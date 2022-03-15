@@ -1,0 +1,7 @@
+{
+    "name": "React",
+    "homeassistant": "2022.2.0",
+    "domains": ["react", "sensor"],
+    "render_readme": true
+  }
+  

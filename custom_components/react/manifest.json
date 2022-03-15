@@ -1,0 +1,11 @@
+{
+  "domain": "react",
+  "name": "React",
+  "version": "0.1.0",
+  "documentation": "https://github.com/gertjanstulp/ha-react",
+  "dependencies": [],
+  "codeowners": ["@gertjanstulp"],
+  "requirements": [], 
+  "config_flow": true,
+  "iot_class": "calculated"
+}

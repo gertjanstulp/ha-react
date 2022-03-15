@@ -1,0 +1,24 @@
+reload:
+  name: Reload
+  description: Reload the react configuration.
+
+turn_on_workflow:
+  name: Turn on workflow
+  description: Enable a workflow.
+  target:
+    entity:
+      domain: react
+
+turn_off_workflow:
+  name: Turn off workflow
+  description: Disable a workflow.
+  target:
+    entity:
+      domain: react
+
+toggle_workflow:
+  name: Toggle workflow
+  description: Toggle (enable / disable) a workflow.
+  target:
+    entity:
+      domain: automation
