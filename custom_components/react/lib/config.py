@@ -82,6 +82,7 @@ class Template():
         self._reactor_delay = config.get(co.ATTR_REACTOR_DELAY, None)
         self._reactor_overwrite = config.get(co.ATTR_REACTOR_OVERWRITE, None)
         self._reset_workflow = config.get(co.ATTR_RESET_WORKFLOW, None)
+        self._action_forward = config.get(co.ATTR_ACTION_FORWARD, None)
 
     @property
     def actor(self):
@@ -123,6 +124,10 @@ class Template():
     def reset_workflow(self):
         return self._reset_workflow
     
+    @property
+    def action_forward(self):
+        return self._action_forward
+    
     def get_attr(self, name: str):
         if (hasattr(self, name)):
             return getattr(self, name)
@@ -147,6 +152,7 @@ class Workflow():
         self._reactor_timing = self._get_property(co.ATTR_REACTOR_TIMING, config, template, 'immediate')
         self._reactor_delay = self._get_property(co.ATTR_REACTOR_DELAY, config, template, '')
         self._reactor_overwrite = self._get_property(co.ATTR_REACTOR_OVERWRITE, config, template, False)
+        self._action_forward = self._get_property(co.ATTR_ACTION_FORWARD, config, template, False)
         self._reset_workflow = self._get_property(co.ATTR_RESET_WORKFLOW, config, template, '')
 
     def _get_property(self, name: str, config, template: Template, default: Any):
@@ -230,6 +236,10 @@ class Workflow():
     def reset_workflow(self):
         return self._reset_workflow
         
+    @property
+    def action_forward(self):
+        return self._action_forward
+    
     @property
     def friendly_name(self):
         return self._friendly_name

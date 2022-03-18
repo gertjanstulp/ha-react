@@ -111,7 +111,7 @@ class ReactionStorage:
     @callback
     def async_add_reaction(self, reaction: ReactionEntry):
         """Create a new ReactionEntry."""
-        co.LOGGER.info("Adding new reaction to store")
+        co.LOGGER.info("Workflow '{}' adding new reaction to store".format(reaction.workflow_id))
 
         if reaction.reaction_id:
             reaction_id = reaction.reaction_id
@@ -130,7 +130,7 @@ class ReactionStorage:
     
     @callback
     def async_update_reaction(self, reaction: ReactionEntry):
-        co.LOGGER.info("Updating reaction '{}' in store".format(reaction.reaction_id))
+        co.LOGGER.info("Workflow '{}' found existing reaction '{}' in store, updating with new timestamp".format(reaction.workflow_id, reaction.reaction_id))
         self.async_schedule_save()
 
     @callback

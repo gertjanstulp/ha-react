@@ -13,6 +13,7 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 CONF_WORKFLOWS = "workflows"
 CONF_TEMPLATES = "templates"
 
+ATTR_ACTION_FORWARD = "action_forward"
 ATTR_ACTOR = "actor"
 ATTR_ACTOR_ACTION = "actor_action"
 ATTR_ACTOR_TYPE = "actor_type"
@@ -89,6 +90,7 @@ WORKFLOW_SCHEMA = vol.Schema({
         vol.Optional(ATTR_REACTOR_DELAY) : vol.Coerce(int),
         vol.Optional(ATTR_REACTOR_OVERWRITE) : vol.Coerce(bool),
         vol.Optional(ATTR_RESET_WORKFLOW) : cv.string,
+        vol.Optional(ATTR_ACTION_FORWARD): vol.Coerce(bool),
         vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
         vol.Optional(CONF_ICON): cv.icon,
     }, None)
@@ -106,6 +108,7 @@ TEMPLATE_SCHEMA = vol.Schema({
         vol.Optional(ATTR_REACTOR_DELAY) : vol.Coerce(int),
         vol.Optional(ATTR_REACTOR_OVERWRITE) : vol.Coerce(bool),
         vol.Optional(ATTR_RESET_WORKFLOW) : cv.string,
+        vol.Optional(ATTR_ACTION_FORWARD): vol.Coerce(bool),
     }, None)
 })
 

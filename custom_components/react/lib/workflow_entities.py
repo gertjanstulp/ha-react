@@ -151,6 +151,7 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
             co.ATTR_REACTOR_DELAY: self._workflow.reactor_delay,
             co.ATTR_REACTOR_OVERWRITE: self._workflow.reactor_overwrite,
             co.ATTR_RESET_WORKFLOW: self._workflow.reset_workflow,
+            co.ATTR_ACTION_FORWARD: self._workflow.action_forward,
         }
 
     @property

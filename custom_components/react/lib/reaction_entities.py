@@ -30,12 +30,12 @@ class ReactionEntity(Entity):
         ]
 
     async def async_added_to_hass(self) -> None:
-        co.LOGGER.info("Reaction entity '{}' added to hass".format(self.entity_id))
+        co.LOGGER.info("Workflow '{}' added reaction entity '{}' to hass".format(self._reaction.workflow_id, self.entity_id))
 
 
     @callback
     async def async_item_updated(self, reaction_id: str):
-        co.LOGGER.info("Reaction entity '{}' updated".format(self.entity_id))
+        co.LOGGER.info("Workflow '{}' updated reaction entity '{}'".format(self._reaction.workflow_id, self.entity_id))
         if reaction_id != self._reaction.reaction_id:
             return
 
@@ -46,7 +46,7 @@ class ReactionEntity(Entity):
         await self.async_update_ha_state()
     
     async def async_will_remove_from_hass(self):
-        co.LOGGER.info("Reaction entity '{}' being removed from hass".format(self.entity_id))
+        co.LOGGER.info("Workflow '{}' removing reaction entity '{}' from hass".format(self._reaction.workflow_id, self.entity_id))
         await super().async_will_remove_from_hass()
 
         while len(self._listeners):

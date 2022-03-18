@@ -10,6 +10,7 @@ from .. import const as co
 from . import config as cf
 from . import events as ev
 from . import store as st
+from . import event_filters as ef
 
 class Listener:
     def __init__(self, hass: HomeAssistant, workflow: cf.Workflow):
@@ -32,22 +33,27 @@ class Listener:
         else:
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, handle_startup)
 
-    async def async_react(self):
+    async def async_react(self, event: ev.BaseEvent):
         if (self.workflow.reset_workflow):
             await self.dd.reactor.async_unreact(self.workflow)
         else:
-            for reaction in self.create_reactions():
+            for reaction in self.create_reactions(event):
                 await self.dd.reactor.async_react(self.workflow, reaction)
 
-    def create_reactions(self):
+    def create_reactions(self, event: ev.BaseEvent):
         result = []
         for reactor in self.workflow.reactor:
             reaction = st.ReactionEntry(
                 reactor = reactor,
                 reactor_type = self.workflow.reactor_type,
-                reactor_action = self.workflow.reactor_action,
+                # reactor_action = self.workflow.reactor_action,
                 workflow_id = self.workflow.id,
             )
+
+            if self.workflow.action_forward:
+                reaction.reactor_action = event.actor_action
+            else:
+                reaction.reactor_action = self.workflow.reactor_action
             
             if self.workflow.reactor_timing == co.REACTOR_TIMING_IMMEDIATE:
                 reaction.reaction_datetime = datetime.now()
@@ -59,7 +65,7 @@ class Listener:
         return result
 
 class BinarySensorListener(Listener):
-    def __init__(self, hass: HomeAssistant, workflow: cf.Workflow) -> None:
+    def __init__(self, hass: HomeAssistant, workflow: cf.Workflow):
         super().__init__(hass, workflow)
 
         entity_ids = []
@@ -67,16 +73,18 @@ class BinarySensorListener(Listener):
             entity_ids.append('binary_sensor.{}'.format(actor))
 
         if workflow.actor_action == 'toggle':
-            self.state_filter = StateFilterToggle(entity_ids)
+            self.state_filter = ef.StateFilterToggle(entity_ids)
         elif workflow.actor_action == 'on':
-            self.state_filter = StateFilterOn(entity_ids)
+            self.state_filter = ef.StateFilterOn(entity_ids)
         elif workflow.actor_action == 'off':
-            self.state_filter = StateFilterOff(entity_ids)
+            self.state_filter = ef.StateFilterOff(entity_ids)
+        elif workflow.action_forward:
+            self.state_filter = ef.StateFilterForward(entity_ids)
         else:
-            raise Exception('Invalid actor_action for workflow {}'.format(workflow.id))
+            raise Exception("Invalid actor_action for workflow '{}'".format(workflow.id))
 
     def start(self):
-        self.cancel_event_listen = self.hass.bus.async_listen(EVENT_STATE_CHANGED, self.state_changed, self.state_changed_filter)
+        self.cancel_event_listen = self.hass.bus.async_listen(EVENT_STATE_CHANGED, self.state_changed, self.event_pre_filter)
         if self.state != co.STATE_INIT:
             self.state = co.STATE_READY
 
@@ -86,64 +94,23 @@ class BinarySensorListener(Listener):
             self.cancel_event_listen()
 
     @callback
-    def state_changed_filter(self, event: Event) -> bool:
-        """Handle entity_id changed filter."""
-        if not self.state == co.STATE_READY: return False
-        return self.state_filter.is_match(event)
+    def event_pre_filter(self, event: Event):
+        return "entity_id" in event.data and event.data["entity_id"].startswith("binary_sensor.")
 
-    async def state_changed(self, event: Event) -> None:
+    async def state_changed(self, event: Event):
         if not self.state == co.STATE_READY: return
+
+        event_data = ev.BinarySensorEvent(event)
+        if not self.state_filter.is_match(event_data): return
         
-        co.LOGGER.info("Workflow '{}' reacting to change in binary_sensor {}".format(self.workflow.id, self.workflow.actor))
+        co.LOGGER.info("Workflow '{}' reacting to change in binary_sensor '{}' from '{}' to '{}'".format(self.workflow.id, event_data.entity_id, event_data.old_state, event_data.new_state))
         
-        await self.async_react()
-        return
-
-class StateFilter:
-    def __init__(self, entity_ids: list[str]) -> None:
-        self.entity_ids = entity_ids
-
-    def is_match(self, event: Event):
-        return (
-            'entity_id' in event.data and 
-            event.data["entity_id"] in self.entity_ids
-        )
-
-class StateFilterToggle(StateFilter):
-    def __init__(self, entity_ids: list[str]):
-        super().__init__(entity_ids)
-
-    def is_match(self, event: Event):
-        return (
-            super().is_match(event) and
-            event.data["old_state"].state != event.data["new_state"].state
-        )
-
-class StateFilterOn(StateFilter):
-    def __init__(self, entity_ids: list[str]):
-        super().__init__(entity_ids)
-
-    def is_match(self, event: Event):
-        return (
-            super().is_match(event) and
-            event.data["old_state"].state == 'off' and
-            event.data["new_state"].state == 'on'
-        )
-
-class StateFilterOff(StateFilter):
-    def __init__(self, entity_ids: list[str]):
-        super().__init__(entity_ids)
-
-    def is_match(self, event: Event):
-        return (
-            super().is_match(event) and
-            event.data["old_state"].state == 'on' and
-            event.data["new_state"].state == 'off'
-        )
+        await self.async_react(event_data)
 
 class ActionEventListener(Listener):
-    def __init__(self, hass: HomeAssistant, workflow: cf.Workflow) -> None:
+    def __init__(self, hass: HomeAssistant, workflow: cf.Workflow):
         super().__init__(hass, workflow)
+        self._filter = ef.ActionEventFilter(workflow)
 
     def start(self):
         self.cancel_event_listen = self.hass.bus.async_listen(co.EVENT_REACT_ACTION, self.handle_react_action)
@@ -153,9 +120,11 @@ class ActionEventListener(Listener):
             self.cancel_event_listen()
 
     async def handle_react_action(self, event: Event):
-        event_data = ev.ActionEvent(**event.data)
-        if not event_data.is_match(self.workflow): return
-
-        co.LOGGER.info("Workflow '{}' reacting to action event {}".format(self.workflow.id, event_data))
+        if not self.state == co.STATE_READY: return
         
-        await self.async_react()
+        event_data = ev.ActionEvent(**event.data)
+        if not self._filter.is_match(event_data): return
+
+        co.LOGGER.info("Workflow '{}' reacting to action event with actor = '{}', actor_type = '{}', actor_action = '{}'".format(self.workflow.id, event_data.actor, event_data.actor_type, event_data.actor_action))
+        
+        await self.async_react(event_data)

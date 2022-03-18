@@ -55,22 +55,22 @@ class Reactor():
 
     async def async_react(self, workflow: cf.Workflow, reaction: st.ReactionEntry):
         if workflow.reactor_timing == co.REACTOR_TIMING_IMMEDIATE:
-            self._react_now(reaction)
+            self._react_now(workflow, reaction)
         else:
             await self._react_later(workflow, reaction)
 
     async def async_unreact(self, workflow: cf.Workflow):
-        co.LOGGER.info("Resetting delayed reactions for workflow '{}'".format(workflow.reset_workflow))
+        co.LOGGER.info("Workflow '{}' resetting delayed reactions for workflow '{}'".format(workflow.id, workflow.reset_workflow))
 
         await self.dd.coordinator.async_reset_workflow_reaction(workflow.reset_workflow)
 
-    def _react_now(self, reaction: st.ReactionEntry):
-        co.LOGGER.info("Firing immediate reaction: {}".format(reaction))
+    def _react_now(self, workflow: cf.Workflow, reaction: st.ReactionEntry):
+        co.LOGGER.info("Workflow '{}' firing immediate reaction with reactor = '{}', reactor_type = '{}', reactor_action = '{}', action_forwarded = {}".format(workflow.id, reaction.reactor, reaction.reactor_type, reaction.reactor_action, workflow.action_forward))
 
         self._send_event(reaction)
 
     async def _react_later(self, workflow: cf.Workflow, reaction: st.ReactionEntry):
-        co.LOGGER.info("Scheduling delayed reaction: {}".format(reaction))
+        co.LOGGER.info("Workflow '{}' scheduling delayed reaction with reactor = '{}', reactor_type = '{}', reactor_action = '{}', reactor_delay = '{}', reactor_overwrite = '{}', action_forwarded = {}".format(workflow.id, reaction.reactor, reaction.reactor_type, reaction.reactor_action, workflow.reactor_delay, workflow.reactor_overwrite, workflow.action_forward))
 
         await self.dd.coordinator.async_add_reaction(reaction, workflow.reactor_overwrite)
         
@@ -81,7 +81,7 @@ class Reactor():
         if not delayed_reactions: return
         
         for id,reaction in delayed_reactions.items():
-            co.LOGGER.info("Firing delayed reaction: '{}' {}".format(id, reaction))
+            co.LOGGER.info("Workflow '{}' firing delayed reaction with reaction_id = '{}', reactor = '{}', reactor_type = '{}', reactor_action = '{}'".format(reaction.workflow_id, reaction.reaction_id, reaction.reactor, reaction.reactor_type, reaction.reactor_action))
             await self.dd.coordinator.async_delete_reaction(id)
             self._send_event(reaction)
 

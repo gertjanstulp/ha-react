@@ -1,23 +1,37 @@
 import attr
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 
 from . import config as co
 
-@attr.s(slots=True, frozen=False)
-class ActionEvent:
-    actor = attr.ib(type=str, default=None)
-    actor_type = attr.ib(type=str, default=None)
-    actor_action = attr.ib(type=str, default=None)
+class BaseEvent:
+    def __init__(self, actor: str, actor_type: str, actor_action: str):
+        self._actor = actor
+        self._actor_type = actor_type
+        self._actor_action = actor_action
 
-    def is_match(self, workflow: co.Workflow) -> bool:
-        return (self.actor in workflow.actor and 
-                self.actor_type == workflow.actor_type and 
-                self.actor_action == workflow.actor_action)
+    @property
+    def actor(self):
+        return self._actor
 
-# class EventSender:
-#     def __init__(self, hass: HomeAssistant):
-#         self._hass = hass
-        
-#     def send_event(self, reaction):
-#         self._hass.bus.async_fire(co.EVENT_REACT_REACTION, attr.asdict(reaction, filter=lambda attr, value: attr.name not in ["reaction_timestamp"]))
+    @property
+    def actor_type(self):
+        return self._actor_type
+
+    @property
+    def actor_action(self):
+        return self._actor_action
+
+class BinarySensorEvent(BaseEvent):
+    def __init__(self, event: Event):
+        self.entity_id = event.data.get('entity_id', '')
+        old_state = event.data.get('old_state', '')
+        self.old_state = old_state.state if old_state else ''
+        new_state = event.data.get('new_state')
+        self.new_state = new_state.state if new_state else ''
+
+        super().__init__(self.entity_id, 'binary_sensor', self.new_state)
+
+class ActionEvent(BaseEvent):
+    def __init__(self, actor: str, actor_type: str, actor_action: str):
+        super().__init__(actor, actor_type, actor_action)
