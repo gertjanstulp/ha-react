@@ -93,11 +93,12 @@ class ReactionStorage:
         if not reaction_id: return None
         return self.reactions.get(reaction_id)
 
-    def async_get_reaction_by_workflow_id(self, workflow_id: str) -> ReactionEntry: 
+    def async_get_reactions_by_workflow_id(self, workflow_id: str) -> ReactionEntry: 
+        result = []
         for (id, reaction) in self.reactions.items():
             if reaction.workflow_id == workflow_id:
-                return reaction
-        return None 
+                result.append(reaction)
+        return result
 
     @callback
     def async_get_reactions(self, before_datetime: datetime = None) -> dict:

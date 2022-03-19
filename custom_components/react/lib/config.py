@@ -1,3 +1,6 @@
+from ast import Raise
+from datetime import datetime, timedelta
+import json
 from typing import Any
 
 from homeassistant.const import (
@@ -80,6 +83,7 @@ class Template():
         self._reactor_action = config.get(co.ATTR_REACTOR_ACTION, None)
         self._reactor_timing = config.get(co.ATTR_REACTOR_TIMING, None)
         self._reactor_delay = config.get(co.ATTR_REACTOR_DELAY, None)
+        self._reactor_schedule = config.get(co.ATTR_REACTOR_SCHEDULE, None)
         self._reactor_overwrite = config.get(co.ATTR_REACTOR_OVERWRITE, None)
         self._reset_workflow = config.get(co.ATTR_RESET_WORKFLOW, None)
         self._action_forward = config.get(co.ATTR_ACTION_FORWARD, None)
@@ -117,6 +121,10 @@ class Template():
         return self._reactor_delay
 
     @property
+    def reactor_schedule(self):
+        return self._reactor_schedule
+
+    @property
     def reactor_overwrite(self):
         return self._reactor_overwrite
         
@@ -132,6 +140,21 @@ class Template():
         if (hasattr(self, name)):
             return getattr(self, name)
         return None
+
+class Schedule:
+    def __init__(self, config):
+        if not config: return
+
+        self._at = config.get(co.ATTR_SCHEDULE_AT, None)
+        self._weekdays = config.get(co.ATTR_SCHEDULE_WEEKDAYS, [])
+
+    @property
+    def at(self) -> datetime:
+        return self._at
+
+    @property
+    def weekdays(self) -> list[str]:
+        return self._weekdays
 
 class Workflow():
     def __init__(self, id, config):
@@ -151,6 +174,7 @@ class Workflow():
         self._reactor_action = self._get_property(co.ATTR_REACTOR_ACTION, config, template, '')
         self._reactor_timing = self._get_property(co.ATTR_REACTOR_TIMING, config, template, 'immediate')
         self._reactor_delay = self._get_property(co.ATTR_REACTOR_DELAY, config, template, '')
+        self._reactor_schedule =  self._load_schedule(self._get_property(co.ATTR_REACTOR_SCHEDULE, config, template, None))
         self._reactor_overwrite = self._get_property(co.ATTR_REACTOR_OVERWRITE, config, template, False)
         self._action_forward = self._get_property(co.ATTR_ACTION_FORWARD, config, template, False)
         self._reset_workflow = self._get_property(co.ATTR_RESET_WORKFLOW, config, template, '')
@@ -172,6 +196,10 @@ class Workflow():
 
         return result
 
+    def _load_schedule(self, config) -> Schedule:
+        if not config: return None
+        return Schedule(config)
+
     def _replace_token(self, input, token):
         result = input
         if isinstance(result, str):
@@ -181,19 +209,49 @@ class Workflow():
                 result[i] = result[i].replace('<token>', token)
         return result
 
-    def create_reaction(self):
-        return 
+    def calculate_reaction_datetime(self):
+        if (self._reactor_timing == co.REACTOR_TIMING_IMMEDIATE):
+            return None
+        if self._reactor_timing == co.REACTOR_TIMING_DELAYED:
+            return datetime.now() + timedelta(seconds = self.reactor_delay)
+        elif self._reactor_timing == co.REACTOR_TIMING_SCHEDULED:
+            return self._calculate_next_schedule_hit()
+
+    def _calculate_next_schedule_hit(self):
+        if not self.reactor_schedule or not self.reactor_schedule.at: return None
+
+        at = self.reactor_schedule.at
+        weekdays = self.reactor_schedule.weekdays
+
+        now = datetime.now()
+        next_try = datetime(now.year, now.month, now.day, at.hour, at.minute, at.second)
+
+        if next_try < now:
+            next_try = next_try + timedelta(days=1)
+
+        if weekdays and len(weekdays) > 0:
+            attempt = 1
+            while True:
+                day_name = next_try.strftime("%A")[0:3].lower()
+                if day_name in weekdays:
+                    break
+                else:
+                    next_try = next_try + timedelta(days=1)
+                    attempt += 1
+                    if (attempt > 7): raise Exception("could not calculate next schedule hit")
+
+        return next_try
 
     @property
-    def id(self):
+    def id(self)-> str:
         return self._id
 
     @property
-    def entity_id(self):
+    def entity_id(self)-> str:
         return self._entity_id
 
     @property
-    def template_name(self):
+    def template_name(self)-> str:
         return self._template_name
 
     @property
@@ -201,11 +259,11 @@ class Workflow():
         return self._actor
 
     @property
-    def actor_type(self):
+    def actor_type(self)-> str:
         return self._actor_type
 
     @property
-    def actor_action(self):
+    def actor_action(self)-> str:
         return self._actor_action
 
     @property
@@ -213,33 +271,37 @@ class Workflow():
         return self._reactor
 
     @property
-    def reactor_type(self):
+    def reactor_type(self)-> str:
         return self._reactor_type
 
     @property
-    def reactor_action(self):
+    def reactor_action(self)-> str:
         return self._reactor_action
 
     @property
-    def reactor_timing(self):
+    def reactor_timing(self)-> str:
         return self._reactor_timing
 
     @property
-    def reactor_delay(self):
+    def reactor_delay(self)-> int:
         return self._reactor_delay
 
     @property
-    def reactor_overwrite(self):
+    def reactor_overwrite(self) -> bool:
         return self._reactor_overwrite
         
     @property
-    def reset_workflow(self):
+    def reset_workflow(self) -> str:
         return self._reset_workflow
         
     @property
-    def action_forward(self):
+    def action_forward(self) -> bool:
         return self._action_forward
     
+    @property
+    def reactor_schedule(self) -> Schedule:
+        return self._reactor_schedule
+
     @property
     def friendly_name(self):
         return self._friendly_name

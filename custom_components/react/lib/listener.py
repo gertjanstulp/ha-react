@@ -46,7 +46,6 @@ class Listener:
             reaction = st.ReactionEntry(
                 reactor = reactor,
                 reactor_type = self.workflow.reactor_type,
-                # reactor_action = self.workflow.reactor_action,
                 workflow_id = self.workflow.id,
             )
 
@@ -55,10 +54,8 @@ class Listener:
             else:
                 reaction.reactor_action = self.workflow.reactor_action
             
-            if self.workflow.reactor_timing == co.REACTOR_TIMING_IMMEDIATE:
-                reaction.reaction_datetime = datetime.now()
-            else:
-                reaction.reaction_datetime = datetime.now() + timedelta(seconds = self.workflow.reactor_delay)
+            reaction.reaction_datetime = self.workflow.calculate_reaction_datetime()
+            
             reaction.sync()
             result.append(reaction)
 

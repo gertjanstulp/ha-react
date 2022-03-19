@@ -45,13 +45,16 @@ class ReactionStoreCoordinator(DataUpdateCoordinator):
 
         add = True
         if overwrite:
-            existing_reaction = self.dd.store.async_get_reaction_by_workflow_id(reaction.workflow_id)
-            if existing_reaction:
+            existing_reactions = self.dd.store.async_get_reactions_by_workflow_id(reaction.workflow_id)
+            if len(existing_reactions) == 1:
+                existing_reaction = existing_reactions[0]
                 existing_reaction.reaction_datetime = reaction.reaction_datetime
                 existing_reaction.sync(True)
-                self.dd.store.async_update_reaction(existing_reaction)
-                async_dispatcher_send(self.hass, co.EVENT_ITEM_UPDATED, existing_reaction.reaction_id)
+                await self.async_update_reaction(existing_reaction)
                 add = False
+            elif len(existing_reactions) > 1:
+                for existing_reaction in existing_reactions:
+                    await self.async_delete_reaction(existing_reaction)
 
         if add and self.dd.store.async_add_reaction(reaction):
             async_dispatcher_send(self.hass, co.EVENT_ITEM_CREATED, reaction)
@@ -60,9 +63,10 @@ class ReactionStoreCoordinator(DataUpdateCoordinator):
     async def async_reset_workflow_reaction(self, reset_workflow_id: str):
         """Reset the reaction for a given workflow"""
 
-        existing_reaction = self.dd.store.async_get_reaction_by_workflow_id(reset_workflow_id)
-        if existing_reaction:
-            await self.async_delete_reaction(existing_reaction.reaction_id)
+        existing_reactions = self.dd.store.async_get_reactions_by_workflow_id(reset_workflow_id)
+        if existing_reactions:
+            for existing_reaction in existing_reactions:
+                await self.async_delete_reaction(existing_reaction)
 
     @callback
     def get_reactions(self, before_datetime: datetime):
@@ -70,13 +74,21 @@ class ReactionStoreCoordinator(DataUpdateCoordinator):
 
         return self.dd.store.async_get_reactions(before_datetime)
 
-    async def async_delete_reaction(self, reaction_id: str):
+    async def async_update_reaction(self, reaction: st.ReactionEntry):
+        """Update an existing reaction"""
+
+        if not self.dd.store.has_reaction(reaction.reaction_id):
+            return
+        self.dd.store.async_update_reaction(reaction)
+        async_dispatcher_send(self.hass, co.EVENT_ITEM_UPDATED, reaction.reaction_id)
+
+    async def async_delete_reaction(self, reaction: st.ReactionEntry):
         """Delete an existing reaction"""
 
-        if not self.dd.store.has_reaction(reaction_id):
+        if not self.dd.store.has_reaction(reaction.reaction_id):
             return
-        self.dd.store.async_delete_reaction(reaction_id)
-        async_dispatcher_send(self.hass, co.EVENT_ITEM_REMOVED, reaction_id)
+        self.dd.store.async_delete_reaction(reaction.reaction_id)
+        async_dispatcher_send(self.hass, co.EVENT_ITEM_REMOVED, reaction.reaction_id)
 
     async def async_delete_config(self):
         """Delete all stored configuration"""

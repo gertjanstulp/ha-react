@@ -82,7 +82,7 @@ class Reactor():
         
         for id,reaction in delayed_reactions.items():
             co.LOGGER.info("Workflow '{}' firing delayed reaction with reaction_id = '{}', reactor = '{}', reactor_type = '{}', reactor_action = '{}'".format(reaction.workflow_id, reaction.reaction_id, reaction.reactor, reaction.reactor_type, reaction.reactor_action))
-            await self.dd.coordinator.async_delete_reaction(id)
+            await self.dd.coordinator.async_delete_reaction(reaction)
             self._send_event(reaction)
 
     def _send_event(self, reaction):
