@@ -1,227 +1,133 @@
-from ast import Raise
 from datetime import datetime, timedelta
-import json
-from typing import Any
+from typing import Any, Callable, Dict, Union
 
-from homeassistant.const import (
-    STATE_ON,
-)
-from homeassistant.core import (
-    HomeAssistant, 
-)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType
 
 from .. import const as co
+from . import template_watcher as tw
 
-async def load_from_config(hass: HomeAssistant, domain_config: ConfigType):
-    co.LOGGER.info("Loading react configuration")
 
-    if domain_config:
-        co.LOGGER.info("Found react configuration, processing")
+class PropertyContainer:
+    def __init__(self, hass: HomeAssistant, variables: dict):
+        self.hass = hass
+        self.variables = variables
+        self.template_watchers: list[tw.TemplateWatcher] = []
 
-        template_config = domain_config.get(co.CONF_TEMPLATES, {})
-        workflow_config = domain_config.get(co.CONF_WORKFLOWS, {})
 
-        templates = await _parse_template_config(hass, template_config)
-        result = await _parse_workflow_config(hass, workflow_config, templates)
-    else:
-        co.LOGGER.info("No react configuration found")
-        result = []
+    def init_property(self, name: str, type_converter: Any, config: dict, stencil: dict, default: Any = None):
+        value = self.get_property(name, config, stencil, default)
+        self.init_property_value(name, type_converter, value)
 
-    return result
 
-async def _parse_template_config(hass, template_config):
-    co.LOGGER.info("Loading react templates")
-    
-    result = {}
-
-    for id, config in template_config.items():
-        co.LOGGER.info("Processing template '{}'".format(id))
-        if not config:
-            config = {}
-        
-        template = Template(config)
-        result[id] = template
-
-    return result
-
-async def _parse_workflow_config(hass: HomeAssistant, workflow_config: dict, templates: dict):
-    co.LOGGER.info("Loading react workflows")
-
-    workflows = []
-    
-    for id, config in workflow_config.items():
-        co.LOGGER.info("Processing workflow '{}'".format(id))
-        if not config:
-            config = {}
-        
-        workflow = Workflow(id, config)
-        template = await _get_template_by_name(templates, workflow.template_name)
-        workflow.load(config, template)
-        workflows.append(workflow)
-
-    return workflows
-
-async def _get_template_by_name(templates, template_name):
-    result = None
-    if template_name:
-        if template_name in templates.keys():
-            result = templates[template_name]
+    def init_property_value(self, name: str, type_converter: Any, value: Any):
+        if isinstance(value, Template):
+            self.template_watchers.append(tw.TemplateWatcher(self.hass, self, name, type_converter, value, self.variables))
         else:
-            co.LOGGER.warn("Template '{}' not found".format(template_name))
-    
-    return result
+            setattr(self, name, type_converter(value))
 
 
-class Template():
-    def __init__(self, config):
-        self._actor = config.get(co.ATTR_ACTOR, None)
-        self._actor_type = config.get(co.ATTR_ACTOR_TYPE, None)
-        self._actor_action = config.get(co.ATTR_ACTOR_ACTION, None)
-        self._reactor = config.get(co.ATTR_REACTOR, None)
-        self._reactor_type = config.get(co.ATTR_REACTOR_TYPE, None)
-        self._reactor_action = config.get(co.ATTR_REACTOR_ACTION, None)
-        self._reactor_timing = config.get(co.ATTR_REACTOR_TIMING, None)
-        self._reactor_delay = config.get(co.ATTR_REACTOR_DELAY, None)
-        self._reactor_schedule = config.get(co.ATTR_REACTOR_SCHEDULE, None)
-        self._reactor_overwrite = config.get(co.ATTR_REACTOR_OVERWRITE, None)
-        self._reset_workflow = config.get(co.ATTR_RESET_WORKFLOW, None)
-        self._action_forward = config.get(co.ATTR_ACTION_FORWARD, None)
-
-    @property
-    def actor(self):
-        return self._actor
-
-    @property
-    def actor_type(self):
-        return self._actor_type
-
-    @property
-    def actor_action(self):
-        return self._actor_action
-
-    @property
-    def reactor(self):
-        return self._reactor
-
-    @property
-    def reactor_type(self):
-        return self._reactor_type
-
-    @property
-    def reactor_action(self):
-        return self._reactor_action
-
-    @property
-    def reactor_timing(self):
-        return self._reactor_timing
-
-    @property
-    def reactor_delay(self):
-        return self._reactor_delay
-
-    @property
-    def reactor_schedule(self):
-        return self._reactor_schedule
-
-    @property
-    def reactor_overwrite(self):
-        return self._reactor_overwrite
-        
-    @property
-    def reset_workflow(self):
-        return self._reset_workflow
-    
-    @property
-    def action_forward(self):
-        return self._action_forward
-    
-    def get_attr(self, name: str):
-        if (hasattr(self, name)):
-            return getattr(self, name)
-        return None
-
-class Schedule:
-    def __init__(self, config):
-        if not config: return
-
-        self._at = config.get(co.ATTR_SCHEDULE_AT, None)
-        self._weekdays = config.get(co.ATTR_SCHEDULE_WEEKDAYS, [])
-
-    @property
-    def at(self) -> datetime:
-        return self._at
-
-    @property
-    def weekdays(self) -> list[str]:
-        return self._weekdays
-
-class Workflow():
-    def __init__(self, id, config):
-        self._id = id
-        self._entity_id = co.ENTITY_ID_FORMAT.format(id)
-        self._template_name = config.get(co.ATTR_TEMPLATE, None)
-        self._token = config.get(co.ATTR_TOKEN, None)
-        self._friendly_name = config.get(co.ATTR_FRIENDLY_NAME, None)
-        self._icon = config.get(co.CONF_ICON, None)
-
-    def load(self, config, template):
-        self._actor = self._get_property(co.ATTR_ACTOR, config, template, [])
-        self._actor_type = self._get_property(co.ATTR_ACTOR_TYPE, config, template, '')
-        self._actor_action = self._get_property(co.ATTR_ACTOR_ACTION, config, template, '')
-        self._reactor = self._get_property(co.ATTR_REACTOR, config, template, [])
-        self._reactor_type = self._get_property(co.ATTR_REACTOR_TYPE, config, template, '')
-        self._reactor_action = self._get_property(co.ATTR_REACTOR_ACTION, config, template, '')
-        self._reactor_timing = self._get_property(co.ATTR_REACTOR_TIMING, config, template, 'immediate')
-        self._reactor_delay = self._get_property(co.ATTR_REACTOR_DELAY, config, template, '')
-        self._reactor_schedule =  self._load_schedule(self._get_property(co.ATTR_REACTOR_SCHEDULE, config, template, None))
-        self._reactor_overwrite = self._get_property(co.ATTR_REACTOR_OVERWRITE, config, template, False)
-        self._action_forward = self._get_property(co.ATTR_ACTION_FORWARD, config, template, False)
-        self._reset_workflow = self._get_property(co.ATTR_RESET_WORKFLOW, config, template, '')
-
-    def _get_property(self, name: str, config, template: Template, default: Any):
-        result = config.get(name, None)
-        if not result and template is not None and hasattr(template, name):
-            template_value = getattr(template, name)
-            if isinstance(template_value, list):
-                result = template_value[:]
+    def get_property(self, name: str, config: dict, stencil: dict, default: Any = None):
+        result = config.get(name, None) if config else None
+        if not result and stencil:
+            stencil_value = stencil.get(name, None)
+            if isinstance(stencil_value, list):
+                result = stencil_value[:]
             else:
-                result = template_value
-
-        if self._token is not None:
-            result = self._replace_token(result, self._token)
+                result = stencil_value
 
         if result is None:
             result = default
 
         return result
 
-    def _load_schedule(self, config) -> Schedule:
-        if not config: return None
-        return Schedule(config)
 
-    def _replace_token(self, input, token):
-        result = input
-        if isinstance(result, str):
-            result = result.replace('<token>', token)
-        elif isinstance(result, list):
-            for i in range(len(result)):
-                result[i] = result[i].replace('<token>', token)
+class Schedule(PropertyContainer):
+    def __init__(self, hass: HomeAssistant, variables: dict, config: dict, stencil: dict):
+        super().__init__(hass, variables)
+
+        if not (config or stencil): return
+        self.at = self.get_property(co.ATTR_SCHEDULE_AT, config, stencil)
+        self.weekdays = self.get_property(co.ATTR_SCHEDULE_WEEKDAYS, config, stencil, [])
+
+
+    def as_dict(self) -> dict:
+        result = {
+            co.ATTR_SCHEDULE_AT: self.at.strftime("%H:%M:%S"),
+        }
+        if self.weekdays:
+            result[co.ATTR_SCHEDULE_WEEKDAYS] = self.weekdays
         return result
 
+
+class Ctor(PropertyContainer):
+    def __init__(self, hass: HomeAssistant, variables: dict, id: str, entity: Union[str, Template]):
+        super().__init__(hass, variables)
+        
+        self.id = id
+        self.init_property_value(co.ATTR_ENTITY, co.PROP_TYPE_STR, entity)
+
+    
+    def load(self, config: Any, stencil: dict):
+        self.init_property(co.ATTR_TYPE, co.PROP_TYPE_STR, config, stencil)
+        self.init_property(co.ATTR_ACTION, co.PROP_TYPE_STR, config, stencil)
+
+
+    def as_dict(self) -> dict:
+        return {
+            a: getattr(self, a)
+            for a in [co.ATTR_ENTITY, co.ATTR_TYPE, co.ATTR_ACTION]
+            if getattr(self, a) is not None
+        }
+
+
+    def register_entity(self, entity: Any):
+        for template_watcher in self.template_watchers:
+            template_watcher.register_entity(entity)
+        
+
+class Actor(Ctor):
+    def __init__(self, hass: HomeAssistant, variables: dict, id: str, entity: Union[str, Template]):
+        super().__init__(hass, variables, id, entity)
+
+
+class Reactor(Ctor):
+    def __init__(self, hass: HomeAssistant, variables: dict, id: str, entity: Union[str, Template]):
+        super().__init__(hass, variables, id, entity)
+
+
+    def load(self, config: dict, stencil: dict):
+        super().load(config, stencil)
+
+        self.timing = self.get_property(co.ATTR_TIMING, config,  stencil, 'immediate')
+        self.init_property(co.ATTR_DELAY, co.PROP_TYPE_INT, config, stencil)
+        self.schedule =  self.load_schedule(config, stencil)
+        self.init_property(co.ATTR_OVERWRITE, co.PROP_TYPE_BOOL, config, stencil, False)
+        self.init_property(co.ATTR_RESET_WORKFLOW, co.PROP_TYPE_STR, config, stencil)
+        self.init_property(co.ATTR_FORWARD_ACTION, co.PROP_TYPE_BOOL, config, stencil, False)
+
+
+    def load_schedule(self, config: dict, stencil: dict) -> Schedule:
+        if co.ATTR_SCHEDULE in config or co.ATTR_SCHEDULE in stencil:
+            return Schedule(self.hass, self.variables, config.get(co.ATTR_SCHEDULE, None), stencil.get(co.ATTR_SCHEDULE, None))
+        return None
+
+
     def calculate_reaction_datetime(self):
-        if (self._reactor_timing == co.REACTOR_TIMING_IMMEDIATE):
+        if (self.timing == co.REACTOR_TIMING_IMMEDIATE):
             return None
-        if self._reactor_timing == co.REACTOR_TIMING_DELAYED:
-            return datetime.now() + timedelta(seconds = self.reactor_delay)
-        elif self._reactor_timing == co.REACTOR_TIMING_SCHEDULED:
-            return self._calculate_next_schedule_hit()
+        if self.timing == co.REACTOR_TIMING_DELAYED:
+            return datetime.now() + timedelta(seconds = self.delay)
+        elif self.timing == co.REACTOR_TIMING_SCHEDULED:
+            return self.calculate_next_schedule_hit()
 
-    def _calculate_next_schedule_hit(self):
-        if not self.reactor_schedule or not self.reactor_schedule.at: return None
 
-        at = self.reactor_schedule.at
-        weekdays = self.reactor_schedule.weekdays
+    def calculate_next_schedule_hit(self):
+        if not self.schedule or not self.schedule.at: return None
+
+        at = self.schedule.at
+        weekdays = self.schedule.weekdays
 
         now = datetime.now()
         next_try = datetime(now.year, now.month, now.day, at.hour, at.minute, at.second)
@@ -242,75 +148,132 @@ class Workflow():
 
         return next_try
 
-    @property
-    def id(self)-> str:
-        return self._id
 
-    @property
-    def entity_id(self)-> str:
-        return self._entity_id
+    def as_dict(self) -> dict:
+        base_dict = super().as_dict()
+        self_dict = {
+            a: getattr(self, a)
+            for a in [co.ATTR_TIMING, co.ATTR_DELAY, co.ATTR_OVERWRITE, co.ATTR_RESET_WORKFLOW, co.ATTR_FORWARD_ACTION]
+            if getattr(self, a) is not None and getattr(self, a) != False
+        }
+        if self.schedule:
+            self_dict[co.ATTR_SCHEDULE] = self.schedule.as_dict(),
 
-    @property
-    def template_name(self)-> str:
-        return self._template_name
+        return base_dict | self_dict
 
-    @property
-    def actor(self):
-        return self._actor
 
-    @property
-    def actor_type(self)-> str:
-        return self._actor_type
-
-    @property
-    def actor_action(self)-> str:
-        return self._actor_action
-
-    @property
-    def reactor(self):
-        return self._reactor
-
-    @property
-    def reactor_type(self)-> str:
-        return self._reactor_type
-
-    @property
-    def reactor_action(self)-> str:
-        return self._reactor_action
-
-    @property
-    def reactor_timing(self)-> str:
-        return self._reactor_timing
-
-    @property
-    def reactor_delay(self)-> int:
-        return self._reactor_delay
-
-    @property
-    def reactor_overwrite(self) -> bool:
-        return self._reactor_overwrite
+class Workflow(PropertyContainer):
+    def __init__(self, hass: HomeAssistant, id: str, config: dict):
+        super().__init__(hass, config.get(co.ATTR_VARIABLES, {}))
         
-    @property
-    def reset_workflow(self) -> str:
-        return self._reset_workflow
-        
-    @property
-    def action_forward(self) -> bool:
-        return self._action_forward
+        self.id = id
+        self.entity_id = co.ENTITY_ID_FORMAT.format(id)
+        self.stencil = config.get(co.ATTR_STENCIL, None)
+        self.friendly_name = config.get(co.ATTR_FRIENDLY_NAME, None)
+        self.icon = config.get(co.CONF_ICON, None)
+
+
+    def load(self, config, stencil):
+        self.actors = self.load_items(config, stencil, co.ATTR_ACTOR, Actor)
+        self.reactors = self.load_items(config, stencil, co.ATTR_REACTOR, Reactor)
+
+
+    def load_items(self, config: Any, stencil: dict, item_property: str, item_type: Callable[[HomeAssistant, dict, str, str], Union[Actor, Reactor] ]) -> Dict[str, Union[Actor, Reactor]]:
+        if not config: return []
+        items_config = self.get_property(item_property, config, None, {})
+        items_stencil = stencil.get(item_property, {})
+
+        result = {}
+        for id,item_config in items_config.items():
+            item_stencil = items_stencil.get(id, {})
+            self.load_entities(id, item_config, item_stencil, item_type, result)
+
+        for id,item_stencil in items_stencil.items():
+            # Check for any stencil item that is not part of the workflow yet.
+            # Add an entity for each match.
+            if id not in result:
+                self.load_entities(id, {}, item_stencil, item_type, result)
+
+        return result
+
+
+    def load_entities(self, id: str, item_config: dict, item_stencil: dict, item_type: Callable[[HomeAssistant, dict, str, str], Union[Actor, Reactor] ], result: dict):
+        entity_data = self.get_property(co.ATTR_ENTITY, item_config, item_stencil)
+        if isinstance(entity_data, Template):
+            self.load_entity(id, item_config, item_stencil, item_type, result, entity_data)
+        elif isinstance(entity_data, list):
+            is_multiple = len(entity_data) > 1
+            for i,entity in enumerate(entity_data):
+                item_id = "{}_{}".format(id, i) if is_multiple else id
+                self.load_entity(item_id, item_config, item_stencil, item_type, result, entity)
+        elif entity_data is None:
+            self.load_entity(id, item_config, item_stencil, item_type, result, None)
+
+    def load_entity(self, item_id: str, item_config: dict, item_stencil: dict, item_type: Callable[[HomeAssistant, dict, str, str], Union[Actor, Reactor] ], result: dict, entity: Union[str, Template]):
+        item: Ctor = item_type(self.hass, self.variables, item_id, entity)
+        item.load(item_config, item_stencil)
+        result[item.id] = item
+
+
+    def as_dict(self) -> dict:
+        result = {
+            a: getattr(self, a)
+            for a in [co.ATTR_ID, co.ATTR_STENCIL, co.ATTR_FRIENDLY_NAME]
+            if getattr(self, a) is not None
+        }
+        result[co.ATTR_ACTOR] = {}
+        result[co.ATTR_REACTOR] = {}
+        for id,actor in self.actors.items():
+            result[co.ATTR_ACTOR][id] = actor.as_dict()
+        for id,reactor in self.reactors.items():
+            result[co.ATTR_REACTOR][id] = reactor.as_dict()
+
+        return result
+
+
+async def load_from_config(hass: HomeAssistant, domain_config: ConfigType) -> Dict[str, Workflow]:
+    co.LOGGER.info("Loading react configuration")
+
+    if domain_config:
+        co.LOGGER.info("Found react configuration, processing")
+
+        stencil_config = domain_config.get(co.CONF_STENCIL, {})
+        workflow_config = domain_config.get(co.CONF_WORKFLOW, {})
+
+        result = await parse_workflow_config(hass, workflow_config, stencil_config)
+    else:
+        co.LOGGER.info("No react configuration found")
+        result = {}
+
+    return result
+
+
+async def parse_workflow_config(hass: HomeAssistant, workflow_config: dict, stencils: dict) -> Dict[str, Workflow]:
+    co.LOGGER.info("Loading react workflows")
+
+    workflows = {}
+
+    for id, config in workflow_config.items():
+        co.LOGGER.info("Processing workflow '{}'".format(id))
+        if not config:
+            config = {}
+
+        workflow = Workflow(hass, id, config)
+        stencil = await get_stencil_by_name(stencils, workflow.stencil)
+        workflow.load(config, stencil)
+        workflows[id] = workflow
+
+    return workflows
+
+
+async def get_stencil_by_name(stencil_config, stencil_name) -> dict:
+    result = {}
+    if stencil_name:
+        stencil = stencil_config.get(stencil_name, None)
+        if stencil:
+            result = stencil
+        else:
+            co.LOGGER.error("Stencil '{}' not found".format(stencil_name))
+
+    return result
     
-    @property
-    def reactor_schedule(self) -> Schedule:
-        return self._reactor_schedule
-
-    @property
-    def friendly_name(self):
-        return self._friendly_name
-        
-    @property
-    def icon(self):
-        return self._icon
-
-    def get_attr(self, name: str):
-        if (hasattr(self, name)):
-            return getattr(self, name)
-        return None

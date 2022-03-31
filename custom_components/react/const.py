@@ -3,40 +3,48 @@ import voluptuous as vol
 
 from typing import Any, Union
 from homeassistant.helpers import config_validation as cv
-from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_ICON, ATTR_ENTITY_ID
+from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_ICON, ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.helpers.template import result_as_boolean
 
 VERSION = "0.0.1"
 
 DOMAIN = 'react'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-CONF_WORKFLOWS = "workflows"
-CONF_TEMPLATES = "templates"
+CONF_WORKFLOW = "workflow"
+CONF_STENCIL = "stencil"
 
-ATTR_ACTION_FORWARD = "action_forward"
+
+
 ATTR_ACTOR = "actor"
-ATTR_ACTOR_ACTION = "actor_action"
-ATTR_ACTOR_TYPE = "actor_type"
-ATTR_REACTIONS = "reactions"
-ATTR_REACTION_ID = "reaction_id"
-ATTR_REACTION_TIMESTAMP = "reaction_timestamp"
-ATTR_REACTION_DATETIME = "reaction_datetime"
+ATTR_ACTORS = "actors"
 ATTR_REACTOR = "reactor"
-ATTR_REACTOR_TYPE = "reactor_type"
-ATTR_REACTOR_ACTION = "reactor_action"
-ATTR_REACTION_TIMESTAMP = "reaction_timestamp"
-ATTR_REACTOR_TIMING = "reactor_timing"
-ATTR_REACTOR_DELAY = "reactor_delay"
-ATTR_REACTOR_OVERWRITE = "reactor_overwrite"
-ATTR_REACTOR_SCHEDULE = "reactor_schedule"
-ATTR_REACTOR_SCHEDULE_AT = "reactor_schedule_at"
-ATTR_REACTOR_SCHEDULE_WEEKDAYS = "reactor_schedule_weekdays"
+ATTR_REACTORS = "reactors"
+
+ATTR_ID = "id"
+ATTR_ENTITY = "entity"
+ATTR_TYPE = "type"
+ATTR_ACTION = "action"
+
+ATTR_VARIABLES = "variables"
+
+ATTR_WORKFLOW_ID = "workflow_id"
+ATTR_STENCIL = "stencil"
+
+ATTR_FORWARD_ACTION = "forward_action"
 ATTR_RESET_WORKFLOW = "reset_workflow"
+ATTR_OVERWRITE = "overwrite"
+
+ATTR_REACTIONS = "reactions"
+ATTR_REACTION_ID = "id"
+ATTR_REACTION_TIMESTAMP = "timestamp"
+ATTR_REACTION_DATETIME = "datetime"
+
+ATTR_TIMING = "timing"
+ATTR_DELAY = "delay"
+ATTR_SCHEDULE = "schedule"
 ATTR_SCHEDULE_AT = "at"
 ATTR_SCHEDULE_WEEKDAYS = "weekdays"
-ATTR_TEMPLATE = "template"
-ATTR_TOKEN = "token"
-ATTR_WORKFLOW_ID = "workflow_id"
 
 DEVICE_REACT_NAME = "React"
 DEVICE_REACT_MODEL = "React"
@@ -72,75 +80,120 @@ STATE_READY = "ready"
 STATE_COMPLETED = "completed"
 STATE_STOPPED = "stopped"
 
+BINARY_SENSOR = "binary_sensor"
+BINARY_SENSOR_PREFIX = "{}.".format(BINARY_SENSOR)
+GROUP = "group"
+GROUP_PREFIX = "{}.".format(GROUP)
+SWITCH = "switch"
+SWITCH_PREFIX = "{}.".format(SWITCH)
+OLD_STATE = "old_state"
+NEW_STATE = "new_state"
+
+ACTION_TOGGLE = "toggle"
+
 DEFAULT_INITIAL_STATE = True
 
 LOGGER = logging.getLogger(__package__)
 
-def device_id(value: Any) -> str:
+
+def entity(value: Any) -> str:
     """Validate device id."""
     return cv.string(value).lower()
 
-def device_ids(value: Union[str, list]) -> 'list[str]':
-    """Help validate device id's"""
-    if value is None:
-        raise vol.Invalid("Device IDs can not be None")
-    if isinstance(value, str):
-        value = [ent_id.strip() for ent_id in value.split(",")]
 
-    validator = device_id
-    return [validator(ent_id) for ent_id in value]
+def is_list_of_strings(obj):
+    return bool(obj) and isinstance(obj, list) and all(isinstance(elem, str) for elem in obj)
 
+
+def entities(value: Union[str, list]) -> list[str]:
+    if is_list_of_strings(value):
+        return value
+    raise vol.Invalid("Not a valid list of entities")
+
+
+def result_as_string(value):
+    if not value:
+        return None
+    elif isinstance(value, str):
+        return value
+    else:
+        return str(value)
+
+
+def result_as_int(value):
+    if not value:
+        return 0
+    elif isinstance(value, int):
+        result = value
+    else:
+        try:
+            result = int(value)
+        except:
+            result = 0
+    return result
+
+
+PROP_TYPE_STR = result_as_string
+PROP_TYPE_INT = result_as_int
+PROP_TYPE_BOOL = result_as_boolean
 
 SCHEDULE_SCHEMA = vol.Schema({
     vol.Required(ATTR_SCHEDULE_AT) : cv.time,
     vol.Optional(ATTR_SCHEDULE_WEEKDAYS) : cv.weekdays
 })
 
+
+ENTITY_DATA_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY) : vol.Any(entities, cv.template),
+    vol.Optional(ATTR_TYPE) : cv.template,
+    vol.Optional(ATTR_ACTION) : cv.template,
+})
+
+
+ACTOR_SCHEMA_STENCIL = vol.Schema({
+    cv.slug: ENTITY_DATA_SCHEMA,
+})
+ACTOR_SCHEMA_WORKFLOW = vol.Schema({
+    cv.slug: ENTITY_DATA_SCHEMA,
+})
+
+
+REACTOR_DATA_SCHEMA = ENTITY_DATA_SCHEMA.extend(
+    vol.Schema({
+        vol.Optional(ATTR_TIMING) : vol.In([REACTOR_TIMING_IMMEDIATE, REACTOR_TIMING_DELAYED, REACTOR_TIMING_SCHEDULED]),
+        vol.Optional(ATTR_DELAY) : cv.template,
+        vol.Optional(ATTR_SCHEDULE) : SCHEDULE_SCHEMA,
+        vol.Optional(ATTR_OVERWRITE) : cv.template,
+        vol.Optional(ATTR_RESET_WORKFLOW) : cv.template,
+        vol.Optional(ATTR_FORWARD_ACTION): cv.template,
+    }).schema
+)
+
+
+REACTOR_SCHEMA_STENCIL = vol.Schema({
+    cv.slug: REACTOR_DATA_SCHEMA
+})
+REACTOR_SCHEMA_WORKFLOW = vol.Schema({
+    cv.slug: REACTOR_DATA_SCHEMA
+})
+
+
+STENCIL_SCHEMA = vol.Schema({
+    cv.slug: vol.Any({
+        vol.Optional(ATTR_ACTOR) : ACTOR_SCHEMA_STENCIL,
+        vol.Optional(ATTR_REACTOR) : REACTOR_SCHEMA_STENCIL,
+        vol.Optional(ATTR_RESET_WORKFLOW) : cv.string,
+    }, None)
+})
+
+
 WORKFLOW_SCHEMA = vol.Schema({
     cv.slug: vol.Any({
-        vol.Optional(ATTR_TEMPLATE) : cv.string,
-        vol.Optional(ATTR_TOKEN) : cv.string,
-        vol.Optional(ATTR_ACTOR): vol.Any(device_ids, None),
-        vol.Optional(ATTR_ACTOR_TYPE): cv.string,
-        vol.Optional(ATTR_ACTOR_ACTION): cv.string,
-        vol.Optional(ATTR_REACTOR): vol.Any(device_ids, None),
-        vol.Optional(ATTR_REACTOR_TYPE): cv.string,
-        vol.Optional(ATTR_REACTOR_ACTION): cv.string,
-        vol.Optional(ATTR_REACTOR_TIMING) : vol.In([REACTOR_TIMING_IMMEDIATE, REACTOR_TIMING_DELAYED, REACTOR_TIMING_SCHEDULED]),
-        vol.Optional(ATTR_REACTOR_DELAY) : vol.Coerce(int),
-        vol.Optional(ATTR_REACTOR_SCHEDULE) : SCHEDULE_SCHEMA,
-        vol.Optional(ATTR_REACTOR_OVERWRITE) : vol.Coerce(bool),
-        vol.Optional(ATTR_RESET_WORKFLOW) : cv.string,
-        vol.Optional(ATTR_ACTION_FORWARD): vol.Coerce(bool),
+        vol.Optional(ATTR_STENCIL) : cv.string,
+        vol.Optional(ATTR_VARIABLES) : dict,
+        vol.Optional(ATTR_ACTOR): ACTOR_SCHEMA_WORKFLOW,
+        vol.Optional(ATTR_REACTOR): REACTOR_SCHEMA_WORKFLOW,
         vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
         vol.Optional(CONF_ICON): cv.icon,
     }, None)
-})
-
-TEMPLATE_SCHEMA = vol.Schema({
-    cv.slug: vol.Any({
-        vol.Optional(ATTR_ACTOR) : vol.Any(device_ids, None),
-        vol.Optional(ATTR_ACTOR_TYPE) : cv.string,
-        vol.Optional(ATTR_ACTOR_ACTION) : cv.string,
-        vol.Optional(ATTR_REACTOR) : vol.Any(device_ids, None),
-        vol.Optional(ATTR_REACTOR_TYPE) : cv.string,
-        vol.Optional(ATTR_REACTOR_ACTION) : cv.string,
-        vol.Optional(ATTR_REACTOR_TIMING) : vol.In([REACTOR_TIMING_IMMEDIATE, REACTOR_TIMING_DELAYED, REACTOR_TIMING_SCHEDULED]),
-        vol.Optional(ATTR_REACTOR_DELAY) : vol.Coerce(int),
-        vol.Optional(ATTR_REACTOR_SCHEDULE) : SCHEDULE_SCHEMA,
-        vol.Optional(ATTR_REACTOR_OVERWRITE) : vol.Coerce(bool),
-        vol.Optional(ATTR_RESET_WORKFLOW) : cv.string,
-        vol.Optional(ATTR_ACTION_FORWARD): vol.Coerce(bool),
-    }, None)
-})
-
-ADD_REACTION_SCHEMA = vol.Schema({
-    vol.Required(ATTR_REACTOR) : cv.string,
-    vol.Required(ATTR_REACTOR_TYPE) : cv.string,
-    vol.Required(ATTR_REACTOR_ACTION) : cv.string,
-    vol.Required(ATTR_REACTION_TIMESTAMP) : cv.string,
-})
-
-REMOVE_REACTION_SCHEMA = vol.Schema({
-    vol.Required(ATTR_REACTION_ID): cv.string
 })

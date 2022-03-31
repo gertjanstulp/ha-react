@@ -26,9 +26,8 @@ async def _async_reproduce_state(
     state: State,
     *,
     context: Context | None = None,
-    reproduce_options: dict[str, Any] | None = None,
-) -> None:
-    """Reproduce a single state."""
+    reproduce_options: dict[str, Any] | None = None) -> None:
+
     if (cur_state := hass.states.get(state.entity_id)) is None:
         _LOGGER.warning("Unable to find entity %s", state.entity_id)
         return
@@ -60,9 +59,7 @@ async def async_reproduce_states(
     states: Iterable[State],
     *,
     context: Context | None = None,
-    reproduce_options: dict[str, Any] | None = None,
-) -> None:
-    """Reproduce workflow states."""
+    reproduce_options: dict[str, Any] | None = None) -> None:
     await asyncio.gather(
         *(
             _async_reproduce_state(

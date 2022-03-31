@@ -1,7 +1,3 @@
-"""Allows the creation of generic react entities."""
-
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.components.sensor import DOMAIN as PLATFORM
@@ -20,28 +16,29 @@ from homeassistant.loader import bind_hass
 from . import const as co
 from .lib import domain_data as dom
 
+
 CONFIG_SCHEMA = vol.Schema({
     vol.Optional(co.DOMAIN, default={}): vol.Schema({
-        vol.Optional(co.CONF_WORKFLOWS): co.WORKFLOW_SCHEMA,
-        vol.Optional(co.CONF_TEMPLATES): co.TEMPLATE_SCHEMA,
+        vol.Optional(co.CONF_WORKFLOW): co.WORKFLOW_SCHEMA,
+        vol.Optional(co.CONF_STENCIL): co.STENCIL_SCHEMA,
     })
 }, extra=vol.ALLOW_EXTRA)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType):
     co.LOGGER.info("Setting up react domain")
 
-    dd = dom.DomainData(hass)
-    hass.data[co.DOMAIN] = dd
+    dd = dom.set_domain_data(hass)
     dd.init_config(config)
     
     return True
 
+
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
-    """Set up react from config."""
     co.LOGGER.info("Setting up react entry")
     
     # Initialize all domain data
-    dd = hass.data[co.DOMAIN]
+    dd = dom.get_domain_data(hass)
     await dd.init_data(config_entry)
     
     # Create device
@@ -60,25 +57,31 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     # Load entities
     await dd.workflow_entity_manager.load()
     
+    # Everything is started (except for the scheduler/transformers), so cleanup abandoned reaction entities which
+    # were left behind in the store
+    await dd.coordinator.async_cleanup_store()
+
     # Setup sensor platform for reactions
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(config_entry, PLATFORM)
     )
     
-    # Start the reactor
-    await dd.reactor.start()
+    # Start the scheduler and transformers
+    await dd.scheduler.start()
+    dd.transformer_manager.start()
 
     return True
 
+
 async def async_unload_entry(hass, entry):
-    """Unload React config entry."""
     co.LOGGER.info("Unloading react")
 
-    dd = hass.data[co.DOMAIN]
+    dd = dom.get_domain_data(hass)
 
-    # Stop the reactor
-    dd.reactor.stop()
-    
+    # Stop the scheduler and transformers
+    dd.transformer_manager.stop()
+    dd.scheduler.stop()
+
     # Unload sensor platform, which will unload ll reaction entities
     unload_ok = all(
         await asyncio.gather(*[hass.config_entries.async_forward_entry_unload(entry, PLATFORM)])
@@ -89,24 +92,25 @@ async def async_unload_entry(hass, entry):
     
     return unload_ok
 
+
 async def async_remove_entry(hass, entry):
-    """Remove React data."""
     co.LOGGER.info("Removing react")
     
-    dd = hass.data[co.DOMAIN]
+    dd = dom.get_domain_data(hass)
     
     # Delete internal store data (react.storage)
     await dd.coordinator.async_delete_config()
 
     # Reset all domain data
     dd.reset()
-    
+
+
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    """Migrate old entry."""
     co.LOGGER.debug("Migrating from version %s", config_entry.version)
     return True
 
+
 @bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
-    """Return if the workflow is on based on the statemachine."""
     return hass.states.is_state(entity_id, STATE_ON)
+
