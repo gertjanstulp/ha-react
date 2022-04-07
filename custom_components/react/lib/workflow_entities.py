@@ -66,10 +66,10 @@ class WorkflowEntity(TemplateEntity, ToggleEntity, RestoreEntity):
 
         if state := await self.async_get_last_state():
             enable_workflow = state.state == STATE_ON
-            co.LOGGER.debug("Loaded workflow '%s' with state '%s' from state, storage last state '%s'", self.entity_id, enable_workflow, state)
+            co.LOGGER.info("Loaded workflow '%s' with state '%s' from state, storage last state '%s'", self.entity_id, enable_workflow, state)
         else:
             enable_workflow = co.DEFAULT_INITIAL_STATE
-            co.LOGGER.debug("Workflow '%s' not in state storage, state '%s' from default is used", self.entity_id, enable_workflow)
+            co.LOGGER.info("Workflow '%s' not in state storage, state '%s' from default is used", self.entity_id, enable_workflow)
 
         if enable_workflow:
             await self.async_enable()

@@ -91,6 +91,9 @@ GROUP = "group"
 GROUP_PREFIX = "{}.".format(GROUP)
 SWITCH = "switch"
 SWITCH_PREFIX = "{}.".format(SWITCH)
+MEDIAPLAYER = "media_player"
+MEDIAPLAYER_PREFIX = "{}.".format(MEDIAPLAYER)
+
 OLD_STATE = "old_state"
 NEW_STATE = "new_state"
 

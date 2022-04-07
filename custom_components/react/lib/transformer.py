@@ -54,6 +54,20 @@ class SensorStateData(StateData):
             self.actions.append(co.ACTION_CHANGE)
         
 
+class MediaPlayerStateData(StateData):
+    def __init__(self, state_event_data: dict[str, Any]):
+        entity = state_event_data.get(ATTR_ENTITY_ID, '').replace(co.MEDIAPLAYER_PREFIX, '')
+        super().__init__(entity)
+
+        old_state = state_event_data.get(co.OLD_STATE, '')
+        new_state = state_event_data.get(co.NEW_STATE, '')
+        old_state_value = old_state.state if old_state else None
+        new_state_value = new_state.state if new_state else None
+
+        if old_state_value != new_state_value:
+            self.actions.append(new_state_value)
+
+
 class BinarySensorStateData(BinaryStateData):
     def __init__(self, state_event_data: dict[str, Any]):
         entity = state_event_data.get(ATTR_ENTITY_ID, '').replace(co.BINARY_SENSOR_PREFIX, '')
@@ -107,8 +121,6 @@ class StateTransformer:
 
     def stop(self):
         self.state = co.STATE_STOPPED
-        # if self.cancel_event_listen:
-        #     self.cancel_event_listen()
 
 
     @callback
@@ -140,6 +152,14 @@ class SensorTransformer(StateTransformer):
     def read_state_data(self, event: Event) -> StateData:
         return SensorStateData(event.data)
 
+
+class MediaplayerTransformer(StateTransformer):
+    def __init__(self, hass: HomeAssistant):
+        super().__init__(hass, co.MEDIAPLAYER_PREFIX, co.MEDIAPLAYER)
+
+
+    def read_state_data(self, event: Event) -> StateData:
+        return MediaPlayerStateData(event.data)
 
 class BinarySensorTransformer(StateTransformer):
     def __init__(self, hass: HomeAssistant):
@@ -176,6 +196,7 @@ class TransformerManager:
             co.GROUP: GroupTransformer(hass),
             co.SWITCH: SwitchTransformer(hass),
             co.SENSOR: SensorTransformer(hass),
+            co.MEDIAPLAYER: MediaplayerTransformer(hass),
         }
 
 
