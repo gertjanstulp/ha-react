@@ -1,13 +1,15 @@
+from webbrowser import get
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityCategory
 from homeassistant.helpers.entity_registry import async_get as get_entity_registry
-
 from homeassistant.components.sensor import DOMAIN as PLATFORM
 
-from . import store as st
 from .. import const as co
-from . import domain_data as dom
+from .config import get as ConfigManager, Reactor
+from .domain_data import get as DomainData
+from .store import ReactionEntry
+from .coordinator import get as Coordinator
+from .dispatcher import get as Dispatcher
 
 
 def reaction_to_entity_id(reactor: str, type: str, action: str, id: str) -> str:
@@ -16,47 +18,16 @@ def reaction_to_entity_id(reactor: str, type: str, action: str, id: str) -> str:
 
 class ReactionEntity(Entity):
 
-    def __init__(self, hass: HomeAssistant, device_id: str, reaction: st.ReactionEntry) -> None:
+    def __init__(self, hass: HomeAssistant, device_id: str, reaction: ReactionEntry, reactor: Reactor) -> None:
         self.device_id = device_id
         self.hass = hass
         self.reaction = reaction
-        self.dd = dom.get_domain_data(hass)
-
-        self.workflow,self.actor,self.reactor = self.dd.get_workflow_metadata(reaction)
-        self._attr_available = self.workflow and self.actor and self.reactor
+        self.reactor = reactor
+        self._attr_available = reactor is not None
 
         if self._attr_available:
             self.entity_id = reaction_to_entity_id(self.reactor.entity, self.reactor.type, self.reaction.action, reaction.id)
             self.entity_state = reaction.datetime
-            self.listeners = [
-                async_dispatcher_connect(self.hass, co.EVENT_ITEM_UPDATED, self.async_item_updated),
-        ]
-
-
-    async def async_added_to_hass(self) -> None:
-        co.LOGGER.info("Workflow '{}' added reaction entity '{}' to hass".format(self.reaction.workflow_id, self.entity_id))
-
-
-    @callback
-    async def async_item_updated(self, reaction_id: str):
-        co.LOGGER.info("Workflow '{}' updated reaction entity '{}'".format(self.reaction.workflow_id, self.entity_id))
-        if reaction_id != self.reaction.id:
-            return
-
-        store = await st.async_get_store(self.hass)
-        self.reaction = store.async_get_reaction_by_id(reaction_id)
-        self.entity_state = self.reaction.datetime
-
-        await self.async_update_ha_state()
-    
-
-    async def async_will_remove_from_hass(self):
-        co.LOGGER.info("Workflow '{}' removing reaction entity '{}' from hass".format(self.reaction.workflow_id, self.entity_id))
-        await super().async_will_remove_from_hass()
-
-        if self.listeners:
-            while len(self.listeners):
-                self.listeners.pop()()
 
 
     @property
@@ -120,26 +91,69 @@ class ReactionEntity(Entity):
 class ReactionEntityManager:
     def __init__(self, hass: HomeAssistant):
         self.hass = hass
-        self.entities = {}
+        self.config_manager = ConfigManager(hass)
+        self.entities: dict[str, ReactionEntity] = {}
+        self.coordinator = Coordinator(hass)
 
 
-    def create_reaction_entity(self, device_id: str, reaction: st.ReactionEntry, async_add_entities):
-        entity = ReactionEntity(self.hass, device_id, reaction)
+    def setup(self, async_add_entities):
+        self.async_add_entities = async_add_entities
+
+
+    def load(self):
+        Dispatcher(self.hass).connect_signal(co.SIGNAL_ITEM_CREATED, self.async_add_entity)
+        Dispatcher(self.hass).connect_signal(co.SIGNAL_ITEM_REMOVED, self.async_delete_entity)
+        Dispatcher(self.hass).connect_signal(co.SIGNAL_ITEM_UPDATED, self.async_update_entity)
+        
+        for entry in self.coordinator.get_reactions().values():
+            self.async_add_entity(entry)
+
+
+    def unload(self):
+        for reaction_id in list(self.entities):
+            self.async_delete_entity(reaction_id)
+
+
+    @callback
+    def async_add_entity(self, reaction: ReactionEntry):
+        _,_,reactor = self.config_manager.get_workflow_metadata(reaction)
+        entity = ReactionEntity(self.hass, DomainData(self.hass).device_id, reaction, reactor)
         if reaction.id in self.entities:
             co.LOGGER.warn("Entity '{}' already found in entity registry while adding, will overwrite".format(entity.entity_id))
             self.entities.pop(reaction.id)
         self.entities[reaction.id] = entity
-        async_add_entities([entity])
+        self.async_add_entities([entity])
+        co.LOGGER.info("Workflow '{}' added reaction entity '{}' to hass".format(reaction.workflow_id, entity.entity_id))
 
 
-    def delete_reaction_entity(self, reaction_id):
+    @callback
+    def async_delete_entity(self, reaction_id):
         if not reaction_id in self.entities:
             co.LOGGER.warn("Entity for reaction '{}' not found".format(reaction_id))
             return
         
-        entity = self.entities[reaction_id]
+        entity = self.entities.pop(reaction_id)
         entity_registry = get_entity_registry(self.hass)
         if entity_registry.async_is_registered(entity.entity_id):
             entity_registry.async_remove(entity.entity_id)
+            co.LOGGER.info("Workflow '{}' removed reaction entity '{}' from hass".format(entity.reaction.workflow_id, entity.entity_id))
         else:
             co.LOGGER.warn("Entity '{}' not found in entity registry while deleting".format(entity.entity_id))
+
+
+    @callback
+    def async_update_entity(self, reaction_id):
+        if not reaction_id in self.entities:
+            co.LOGGER.warn("Received update on non-existing reaction entity '{}', ingoring update".format(reaction_id))
+            return
+
+        entity = self.entities.get(reaction_id)
+        entity.entity_state = entity.reaction.datetime
+        self.hass.loop.create_task(entity.async_update_ha_state())
+        co.LOGGER.info("Workflow '{}' updated reaction entity '{}'".format(entity.reaction.workflow_id, entity.entity_id))
+
+
+def get(hass: HomeAssistant) -> ReactionEntityManager:
+    if co.DOMAIN_BOOTSTRAPPER in hass.data:
+        return hass.data[co.DOMAIN_BOOTSTRAPPER].reaction_entity_manager
+    return None

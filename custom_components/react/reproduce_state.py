@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable
 import logging
-from typing import Any
+from typing import Any, Union
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -25,8 +25,8 @@ async def _async_reproduce_state(
     hass: HomeAssistant,
     state: State,
     *,
-    context: Context | None = None,
-    reproduce_options: dict[str, Any] | None = None) -> None:
+    context: Union[Context, None] = None,
+    reproduce_options: Union[dict[str, Any], None] = None) -> None:
 
     if (cur_state := hass.states.get(state.entity_id)) is None:
         _LOGGER.warning("Unable to find entity %s", state.entity_id)
@@ -58,8 +58,8 @@ async def async_reproduce_states(
     hass: HomeAssistant,
     states: Iterable[State],
     *,
-    context: Context | None = None,
-    reproduce_options: dict[str, Any] | None = None) -> None:
+    context: Union[Context, None] = None,
+    reproduce_options: Union[dict[str, Any], None] = None) -> None:
     await asyncio.gather(
         *(
             _async_reproduce_state(

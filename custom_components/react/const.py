@@ -6,15 +6,15 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_ICON, ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.helpers.template import result_as_boolean
 
-VERSION = "0.0.1"
+VERSION = "0.5.0"
 
 DOMAIN = 'react'
+DOMAIN_DATA = "{}_data".format(DOMAIN)
+DOMAIN_BOOTSTRAPPER = "{}_bootstrapper".format(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 CONF_WORKFLOW = "workflow"
 CONF_STENCIL = "stencil"
-
-
 
 ATTR_ACTOR = "actor"
 ATTR_ACTORS = "actors"
@@ -34,6 +34,7 @@ ATTR_STENCIL = "stencil"
 ATTR_FORWARD_ACTION = "forward_action"
 ATTR_RESET_WORKFLOW = "reset_workflow"
 ATTR_OVERWRITE = "overwrite"
+ATTR_CONDITION = "condition"
 
 ATTR_REACTIONS = "reactions"
 ATTR_REACTION_ID = "id"
@@ -50,12 +51,14 @@ DEVICE_REACT_NAME = "React"
 DEVICE_REACT_MODEL = "React"
 DEVICE_REACT_MANUFACTURER = "@gertjanstulp"
 
-EVENT_STARTED = "react_started"
 EVENT_REACT_ACTION = "ev_react_action"
 EVENT_REACT_REACTION = "ev_react_reaction"
-EVENT_ITEM_CREATED = "react_item_created"
-EVENT_ITEM_UPDATED = "react_item_updated"
-EVENT_ITEM_REMOVED = "react_item_removed"
+
+SIGNAL_ITEM_CREATED = "react_item_created"
+SIGNAL_ITEM_UPDATED = "react_item_updated"
+SIGNAL_ITEM_REMOVED = "react_item_removed"
+SIGNAL_PROPERTY_COMPLETE = "signal_property_complete"
+SIGNAL_REACTION_READY = "signal_reaction_ready"
 
 REACTOR_SCAN_INTERVAL = 5
 
@@ -82,6 +85,8 @@ STATE_STOPPED = "stopped"
 
 BINARY_SENSOR = "binary_sensor"
 BINARY_SENSOR_PREFIX = "{}.".format(BINARY_SENSOR)
+SENSOR = "sensor"
+SENSOR_PREFIX = "{}.".format(SENSOR)
 GROUP = "group"
 GROUP_PREFIX = "{}.".format(GROUP)
 SWITCH = "switch"
@@ -90,6 +95,11 @@ OLD_STATE = "old_state"
 NEW_STATE = "new_state"
 
 ACTION_TOGGLE = "toggle"
+ACTION_CHANGE = "change"
+
+HA_STARTUP_DELAY = 5
+
+DISCONNECT_EVENT_TAG_CONFIG = "config"
 
 DEFAULT_INITIAL_STATE = True
 
@@ -133,9 +143,14 @@ def result_as_int(value):
     return result
 
 
+def result_as_source(value):
+    return value
+
+
 PROP_TYPE_STR = result_as_string
 PROP_TYPE_INT = result_as_int
 PROP_TYPE_BOOL = result_as_boolean
+PROP_TYPE_SOURCE = result_as_source
 
 SCHEDULE_SCHEMA = vol.Schema({
     vol.Required(ATTR_SCHEDULE_AT) : cv.time,
@@ -147,6 +162,7 @@ ENTITY_DATA_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY) : vol.Any(entities, cv.template),
     vol.Optional(ATTR_TYPE) : cv.template,
     vol.Optional(ATTR_ACTION) : cv.template,
+    vol.Optional(ATTR_CONDITION) : cv.template,
 })
 
 
@@ -190,7 +206,7 @@ STENCIL_SCHEMA = vol.Schema({
 WORKFLOW_SCHEMA = vol.Schema({
     cv.slug: vol.Any({
         vol.Optional(ATTR_STENCIL) : cv.string,
-        vol.Optional(ATTR_VARIABLES) : dict,
+        vol.Optional(ATTR_VARIABLES) : vol.All(dict, cv.template_complex),
         vol.Optional(ATTR_ACTOR): ACTOR_SCHEMA_WORKFLOW,
         vol.Optional(ATTR_REACTOR): REACTOR_SCHEMA_WORKFLOW,
         vol.Optional(ATTR_FRIENDLY_NAME): cv.string,

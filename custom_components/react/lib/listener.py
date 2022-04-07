@@ -1,78 +1,113 @@
-from typing import Any
+from typing import Any, Tuple
 
-from anyio import create_event
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_STATE_CHANGED
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 
 from .. import const as co
-from . import config as cf
-from . import store as st
-from . import domain_data as dom
+from .store import ReactionEntry
+from .config import Actor, Reactor, Workflow
+from .dispatcher import get as Dispatcher
 
  
-class ActionEventData:
-    def __init__(self, event_data: dict[str, Any] ):
-        self.entity = event_data.get(co.ATTR_ENTITY, None)
-        self.type = event_data.get(co.ATTR_TYPE, None)
-        self.action = event_data.get(co.ATTR_ACTION, None)
+def extract_action_event_data(event: Event) -> Tuple[str, str, str]:
+    entity = event.data.get(co.ATTR_ENTITY, None)
+    type = event.data.get(co.ATTR_TYPE, None)
+    action = event.data.get(co.ATTR_ACTION, None)
+    return entity, type, action
 
 
-    def is_match(self, actor: cf.Actor):
-        if (self.entity == actor.entity and self.type == actor.type):
-            if actor.action is None:
-                return True   
+class ActionEventFilter:
+    def __init__(self, hass: HomeAssistant, workflow_id: str, actor: Actor):
+        self.hass = hass
+        self.workflow_id = workflow_id
+        self.actor = actor
+        self.enabled = False
+
+
+    @callback
+    def async_is_match(self, event: Event) -> bool:
+        entity, type, action = extract_action_event_data(event)
+
+        if not self.enabled:
+            co.LOGGER.info("Workflow '{}' skipping actor '{}' because the workflow is disabled".format(self.workflow_id, self.actor.id))
+            return False
+
+        result = False
+        if (entity == self.actor.entity and type == self.actor.type):
+            if self.actor.action is None:
+                result = True   
             else:
-                return self.action == actor.action
+                result = action == self.actor.action
+        
+        if result:
+            pass_condition = self.actor.condition if hasattr(self.actor, co.ATTR_CONDITION) else True
+            if not pass_condition:
+                result = False
+                co.LOGGER.info("Workflow '{}' skipping actor '{}' because its' condition evaluates to False".format(self.workflow_id, self.actor.id))
+
+        return result
+
+
+    def enable(self) -> None:
+        self.enabled = True
+
+
+    def disable(self) -> None:
+        self.enabled = False
 
 
 class Listener:
-    def __init__(self, hass: HomeAssistant, workflow: cf.Workflow, actor: cf.Actor):
+    def __init__(self, hass: HomeAssistant, workflow: Workflow, actor: Actor):
         self.hass = hass
-        self.dd = dom.get_domain_data(hass)
         self.state = co.STATE_INIT
         self.workflow = workflow
         self.actor = actor
+        self.filter = ActionEventFilter(hass, workflow.id, actor)
 
         @callback
         def handle_startup(_event):
             @callback
             def async_timer_finished(_now):
                 self.state = co.STATE_READY
-                async_dispatcher_send(hass, co.EVENT_STARTED)
 
-            async_call_later(hass, 5, async_timer_finished)
+            async_call_later(hass, co.HA_STARTUP_DELAY, async_timer_finished)
 
         if hass.state == CoreState.running:
             handle_startup(None)
         else:
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, handle_startup)
 
-
-    def start(self):
-        self.cancel_event_listen = self.hass.bus.async_listen(co.EVENT_REACT_ACTION, self.handle_react_action)
+        Dispatcher(self.hass).connect_event(co.EVENT_REACT_ACTION, self.async_handle_react_action, self.filter.async_is_match, co.DISCONNECT_EVENT_TAG_CONFIG)
 
 
-    def stop(self):
-        if self.cancel_event_listen:
-            self.cancel_event_listen()
+    def enable(self):
+        self.filter.enable()
+
+    
+    def disable(self):
+        self.filter.disable()
 
 
-    async def handle_react_action(self, event: Event):
+    @callback
+    def async_handle_react_action(self, event: Event):
         if not self.state == co.STATE_READY: return
-        event_data = ActionEventData(event.data)
-        if not event_data.is_match(self.actor): return
+        entity, type, action = extract_action_event_data(event)
         
-        co.LOGGER.info("Workflow '{}' reacting to action event with entity = '{}', type = '{}', action = '{}'".format(self.workflow.id, event_data.entity, event_data.type, event_data.action))
+        co.LOGGER.info("Workflow '{}' reacting to action event with entity = '{}', type = '{}', action = '{}'".format(self.workflow.id, entity, type, action))
 
         for reactor in self.workflow.reactors.values():
-            reaction = self.create_reaction(self.actor.id, event_data.action, reactor)
-            await self.dd.scheduler.async_react(reaction)
+            # Toggle action should not be forwarded, otherwise double-triggering
+            # could occur (toggle and on/off actions are generated simultaneously)
+            if action == co.ACTION_TOGGLE and reactor.forward_action:
+                co.LOGGER.info("Workflow '{}' skipping reactor '{}' because action is 'toggle' and 'forward_action' is True".format(self.workflow.id, reactor.id))
+                continue
+            reaction = self.create_reaction(self.actor.id, action, reactor)
+            Dispatcher(self.hass).send_signal(co.SIGNAL_REACTION_READY, reaction)
 
 
-    def create_reaction(self, actor_id: str, action: str, reactor: cf.Reactor):
-        reaction = st.ReactionEntry(
+    def create_reaction(self, actor_id: str, action: str, reactor: Reactor):
+        reaction = ReactionEntry(
             workflow_id = self.workflow.id,
             actor_id = actor_id,
             reactor_id = reactor.id,

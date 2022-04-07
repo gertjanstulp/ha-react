@@ -5,18 +5,21 @@ from homeassistant.core import (
     HomeAssistant, 
     callback
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 
 from .. import const as co
-from . import store as st
-from . import config as cf
-from . import domain_data as dom
+from .config import get as ConfigManager, Reactor
+from .coordinator import get as Coordinator
+from .store import ReactionEntry
+from .dispatcher import get as Dispatcher
+
 
 class Scheduler():
     def __init__(self, hass: HomeAssistant):
-        self._hass = hass
-        self.dd = dom.get_domain_data(hass)
+        self.hass = hass
+        self.dispatcher = Dispatcher(hass)
+        self.config_manager = ConfigManager(hass)
+        self.coordinator = Coordinator(hass)
         self.state = co.STATE_INIT
 
         @callback
@@ -24,9 +27,8 @@ class Scheduler():
             @callback
             def async_timer_finished(_now):
                 self.state = co.STATE_READY
-                async_dispatcher_send(self._hass, co.EVENT_STARTED)
 
-            async_call_later(hass, 5, async_timer_finished)
+            async_call_later(hass, co.HA_STARTUP_DELAY, async_timer_finished)
 
         if hass.state == CoreState.running:
             handle_startup(None)
@@ -34,16 +36,21 @@ class Scheduler():
             hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, handle_startup)
 
 
-    async def start(self):
-        async def async_delay_loop(_now):
-            await self.delay_run()
+    def start(self):
+        if self.state != co.STATE_INIT:
+            self.state = co.STATE_READY
+            
+        @callback
+        def async_schedule_loop(_now):
+            self.run()
             self._cancel_delay_loop = async_call_later(
-                self._hass,
+                self.hass,
                 co.REACTOR_SCAN_INTERVAL,
-                async_delay_loop,
+                async_schedule_loop,
             )
 
-        await async_delay_loop(None)
+        self.dispatcher.connect_signal(co.SIGNAL_REACTION_READY, self.async_react)
+        async_schedule_loop(None)
 
 
     def stop(self):
@@ -52,53 +59,77 @@ class Scheduler():
             self._cancel_delay_loop()
 
 
-    async def async_react(self, reaction: st.ReactionEntry):
-        workflow, actor, reactor = self.dd.get_workflow_metadata(reaction)
-        if not(workflow and actor and reactor): 
+    @callback
+    def async_react(self, reaction: ReactionEntry):
+        _,_,reactor = self.config_manager.get_workflow_metadata(reaction)
+        if not reactor: 
             co.LOGGER.warn("Reaction has invalid metadata and will be removed")
-            self.dd.coordinator.async_delete_reaction(reaction)
+            self.coordinator.delete_reaction(reaction)
+            return
+        
+        pass_condition = reactor.condition if hasattr(reactor, co.ATTR_CONDITION) else True
+        if not pass_condition:
+            co.LOGGER.info("Workflow '{}' skipping reactor '{}' because its' condition evaluates to False".format(reaction.workflow_id, reactor.id))
             return
 
         if (reactor.reset_workflow):
-            await self.async_unreact(reactor, reaction)
+            self.unreact(reactor, reaction)
         elif reaction.datetime:
-            await self.react_later(reactor, reaction)
+            self.react_later(reactor, reaction)
         else:
             self.react_now(reactor, reaction)
 
 
-    async def async_unreact(self, reactor: cf.Reactor, reaction: st.ReactionEntry):
+    def unreact(self, reactor: Reactor, reaction: ReactionEntry):
         co.LOGGER.info("Workflow '{}' resetting delayed reactions for workflow '{}'".format(reaction.workflow_id, reactor.reset_workflow))
-        await self.dd.coordinator.async_reset_workflow_reaction(reactor)
+        self.coordinator.reset_workflow_reaction(reactor)
 
 
-    def react_now(self, reactor: cf.Reactor, reaction: st.ReactionEntry):
+    def react_now(self, reactor: Reactor, reaction: ReactionEntry):
         co.LOGGER.info("Workflow '{}' firing immediate reaction with entity = '{}', type = '{}', action = '{}', reactor = '{}'".format(reaction.workflow_id, reactor.entity, reactor.type, reactor.action if reactor.action else reaction.action, reactor.id))
         self.send_event(reactor, reaction)
 
 
-    async def react_later(self, reactor: cf.Reactor, reaction: st.ReactionEntry):
+    def react_later(self, reactor: Reactor, reaction: ReactionEntry):
         co.LOGGER.info("Workflow '{}' scheduling delayed reaction with entity = '{}', type = '{}', action = '{}', overwrite = '{}', reactor = '{}'".format(reaction.workflow_id, reactor.entity, reactor.type, reactor.action, reactor.overwrite, reactor.id))
-        await self.dd.coordinator.async_add_reaction(reactor, reaction)
+        self.coordinator.add_reaction(reactor, reaction)
         
 
-    async def delay_run(self):
+    def run(self):
         if not self.state == co.STATE_READY: return
 
-        delayed_reactions = self.dd.coordinator.get_reactions(datetime.now())
+        delayed_reactions = self.coordinator.get_reactions(datetime.now())
         if not delayed_reactions: return
         
         for id,reaction in delayed_reactions.items():
-            workflow, actor, reactor = self.dd.get_workflow_metadata(reaction)
-            if not(workflow and actor and reactor): 
+            _,_,reactor = self.config_manager.get_workflow_metadata(reaction)
+            if not reactor: 
                 co.LOGGER.warn("Reaction has invalid metadata and will be removed")
-                await self.dd.coordinator.async_delete_reaction(reaction)
+                self.coordinator.delete_reaction(reaction)
                 continue
 
-            co.LOGGER.info("Workflow '{}' firing delayed reaction with reaction_id = '{}', entity = '{}', type = '{}', action = '{}'".format(reaction.workflow_id, id, reactor.entity, reactor.type, reactor.action if reactor.action else reaction.action ))
-            await self.dd.coordinator.async_delete_reaction(reaction)
+            co.LOGGER.info("Workflow '{}' firing and removing delayed reaction with reaction_id = '{}', entity = '{}', type = '{}', action = '{}'".format(reaction.workflow_id, id, reactor.entity, reactor.type, reactor.action if reactor.action else reaction.action ))
+            self.coordinator.delete_reaction(reaction)
             self.send_event(reactor, reaction)
 
 
-    def send_event(self, reactor: cf.Reactor, reaction: st.ReactionEntry):
-        self._hass.bus.async_fire(co.EVENT_REACT_REACTION, reaction.to_event_data(reactor))
+    def send_event(self, reactor: Reactor, reaction: ReactionEntry):
+        Dispatcher(self.hass).send_event(co.EVENT_REACT_REACTION, self.to_event_data(reactor, reaction))
+
+
+    def to_event_data(self, reactor: Reactor, reaction: ReactionEntry) -> dict:
+        result = {
+            co.ATTR_ENTITY: reactor.entity,
+            co.ATTR_TYPE: reactor.type,
+        }
+        if reactor.forward_action:
+            result[co.ATTR_ACTION] = reaction.action
+        else:
+            result[co.ATTR_ACTION] = reactor.action
+        return result
+
+
+def get(hass: HomeAssistant) -> Scheduler:
+    if co.DOMAIN_BOOTSTRAPPER in hass.data:
+        return hass.data[co.DOMAIN_BOOTSTRAPPER].scheduler
+    return None
