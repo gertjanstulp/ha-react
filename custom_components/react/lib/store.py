@@ -1,24 +1,23 @@
-from datetime import datetime
-import logging
 import secrets
+import attr
+
+from datetime import datetime
 from collections import OrderedDict
 from typing import Dict, MutableMapping, cast
 
-import attr
 from homeassistant.core import callback, HomeAssistant
 from homeassistant.helpers.storage import Store
-from homeassistant.loader import bind_hass
 from homeassistant.util.dt import as_timestamp
 
 from .. import const as co
 
+
 DATA_REGISTRY = f"{co.DOMAIN}_storage"
 STORAGE_KEY = f"{co.DOMAIN}.storage"
 
-_LOGGER = logging.getLogger(__name__)
-
 STORAGE_VERSION = 3
 SAVE_DELAY = 1
+
 
 @attr.s(slots=True, frozen=False)
 class ReactionEntry:
@@ -80,7 +79,7 @@ class ReactionStorage:
 
 
     async def async_delete(self):
-        _LOGGER.warning("Removing react configuration data!")
+        co.LOGGER.warn("Store", "Removing react configuration data!")
         self.reactions = {}
         await self.store.async_remove()
 
@@ -103,7 +102,6 @@ class ReactionStorage:
 
 
     def get_reactions(self, before_datetime: datetime = None) -> Dict[str, ReactionEntry]:
-        """Get existing reactions."""
         res = {}
         for (id, reaction) in self.reactions.items():
             if (not before_datetime or reaction.datetime < before_datetime):
@@ -112,8 +110,6 @@ class ReactionStorage:
 
 
     def add_reaction(self, reaction: ReactionEntry):
-        """Create a new ReactionEntry."""
-        co.LOGGER.info("Workflow '{}' adding new reaction to store".format(reaction.workflow_id))
 
         if reaction.id:
             id = reaction.id
@@ -124,6 +120,8 @@ class ReactionStorage:
             id = secrets.token_hex(3)
             while id in self.reactions:
                 id = secrets.token_hex(3)
+
+        co.LOGGER.info("Store", "'{}' adding reaction to store: '{}'", reaction.workflow_id, id)
         
         reaction.id = id
         self.reactions[id] = reaction
@@ -132,17 +130,17 @@ class ReactionStorage:
     
 
     def update_reaction(self, reaction: ReactionEntry):
-        co.LOGGER.info("Workflow '{}' found existing reaction '{}' in store, updating with new timestamp".format(reaction.workflow_id, reaction.id))
+        co.LOGGER.info("Store", "'{}' found existing reaction in store, updating with new timestamp: '{}'", reaction.workflow_id, reaction.id)
         self.schedule_save()
 
 
     def delete_reaction(self, id: str) -> None:
-        """Delete ReactionEntry."""
         if id in self.reactions:
-            del self.reactions[id]
+            reaction = self.reactions.pop(id)
+            co.LOGGER.info("Store", "'{}' deleting reaction from store: '{}'", reaction.workflow_id, id)
             self.schedule_save()
         else:
-            co.LOGGER.warn("Reaction '{}' not found in store while deleting".format(id))
+            co.LOGGER.warn("Store", "Reaction not found in store while deleting: '{}'".format(id))
 
 
 async def async_get_store(hass: HomeAssistant) -> ReactionStorage:
@@ -150,9 +148,9 @@ async def async_get_store(hass: HomeAssistant) -> ReactionStorage:
 
     if task is None:
         async def _load_reg() -> ReactionStorage:
-            registry = ReactionStorage(hass)
-            await registry.async_load()
-            return registry
+            store = ReactionStorage(hass)
+            await store.async_load()
+            return store
 
         task = hass.data[DATA_REGISTRY] = hass.async_create_task(_load_reg())
 

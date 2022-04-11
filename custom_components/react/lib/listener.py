@@ -1,6 +1,6 @@
-from typing import Any, Tuple
+from typing import Tuple
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_STATE_CHANGED
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
 
@@ -30,7 +30,7 @@ class ActionEventFilter:
         entity, type, action = extract_action_event_data(event)
 
         if not self.enabled:
-            co.LOGGER.info("Workflow '{}' skipping actor '{}' because the workflow is disabled".format(self.workflow_id, self.actor.id))
+            co.LOGGER.info("Listener", "'{}'.'{}' skipping (workflow is disabled)", self.workflow_id, self.actor.id)
             return False
 
         result = False
@@ -44,7 +44,7 @@ class ActionEventFilter:
             pass_condition = self.actor.condition if hasattr(self.actor, co.ATTR_CONDITION) else True
             if not pass_condition:
                 result = False
-                co.LOGGER.info("Workflow '{}' skipping actor '{}' because its' condition evaluates to False".format(self.workflow_id, self.actor.id))
+                co.LOGGER.info("Listener", "'{}'.'{}' skipping (condition false)", self.workflow_id, self.actor.id)
 
         return result
 
@@ -94,13 +94,14 @@ class Listener:
         if not self.state == co.STATE_READY: return
         entity, type, action = extract_action_event_data(event)
         
-        co.LOGGER.info("Workflow '{}' reacting to action event with entity = '{}', type = '{}', action = '{}'".format(self.workflow.id, entity, type, action))
+        # co.LOGGER.info("Listener", "'{}'.'{}' receiving action: | entity = '{}' | type = '{}' | action = '{}' |", self.workflow.id, self.actor.id, entity, type, action)
+        co.LOGGER.info("Listener", "'{}'.'{}' receiving action: {}", self.workflow.id, self.actor.id, co.LOGGER.format_data(entity=entity, type=type, action=action))
 
         for reactor in self.workflow.reactors.values():
             # Toggle action should not be forwarded, otherwise double-triggering
             # could occur (toggle and on/off actions are generated simultaneously)
             if action == co.ACTION_TOGGLE and reactor.forward_action:
-                co.LOGGER.info("Workflow '{}' skipping reactor '{}' because action is 'toggle' and 'forward_action' is True".format(self.workflow.id, reactor.id))
+                co.LOGGER.info("Listener", "'{}'.'{}' skipping reactor (action 'toggle' with forward_action): '{}' ", self.workflow.id, self.actor.id, reactor.id)
                 continue
             reaction = self.create_reaction(self.actor.id, action, reactor)
             Dispatcher(self.hass).send_signal(co.SIGNAL_REACTION_READY, reaction)

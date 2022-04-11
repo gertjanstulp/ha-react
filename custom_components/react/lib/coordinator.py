@@ -1,16 +1,12 @@
 from datetime import datetime
 from typing import Dict
-from homeassistant.core import (
-    EVENT_HOMEASSISTANT_STARTED,
-    HomeAssistant, 
-    CoreState,
-    callback,
-)
+
+from homeassistant.core import EVENT_HOMEASSISTANT_STARTED, HomeAssistant, CoreState, callback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .. import const as co
-from .config import get as ConfigManager, Reactor
+from .config import RuntimeReactor, get as ConfigManager
 from .dispatcher import get as Dispatcher
 from .store import ReactionEntry, async_get_store
 
@@ -24,12 +20,13 @@ class Coordinator(DataUpdateCoordinator):
 
         super().__init__(hass, co.LOGGER, name=co.DOMAIN)
 
-        # wait for 10 seconds after HA startup to allow entities to be initialized
+        # wait for 5 seconds after HA startup to allow entities to be initialized
         @callback
         def handle_startup(_event):
             @callback
             def async_timer_finished(_now):
                 self.state = co.STATE_READY
+                co.LOGGER.info("Runtime", "{} ready", self.__class__.__name__)
 
             async_call_later(hass, co.HA_STARTUP_DELAY, async_timer_finished)
 
@@ -45,7 +42,7 @@ class Coordinator(DataUpdateCoordinator):
         self.store = await async_get_store(self.hass)
 
 
-    def add_reaction(self, reactor: Reactor, reaction: ReactionEntry):
+    def add_reaction(self, reactor: RuntimeReactor, reaction: ReactionEntry):
         add = True
         if reactor.overwrite:
             existing_reactions = self.store.get_reactions_by_workflow_id(reaction.workflow_id)
@@ -65,7 +62,7 @@ class Coordinator(DataUpdateCoordinator):
             Dispatcher(self.hass).send_signal(co.SIGNAL_ITEM_CREATED, reaction)
 
 
-    def reset_workflow_reaction(self, reactor: Reactor):
+    def reset_workflow_reaction(self, reactor: RuntimeReactor):
         existing_reactions = self.store.get_reactions_by_workflow_id(reactor.reset_workflow)
         if existing_reactions:
             for existing_reaction in existing_reactions:

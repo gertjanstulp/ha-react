@@ -60,16 +60,16 @@ class WorkflowEntity(TemplateEntity, ToggleEntity, RestoreEntity):
 
     async def async_added_to_hass(self) -> None:
         """Startup with initial state or previous state."""
-        co.LOGGER.info("Workflow entity '{}' added to hass".format(self.entity_id))
+        co.LOGGER.info("Registry", "'{}' added to registry", self.entity_id)
 
         await super().async_added_to_hass()
 
         if state := await self.async_get_last_state():
             enable_workflow = state.state == STATE_ON
-            co.LOGGER.info("Loaded workflow '%s' with state '%s' from state, storage last state '%s'", self.entity_id, enable_workflow, state)
+            co.LOGGER.info("Registry", "'{}' setting state: |last state='{}'|enabled='{}'|", self.entity_id, enable_workflow, state.state)
         else:
             enable_workflow = co.DEFAULT_INITIAL_STATE
-            co.LOGGER.info("Workflow '%s' not in state storage, state '%s' from default is used", self.entity_id, enable_workflow)
+            co.LOGGER.info("Registry", "'{}' setting state (no last state found): |enabled='{}'|", self.entity_id, enable_workflow)
 
         if enable_workflow:
             await self.async_enable()
@@ -84,7 +84,7 @@ class WorkflowEntity(TemplateEntity, ToggleEntity, RestoreEntity):
 
 
     async def async_will_remove_from_hass(self):
-        co.LOGGER.info("Workflow entity '{}' being removed from hass".format(self.entity_id))
+        co.LOGGER.info("Registry", "'{}' removing from registry", self.entity_id)
         await self.async_disable()
 
 
@@ -147,6 +147,7 @@ class WorkflowEntity(TemplateEntity, ToggleEntity, RestoreEntity):
         if self.is_enabled:
             return
 
+        co.LOGGER.info("Registry", "'{}' enabled", self.entity_id)
         self.is_enabled = True
         for listener in self.listeners:
             listener.enable()
@@ -158,6 +159,7 @@ class WorkflowEntity(TemplateEntity, ToggleEntity, RestoreEntity):
         if not self.is_enabled:
             return
 
+        co.LOGGER.info("Registry", "'{}' disabled", self.entity_id)
         self.is_enabled = False
         for listener in self.listeners:
             listener.disable()

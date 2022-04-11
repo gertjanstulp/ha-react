@@ -1,19 +1,39 @@
 from datetime import datetime, timedelta
-from typing import Any, Callable, Coroutine, Dict, Tuple, Union
+from jinja2 import Template as JinjaTemplate
+from typing import Any, Callable, Dict, Tuple, Union
 
-from attr import asdict
-
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import TrackTemplate, TrackTemplateResult, async_track_template_result
-from homeassistant.helpers.template import Template
+from homeassistant.helpers.template import LoggingUndefined, Template, TemplateEnvironment
 from homeassistant.helpers.typing import ConfigType
 
 from .. import const as co
 from .store import ReactionEntry
 from .dispatcher import get as Dispatcher
 from .common import Updatable, Unloadable, callable_type
+
+
+RUNTIME_VALUES = ["actor"]
+
+
+class RuntimeValueUsedError(Exception):
+    def __init__(self, *args: object) -> None:
+        super().__init__(*args)
+
+
+class NonLoggingUndefined(LoggingUndefined):
+    def _fail_with_undefined_error(self, *args, **kwargs):
+        if self._undefined_name in RUNTIME_VALUES:
+            raise RuntimeValueUsedError()
+        else:
+            raise Exception()
+    
+
+class ValidateEnv(TemplateEnvironment):
+    def __init__(self, hass, limited=False, strict=False):
+        super().__init__(hass, limited, strict)
+        self.undefined = NonLoggingUndefined
 
 
 class TemplateWatcher(Updatable):
@@ -23,10 +43,33 @@ class TemplateWatcher(Updatable):
         self.property = property
         self.type_converter = type_converter
         self.template = template
+        self.static_variables = variables
+
+        template.hass = hass
 
         setattr(owner, property, None)
 
-        self.result_info = async_track_template_result(hass, [TrackTemplate(template, variables)], self.async_update_template)
+        self.needs_runtime_values = False
+            
+        def template_needs_runtime_values(template: Template, kwargs: dict):
+            result = False
+            if not(template.is_static):
+                try:
+                    validate_env = ValidateEnv(hass, False, False)
+                    validate_template = validate_env.compile(template.template)
+                    jinja_template = JinjaTemplate.from_code(validate_env, validate_template, validate_env.globals, None)
+                    jinja_template.render(**kwargs)
+                except RuntimeValueUsedError:
+                    result = True
+                except Exception:
+                    result = False
+
+            return result
+
+        self.needs_runtime_values = template_needs_runtime_values(template, self.static_variables)
+        self.runtime_variables = self.static_variables | (co.RUNTIME_VARIABLES if self.needs_runtime_values else {})
+
+        self.result_info = async_track_template_result(hass, [TrackTemplate(template, self.runtime_variables)], self.async_update_template)
         self.async_remove = self.result_info.async_remove
         self.async_refresh = self.result_info.async_refresh
 
@@ -38,7 +81,7 @@ class TemplateWatcher(Updatable):
         if updates and len(updates) > 0:
             result = updates.pop().result
             if isinstance(result, TemplateError):
-                co.LOGGER.error("Error rendering %s %s: %s", self.property, self.template, result)
+                co.LOGGER.error("Config", "Error rendering {}: {}", self.property, result)
                 return
 
             if hasattr(self.owner, "set_property"):
@@ -47,6 +90,16 @@ class TemplateWatcher(Updatable):
                 self.owner.__setattr__(self.property, self.type_converter(result))
 
             self.async_update()
+
+
+    def runtime_value(self, additional_variables: dict):
+        runtime_variables = self.static_variables | additional_variables
+        result = None
+        try:
+            result = self.template.async_render(runtime_variables)
+        except TemplateError:
+            co.LOGGER("Could not evaluate runtime value for '{}'".format(self.property))
+        return result
 
 
 class WorkflowContext(Updatable, Unloadable):
@@ -95,6 +148,7 @@ class WorkflowContext(Updatable, Unloadable):
 class PropertyContainer:
     def __init__(self, context: WorkflowContext):
         self.context = context
+        self.watchers_with_need_for_runtime_values: dict[str, TemplateWatcher] = {}
 
 
     def init_property(self, name: str, type_converter: Any, config: dict, stencil: dict, default: Any = None):
@@ -104,7 +158,9 @@ class PropertyContainer:
 
     def init_property_value(self, name: str, type_converter: Any, value: Any):
         if isinstance(value, Template):
-            self.context.create_template_watcher(self, name, type_converter, value)
+            watcher = self.context.create_template_watcher(self, name, type_converter, value)
+            if watcher.needs_runtime_values:
+                self.watchers_with_need_for_runtime_values[name] = watcher
         else:
             self.set_property(name, type_converter(value))
 
@@ -171,6 +227,15 @@ class Ctor(PropertyContainer):
         self.init_property(co.ATTR_CONDITION, co.PROP_TYPE_BOOL, config, stencil, True)
 
 
+    def runtime_value(self, name: str, backup: Any = None) -> Any:
+        result = None
+        if hasattr(self, name):
+            result = getattr(self, name)
+        if not result and backup and hasattr(backup, name):
+            result = getattr(backup, name)
+        return result
+
+
     def as_dict(self) -> dict:
         return {
             a: getattr(self, a)
@@ -179,9 +244,42 @@ class Ctor(PropertyContainer):
         }
         
 
+class RuntimeActor:
+    id: str
+    entity: str
+    type: str
+    action: str
+    condition: bool
+
+
 class Actor(Ctor):
     def __init__(self, context: WorkflowContext, id: str, entity: Union[str, Template]):
         super().__init__(context, id, entity)
+
+
+    def load(self, config: Any, stencil: dict):
+        co.LOGGER.info("Config", "'{}' loading actor: '{}'", self.context.workflow_id, self.id)
+        return super().load(config, stencil)
+
+    def to_runtime(self, reaction: ReactionEntry) -> RuntimeActor:
+        result = RuntimeActor()
+        for attr in [co.ATTR_ID, co.ATTR_CONDITION, co.ATTR_ENTITY, co.ATTR_TYPE, co.ATTR_ACTION]:
+            setattr(result, attr, self.runtime_value(attr, reaction))
+        return result
+
+
+class RuntimeReactor:
+    id: str
+    entity: str
+    type: str
+    action: str
+    timing: str
+    delay: int
+    schedule: Any
+    overwrite: bool
+    reset_workflow: str
+    forward_action: str
+    condition: bool
 
 
 class Reactor(Ctor):
@@ -197,6 +295,7 @@ class Reactor(Ctor):
 
 
     def load(self, config: dict, stencil: dict):
+        co.LOGGER.info("Config", "'{}' loading reactor: '{}'", self.context.workflow_id, self.id)
         super().load(config, stencil)
 
         self.timing = self.get_property(co.ATTR_TIMING, config,  stencil, 'immediate')
@@ -246,6 +345,23 @@ class Reactor(Ctor):
                     if (attempt > 7): raise Exception("could not calculate next schedule hit")
 
         return next_try
+
+
+    def to_runtime(self, actor: RuntimeActor) -> RuntimeReactor:
+        result = RuntimeReactor()
+        for attr in [co.ATTR_ID, co.ATTR_CONDITION, co.ATTR_ENTITY, co.ATTR_TYPE, co.ATTR_ACTION, co.ATTR_TIMING, co.ATTR_DELAY, co.ATTR_SCHEDULE, co.ATTR_OVERWRITE, co.ATTR_RESET_WORKFLOW, co.ATTR_FORWARD_ACTION]:
+            setattr(result, attr, self.runtime_value(attr, actor))
+        return result
+
+
+    def runtime_value(self, name: str, actor: Actor) -> Any:
+        if name in self.watchers_with_need_for_runtime_values:
+            runtime_values = {
+                co.ATTR_ACTOR: actor.__dict__
+            }
+            return self.watchers_with_need_for_runtime_values[name].runtime_value(runtime_values)
+        else:
+            return super().runtime_value(name)
 
 
     def as_dict(self) -> dict:
@@ -350,12 +466,12 @@ class ConfigManager:
 
 
     def load(self, config: ConfigType) -> None:
-        co.LOGGER.info("Loading react configuration")
+        co.LOGGER.info("Config", "loading react configuration")
         
         self.domain_config = config.get(co.DOMAIN, {})
 
         if self.domain_config:
-            co.LOGGER.info("Found react configuration, processing")
+            co.LOGGER.info("Config", "found react configuration, processing")
 
             self.stencil_config = self.domain_config.get(co.CONF_STENCIL, {})
             self.workflow_config = self.domain_config.get(co.CONF_WORKFLOW, {})
@@ -363,11 +479,11 @@ class ConfigManager:
             self.parse_workflow_config(self.hass)
         else:
             self.workflows: dict[str, Workflow] = {}
-            co.LOGGER.info("No react configuration found")
+            co.LOGGER.info("Config", "no react configuration found")
 
 
     def unload(self):
-        co.LOGGER.info("Unloading react configuration")
+        co.LOGGER.info("Config", "unloading react configuration")
         if self.workflows:
             for workflow in self.workflows.values():
                 workflow.async_unload()
@@ -382,18 +498,16 @@ class ConfigManager:
 
 
     def parse_workflow_config(self, hass: HomeAssistant):
-        co.LOGGER.info("Loading react workflows")
+        co.LOGGER.info("Config", "loading react workflows")
 
         self.workflows: dict[str, Workflow] = {}
 
         for id, config in self.workflow_config.items():
-            co.LOGGER.info("Processing workflow '{}'".format(id))
+            co.LOGGER.info("Config", "'{}' processing workflow", id)
             if not config:
                 config = {}
 
             context = WorkflowContext(hass, id)
-            # variables = VariableContainer(context, config.get(co.ATTR_VARIABLES, {}))
-            # context.set_variables(variables)
             context.load_variables(config.get(co.ATTR_VARIABLES, {}))
             workflow = Workflow(context, config)
             stencil = self.get_stencil_by_name(workflow.stencil)
@@ -408,7 +522,7 @@ class ConfigManager:
             if stencil:
                 result = stencil
             else:
-                co.LOGGER.error("Stencil '{}' not found".format(stencil_name))
+                co.LOGGER.error("Config", "Stencil not found: '{}'".format(stencil_name))
 
         return result
 
@@ -416,17 +530,17 @@ class ConfigManager:
     def get_workflow_metadata(self, reaction: ReactionEntry) -> Tuple[Workflow, Actor, Reactor]:
         workflow = self.workflows.get(reaction.workflow_id, None)
         if workflow is None:
-            co.LOGGER.warn("Workflow that created reaction '{}' no longer exists".format(reaction.id))
+            co.LOGGER.warn("Config: workflow that created reaction not found: '{}'".format(reaction.id))
             return None, None, None
 
         actor = workflow.actors.get(reaction.actor_id, None)
         if actor is None:
-            co.LOGGER.warn("Actor in workflow '{}' that created reaction '{}' no longer exists".format(workflow.id, reaction.id))
+            co.LOGGER.warn("Config: actor in workflow that created reaction not found: '{}'.'{}'".format(workflow.id, reaction.id))
             return None, None, None
 
         reactor = workflow.reactors.get(reaction.reactor_id, None)
         if reactor is None:
-            co.LOGGER.warn("Reactor in workflow '{}' that created reaction '{}' no longer exists".format(workflow.id, reaction.id))
+            co.LOGGER.warn("Config: reactor in workflow  that created reaction not found: '{}'.'{}'".format(workflow.id, reaction.id))
             return None, None, None
 
         return workflow, actor, reactor

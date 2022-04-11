@@ -1,4 +1,5 @@
 from typing import Any, Awaitable, Callable, Union
+
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, async_dispatcher_send
 from homeassistant.core import Event, HomeAssistant
 

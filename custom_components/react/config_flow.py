@@ -2,12 +2,10 @@ import secrets
 
 from homeassistant import config_entries
 
-from .const import (
-    DOMAIN,
-)
+from . import const as co
 
 
-@config_entries.HANDLERS.register(DOMAIN)
+@config_entries.HANDLERS.register(co.DOMAIN)
 class ReactConfigFlow(config_entries.ConfigFlow):
     async def async_step_user(self, user_input=None):
         # Only a single instance of the integration

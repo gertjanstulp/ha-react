@@ -6,6 +6,8 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_ICON, ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.helpers.template import result_as_boolean
 
+from .logger import LogManager
+
 VERSION = "0.5.0"
 
 DOMAIN = 'react'
@@ -93,6 +95,10 @@ SWITCH = "switch"
 SWITCH_PREFIX = "{}.".format(SWITCH)
 MEDIAPLAYER = "media_player"
 MEDIAPLAYER_PREFIX = "{}.".format(MEDIAPLAYER)
+PERSON = "person"
+PERSON_PREFIX = "{}.".format(PERSON)
+DEVICE_TRACKER = "device_tracker"
+DEVICE_TRACKER_PREFIX = "{}.".format(DEVICE_TRACKER)
 
 OLD_STATE = "old_state"
 NEW_STATE = "new_state"
@@ -106,7 +112,18 @@ DISCONNECT_EVENT_TAG_CONFIG = "config"
 
 DEFAULT_INITIAL_STATE = True
 
-LOGGER = logging.getLogger(__package__)
+TEMPLATE_WATCHER_PROPERTY_FORMAT = "_{}_watcher_"
+TEMPLATE_ACTOR_DEPENDENCY_ERROR = "'actor' is undefined"
+
+RUNTIME_VARIABLES = {
+    ATTR_ACTOR : {
+        ATTR_ENTITY: None,
+        ATTR_TYPE: None,
+        ATTR_ACTION: None,
+    }
+}
+
+LOGGER = LogManager(logging.getLogger(__package__))
 
 
 def entity(value: Any) -> str:

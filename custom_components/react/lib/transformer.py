@@ -1,6 +1,5 @@
 from typing import Any
 
-from .domain_data import DomainData
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_STARTED, EVENT_STATE_CHANGED, STATE_OFF, STATE_ON
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later
@@ -8,9 +7,10 @@ from homeassistant.helpers.event import async_call_later
 from .. import const as co
 from .dispatcher import get as Dispatcher
 
+
 class StateData:
-    def __init__(self, entity: str):
-        self.entity = entity
+    def __init__(self, entity_prefix: str, event_data: dict[str, Any]):
+        self.entity = event_data.get(ATTR_ENTITY_ID, '').replace(entity_prefix, '')
         self.actions = []
 
     def to_react_events(self, type: str):
@@ -25,10 +25,10 @@ class StateData:
 
 
 class BinaryStateData(StateData):
-    def __init__(self, entity: str, state_event_data: dict[str, Any]):
-        super().__init__(entity)
-        old_state = state_event_data.get(co.OLD_STATE, '')
-        new_state = state_event_data.get(co.NEW_STATE)
+    def __init__(self, entity_prefix: str, event_data: dict[str, Any]):
+        super().__init__(entity_prefix, event_data)
+        old_state = event_data.get(co.OLD_STATE, None)
+        new_state = event_data.get(co.NEW_STATE, None)
         old_state_value = old_state.state if old_state else None
         new_state_value = new_state.state if new_state else None
 
@@ -40,50 +40,60 @@ class BinaryStateData(StateData):
             self.actions.append(co.ACTION_TOGGLE)
 
 
-class SensorStateData(StateData):
-    def __init__(self, state_event_data: dict[str, Any]):
-        entity = state_event_data.get(ATTR_ENTITY_ID, '').replace(co.SENSOR_PREFIX, '')
-        super().__init__(entity)
+class NonBinaryStateData(StateData):
+    def __init__(self, entity_prefix: str, event_data: dict[str, Any]):
+        super().__init__(entity_prefix, event_data)
+        
+        old_state = event_data.get(co.OLD_STATE, None)
+        new_state = event_data.get(co.NEW_STATE, None)
+        self.old_state_value = old_state.state if old_state else None
+        self.new_state_value = new_state.state if new_state else None
 
-        old_state = state_event_data.get(co.OLD_STATE, '')
-        new_state = state_event_data.get(co.NEW_STATE)
-        old_state_value = old_state.state if old_state else None
-        new_state_value = new_state.state if new_state else None
+class SensorStateData(NonBinaryStateData):
+    def __init__(self, event_data: dict[str, Any]):
+        super().__init__(co.SENSOR_PREFIX, event_data)
 
-        if new_state_value != old_state_value:
+        if self.new_state_value != self.old_state_value:
             self.actions.append(co.ACTION_CHANGE)
+
+
+class PersonStateData(NonBinaryStateData):
+    def __init__(self, event_data: dict[str, Any]):
+        super().__init__(co.PERSON_PREFIX, event_data)
+
+        if self.old_state_value != self.new_state_value:
+            self.actions.append(self.new_state_value)
         
 
-class MediaPlayerStateData(StateData):
-    def __init__(self, state_event_data: dict[str, Any]):
-        entity = state_event_data.get(ATTR_ENTITY_ID, '').replace(co.MEDIAPLAYER_PREFIX, '')
-        super().__init__(entity)
+class DeviceTrackerStateData(NonBinaryStateData):
+    def __init__(self, event_data: dict[str, Any]):
+        super().__init__(co.DEVICE_TRACKER_PREFIX, event_data)
 
-        old_state = state_event_data.get(co.OLD_STATE, '')
-        new_state = state_event_data.get(co.NEW_STATE, '')
-        old_state_value = old_state.state if old_state else None
-        new_state_value = new_state.state if new_state else None
+        if self.old_state_value != self.new_state_value:
+            self.actions.append(self.new_state_value)
 
-        if old_state_value != new_state_value:
-            self.actions.append(new_state_value)
+
+class MediaPlayerStateData(NonBinaryStateData):
+    def __init__(self, event_data: dict[str, Any]):
+        super().__init__(co.MEDIAPLAYER_PREFIX, event_data)
+
+        if self.old_state_value != self.new_state_value:
+            self.actions.append(self.new_state_value)
 
 
 class BinarySensorStateData(BinaryStateData):
-    def __init__(self, state_event_data: dict[str, Any]):
-        entity = state_event_data.get(ATTR_ENTITY_ID, '').replace(co.BINARY_SENSOR_PREFIX, '')
-        super().__init__(entity, state_event_data)
+    def __init__(self, event_data: dict[str, Any]):
+        super().__init__(co.BINARY_SENSOR_PREFIX, event_data)
 
 
 class GroupStateData(BinaryStateData):
-    def __init__(self, state_event_data: dict[str, Any]):
-        entity = state_event_data.get(ATTR_ENTITY_ID, '').replace(co.GROUP_PREFIX, '')
-        super().__init__(entity, state_event_data)
+    def __init__(self, event_data: dict[str, Any]):
+        super().__init__(co.GROUP_PREFIX, event_data)
 
 
 class SwitchStateData(BinaryStateData):
-    def __init__(self, state_event_data: dict[str, Any]):
-        entity = state_event_data.get(ATTR_ENTITY_ID, '').replace(co.SWITCH_PREFIX, '')
-        super().__init__(entity, state_event_data)
+    def __init__(self, event_data: dict[str, Any]):
+        super().__init__(co.SWITCH_PREFIX, event_data)
 
 
 class StateTransformer:
@@ -99,6 +109,7 @@ class StateTransformer:
             @callback
             def async_timer_finished(_now):
                 self.state = co.STATE_READY
+                co.LOGGER.info("Runtime", "{} ready", self.__class__.__name__)
 
             async_call_later(hass, co.HA_STARTUP_DELAY, async_timer_finished)
 
@@ -153,13 +164,32 @@ class SensorTransformer(StateTransformer):
         return SensorStateData(event.data)
 
 
-class MediaplayerTransformer(StateTransformer):
+class MediaPlayerTransformer(StateTransformer):
     def __init__(self, hass: HomeAssistant):
         super().__init__(hass, co.MEDIAPLAYER_PREFIX, co.MEDIAPLAYER)
 
 
     def read_state_data(self, event: Event) -> StateData:
         return MediaPlayerStateData(event.data)
+
+
+class PersonTransformer(StateTransformer):
+    def __init__(self, hass: HomeAssistant):
+        super().__init__(hass, co.PERSON_PREFIX, co.PERSON)
+
+
+    def read_state_data(self, event: Event) -> StateData:
+        return PersonStateData(event.data)
+
+
+class DeviceTrackerTransformer(StateTransformer):
+    def __init__(self, hass: HomeAssistant):
+        super().__init__(hass, co.DEVICE_TRACKER_PREFIX, co.DEVICE_TRACKER)
+
+
+    def read_state_data(self, event: Event) -> StateData:
+        return DeviceTrackerStateData(event.data)
+
 
 class BinarySensorTransformer(StateTransformer):
     def __init__(self, hass: HomeAssistant):
@@ -196,7 +226,9 @@ class TransformerManager:
             co.GROUP: GroupTransformer(hass),
             co.SWITCH: SwitchTransformer(hass),
             co.SENSOR: SensorTransformer(hass),
-            co.MEDIAPLAYER: MediaplayerTransformer(hass),
+            co.MEDIAPLAYER: MediaPlayerTransformer(hass),
+            co.PERSON: PersonTransformer(hass),
+            co.DEVICE_TRACKER: DeviceTrackerTransformer(hass),
         }
 
 

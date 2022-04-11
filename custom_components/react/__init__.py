@@ -1,7 +1,6 @@
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.typing import ConfigType
@@ -20,7 +19,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType):
-    co.LOGGER.info("Setting up react domain")
+    co.LOGGER.info("Init", "setting up react domain")
     
     Bootstrapper(hass).bootstrap(config)
     
@@ -28,7 +27,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType):
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
-    co.LOGGER.info("Setting up react entry")
+    co.LOGGER.info("Init", "setting up react entry")
     
     # Initialize all domain data
     dd = DomainData(hass)
@@ -53,15 +52,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
 
 async def async_unload_entry(hass, entry):
-    co.LOGGER.info("Unloading react")
+    co.LOGGER.info("Init", "Unloading react")
     return await Bootstrapper(hass).async_unload(entry)
 
 
 async def async_remove_entry(hass, entry):
-    co.LOGGER.info("Removing react")
+    co.LOGGER.info("Init", "Removing react")
     await Bootstrapper(hass).async_teardown()
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    co.LOGGER.debug("Migrating from version %s", config_entry.version)
+    co.LOGGER.info("Init", "Migrating from version {}", config_entry.version)
     return True

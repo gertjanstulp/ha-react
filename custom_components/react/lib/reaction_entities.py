@@ -1,4 +1,3 @@
-from webbrowser import get
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity, EntityCategory
 from homeassistant.helpers.entity_registry import async_get as get_entity_registry
@@ -106,6 +105,7 @@ class ReactionEntityManager:
         Dispatcher(self.hass).connect_signal(co.SIGNAL_ITEM_UPDATED, self.async_update_entity)
         
         for entry in self.coordinator.get_reactions().values():
+            co.LOGGER.info("Registry", "'{}' found reaction in store, adding: '{}'", entry.workflow_id, entry.id)
             self.async_add_entity(entry)
 
 
@@ -118,39 +118,41 @@ class ReactionEntityManager:
     def async_add_entity(self, reaction: ReactionEntry):
         _,_,reactor = self.config_manager.get_workflow_metadata(reaction)
         entity = ReactionEntity(self.hass, DomainData(self.hass).device_id, reaction, reactor)
+        
+        co.LOGGER.info("Registry", "'{}' added reaction to registry: '{}'", reaction.workflow_id, entity.entity_id)
+        
         if reaction.id in self.entities:
-            co.LOGGER.warn("Entity '{}' already found in entity registry while adding, will overwrite".format(entity.entity_id))
+            co.LOGGER.warn("Registry: '{}' found existing reaction in registry while adding, overwriting: '{}'", reaction.workflow_id, entity.entity_id)
             self.entities.pop(reaction.id)
         self.entities[reaction.id] = entity
         self.async_add_entities([entity])
-        co.LOGGER.info("Workflow '{}' added reaction entity '{}' to hass".format(reaction.workflow_id, entity.entity_id))
 
 
     @callback
     def async_delete_entity(self, reaction_id):
         if not reaction_id in self.entities:
-            co.LOGGER.warn("Entity for reaction '{}' not found".format(reaction_id))
+            co.LOGGER.warn("Registry: reaction not found while deleting, ignoring: '{}'".format(reaction_id))
             return
         
         entity = self.entities.pop(reaction_id)
         entity_registry = get_entity_registry(self.hass)
         if entity_registry.async_is_registered(entity.entity_id):
+            co.LOGGER.info("Registry", "'{}' removing reaction from registry: '{}'".format(entity.reaction.workflow_id, entity.entity_id))
             entity_registry.async_remove(entity.entity_id)
-            co.LOGGER.info("Workflow '{}' removed reaction entity '{}' from hass".format(entity.reaction.workflow_id, entity.entity_id))
         else:
-            co.LOGGER.warn("Entity '{}' not found in entity registry while deleting".format(entity.entity_id))
+            co.LOGGER.warn("Registry: '{}' couldn't find reaction in registry while deleting: '{}'", entity.reaction.workflow_id, entity.entity_id)
 
 
     @callback
     def async_update_entity(self, reaction_id):
         if not reaction_id in self.entities:
-            co.LOGGER.warn("Received update on non-existing reaction entity '{}', ingoring update".format(reaction_id))
+            co.LOGGER.warn("Registry: reaction not found while updating, ignoring: '{}'", reaction_id)
             return
 
         entity = self.entities.get(reaction_id)
         entity.entity_state = entity.reaction.datetime
         self.hass.loop.create_task(entity.async_update_ha_state())
-        co.LOGGER.info("Workflow '{}' updated reaction entity '{}'".format(entity.reaction.workflow_id, entity.entity_id))
+        co.LOGGER.info("Registry", "'{}' updated reaction in registry: '{}'", entity.reaction.workflow_id, entity.entity_id)
 
 
 def get(hass: HomeAssistant) -> ReactionEntityManager:
