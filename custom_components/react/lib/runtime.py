@@ -328,9 +328,9 @@ class ReactionHandler(RuntimeHandler):
             if isinstance(attr_value, str) and is_template_string(attr_value):
                 self.set_jitter(property, TemplateJitter(self.runtime.react,  property, Template(attr_value), type_converter), PROP_TYPE_TEMPLATE)
             else:
-                self.set_jitter(property, ValueJitter(attr_value), PROP_TYPE_VALUE)
+                self.set_jitter(property, ValueJitter(attr_value, type_converter), PROP_TYPE_VALUE)
         else:
-            self.set_jitter(property, ValueJitter(default), PROP_TYPE_DEFAULT)
+            self.set_jitter(property, ValueJitter(default, type_converter), PROP_TYPE_DEFAULT)
 
 
     def set_jitter(self, property: str, value: Any, prop_type: str):

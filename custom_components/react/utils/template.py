@@ -9,12 +9,16 @@ from .updatable import Updatable, callable_type
 
 
 class ValueJitter:
-    def __init__(self, value: Any) -> None:
+    def __init__(self, value: Any, type_converter: Any = None) -> None:
         self.value = value
+        self.type_converter = type_converter
 
     
     def render(self, *args):
-        return self.value
+        if self.type_converter:
+            return self.type_converter(self.value)
+        else:
+            return self.value
 
 
 class TemplateJitter:
