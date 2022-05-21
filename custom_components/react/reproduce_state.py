@@ -1,18 +1,25 @@
 import asyncio
-import logging
 
 from __future__ import annotations
 from collections.abc import Iterable
 from typing import Any, Union
 
-from homeassistant.const import  ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON
 from homeassistant.core import Context, HomeAssistant, State
+from homeassistant.const import (
+    ATTR_ENTITY_ID, 
+    SERVICE_TURN_OFF, 
+    SERVICE_TURN_ON, 
+    STATE_OFF, STATE_ON,
+)
 
-from . import const as co
-
+from .utils.logger import get_react_logger
+from .const import (
+    DOMAIN,
+)
 
 VALID_STATES = {STATE_ON, STATE_OFF}
 
+_LOGGER = get_react_logger()
 
 async def _async_reproduce_state(
     hass: HomeAssistant,
@@ -21,12 +28,13 @@ async def _async_reproduce_state(
     context: Union[Context, None] = None,
     reproduce_options: Union[dict[str, Any], None] = None) -> None:
 
+    
     if (cur_state := hass.states.get(state.entity_id)) is None:
-        co.LOGGER.warn("State", "Unable to find entity {}", state.entity_id)
+        _LOGGER.warn(f"State: Unable to find entity {state.entity_id}")
         return
 
     if state.state not in VALID_STATES:
-        co.LOGGER.warn("State", "Invalid state specified for {}: {}", state.entity_id, state.state)
+        _LOGGER.warn(f"State: Invalid state specified for {state.entity_id}: {state.state}")
         return
 
     # Return if we are already at the right state.
@@ -40,7 +48,7 @@ async def _async_reproduce_state(
     elif state.state == STATE_OFF:
         service = SERVICE_TURN_OFF
 
-    await hass.services.async_call(co.DOMAIN, service, service_data, context=context, blocking=True)
+    await hass.services.async_call(DOMAIN, service, service_data, context=context, blocking=True)
 
 
 async def async_reproduce_states(
@@ -51,9 +59,7 @@ async def async_reproduce_states(
     reproduce_options: Union[dict[str, Any], None] = None) -> None:
     await asyncio.gather(
         *(
-            _async_reproduce_state(
-                hass, state, context=context, reproduce_options=reproduce_options
-            )
+            _async_reproduce_state(hass, state, context=context, reproduce_options=reproduce_options)
             for state in states
         )
     )

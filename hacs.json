@@ -1,7 +1,9 @@
 {
     "name": "React",
+    "zip_release": true,
+    "hide_default_branch": true,
     "homeassistant": "2022.2.0",
-    "domains": ["react", "sensor"],
-    "render_readme": true
-  }
+    "render_readme": true,
+    "filename": "react.zip"
+}
   

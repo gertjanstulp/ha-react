@@ -1,0 +1,59 @@
+name: Publish
+
+on:
+    release:
+      types:
+        - published
+    push:
+      branches:
+        - main
+        - feature/trace
+
+jobs:
+  release_zip_file:
+    name: Publish React zip file asset
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: 📥 Checkout the repository
+        uses: actions/checkout@v3.0.2
+
+      - name: 🛠️ Set up Python
+        uses: actions/setup-python@v3.1.2
+        with:
+          python-version: "3.x"
+          cache: 'pip'
+
+      - name: 🔢 Get version
+        id: version
+        uses: home-assistant/actions/helpers/version@master
+
+      - name: 🔢 Set version number
+        run: |
+          sed -i "/MINIMUM_HA_VERSION = /c\MINIMUM_HA_VERSION = \"$(jq .homeassistant -r ${{ github.workspace }}/hacs.json)\"" ${{ github.workspace }}/custom_components/react/const.py
+          python3 ${{ github.workspace }}/manage/update_manifest.py --version ${{ steps.version.outputs.version }}
+
+      - name: ⏬ Download React frontend
+        run: ${{ github.workspace }}/manage/install_frontend
+
+      - name: 📤 Upload zip to action
+        uses: actions/upload-artifact@v3.0.0
+        if: ${{ github.event_name == 'push' }}
+        with:
+          name: react
+          path: ${{ github.workspace }}/custom_components/react
+
+      # Pack the React dir as a zip and upload to the release
+      - name: 📦 ZIP React Dir
+        if: ${{ github.event_name == 'release' }}
+        run: |
+          cd ${{ github.workspace }}/custom_components/react
+          zip react.zip -r ./
+
+      - name: 📤 Upload zip to release
+        uses: softprops/action-gh-release@v0.1.14
+        if: ${{ github.event_name == 'release' }}
+        with:
+          files: ${{ github.workspace }}/custom_components/react/react.zip
+

@@ -1,0 +1,18 @@
+#!/bin/bash
+
+version=$(curl -sSL -f https://pypi.org/pypi/react-frontend/json | jq -r .info.version)
+raw=$(\
+    curl -sSL -f "https://github.com/gertjanstulp/ha-react-frontend/releases/tag/$version" \
+    | grep "<li>" \
+    | grep "</a></li>" \
+    | grep "user" \
+    )
+
+user=$(echo "$raw" | cut -d">" -f 5 | cut -d"<" -f 1)
+change=$(echo "$raw" | cut -d">" -f 2 | cut -d"(" -f 1)
+
+# git checkout -b "frontend/$version"
+sed -i "/FRONTEND_VERSION=/c\FRONTEND_VERSION=\"$version\"" manage/install_frontend
+git add manage/install_frontend
+git commit -m "Bump frontend $version"
+git push #--set-upstream origin "frontend/$version"
