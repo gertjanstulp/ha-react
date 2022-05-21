@@ -382,7 +382,7 @@ class WorkflowRun:
         action: str,
         context: Context
     ) -> None:
-        self.id = ulid_util.ulid
+        self.id = ulid_util.ulid_hex()
         self.runtime = runtime
         self.action_context = action_context
         self.entity = entity
