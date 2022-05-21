@@ -375,7 +375,7 @@ class ReactionHandler(RuntimeHandler):
                 reaction.data.reactor_id = self.reactor.id
                 reaction.data.reactor_entity = self.jit_render(ATTR_ENTITY, actor_data)
                 reaction.data.reactor_type = self.jit_render(ATTR_TYPE, actor_data)
-                reaction.data.reactor_action = actor_data.get(ATTR_ACTION) if self.reactor.forward_action else self.jit_render(ATTR_ACTION, actor_data)
+                reaction.data.reactor_action = actor_data.get(ATTR_ACTOR_ACTION) if self.reactor.forward_action else self.jit_render(ATTR_ACTION, actor_data)
                 reaction.data.reset_workflow = self.jit_render(ATTR_RESET_WORKFLOW, actor_data)
                 reaction.data.overwrite = self.reactor.overwrite
                 reaction.data.datetime = calculate_reaction_datetime(self.reactor.timing, self.reactor.schedule, self.jit_render(ATTR_DELAY, actor_data))
