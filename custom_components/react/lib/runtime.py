@@ -96,8 +96,25 @@ class VariableHandler(Updatable):
         }
         setattr(self.variable_container, ATTR_ACTOR, actor_container)
 
+        def init_attr(attr: str, type_converter: Any, default: Any = None):
+            type_prop = f"_{attr}{PROP_ATTR_TYPE_POSTFIX}"
+            attr_value = getattr(workflow.variables, attr, None)
+
+            def set_attr(attr: str, value: Any, prop_type):
+                setattr(self.variable_container, attr, value)
+                setattr(self.variable_container, type_prop, prop_type)
+
+            if attr_value:
+                if isinstance(attr_value, str) and is_template_string(attr_value):
+                    set_attr(attr, None, PROP_TYPE_TEMPLATE)
+                    self.variable_trackers.append(TemplateTracker(react, self, attr, Template(attr_value), type_converter))
+                else:
+                    set_attr(attr, attr_value, PROP_TYPE_VALUE)
+            else:
+                set_attr(attr, default, PROP_TYPE_DEFAULT)
+
         for name in self.names:
-            self.variable_trackers.append(TemplateTracker(react, self.variable_container, name, Template(getattr(workflow.variables, name)), PROP_TYPE_SOURCE, update_callback=self.async_update))
+            init_attr(name, PROP_TYPE_STR)
 
         for tracker in self.variable_trackers:
             tracker.start()
