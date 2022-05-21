@@ -7,7 +7,6 @@ on:
     push:
       branches:
         - main
-        - feature/trace
 
 jobs:
   release_zip_file:
