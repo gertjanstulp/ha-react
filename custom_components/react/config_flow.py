@@ -2,10 +2,12 @@ import secrets
 
 from homeassistant import config_entries
 
-from . import const as co
+from .const import (
+    DOMAIN,
+    TITLE
+)
 
-
-@config_entries.HANDLERS.register(co.DOMAIN)
+@config_entries.HANDLERS.register(DOMAIN)
 class ReactConfigFlow(config_entries.ConfigFlow):
     async def async_step_user(self, user_input=None):
         # Only a single instance of the integration
@@ -17,4 +19,4 @@ class ReactConfigFlow(config_entries.ConfigFlow):
         await self.async_set_unique_id(id)
         self._abort_if_unique_id_configured(updates=user_input)
 
-        return self.async_create_entry(title="React", data={})
+        return self.async_create_entry(title=TITLE, data={})
