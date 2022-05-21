@@ -1,4 +1,3 @@
-from config.custom_components.react.lib.config import Workflow
 from homeassistant.const import SERVICE_RELOAD, SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers.entity_component import EntityComponent
