@@ -242,16 +242,16 @@ class ActionHandler(RuntimeHandler):
     def async_filter(self, event: Event) -> bool:
         entity, type, action = extract_action_event_data(event)
 
-        if not self.enabled:
-            self.runtime.react.log.info(f"ActionHandler: '{self.runtime.workflow_config.id}'.'{self.actor.id}' skipping (workflow is disabled)")
-            return False
-
         result = False
         if (entity == self.entity and type == self.type):
             if self.action is None:
                 result = True   
             else:
                 result = action == self.action
+
+        if result and not self.enabled:
+            self.runtime.react.log.info(f"ActionHandler: '{self.runtime.workflow_config.id}'.'{self.actor.id}' skipping (workflow is disabled)")
+            return False
 
         return result
 
