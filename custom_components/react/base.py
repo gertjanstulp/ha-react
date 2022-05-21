@@ -91,7 +91,9 @@ class ReactReactions:
     def update_by_workflow_id(self, reaction: ReactReaction) -> None:
         existing_reactions = self.get_by_workflow_id(reaction.data.workflow_id)
         while existing_reactions:
-            self.delete(existing_reactions.pop())
+            existing_reaction = existing_reactions.pop()
+            if existing_reaction.data.reactor_id == reaction.data.reactor_id:
+                self.delete(existing_reaction)
         self._add_new(reaction)
 
 
