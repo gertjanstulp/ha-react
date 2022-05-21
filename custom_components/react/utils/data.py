@@ -115,7 +115,6 @@ class ReactData:
                     self.react.log.debug("<ReactData restore> Found reaction with ID %s - %s", entry, reaction_data)
                     continue
                 self.async_restore_reaction(entry, reaction_data)
-                self.react.dispatcher.dispatch(entry)
             self.react.log.debug("<ReactData restore> Restore done")
         except BaseException as exception:
             self.react.log.critical("<ReactData restore> [%s] Restore Failed!", exception, exc_info=exception)
