@@ -123,9 +123,9 @@ class VariableHandler(Updatable):
     def to_dict(self, actor_data: dict = None) -> dict:
         result = vars(self.variable_container)
         if actor_data:
-            result[ATTR_ACTOR][ATTR_ENTITY] = actor_data.get(ATTR_ENTITY, None)
-            result[ATTR_ACTOR][ATTR_TYPE] = actor_data.get(ATTR_TYPE, None)
-            result[ATTR_ACTOR][ATTR_ACTION] = actor_data.get(ATTR_ACTION, None)
+            result[ATTR_ACTOR][ATTR_ENTITY] = actor_data.get(ATTR_ACTOR_ENTITY, None)
+            result[ATTR_ACTOR][ATTR_TYPE] = actor_data.get(ATTR_ACTOR_TYPE, None)
+            result[ATTR_ACTOR][ATTR_ACTION] = actor_data.get(ATTR_ACTOR_ACTION, None)
         return result
 
 
