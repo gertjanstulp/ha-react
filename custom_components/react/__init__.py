@@ -124,6 +124,10 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
     return await async_initialize_integration(hass=hass, config=config)
 
 
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    return True
+
+
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     _LOGGER.debug(f"Init: Migrating from version {config_entry.version}")
     return True
