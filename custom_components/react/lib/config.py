@@ -218,7 +218,7 @@ class Workflow():
         for id,item_stencil in items_stencil.items():
             # Check for any stencil item that is not part of the workflow yet.
             # Add an entity for each match.
-            if not any(item.id == id for item in result):
+            if not any(item.id == id or item.id == f"{id}_0" for item in result):
                 self.load_entities(id, {}, item_stencil, item_type, result)
 
         return result
