@@ -2,7 +2,7 @@
 
 set -e
 
-FRONTEND_VERSION="20220523174844"
+FRONTEND_VERSION="20220605155306"
 
 python3 -m pip install -U --target=./custom_components/react "react_frontend==$FRONTEND_VERSION"
 rm -rf ./custom_components/react/*.dist-info
