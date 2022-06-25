@@ -14,6 +14,7 @@ from ..base import ReactBase
 from ..const import (
     ACTION_CHANGE,
     ACTION_TOGGLE,
+    ALARM_PREFIX,
     ATTR_ACTION,
     ATTR_ENTITY, 
     ATTR_TYPE,
@@ -118,6 +119,14 @@ class GroupStateData(BinaryStateData):
 class SwitchStateData(BinaryStateData):
     def __init__(self, event_data: dict[str, Any]):
         super().__init__(SWITCH_PREFIX, event_data)
+
+
+class AlarmStateData(NonBinaryStateData):
+    def __init__(self, event_data: dict[str, Any]):
+        super().__init__(ALARM_PREFIX, event_data)
+
+        if self.old_state_value != self.new_state_value:
+            self.actions.append(self.new_state_value)
 
 
 class StateTransformTask(ReactTask):

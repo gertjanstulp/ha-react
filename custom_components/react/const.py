@@ -120,6 +120,8 @@ PERSON = "person"
 PERSON_PREFIX = f"{PERSON}."
 DEVICE_TRACKER = "device_tracker"
 DEVICE_TRACKER_PREFIX = f"{DEVICE_TRACKER}."
+ALARM = "alarm_control_panel"
+ALARM_PREFIX = f"{ALARM}."
 # transformer states
 OLD_STATE = "old_state"
 NEW_STATE = "new_state"
