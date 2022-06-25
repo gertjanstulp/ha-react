@@ -132,6 +132,7 @@ NEW_STATE = "new_state"
 # transformer actions
 ACTION_TOGGLE = "toggle"
 ACTION_CHANGE = "change"
+ACTION_PRESS = "press"
 
 # workflow entity settings
 DEFAULT_INITIAL_STATE = True
