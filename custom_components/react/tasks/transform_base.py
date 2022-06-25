@@ -22,6 +22,7 @@ from ..const import (
     DEVICE_TRACKER_PREFIX,
     EVENT_REACT_ACTION,
     GROUP_PREFIX,
+    LIGHT_PREFIX,
     MEDIAPLAYER_PREFIX,
     NEW_STATE,
     OLD_STATE,
@@ -119,6 +120,11 @@ class GroupStateData(BinaryStateData):
 class SwitchStateData(BinaryStateData):
     def __init__(self, event_data: dict[str, Any]):
         super().__init__(SWITCH_PREFIX, event_data)
+
+
+class LightStateData(BinaryStateData):
+    def __init__(self, event_data: dict[str, Any]):
+        super().__init__(LIGHT_PREFIX, event_data)
 
 
 class AlarmStateData(NonBinaryStateData):

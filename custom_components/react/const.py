@@ -122,6 +122,8 @@ DEVICE_TRACKER = "device_tracker"
 DEVICE_TRACKER_PREFIX = f"{DEVICE_TRACKER}."
 ALARM = "alarm_control_panel"
 ALARM_PREFIX = f"{ALARM}."
+LIGHT = "light"
+LIGHT_PREFIX = f"{LIGHT}."
 # transformer states
 OLD_STATE = "old_state"
 NEW_STATE = "new_state"
