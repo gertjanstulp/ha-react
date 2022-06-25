@@ -22,6 +22,7 @@ from ..const import (
     DEVICE_TRACKER_PREFIX,
     EVENT_REACT_ACTION,
     GROUP_PREFIX,
+    INPUT_BUTTON_PREFIX,
     LIGHT_PREFIX,
     MEDIAPLAYER_PREFIX,
     NEW_STATE,
@@ -130,6 +131,14 @@ class LightStateData(BinaryStateData):
 class AlarmStateData(NonBinaryStateData):
     def __init__(self, event_data: dict[str, Any]):
         super().__init__(ALARM_PREFIX, event_data)
+
+        if self.old_state_value != self.new_state_value:
+            self.actions.append(self.new_state_value)
+
+
+class InputButtonStateData(NonBinaryStateData):
+    def __init__(self, event_data: dict[str, Any]):
+        super().__init__(INPUT_BUTTON_PREFIX, event_data)
 
         if self.old_state_value != self.new_state_value:
             self.actions.append(self.new_state_value)
