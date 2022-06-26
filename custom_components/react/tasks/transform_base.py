@@ -13,6 +13,7 @@ from ..base import ReactBase
 
 from ..const import (
     ACTION_CHANGE,
+    ACTION_PRESS,
     ACTION_TOGGLE,
     ALARM_PREFIX,
     ATTR_ACTION,
@@ -141,7 +142,7 @@ class InputButtonStateData(NonBinaryStateData):
         super().__init__(INPUT_BUTTON_PREFIX, event_data)
 
         if self.old_state_value != self.new_state_value:
-            self.actions.append(self.new_state_value)
+            self.actions.append(ACTION_PRESS)
 
 
 class StateTransformTask(ReactTask):
