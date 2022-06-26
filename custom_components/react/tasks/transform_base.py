@@ -134,6 +134,8 @@ class AlarmStateData(NonBinaryStateData):
         super().__init__(ALARM_PREFIX, event_data)
 
         if self.old_state_value != self.new_state_value:
+            if self.old_state_value != None:
+                self.actions.append(f"un_{self.old_state_value}")
             self.actions.append(self.new_state_value)
 
 
