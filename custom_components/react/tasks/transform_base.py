@@ -6,15 +6,18 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED, 
     STATE_OFF, 
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 
 from .base import ReactTask
 from ..base import ReactBase
 
 from ..const import (
+    ACTION_AVAILABLED,
     ACTION_CHANGE,
     ACTION_PRESS,
     ACTION_TOGGLE,
+    ACTION_UNAVAILABLED,
     ALARM_PREFIX,
     ATTR_ACTION,
     ATTR_ENTITY, 
@@ -36,9 +39,14 @@ from ..const import (
 
 
 class StateData:
+    old_state_value: Any
+    new_state_value: Any
+
+
     def __init__(self, entity_prefix: str, event_data: dict[str, Any]):
         self.entity = event_data.get(ATTR_ENTITY_ID, '').replace(entity_prefix, '')
         self.actions = []
+
 
     def to_react_events(self, type: str):
         result = []
@@ -56,13 +64,17 @@ class BinaryStateData(StateData):
         super().__init__(entity_prefix, event_data)
         old_state = event_data.get(OLD_STATE, None)
         new_state = event_data.get(NEW_STATE, None)
-        old_state_value = old_state.state if old_state else None
-        new_state_value = new_state.state if new_state else None
+        self.old_state_value = old_state.state if old_state else None
+        self.new_state_value = new_state.state if new_state else None
 
-        if (old_state_value == STATE_OFF and new_state_value == STATE_ON):
+        if (self.old_state_value == STATE_UNAVAILABLE and self.new_state_value != STATE_UNAVAILABLE):
+            self.actions.append(ACTION_AVAILABLED)
+        if (self.old_state_value != STATE_UNAVAILABLE and self.new_state_value == STATE_UNAVAILABLE):
+            self.actions.append(ACTION_UNAVAILABLED)
+        if (self.old_state_value == STATE_OFF and self.new_state_value == STATE_ON):
             self.actions.append(STATE_ON)
             self.actions.append(ACTION_TOGGLE)
-        if (old_state_value == STATE_ON and new_state_value == STATE_OFF):
+        if (self.old_state_value == STATE_ON and self.new_state_value == STATE_OFF):
             self.actions.append(STATE_OFF)
             self.actions.append(ACTION_TOGGLE)
 
@@ -76,6 +88,11 @@ class NonBinaryStateData(StateData):
         self.old_state_value = old_state.state if old_state else None
         self.new_state_value = new_state.state if new_state else None
 
+        if (self.old_state_value == STATE_UNAVAILABLE and self.new_state_value != STATE_UNAVAILABLE):
+            self.actions.append(ACTION_AVAILABLED)
+        if (self.old_state_value != STATE_UNAVAILABLE and self.new_state_value == STATE_UNAVAILABLE):
+            self.actions.append(ACTION_UNAVAILABLED)
+        
 
 class SensorStateData(NonBinaryStateData):
     def __init__(self, event_data: dict[str, Any]):
