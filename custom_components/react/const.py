@@ -133,6 +133,8 @@ NEW_STATE = "new_state"
 ACTION_TOGGLE = "toggle"
 ACTION_CHANGE = "change"
 ACTION_PRESS = "press"
+ACTION_AVAILABLE = "available"
+ACTION_UNAVAILABLE = "unavailable"
 
 # workflow entity settings
 DEFAULT_INITIAL_STATE = True
