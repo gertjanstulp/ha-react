@@ -26,7 +26,9 @@ if TYPE_CHECKING:
     from .. import WorkflowEntity
 
 from ..const import (
+    ACTION_AVAILABLE,
     ACTION_TOGGLE,
+    ACTION_UNAVAILABLE,
     ATTR_ACTION,
     ATTR_ACTOR,
     ATTR_ACTOR_ACTION,
@@ -360,11 +362,18 @@ class ReactionHandler(RuntimeHandler):
 
         with trace_path(TRACE_PATH_EVENT):
             with trace_node(variables):
-                # Don't forward toggle actions as they are always accompanied by other actions which will be forwarded
-                if actor_data.get(ATTR_ACTOR_ACTION) == ACTION_TOGGLE and self.reactor.forward_action:
-                    self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{actor_data.get(ATTR_ACTOR_ID)}' skipping reactor (action 'toggle' with forward_action): '{self.reactor.id}'")
-                    trace_set_result(message="Skipped, toggle with forward-action ")
-                    return
+                if self.reactor.forward_action:
+                    # Don't forward toggle actions as they are always accompanied by other actions which will be forwarded
+                    if actor_data.get(ATTR_ACTOR_ACTION) == ACTION_TOGGLE:
+                        self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{actor_data.get(ATTR_ACTOR_ID)}' skipping reactor (action 'toggle' with forward_action): '{self.reactor.id}'")
+                        trace_set_result(message="Skipped, toggle with forward-action")
+                        return
+                    # Don't forward availabililty actions as reactors don't support them
+                    if actor_data.get(ATTR_ACTOR_ACTION) == ACTION_AVAILABLE or actor_data.get(ATTR_ACTOR_ACTION) == ACTION_UNAVAILABLE:
+                        self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{actor_data.get(ATTR_ACTOR_ID)}' skipping reactor (availability action with forward_action): '{self.reactor.id}'")
+                        trace_set_result(message="Skipped, availability action with forward_action")
+                        return
+                    
 
                 reaction = ReactReaction(self.runtime.react)
                 reaction.data.workflow_id = self.runtime.workflow_config.id

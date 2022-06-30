@@ -13,11 +13,11 @@ from .base import ReactTask
 from ..base import ReactBase
 
 from ..const import (
-    ACTION_AVAILABLED,
+    ACTION_AVAILABLE,
     ACTION_CHANGE,
     ACTION_PRESS,
     ACTION_TOGGLE,
-    ACTION_UNAVAILABLED,
+    ACTION_UNAVAILABLE,
     ALARM_PREFIX,
     ATTR_ACTION,
     ATTR_ENTITY, 
@@ -68,9 +68,9 @@ class BinaryStateData(StateData):
         self.new_state_value = new_state.state if new_state else None
 
         if (self.old_state_value == STATE_UNAVAILABLE and self.new_state_value != STATE_UNAVAILABLE):
-            self.actions.append(ACTION_AVAILABLED)
+            self.actions.append(ACTION_AVAILABLE)
         if (self.old_state_value != STATE_UNAVAILABLE and self.new_state_value == STATE_UNAVAILABLE):
-            self.actions.append(ACTION_UNAVAILABLED)
+            self.actions.append(ACTION_UNAVAILABLE)
         if (self.old_state_value == STATE_OFF and self.new_state_value == STATE_ON):
             self.actions.append(STATE_ON)
             self.actions.append(ACTION_TOGGLE)
@@ -89,9 +89,9 @@ class NonBinaryStateData(StateData):
         self.new_state_value = new_state.state if new_state else None
 
         if (self.old_state_value == STATE_UNAVAILABLE and self.new_state_value != STATE_UNAVAILABLE):
-            self.actions.append(ACTION_AVAILABLED)
+            self.actions.append(ACTION_AVAILABLE)
         if (self.old_state_value != STATE_UNAVAILABLE and self.new_state_value == STATE_UNAVAILABLE):
-            self.actions.append(ACTION_UNAVAILABLED)
+            self.actions.append(ACTION_UNAVAILABLE)
         
 
 class SensorStateData(NonBinaryStateData):
