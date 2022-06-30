@@ -135,8 +135,6 @@ ACTION_CHANGE = "change"
 ACTION_PRESS = "press"
 ACTION_AVAILABLE = "available"
 ACTION_UNAVAILABLE = "unavailable"
-ACTION_KNOWN = "known"
-ACTION_UNKNOWN = "unknown"
 
 # workflow entity settings
 DEFAULT_INITIAL_STATE = True
