@@ -401,6 +401,7 @@ class WorkflowRun:
 
     def __init__(self, 
         runtime: WorkflowRuntime, 
+        actor_id: str,
         action_context: ActionContext, 
         # event: Event,
         entity: str,
@@ -410,6 +411,7 @@ class WorkflowRun:
     ) -> None:
         self.id = ulid_util.ulid_hex()
         self.runtime = runtime
+        self.actor_id = actor_id
         self.action_context = action_context
         self.entity = entity
         self.type = type
@@ -557,7 +559,7 @@ class WorkflowRuntime(Updatable):
         context: Context,
     ):
         action_context = actor_handler.get_run_context()
-        run = WorkflowRun(self, action_context, entity, type, action, context)
+        run = WorkflowRun(self, actor_handler.actor.id, action_context, entity, type, action, context)
         self.react.log.info(f"ActionHandler: '{self.workflow_config.id}'.'{action_context.actor_id}' receiving action: {format_data(entity=run.entity, type=run.type, action=run.action)}")
         self.last_triggered = utcnow()
         self.async_update()

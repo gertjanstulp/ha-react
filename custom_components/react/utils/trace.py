@@ -23,8 +23,8 @@ from ..const import (
 class ReactTrace(ActionTrace):
     _domain = DOMAIN
 
-    def __init__(self, workflow: Workflow, context: Context) -> None:
-        super().__init__(workflow.id, workflow.as_dict(), {}, context)
+    def __init__(self, workflow: Workflow, context: Context, actor_id: str = None) -> None:
+        super().__init__(workflow.id, workflow.as_dict(actor_id), {}, context)
         self._actor_description: str | None = None
 
     def set_actor_description(self, trigger: str) -> None:
@@ -40,24 +40,22 @@ class ReactTrace(ActionTrace):
 
 
 @contextmanager
-def trace_workflow(
-    run: WorkflowRun
-) -> Iterator[ReactTrace]:
+def trace_workflow(run: WorkflowRun) -> Iterator[ReactTrace]:
     """Trace execution of a script."""
-    workflow = run.runtime.workflow_config
-    trace = ReactTrace(workflow, run.run_context)
+    workflow_config = run.runtime.workflow_config
+    trace = ReactTrace(workflow_config, run.run_context, run.actor_id)
     
-    async_store_trace(run.runtime.react.hass, trace, workflow.trace_config[CONF_STORED_TRACES])
+    async_store_trace(run.runtime.react.hass, trace, workflow_config.trace_config[CONF_STORED_TRACES])
 
     try:
         run.set_trace(trace)
         yield trace
     except Exception as ex:
-        if workflow.id:
+        if workflow_config.id:
             trace.set_error(ex)
         raise ex
     finally:
-        if workflow.id:
+        if workflow_config.id:
             trace.finished()
 
 
