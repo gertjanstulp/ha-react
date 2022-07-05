@@ -2,15 +2,13 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from contextlib import asynccontextmanager, contextmanager
+from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.trace import ActionTrace, async_store_trace
 from homeassistant.components.trace.const import CONF_STORED_TRACES
-from homeassistant.core import Context
 from homeassistant.helpers.trace import TraceElement, trace_append_element, trace_path_get, trace_stack_pop, trace_stack_push, trace_stack_cv
 
-from ..base import ReactBase
 from ..lib.config import Workflow
 
 if TYPE_CHECKING:
@@ -23,8 +21,8 @@ from ..const import (
 class ReactTrace(ActionTrace):
     _domain = DOMAIN
 
-    def __init__(self, workflow: Workflow, context: Context, actor_id: str = None) -> None:
-        super().__init__(workflow.id, workflow.as_dict(actor_id), {}, context)
+    def __init__(self, workflow_config: Workflow, workflow_run: WorkflowRun) -> None:
+        super().__init__(workflow_config.id, workflow_config.as_dict(workflow_run.actor_id), {}, workflow_run.run_context)
         self._actor_description: str | None = None
 
     def set_actor_description(self, trigger: str) -> None:
@@ -40,15 +38,15 @@ class ReactTrace(ActionTrace):
 
 
 @contextmanager
-def trace_workflow(run: WorkflowRun) -> Iterator[ReactTrace]:
+def trace_workflow(workflow_run: WorkflowRun) -> Iterator[ReactTrace]:
     """Trace execution of a script."""
-    workflow_config = run.runtime.workflow_config
-    trace = ReactTrace(workflow_config, run.run_context, run.actor_id)
+    workflow_config = workflow_run.runtime.workflow_config
+    trace = ReactTrace(workflow_config, workflow_run)
     
-    async_store_trace(run.runtime.react.hass, trace, workflow_config.trace_config[CONF_STORED_TRACES])
+    async_store_trace(workflow_run.runtime.react.hass, trace, workflow_config.trace_config[CONF_STORED_TRACES])
 
     try:
-        run.set_trace(trace)
+        workflow_run.set_trace(trace)
         yield trace
     except Exception as ex:
         if workflow_config.id:
@@ -57,13 +55,6 @@ def trace_workflow(run: WorkflowRun) -> Iterator[ReactTrace]:
     finally:
         if workflow_config.id:
             trace.finished()
-
-
-# def trace_actor1(index, variables: dict) -> str:
-#     actor_path = f"actor/{index}"
-#     trace_element = TraceElement(variables, actor_path)
-#     trace_append_element(trace_element)
-#     return actor_path
 
 
 def node_trace_append(variables, path):
@@ -87,57 +78,3 @@ def trace_node(variables):
         raise ex
     finally:
         trace_stack_pop(trace_stack_cv)
-
-
-# def parallel_trace_append(path):
-#     """Append a TraceElement to trace[path]."""
-#     trace_element = TraceElement({}, path)
-#     trace_append_element(trace_element)
-#     return trace_element
-
-
-# @contextmanager
-# def trace_parallel():
-#     """Trace action execution."""
-#     path = trace_path_get()
-#     trace_element = parallel_trace_append(path)
-#     trace_stack_push(trace_stack_cv, trace_element)
-
-#     try:
-#         yield trace_element
-#     except Exception as ex:
-#         trace_element.set_error(ex)
-#         raise ex
-#     finally:
-#         trace_stack_pop(trace_stack_cv)
-
-
-# def reactor_trace_append(variables, path):
-#     """Append a TraceElement to trace[path]."""
-#     trace_element = TraceElement(variables, path)
-#     trace_append_element(trace_element)
-#     return trace_element
-
-
-# @contextmanager
-# def trace_reactor(variables):
-#     """Trace action execution."""
-#     path = trace_path_get()
-#     trace_element = reactor_trace_append(variables, path)
-#     trace_stack_push(trace_stack_cv, trace_element)
-
-#     try:
-#         yield trace_element
-#     except Exception as ex:
-#         trace_element.set_error(ex)
-#         raise ex
-#     finally:
-#         trace_stack_pop(trace_stack_cv)
-
-# def create_variables(workflow: Workflow):
-#     result = {
-#         "this": {
-#             ATTR_ENTITY_ID: workflow.entity_id,
-#             state: 
-#         }
-#     }
