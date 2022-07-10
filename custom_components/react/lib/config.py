@@ -16,6 +16,7 @@ from ..const import (
     ATTR_ENTITY,
     ATTR_EVENT,
     ATTR_FORWARD_ACTION,
+    ATTR_INDEX,
     ATTR_OVERWRITE,
     ATTR_PARALLEL,
     ATTR_REACTOR,
@@ -77,6 +78,7 @@ class Ctor():
     type: str
     action: str
     enabled: bool
+    is_list_item: bool
 
 
     def __init__(self, id: str, entity: str, moniker: str):
@@ -92,8 +94,9 @@ class Ctor():
         self.condition = get_property(ATTR_CONDITION, config, stencil)
 
 
-    def as_dict(self) -> dict:
+    def as_dict(self, index: int) -> dict:
         result = {
+            ATTR_INDEX: index,
             self.moniker: {
                 a: getattr(self, a)
                 for a in [ATTR_ID, ATTR_ENABLED, ATTR_ENTITY, ATTR_TYPE, ATTR_ACTION]
@@ -149,8 +152,8 @@ class Reactor(Ctor):
         return None
 
 
-    def as_dict(self) -> dict:
-        base_dict = super().as_dict()
+    def as_dict(self, index: int) -> dict:
+        base_dict = super().as_dict(index)
         self_dict = {
             a: getattr(self, a)
             for a in [ATTR_TIMING, ATTR_DELAY, ATTR_OVERWRITE, ATTR_RESET_WORKFLOW, ATTR_FORWARD_ACTION]
@@ -227,23 +230,24 @@ class Workflow():
     def load_entities(self, id: str, item_config: dict, item_stencil: dict, item_type: ctor_type, result: list):
         entity_data = get_property(ATTR_ENTITY, item_config, item_stencil)
         if isinstance(entity_data, str):
-            self.load_entity(id, item_config, item_stencil, item_type, result, entity_data)
+            self.load_entity(id, item_config, item_stencil, item_type, result, entity_data, False)
         elif isinstance(entity_data, list):
-            is_multiple = len(entity_data) > 1
+            is_list_item = len(entity_data) > 1
             for i,entity in enumerate(entity_data):
-                item_id = f"{id}_{i}" if is_multiple else id
-                self.load_entity(item_id, item_config, item_stencil, item_type, result, entity)
+                item_id = f"{id}_{i}" if is_list_item else id
+                self.load_entity(item_id, item_config, item_stencil, item_type, result, entity, is_list_item)
         elif entity_data is None:
-            self.load_entity(id, item_config, item_stencil, item_type, result, None)
+            self.load_entity(id, item_config, item_stencil, item_type, result, None, False)
 
 
-    def load_entity(self, item_id: str, item_config: dict, item_stencil: dict, item_type: ctor_type, result: list, entity: str):
+    def load_entity(self, item_id: str, item_config: dict, item_stencil: dict, item_type: ctor_type, result: list, entity: str, is_list_item: bool):
         item: Ctor = item_type(item_id, self.id, entity)
         item.load(item_config, item_stencil)
+        item.is_list_item = is_list_item
         result.append(item)
 
     
-    def as_dict(self) -> dict:
+    def as_dict(self, actor_id: str = None) -> dict:
         result = {
             a: getattr(self, a)
             for a in [ATTR_ID, ATTR_STENCIL, ATTR_FRIENDLY_NAME]
@@ -253,10 +257,13 @@ class Workflow():
             result[ATTR_VARIABLES] = self.variables.as_dict()
         result[ATTR_ACTOR] = []
         result[ATTR_REACTOR] = []
-        for actor in self.actors:
-            result[ATTR_ACTOR].append(actor.as_dict())
-        for reactor in self.reactors:
-            result[ATTR_REACTOR].append(reactor.as_dict())
+        for index, actor in enumerate(self.actors):
+            if (actor_id is None or
+                not actor.is_list_item or
+                actor.id == actor_id):
+                result[ATTR_ACTOR].append(actor.as_dict(index))
+        for index, reactor in enumerate(self.reactors):
+            result[ATTR_REACTOR].append(reactor.as_dict(index))
 
         if len(self.reactors) > 1:
             result[ATTR_PARALLEL] = "parallel"

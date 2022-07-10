@@ -91,6 +91,7 @@ ATTR_ENABLED = "enabled"
 ATTR_TEMPLATE = "template"
 ATTR_TRIGGER = "trigger"
 ATTR_EVENT = "event"
+ATTR_INDEX = "index"
 
 # events
 EVENT_REACT_ACTION = "ev_react_action"
