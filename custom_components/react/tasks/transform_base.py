@@ -14,27 +14,15 @@ from ..base import ReactBase
 
 from ..const import (
     ACTION_AVAILABLE,
-    ACTION_CHANGE,
-    ACTION_PRESS,
     ACTION_TOGGLE,
     ACTION_UNAVAILABLE,
-    ALARM_PREFIX,
     ATTR_ACTION,
     ATTR_ENTITY, 
     ATTR_TYPE,
-    BINARY_SENSOR_PREFIX,
-    DEVICE_TRACKER_PREFIX,
     EVENT_REACT_ACTION,
-    GROUP_PREFIX,
-    INPUT_BUTTON_PREFIX,
-    LIGHT_PREFIX,
-    MEDIAPLAYER_PREFIX,
     NEW_STATE,
     OLD_STATE,
-    PERSON_PREFIX,
-    SENSOR_PREFIX,
     SIGNAL_PROPERTY_COMPLETE,
-    SWITCH_PREFIX,
 )
 
 
@@ -92,78 +80,8 @@ class NonBinaryStateData(StateData):
             self.actions.append(ACTION_AVAILABLE)
         if (self.old_state_value != STATE_UNAVAILABLE and self.new_state_value == STATE_UNAVAILABLE):
             self.actions.append(ACTION_UNAVAILABLE)
-        
 
-class SensorStateData(NonBinaryStateData):
-    def __init__(self, event_data: dict[str, Any]):
-        super().__init__(SENSOR_PREFIX, event_data)
-
-        if self.new_state_value != self.old_state_value:
-            self.actions.append(ACTION_CHANGE)
-
-
-class BinarySensorStateData(BinaryStateData):
-    def __init__(self, event_data: dict[str, Any]):
-        super().__init__(BINARY_SENSOR_PREFIX, event_data)
-
-
-class PersonStateData(NonBinaryStateData):
-    def __init__(self, event_data: dict[str, Any]):
-        super().__init__(PERSON_PREFIX, event_data)
-
-        if self.old_state_value != self.new_state_value:
-            self.actions.append(self.new_state_value)
-        
-
-class DeviceTrackerStateData(NonBinaryStateData):
-    def __init__(self, event_data: dict[str, Any]):
-        super().__init__(DEVICE_TRACKER_PREFIX, event_data)
-
-        if self.old_state_value != self.new_state_value:
-            self.actions.append(self.new_state_value)
-
-
-class MediaPlayerStateData(NonBinaryStateData):
-    def __init__(self, event_data: dict[str, Any]):
-        super().__init__(MEDIAPLAYER_PREFIX, event_data)
-
-        if self.old_state_value != self.new_state_value:
-            self.actions.append(self.new_state_value)
-
-
-class GroupStateData(BinaryStateData):
-    def __init__(self, event_data: dict[str, Any]):
-        super().__init__(GROUP_PREFIX, event_data)
-
-
-class SwitchStateData(BinaryStateData):
-    def __init__(self, event_data: dict[str, Any]):
-        super().__init__(SWITCH_PREFIX, event_data)
-
-
-class LightStateData(BinaryStateData):
-    def __init__(self, event_data: dict[str, Any]):
-        super().__init__(LIGHT_PREFIX, event_data)
-
-
-class AlarmStateData(NonBinaryStateData):
-    def __init__(self, event_data: dict[str, Any]):
-        super().__init__(ALARM_PREFIX, event_data)
-
-        if self.old_state_value != self.new_state_value:
-            if self.old_state_value != None:
-                self.actions.append(f"un_{self.old_state_value}")
-            self.actions.append(self.new_state_value)
-
-
-class InputButtonStateData(NonBinaryStateData):
-    def __init__(self, event_data: dict[str, Any]):
-        super().__init__(INPUT_BUTTON_PREFIX, event_data)
-
-        if self.old_state_value != None and self.new_state_value != None and self.old_state_value != self.new_state_value:
-            self.actions.append(ACTION_PRESS)
-
-
+   
 class StateTransformTask(ReactTask):
     def __init__(self, react: ReactBase, prefix: str, type: str) -> None:
         super().__init__(react)
