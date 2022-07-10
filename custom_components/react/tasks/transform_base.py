@@ -160,7 +160,7 @@ class InputButtonStateData(NonBinaryStateData):
     def __init__(self, event_data: dict[str, Any]):
         super().__init__(INPUT_BUTTON_PREFIX, event_data)
 
-        if self.old_state_value != self.new_state_value:
+        if self.old_state_value != None and self.new_state_value != None and self.old_state_value != self.new_state_value:
             self.actions.append(ACTION_PRESS)
 
 
