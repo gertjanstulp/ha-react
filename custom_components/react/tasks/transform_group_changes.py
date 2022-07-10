@@ -1,9 +1,10 @@
 """"Store React data."""
 from __future__ import annotations
+from typing import Any
 
 from homeassistant.core import Event
 
-from .transform_base import GroupStateData, StateData, StateTransformTask
+from .transform_base import BinaryStateData, StateData, StateTransformTask
 from ..base import ReactBase
 
 from ..const import (
@@ -15,6 +16,11 @@ from ..const import (
 async def async_setup_task(react: ReactBase) -> Task:
     """Set up this task."""
     return Task(react=react)
+
+
+class GroupStateData(BinaryStateData):
+    def __init__(self, event_data: dict[str, Any]):
+        super().__init__(GROUP_PREFIX, event_data)
 
 
 class Task(StateTransformTask):
