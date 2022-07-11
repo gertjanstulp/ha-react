@@ -116,7 +116,7 @@ class DataDictHandler(Updatable):
                         test = 1
                         # self.value_trackers.append(TemplateTracker(react, self, attr, Template(attr_value), type_converter, additional_variables.as_dict()))
                     else:
-                        self.value_trackers.append(TemplateTracker(react, self, attr, Template(attr_value), type_converter, variables = additional_variables.as_dict() if additional_variables is not None else None ))
+                        self.value_trackers.append(TemplateTracker(react, self.variable_container, attr, Template(attr_value), type_converter, variables = additional_variables.as_dict() if additional_variables is not None else None ))
                 else:
                     set_attr(attr, attr_value, PROP_TYPE_VALUE)
             else:
@@ -126,6 +126,7 @@ class DataDictHandler(Updatable):
             init_attr(name, PROP_TYPE_STR)
 
         for tracker in self.value_trackers:
+            tracker.on_update(self.async_update)
             tracker.start()
 
 
