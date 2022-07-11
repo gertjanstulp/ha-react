@@ -86,11 +86,20 @@ class WorkflowState:
 
 
 class DataDictHandler(Updatable):
-    def __init__(self, react: ReactBase, dataDict: DataDict) -> None:
+    def __init__(self, is_jit: bool, react: ReactBase, dataDict: DataDict, additional_variables: DataDictHandler = None) -> None:
         super().__init__(react)
+        # self.is_jit = is_jit
         self.value_trackers: list[TemplateTracker] = []
         self.names = dataDict.names
+        self.additional_variables = additional_variables
         self.value_container = type('object', (), {})()
+        actor_container = {
+            ATTR_ENTITY: None,
+            ATTR_TYPE: None,
+            ATTR_ACTION: None,
+        }
+        setattr(self.value_container, ATTR_ACTOR, actor_container)
+
 
         def init_attr(attr: str, type_converter: Any, default: Any = None):
             type_prop = f"_{attr}{PROP_ATTR_TYPE_POSTFIX}"
@@ -103,7 +112,11 @@ class DataDictHandler(Updatable):
             if attr_value:
                 if isinstance(attr_value, str) and is_template_string(attr_value):
                     set_attr(attr, None, PROP_TYPE_TEMPLATE)
-                    self.value_trackers.append(TemplateTracker(react, self, attr, Template(attr_value), type_converter))
+                    if is_jit:
+                        test = 1
+                        # self.value_trackers.append(TemplateTracker(react, self, attr, Template(attr_value), type_converter, additional_variables.as_dict()))
+                    else:
+                        self.value_trackers.append(TemplateTracker(react, self, attr, Template(attr_value), type_converter, variables = additional_variables.as_dict() if additional_variables is not None else None ))
                 else:
                     set_attr(attr, attr_value, PROP_TYPE_VALUE)
             else:
@@ -116,8 +129,13 @@ class DataDictHandler(Updatable):
             tracker.start()
 
 
-    def to_dict(self) -> dict:
-        return vars(self.value_container)
+    def to_dict(self, actor_data: dict = None) -> dict:
+        result = vars(self.value_container)
+        if actor_data:
+            result[ATTR_ACTOR][ATTR_ENTITY] = actor_data.get(ATTR_ACTOR_ENTITY, None)
+            result[ATTR_ACTOR][ATTR_TYPE] = actor_data.get(ATTR_ACTOR_TYPE, None)
+            result[ATTR_ACTOR][ATTR_ACTION] = actor_data.get(ATTR_ACTOR_ACTION, None)
+        return result
         
 
     def as_dict(self) -> dict:
@@ -130,24 +148,34 @@ class DataDictHandler(Updatable):
             tracker.destroy()
 
 
-class VariableHandler(DataDictHandler):
-    def __init__(self, react: ReactBase, workflow: Workflow) -> None:
-        super().__init__(react, workflow.variables)
-        actor_container = {
-            ATTR_ENTITY: None,
-            ATTR_TYPE: None,
-            ATTR_ACTION: None,
-        }
-        setattr(self.value_container, ATTR_ACTOR, actor_container)
+class WorkflowVariableHandler(DataDictHandler):
+    def __init__(self, react: ReactBase, workflowVariables: DataDict) -> None:
+        super().__init__(False, react, workflowVariables)
 
 
-    def to_dict(self, actor_data: dict = None):
-        result = super().to_dict()
-        if actor_data:
-            result[ATTR_ACTOR][ATTR_ENTITY] = actor_data.get(ATTR_ACTOR_ENTITY, None)
-            result[ATTR_ACTOR][ATTR_TYPE] = actor_data.get(ATTR_ACTOR_TYPE, None)
-            result[ATTR_ACTOR][ATTR_ACTION] = actor_data.get(ATTR_ACTOR_ACTION, None)
-        return result
+class ReactorDataHandler(DataDictHandler):
+    def __init__(self, react: ReactBase, reactorData: DataDict, workflowVariables: DataDictHandler) -> None:
+        super().__init__(True, react, reactorData, workflowVariables)
+
+
+# class VariableHandler(DataDictHandler):
+#     def __init__(self, react: ReactBase, dataDict: DataDict) -> None:
+#         super().__init__(react, dataDict)
+#         actor_container = {
+#             ATTR_ENTITY: None,
+#             ATTR_TYPE: None,
+#             ATTR_ACTION: None,
+#         }
+#         setattr(self.value_container, ATTR_ACTOR, actor_container)
+
+
+#     def to_dict(self, actor_data: dict = None):
+#         result = super().to_dict()
+#         if actor_data:
+#             result[ATTR_ACTOR][ATTR_ENTITY] = actor_data.get(ATTR_ACTOR_ENTITY, None)
+#             result[ATTR_ACTOR][ATTR_TYPE] = actor_data.get(ATTR_ACTOR_TYPE, None)
+#             result[ATTR_ACTOR][ATTR_ACTION] = actor_data.get(ATTR_ACTOR_ACTION, None)
+#         return result
 
 
 class RuntimeHandler():
@@ -190,7 +218,7 @@ class ActionHandler(RuntimeHandler):
     action: Union[str, None] = None
     condition: Union[bool, None] = True
     
-    def __init__(self, runtime: WorkflowRuntime, actor: Actor, index: int, variable_handler: VariableHandler):
+    def __init__(self, runtime: WorkflowRuntime, actor: Actor, index: int, variable_handler: WorkflowVariableHandler):
         self.runtime = runtime
         self.actor = actor
         self.index = index
@@ -300,13 +328,13 @@ class ActionHandler(RuntimeHandler):
 
 
 class ReactionHandler(RuntimeHandler):
-    def __init__(self, runtime: WorkflowRuntime, reactor: Reactor, index: int, variable_handler: VariableHandler):
+    def __init__(self, runtime: WorkflowRuntime, reactor: Reactor, index: int, variable_handler: WorkflowVariableHandler):
         self.runtime = runtime
         self.reactor = reactor
         self.index = index
         self.variable_handler = variable_handler
         self.enabled = False
-        self.data_handler = DataDictHandler(runtime.react, reactor.data)
+        self.data_handler = ReactorDataHandler(runtime.react, reactor.data, variable_handler)
         
         self.add_jitter(ATTR_ENTITY, PROP_TYPE_STR)
         self.add_jitter(ATTR_TYPE, PROP_TYPE_STR)
@@ -338,7 +366,7 @@ class ReactionHandler(RuntimeHandler):
         attr_value = getattr(self.reactor, property, None)
         if attr_value:
             if isinstance(attr_value, str) and is_template_string(attr_value):
-                self.set_jitter(property, TemplateJitter(self.runtime.react,  property, Template(attr_value), type_converter), PROP_TYPE_TEMPLATE)
+                self.set_jitter(property, TemplateJitter(self.runtime.react, property, Template(attr_value), type_converter), PROP_TYPE_TEMPLATE)
             else:
                 self.set_jitter(property, ValueJitter(attr_value, type_converter), PROP_TYPE_VALUE)
         else:
@@ -512,7 +540,7 @@ class WorkflowRuntime(Updatable):
         self.workflow_config = workflow_config
         self.actor_handlers: list[ActionHandler] = []
         self.reactor_handlers: list[ReactionHandler] = []
-        self.variable_handler = VariableHandler(react, workflow_config)
+        self.variable_handler = WorkflowVariableHandler(react, workflow_config.variables)
         self.last_triggered: Union[datetime, None] = None
 
         for ai,actor in enumerate(workflow_config.actors):
