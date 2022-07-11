@@ -97,7 +97,7 @@ class TemplateTracker(Updatable):
                 return
 
             if hasattr(self.owner, "set_property"):
-                self.owner.set_property(self.property, self.type_converter(result))
+                self.owner.set_property(self.owner, self.property, self.type_converter(result))
             else:
                 setattr(self.owner, self.property, self.type_converter(result))
             self.async_update()
