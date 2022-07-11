@@ -11,6 +11,7 @@ from ..const import (
     ATTR_ACTION,
     ATTR_ACTOR,
     ATTR_CONDITION,
+    ATTR_DATA,
     ATTR_DELAY,
     ATTR_ENABLED,
     ATTR_ENTITY,
@@ -54,6 +55,23 @@ def get_property(name: str, config: dict, stencil: dict, default: Any = None):
         result = default
 
     return result
+
+
+class DataDict():
+    def __init__(self, workflow_id: str, config: dict) -> None:
+        # self.workflow_id = workflow_id
+        self.names: list[str] = []
+
+        for k,v in config.items():
+            setattr(self, k, v)
+            self.names.append(k)
+
+    def as_dict(self) -> dict:
+        return {
+            a: getattr(self, a)
+            for a in self.names
+            if getattr(self, a) is not None
+        }
 
 
 class Schedule():
@@ -127,7 +145,7 @@ class Reactor(Ctor):
     overwrite: Union[bool, str]
     reset_workflow: str
     forward_action: Union[bool, str]
-    
+    data: DataDict
 
     def __init__(self, id: str, workflow_id: str, entity: str):
         super().__init__(id, entity, ATTR_EVENT)
@@ -144,6 +162,7 @@ class Reactor(Ctor):
         self.overwrite = get_property(ATTR_OVERWRITE, config, stencil, False)
         self.reset_workflow = get_property(ATTR_RESET_WORKFLOW, config, stencil)
         self.forward_action = get_property(ATTR_FORWARD_ACTION, config, stencil, False)
+        self.data = DataDict(None,  get_property(ATTR_DATA, config, stencil, {}))
 
 
     def load_schedule(self, config: dict, stencil: dict) -> Schedule:
@@ -160,28 +179,14 @@ class Reactor(Ctor):
             if getattr(self, a) is not None and getattr(self, a) != False
         }
         if self.schedule:
-            self_dict[ATTR_SCHEDULE] = self.schedule.as_dict(),
+            self_dict[ATTR_SCHEDULE] = self.schedule.as_dict()
+        if self.data:
+            self_dict[ATTR_DATA] = self.data.as_dict()
 
         return base_dict | self_dict
 
 
 ctor_type = Callable[[str, str, str], Union[Actor, Reactor] ]
-
-class Variables():
-    def __init__(self, workflow_id: str, config: dict) -> None:
-        self.workflow_id = workflow_id
-        self.names: list[str] = []
-
-        for k,v in config.items():
-            setattr(self, k, v)
-            self.names.append(k)
-
-    def as_dict(self) -> dict:
-        return {
-            a: getattr(self, a)
-            for a in self.names
-            if getattr(self, a) is not None
-        }
 
 
 class Workflow():
@@ -191,7 +196,7 @@ class Workflow():
     friendly_name: Union[str, None] = None
     icon: Union[str, None] = None
     trace_config: Union[Any, None] = None
-    variables: Union[Variables, None] = None
+    variables: Union[DataDict, None] = None
 
     def __init__(self, workflow_id: str, config: dict):
         self.id = workflow_id
@@ -200,7 +205,7 @@ class Workflow():
         self.friendly_name = config.get(ATTR_FRIENDLY_NAME, None)
         self.icon = config.get(CONF_ICON, None)
         self.trace_config = config.get(CONF_TRACE, None)
-        self.variables = Variables(id, config.get(ATTR_VARIABLES, {}))
+        self.variables = DataDict(id, config.get(ATTR_VARIABLES, {}))
 
 
     def load(self, config, stencil):

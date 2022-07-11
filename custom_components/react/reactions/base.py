@@ -12,6 +12,7 @@ from homeassistant.helpers.event import async_track_point_in_time
 
 from ..const import (
     ATTR_ACTION,
+    ATTR_DATA,
     ATTR_ENTITY,
     ATTR_REACTOR_ID,
     ATTR_TYPE,
@@ -40,6 +41,7 @@ class ReactionData:
     reset_workflow: str = ""
     overwrite: bool = False
     forward_action: bool = False
+    data: dict = {}
 
     def to_json(self):
         """Export to json."""
@@ -62,7 +64,8 @@ class ReactReaction:
             ATTR_REACTOR_ID: self.data.reactor_id,
             ATTR_ENTITY: self.data.reactor_entity,
             ATTR_TYPE: self.data.reactor_type,
-            ATTR_ACTION:  self.data.reactor_action
+            ATTR_ACTION:  self.data.reactor_action,
+            ATTR_DATA: self.data.data
         }
 
 
