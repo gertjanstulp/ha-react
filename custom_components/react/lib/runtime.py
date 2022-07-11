@@ -88,8 +88,6 @@ class WorkflowState:
 class DataDictHandler(Updatable):
     def __init__(self, is_jit: bool, react: ReactBase, dataDict: DataDict, additional_variables: DataDictHandler = None) -> None:
         super().__init__(react)
-        # self.is_jit = is_jit
-        self.value_trackers: list[TemplateTracker] = []
         self.names = dataDict.names
         self.additional_variables = additional_variables
         self.value_container = type('object', (), {})()
@@ -100,7 +98,7 @@ class DataDictHandler(Updatable):
         }
         setattr(self.value_container, ATTR_ACTOR, actor_container)
 
-
+        self.template_trackers: list[TemplateTracker] = []
         def init_attr(attr: str, type_converter: Any, default: Any = None):
             type_prop = f"_{attr}{PROP_ATTR_TYPE_POSTFIX}"
             attr_value = getattr(dataDict, attr, None)
@@ -114,9 +112,9 @@ class DataDictHandler(Updatable):
                     set_attr(attr, None, PROP_TYPE_TEMPLATE)
                     if is_jit:
                         test = 1
-                        # self.value_trackers.append(TemplateTracker(react, self, attr, Template(attr_value), type_converter, additional_variables.as_dict()))
+                        # self.template_trackers.append(TemplateTracker(react, self.value_container, attr, Template(attr_value), type_converter, additional_variables.to_dict()))
                     else:
-                        self.value_trackers.append(TemplateTracker(react, self.variable_container, attr, Template(attr_value), type_converter, variables = additional_variables.as_dict() if additional_variables is not None else None ))
+                        self.template_trackers.append(TemplateTracker(react, self.value_container, attr, Template(attr_value), type_converter, variables = additional_variables.to_dict() if additional_variables is not None else None ))
                 else:
                     set_attr(attr, attr_value, PROP_TYPE_VALUE)
             else:
@@ -125,7 +123,7 @@ class DataDictHandler(Updatable):
         for name in self.names:
             init_attr(name, PROP_TYPE_STR)
 
-        for tracker in self.value_trackers:
+        for tracker in self.template_trackers:
             tracker.on_update(self.async_update)
             tracker.start()
 
@@ -139,7 +137,7 @@ class DataDictHandler(Updatable):
         return result
         
 
-    def as_dict(self) -> dict:
+    def as_trace_dict(self) -> dict:
         return { name : getattr(self.value_container, name, None) for name in self.names }
 
     
@@ -157,26 +155,6 @@ class WorkflowVariableHandler(DataDictHandler):
 class ReactorDataHandler(DataDictHandler):
     def __init__(self, react: ReactBase, reactorData: DataDict, workflowVariables: DataDictHandler) -> None:
         super().__init__(True, react, reactorData, workflowVariables)
-
-
-# class VariableHandler(DataDictHandler):
-#     def __init__(self, react: ReactBase, dataDict: DataDict) -> None:
-#         super().__init__(react, dataDict)
-#         actor_container = {
-#             ATTR_ENTITY: None,
-#             ATTR_TYPE: None,
-#             ATTR_ACTION: None,
-#         }
-#         setattr(self.value_container, ATTR_ACTOR, actor_container)
-
-
-#     def to_dict(self, actor_data: dict = None):
-#         result = super().to_dict()
-#         if actor_data:
-#             result[ATTR_ACTOR][ATTR_ENTITY] = actor_data.get(ATTR_ACTOR_ENTITY, None)
-#             result[ATTR_ACTOR][ATTR_TYPE] = actor_data.get(ATTR_ACTOR_TYPE, None)
-#             result[ATTR_ACTOR][ATTR_ACTION] = actor_data.get(ATTR_ACTOR_ACTION, None)
-#         return result
 
 
 class RuntimeHandler():
@@ -225,6 +203,12 @@ class ActionHandler(RuntimeHandler):
         self.index = index
         self.complete = False
         self.enabled = False
+
+        self.value_container = type('object', (), {})()
+        setattr(self.value_container, ATTR_ENTITY, None)
+        setattr(self.value_container, ATTR_TYPE, None)
+        setattr(self.value_container, ATTR_ACTION, None)
+        setattr(self.value_container, ATTR_CONDITION, None)
 
         self.template_trackers: list[TemplateTracker] = []
         def init_attr(attr: str, type_converter: Any, default: Any = None):
@@ -427,7 +411,7 @@ class ReactionHandler(RuntimeHandler):
                 reaction.data.reset_workflow = self.jit_render(ATTR_RESET_WORKFLOW, actor_data)
                 reaction.data.overwrite = self.reactor.overwrite
                 reaction.data.datetime = calculate_reaction_datetime(self.reactor.timing, self.reactor.schedule, self.jit_render(ATTR_DELAY, actor_data))
-                reaction.data.data = self.data_handler.as_dict()
+                reaction.data.data = self.data_handler.to_dict()
 
                 self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{self.reactor.id}' sending reaction: {format_data(entity=reaction.data.reactor_entity, type=reaction.data.reactor_type, action=reaction.data.reactor_action, overwrite=reaction.data.overwrite, reset_workflow=reaction.data.reset_workflow)}")
                 self.runtime.react.reactions.add(reaction)
@@ -470,7 +454,7 @@ class WorkflowRun:
             this = state.as_dict()
         self.run_variables = {
             ATTR_THIS: this,
-            ATTR_VARIABLES: self.runtime.variable_handler.as_dict(),
+            ATTR_VARIABLES: self.runtime.variable_handler.as_trace_dict(),
             ATTR_ACTOR: {
                 ATTR_DATA: {
                     ATTR_WORKFLOW_ID: self.runtime.workflow_config.id, 
