@@ -109,7 +109,7 @@ class VariableHandler(Updatable):
             if attr_value:
                 if isinstance(attr_value, str) and is_template_string(attr_value):
                     set_attr(attr, None, PROP_TYPE_TEMPLATE)
-                    self.variable_trackers.append(TemplateTracker(react, self, attr, Template(attr_value), type_converter))
+                    self.variable_trackers.append(TemplateTracker(react, self.variable_container, attr, Template(attr_value), type_converter))
                 else:
                     set_attr(attr, attr_value, PROP_TYPE_VALUE)
             else:
@@ -119,7 +119,8 @@ class VariableHandler(Updatable):
             init_attr(name, PROP_TYPE_STR)
 
         for tracker in self.variable_trackers:
-            tracker.start()
+           tracker.on_update(self.async_update)
+           tracker.start()
 
 
     def to_dict(self, actor_data: dict = None) -> dict:
