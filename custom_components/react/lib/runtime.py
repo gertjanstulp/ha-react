@@ -159,10 +159,10 @@ class RuntimeHandler(Updatable):
             return default
 
 
-    def jit_render_all(self):
+    def jit_render_all(self, actor_data: dict):
         result = {}
         for attr in self.jit_attrs:
-            result[attr] = self.jit_render(attr)
+            result[attr] = self.jit_render(attr, actor_data)
         return result
 
 
@@ -404,7 +404,7 @@ class ReactionHandler(RuntimeHandler):
                 reaction.data.reset_workflow = self.jit_render(ATTR_RESET_WORKFLOW, actor_data)
                 reaction.data.overwrite = self.reactor.overwrite
                 reaction.data.datetime = calculate_reaction_datetime(self.reactor.timing, self.reactor.schedule, self.jit_render(ATTR_DELAY, actor_data))
-                reaction.data.data = self.data_handler.jit_render_all()
+                reaction.data.data = self.data_handler.jit_render_all(actor_data)
 
                 self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{self.reactor.id}' sending reaction: {format_data(entity=reaction.data.reactor_entity, type=reaction.data.reactor_type, action=reaction.data.reactor_action, overwrite=reaction.data.overwrite, reset_workflow=reaction.data.reset_workflow)}")
                 self.runtime.react.reactions.add(reaction)
