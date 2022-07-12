@@ -1,13 +1,11 @@
 from __future__ import annotations
 import asyncio
-from contextlib import contextmanager, suppress
 from copy import copy
 from dataclasses import dataclass
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Callable, Iterator, Tuple, Union
+from typing import Any, Callable, Tuple, Union
 from homeassistant.core import Context, Event, callback
-from homeassistant.helpers.condition import condition_trace_append
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, async_dispatcher_send
 from homeassistant.helpers.template import Template, is_template_string
 from homeassistant.helpers.trace import trace_get, trace_path, trace_set_result, trace_path_stack_cv
@@ -21,9 +19,6 @@ from ..utils.updatable import Updatable
 from ..utils.logger import format_data
 from ..utils.template import TemplateJitter, TemplateTracker, ValueJitter
 from ..utils.trace import ReactTrace, trace_node, trace_workflow
-
-if TYPE_CHECKING:
-    from .. import WorkflowEntity
 
 from ..const import (
     ACTION_AVAILABLE,
@@ -52,7 +47,6 @@ from ..const import (
     PROP_ATTR_TYPE_POSTFIX,
     PROP_TYPE_BOOL,
     PROP_TYPE_INT,
-    PROP_TYPE_SOURCE,
     PROP_TYPE_STR,
     SIGNAL_DISPATCH,
     SIGNAL_PROPERTY_COMPLETE,
@@ -67,30 +61,123 @@ from ..const import (
 
 _JITTER_PROPERTY = "{}_jitter"
 
- 
-def extract_action_event_data(event: Event) -> Tuple[str, str, str]:
-    entity = event.data.get(ATTR_ENTITY, None)
-    type = event.data.get(ATTR_TYPE, None)
-    action = event.data.get(ATTR_ACTION, None)
-    return entity, type, action
 
-
-class WorkflowState:
-    def __init__(self, workflow_entity: WorkflowEntity) -> None:
-        self.workflow_entity = workflow_entity
-
-
-    @callback
-    def async_set_context(self, context: Context) -> None:
-        self.workflow_entity.async_set_context(context)
-
-
-class DataDictHandler(Updatable):
-    def __init__(self, is_jit: bool, react: ReactBase, dataDict: DataDict, additional_variables: DataDictHandler = None) -> None:
-        super().__init__(react)
-        self.names = dataDict.names
+class RuntimeHandler(Updatable):
+    def __init__(self, runtime: WorkflowRuntime, config_source: Any, additional_variables: DataDictHandler) -> None:
+        super().__init__(runtime.react)
+        self.runtime = runtime
+        self.config_source = config_source
         self.additional_variables = additional_variables
+
+        self.template_trackers: list[TemplateTracker] = []
         self.value_container = type('object', (), {})()
+        self.track_attrs = []
+        self.jit_attrs = []
+    
+
+    def start_trackers(self):
+        if self.additional_variables:
+            @callback
+            def async_update_template_trackers():
+                for tracker in self.template_trackers:
+                    tracker.async_refresh()
+            self.additional_variables.on_update(async_update_template_trackers)
+        
+        for tracker in self.template_trackers:
+            tracker.start()
+
+
+    def start(self):
+        pass
+    
+
+    def stop(self):
+        pass
+
+
+    def init_attr(self, is_jit: bool, attr: str, type_converter: Any, default: Any = None):
+        attr_value = getattr(self.config_source, attr, None)
+
+        if is_jit:
+            self.add_jitter(attr, attr_value, type_converter, default)
+        else:
+            self.add_tracker(attr, attr_value, type_converter, default)
+    
+
+    def add_tracker(self, attr: str, attr_value: Any, type_converter: Any, default: Any = None):
+        type_prop = f"_{attr}{PROP_ATTR_TYPE_POSTFIX}"
+        
+        def set_attr(attr: str, value: Any, prop_type: str):
+            self.set_property(self.value_container, attr, value)
+            setattr(self.value_container, type_prop, prop_type)
+
+        if attr_value:
+            if isinstance(attr_value, str) and is_template_string(attr_value):
+                set_attr(attr, None, PROP_TYPE_TEMPLATE)
+                self.template_trackers.append(TemplateTracker(
+                    react=self.runtime.react,
+                    owner=self.value_container, 
+                    property=attr, 
+                    template=Template(attr_value),
+                    type_converter=type_converter, 
+                    variables=self.additional_variables.to_dict() if self.additional_variables is not None else None,
+                    update_callback=self.async_update))
+            else:
+                set_attr(attr, attr_value, PROP_TYPE_VALUE)
+        else:
+            set_attr(attr, default, PROP_TYPE_DEFAULT)
+
+        self.track_attrs.append(attr)
+
+
+    def add_jitter(self, attr: str, attr_value: Any, type_converter: Any, default: Any = None):
+        # attr_value = getattr(self.config_source, property, None)
+        if attr_value:
+            if isinstance(attr_value, str) and is_template_string(attr_value):
+                self.set_jitter(attr, TemplateJitter(self.runtime.react, attr, Template(attr_value), type_converter), PROP_TYPE_TEMPLATE)
+            else:
+                self.set_jitter(attr, ValueJitter(attr_value, type_converter), PROP_TYPE_VALUE)
+        else:
+            self.set_jitter(attr, ValueJitter(default, type_converter), PROP_TYPE_DEFAULT)
+            
+        self.jit_attrs.append(attr)
+
+
+    def set_jitter(self, attr: str, value: Any, prop_type: str):
+        jitter_prop = _JITTER_PROPERTY.format(attr)
+        type_prop = f"_{attr}{PROP_ATTR_TYPE_POSTFIX}"
+        setattr(self, jitter_prop, value)
+        setattr(self, type_prop, prop_type)
+
+
+    def jit_render(self, attr: str, actor_data: dict, default: Any = None):
+        jitter_property = _JITTER_PROPERTY.format(attr)
+        attr_jitter: TemplateJitter = getattr(self, jitter_property, None)
+        if attr_jitter:
+            return attr_jitter.render(self.additional_variables.to_dict(actor_data) if self.additional_variables else {})
+        else:
+            return default
+
+
+    def jit_render_all(self):
+        result = {}
+        for attr in self.jit_attrs:
+            result[attr] = self.jit_render(attr)
+        return result
+
+
+    def set_property(self, target: Any, name: str, value: Any):
+        if hasattr(target, name) and getattr(target, name) == value: 
+            return
+        setattr(target, name, value)
+
+
+class DataDictHandler(RuntimeHandler):
+    def __init__(self, is_jit: bool, runtime: WorkflowRuntime, dataDict: DataDict, additional_variables: DataDictHandler = None) -> None:
+        super().__init__(runtime, dataDict, additional_variables)
+
+        self.names = dataDict.names
+
         actor_container = {
             ATTR_ENTITY: None,
             ATTR_TYPE: None,
@@ -98,48 +185,10 @@ class DataDictHandler(Updatable):
         }
         setattr(self.value_container, ATTR_ACTOR, actor_container)
 
-        self.template_trackers: list[TemplateTracker] = []
-        source = dataDict
-        target = self.value_container
-        def init_attr(attr: str, type_converter: Any, default: Any = None):
-            type_prop = f"_{attr}{PROP_ATTR_TYPE_POSTFIX}"
-            attr_value = getattr(source, attr, None)
-
-            def set_attr(attr: str, value: Any, prop_type: str):
-                self.set_property(target, attr, value)
-                setattr(target, type_prop, prop_type)
-
-            if attr_value:
-                if isinstance(attr_value, str) and is_template_string(attr_value):
-                    set_attr(attr, None, PROP_TYPE_TEMPLATE)
-                    if is_jit:
-                        test = 1
-                        # self.template_trackers.append(TemplateTracker(react, self.value_container, attr, Template(attr_value), type_converter, additional_variables.to_dict()))
-                    else:
-                        self.template_trackers.append(TemplateTracker(
-                            react=react,
-                            owner=self.value_container, 
-                            property=attr, 
-                            template=Template(attr_value),
-                            type_converter=type_converter, 
-                            variables = additional_variables.to_dict() if additional_variables is not None else None,
-                            update_callback=self.async_update))
-                else:
-                    set_attr(attr, attr_value, PROP_TYPE_VALUE)
-            else:
-                set_attr(attr, default, PROP_TYPE_DEFAULT)
-
         for name in self.names:
-            init_attr(name, PROP_TYPE_STR)
+            self.init_attr(is_jit, name, PROP_TYPE_STR)
 
-        for tracker in self.template_trackers:
-            tracker.start()
-
-
-    def set_property(self, target: Any, name: str, value: Any):
-        if hasattr(target, name) and getattr(target, name) == value: 
-            return
-        setattr(target, name, value)
+        self.start_trackers()
 
 
     def to_dict(self, actor_data: dict = None) -> dict:
@@ -162,60 +211,13 @@ class DataDictHandler(Updatable):
 
 
 class WorkflowVariableHandler(DataDictHandler):
-    def __init__(self, react: ReactBase, workflowVariables: DataDict) -> None:
-        super().__init__(False, react, workflowVariables)
+    def __init__(self, runtime: WorkflowRuntime, workflowVariables: DataDict) -> None:
+        super().__init__(False, runtime, workflowVariables)
 
 
 class ReactorDataHandler(DataDictHandler):
-    def __init__(self, react: ReactBase, reactorData: DataDict, workflowVariables: DataDictHandler) -> None:
-        super().__init__(True, react, reactorData, workflowVariables)
-
-
-class RuntimeHandler(Updatable):
-    def __init__(self, react: ReactBase, config_source: Any, additional_variables: DataDictHandler) -> None:
-        super().__init__(react)
-        self.react = react
-        self.config_source = config_source
-        self.additional_variables = additional_variables
-
-
-    def start(self):
-        pass
-    
-
-    def stop(self):
-        pass
-
-
-    def destroy(self):
-        super().destroy()
-
-    
-    def add_jitter(self, property: str, type_converter: Any, default: Any = None):
-        attr_value = getattr(self.config_source, property, None)
-        if attr_value:
-            if isinstance(attr_value, str) and is_template_string(attr_value):
-                self.set_jitter(property, TemplateJitter(self.react, property, Template(attr_value), type_converter), PROP_TYPE_TEMPLATE)
-            else:
-                self.set_jitter(property, ValueJitter(attr_value, type_converter), PROP_TYPE_VALUE)
-        else:
-            self.set_jitter(property, ValueJitter(default, type_converter), PROP_TYPE_DEFAULT)
-
-
-    def set_jitter(self, property: str, value: Any, prop_type: str):
-        jitter_prop = _JITTER_PROPERTY.format(property)
-        type_prop = f"_{property}{PROP_ATTR_TYPE_POSTFIX}"
-        setattr(self, jitter_prop, value)
-        setattr(self, type_prop, prop_type)
-
-
-    def jit_render(self, attr: str, actor_data: dict, default: Any = None):
-        jitter_property = _JITTER_PROPERTY.format(attr)
-        attr_jitter: TemplateJitter = getattr(self, jitter_property, None)
-        if attr_jitter:
-            return attr_jitter.render(self.additional_variables.to_dict(actor_data) if self.additional_variables else {})
-        else:
-            return default
+    def __init__(self, runtime: WorkflowRuntime, reactorData: DataDict, workflowVariables: DataDictHandler) -> None:
+        super().__init__(True, runtime, reactorData, workflowVariables)
 
 
 class ConditionHandler():
@@ -248,74 +250,32 @@ class ActionHandler(RuntimeHandler):
     condition: Union[bool, None] = True
     
     def __init__(self, runtime: WorkflowRuntime, actor: Actor, index: int, additional_variables: WorkflowVariableHandler):
-        super().__init__(runtime.react, actor, additional_variables)
+        super().__init__(runtime, actor, additional_variables)
 
-        self.runtime = runtime
         self.actor = actor
         self.index = index
         self.complete = False
         self.enabled = False
 
-        self.value_container = type('object', (), {})()
-        setattr(self, ATTR_ENTITY, None)
-        setattr(self, ATTR_TYPE, None)
-        setattr(self, ATTR_ACTION, None)
-        setattr(self, ATTR_CONDITION, None)
+        self.init_attr(False, ATTR_ENTITY, PROP_TYPE_STR)
+        self.init_attr(False, ATTR_TYPE, PROP_TYPE_STR)
+        self.init_attr(False, ATTR_ACTION, PROP_TYPE_STR)
+        self.init_attr(False, ATTR_CONDITION, PROP_TYPE_BOOL, True)
 
-        self.template_trackers: list[TemplateTracker] = []
-        source = actor
-        target = self
-        def init_attr(attr: str, type_converter: Any, default: Any = None):
-            type_prop = f"_{attr}{PROP_ATTR_TYPE_POSTFIX}"
-            attr_value = getattr(source, attr, None)
-
-            def set_attr(attr: str, value: Any, prop_type: str):
-                self.set_property(target, attr, value)
-                setattr(target, type_prop, prop_type)
-
-            if attr_value:
-                if isinstance(attr_value, str) and is_template_string(attr_value):
-                    set_attr(attr, None, PROP_TYPE_TEMPLATE)
-                    self.template_trackers.append(TemplateTracker(
-                        react=self.runtime.react, 
-                        owner=self, 
-                        property=attr, 
-                        template=Template(attr_value), 
-                        type_converter=type_converter, 
-                        variables=additional_variables.to_dict() if additional_variables is not None else None))
-                else:
-                    set_attr(attr, attr_value, PROP_TYPE_VALUE)
-            else:
-                set_attr(attr, default, PROP_TYPE_DEFAULT)
-
-        init_attr(ATTR_ENTITY, PROP_TYPE_STR)
-        init_attr(ATTR_TYPE, PROP_TYPE_STR)
-        init_attr(ATTR_ACTION, PROP_TYPE_STR)
-        init_attr(ATTR_CONDITION, PROP_TYPE_BOOL, True)
-
-        @callback
-        def async_update_template_trackers():
-            for tracker in self.template_trackers:
-                tracker.async_refresh()
-        additional_variables.on_update(async_update_template_trackers)
+        self.start_trackers()
 
         self.disconnect_event_listener = self.runtime.react.hass.bus.async_listen(EVENT_REACT_ACTION, self.async_handle, self.async_filter)
-        
-        for tracker in self.template_trackers:
-            tracker.start()
 
 
     def set_property(self, target: ActionHandler, name: str, value: Any):
-        if hasattr(target, name) and getattr(target, name) == value: 
-            return
-        setattr(target, name, value)
+        super().set_property(target, name, value)
 
         if (name == ATTR_ENTITY or name == ATTR_TYPE):
             entity = getattr(target, ATTR_ENTITY, None)
             type = getattr(target, ATTR_TYPE, None)
             if entity and type and not self.complete:
                 target.complete = True
-                async_dispatcher_send(target.runtime.react.hass, SIGNAL_PROPERTY_COMPLETE, entity, type)
+                async_dispatcher_send(self.runtime.react.hass, SIGNAL_PROPERTY_COMPLETE, entity, type)
 
 
     def start(self):
@@ -339,11 +299,11 @@ class ActionHandler(RuntimeHandler):
         entity, type, action = extract_action_event_data(event)
 
         result = False
-        if (entity == self.entity and type == self.type):
-            if self.action is None:
+        if (entity == self.value_container.entity and type == self.value_container.type):
+            if self.value_container.action is None:
                 result = True   
             else:
-                result = action == self.action
+                result = action == self.value_container.action
 
         if result and not self.enabled:
             self.runtime.react.log.info(f"ActionHandler: '{self.runtime.workflow_config.id}'.'{self.actor.id}' skipping (workflow is disabled)")
@@ -373,24 +333,23 @@ class ActionHandler(RuntimeHandler):
 
 class ReactionHandler(RuntimeHandler):
     def __init__(self, runtime: WorkflowRuntime, reactor: Reactor, index: int, additional_variables: WorkflowVariableHandler):
-        super().__init__(runtime.react, reactor, additional_variables)
+        super().__init__(runtime, reactor, additional_variables)
         
-        self.runtime = runtime
         self.reactor = reactor
         self.index = index
         self.enabled = False
-        self.data_handler = ReactorDataHandler(runtime.react, reactor.data, additional_variables)
+        self.data_handler = ReactorDataHandler(runtime, reactor.data, additional_variables)
         
-        self.add_jitter(ATTR_ENTITY, PROP_TYPE_STR)
-        self.add_jitter(ATTR_TYPE, PROP_TYPE_STR)
-        self.add_jitter(ATTR_ACTION, PROP_TYPE_STR)
-        self.add_jitter(ATTR_RESET_WORKFLOW, PROP_TYPE_STR)
-        self.add_jitter(ATTR_DELAY, PROP_TYPE_INT)
-        self.add_jitter(ATTR_CONDITION, PROP_TYPE_BOOL, True)
+        self.init_attr(True, ATTR_ENTITY, PROP_TYPE_STR)
+        self.init_attr(True, ATTR_TYPE, PROP_TYPE_STR)
+        self.init_attr(True, ATTR_ACTION, PROP_TYPE_STR)
+        self.init_attr(True, ATTR_RESET_WORKFLOW, PROP_TYPE_STR)
+        self.init_attr(True, ATTR_DELAY, PROP_TYPE_INT)
+        self.init_attr(True, ATTR_CONDITION, PROP_TYPE_BOOL, True)
 
         self.condition_handler = ConditionHandler(self, lambda variables: self.jit_render(ATTR_CONDITION, variables[ATTR_ACTOR][ATTR_DATA], True))
 
-        self.disconnect_signal_listener = async_dispatcher_connect(self.runtime.react.hass, SIGNAL_REACT.format(self.runtime.workflow_config.id), self.async_handle)
+        self.disconnect_signal_listener = async_dispatcher_connect(runtime.react.hass, SIGNAL_REACT.format(self.runtime.workflow_config.id), self.async_handle)
 
 
     def start(self):
@@ -402,36 +361,10 @@ class ReactionHandler(RuntimeHandler):
 
 
     def destroy(self):
+        super().destroy()
         self.enabled = False
         if self.disconnect_signal_listener:
             self.disconnect_signal_listener()
-        
-
-    # def add_jitter(self, property: str, type_converter: Any, default: Any = None):
-    #     attr_value = getattr(self.reactor, property, None)
-    #     if attr_value:
-    #         if isinstance(attr_value, str) and is_template_string(attr_value):
-    #             self.set_jitter(property, TemplateJitter(self.runtime.react, property, Template(attr_value), type_converter), PROP_TYPE_TEMPLATE)
-    #         else:
-    #             self.set_jitter(property, ValueJitter(attr_value, type_converter), PROP_TYPE_VALUE)
-    #     else:
-    #         self.set_jitter(property, ValueJitter(default, type_converter), PROP_TYPE_DEFAULT)
-
-
-    # def set_jitter(self, property: str, value: Any, prop_type: str):
-    #     jitter_prop = _JITTER_PROPERTY.format(property)
-    #     type_prop = f"_{property}{PROP_ATTR_TYPE_POSTFIX}"
-    #     setattr(self, jitter_prop, value)
-    #     setattr(self, type_prop, prop_type)
-
-
-    # def jit_render(self, attr: str, actor_data: dict, default: Any = None):
-    #     jitter_property = _JITTER_PROPERTY.format(attr)
-    #     attr_jitter: TemplateJitter = getattr(self, jitter_property, None)
-    #     if attr_jitter:
-    #         return attr_jitter.render(self.variable_handler.to_dict(actor_data))
-    #     else:
-    #         return default
 
 
     @callback
@@ -471,7 +404,7 @@ class ReactionHandler(RuntimeHandler):
                 reaction.data.reset_workflow = self.jit_render(ATTR_RESET_WORKFLOW, actor_data)
                 reaction.data.overwrite = self.reactor.overwrite
                 reaction.data.datetime = calculate_reaction_datetime(self.reactor.timing, self.reactor.schedule, self.jit_render(ATTR_DELAY, actor_data))
-                reaction.data.data = self.data_handler.to_dict()
+                reaction.data.data = self.data_handler.jit_render_all()
 
                 self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{self.reactor.id}' sending reaction: {format_data(entity=reaction.data.reactor_entity, type=reaction.data.reactor_type, action=reaction.data.reactor_action, overwrite=reaction.data.overwrite, reset_workflow=reaction.data.reset_workflow)}")
                 self.runtime.react.reactions.add(reaction)
@@ -487,7 +420,6 @@ class WorkflowRun:
         runtime: WorkflowRuntime, 
         actor_id: str,
         action_context: ActionContext, 
-        # event: Event,
         entity: str,
         type: str,
         action: str,
@@ -550,9 +482,6 @@ class WorkflowRun:
                         self.runtime.react.log.info(f"ActionHandler: '{self.runtime.workflow_config.id}'.'{self.action_context.actor_id}' skipping (condition false)")
                         return
 
-            # Update workflow entity context                              
-            self.runtime.workflow_state.async_set_context(self.run_context)
-
             self.run_variables[ATTR_CONTEXT] = self.trigger_context
             
             # Add a parallel section if more than one reactor is triggered
@@ -577,15 +506,14 @@ class WorkflowRun:
 
 class WorkflowRuntime(Updatable):
     
-    def __init__(self, react: ReactBase, workflow_state: WorkflowState, workflow_config: Workflow) -> None:
+    def __init__(self, react: ReactBase, workflow_config: Workflow) -> None:
         super().__init__(react)
         
         self.react = react
-        self.workflow_state = workflow_state
         self.workflow_config = workflow_config
         self.actor_handlers: list[ActionHandler] = []
         self.reactor_handlers: list[ReactionHandler] = []
-        self.variable_handler = WorkflowVariableHandler(react, workflow_config.variables)
+        self.variable_handler = WorkflowVariableHandler(self, workflow_config.variables)
         self.last_triggered: Union[datetime, None] = None
 
         for ai,actor in enumerate(workflow_config.actors):
@@ -627,13 +555,14 @@ class WorkflowRuntime(Updatable):
 
 
     def create_run_from_service_call(self, context: Context) -> WorkflowRun:
-        actor_handler = self.actor_handlers[0]
+        entity,type,action = extract_action_handler_data(self.actor_handlers[0])
         return self.create_run_core(
-            actor_handler,
-            actor_handler.entity,
-            actor_handler.type,
-            actor_handler.action,
+            self.actor_handlers[0],
+            entity,
+            type,
+            action,
             context)
+
 
     def create_run_core(self, 
         actor_handler: ActionHandler, 
@@ -648,3 +577,17 @@ class WorkflowRuntime(Updatable):
         self.last_triggered = utcnow()
         self.async_update()
         return run
+
+
+def extract_action_event_data(event: Event) -> Tuple[str, str, str]:
+    entity = event.data.get(ATTR_ENTITY, None)
+    type = event.data.get(ATTR_TYPE, None)
+    action = event.data.get(ATTR_ACTION, None)
+    return entity, type, action
+
+
+def extract_action_handler_data(action_handler: ActionHandler) -> Tuple[str, str, str]:
+    entity = action_handler.value_container.entity
+    type = action_handler.value_container.type
+    action = action_handler.value_container.action
+    return entity, type, action
