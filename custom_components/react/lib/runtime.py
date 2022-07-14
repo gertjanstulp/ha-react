@@ -4,8 +4,7 @@ from copy import copy
 from dataclasses import dataclass
 
 from datetime import datetime
-from statistics import variance
-from typing import Any, Callable, Tuple, Union
+from typing import Any, Tuple, Union
 from homeassistant.core import Context, Event, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, async_dispatcher_send
 from homeassistant.helpers.template import Template, is_template_string
@@ -16,9 +15,10 @@ from homeassistant.util.dt import utcnow
 from .config import Actor, DynamicData, Reactor, Workflow, calculate_reaction_datetime
 from ..base import ReactBase
 from ..reactions.base import ReactReaction
+from ..utils.context import ActorTemplateContextDataProvider, TemplateContext, TemplateContextDataProvider, VariableContextDataProvider
 from ..utils.updatable import Updatable
 from ..utils.logger import format_data
-from ..utils.template import ExtraVariableProvider, TemplateContext, TemplateJitter, TemplateTracker, ValueJitter
+from ..utils.template import TemplateJitter, TemplateTracker, ValueJitter
 from ..utils.trace import ReactTrace, trace_node, trace_workflow
 
 from ..const import (
@@ -95,6 +95,11 @@ class RuntimeHandler(Updatable):
     def stop(self):
         pass
 
+    def destroy(self):
+        super().destroy()
+        if self.template_context:
+            self.template_context.destroy()
+
 
     def init_attr(self, is_jit: bool, attr: str, type_converter: Any, default: Any = None):
         attr_value = getattr(self.config_source, attr, None)
@@ -132,7 +137,6 @@ class RuntimeHandler(Updatable):
 
 
     def add_jitter(self, attr: str, attr_value: Any, type_converter: Any, default: Any = None):
-        # attr_value = getattr(self.config_source, property, None)
         if attr_value:
             if isinstance(attr_value, str) and is_template_string(attr_value):
                 self.set_jitter(attr, TemplateJitter(self.runtime.react, attr, Template(attr_value), type_converter, self.template_context), PROP_TYPE_TEMPLATE)
@@ -151,19 +155,19 @@ class RuntimeHandler(Updatable):
         setattr(self, type_prop, prop_type)
 
 
-    def jit_render(self, attr: str, extra_variable_provider: ExtraVariableProvider = None, default: Any = None):
+    def jit_render(self, attr: str, template_context_data_provider: TemplateContextDataProvider = None, default: Any = None):
         jitter_property = _JITTER_PROPERTY.format(attr)
         attr_jitter: TemplateJitter = getattr(self, jitter_property, None)
         if attr_jitter:
-            return attr_jitter.render(extra_variable_provider)
+            return attr_jitter.render(template_context_data_provider)
         else:
             return default
 
 
-    def jit_render_all(self, extra_variable_provider: ExtraVariableProvider = None):
+    def jit_render_all(self, template_context_data_provider: TemplateContextDataProvider = None):
         result = {}
         for attr in self.jit_attrs:
-            result[attr] = self.jit_render(attr, extra_variable_provider)
+            result[attr] = self.jit_render(attr, template_context_data_provider)
         return result
 
 
@@ -179,13 +183,6 @@ class DynamicDataHandler(RuntimeHandler):
 
         self.names = dynamicData.names
 
-        # actor_container = {
-        #     ATTR_ENTITY: None,
-        #     ATTR_TYPE: None,
-        #     ATTR_ACTION: None,
-        # }
-        # setattr(self.value_container, ATTR_ACTOR, actor_container)
-
         for name in self.names:
             self.init_attr(is_jit, name, PROP_TYPE_STR)
 
@@ -193,12 +190,7 @@ class DynamicDataHandler(RuntimeHandler):
 
 
     def to_dict(self) -> dict:
-        result = vars(self.value_container)
-        # if actor_data:
-        #     result[ATTR_ACTOR][ATTR_ENTITY] = actor_data.get(ATTR_ACTOR_ENTITY, None)
-        #     result[ATTR_ACTOR][ATTR_TYPE] = actor_data.get(ATTR_ACTOR_TYPE, None)
-        #     result[ATTR_ACTOR][ATTR_ACTION] = actor_data.get(ATTR_ACTOR_ACTION, None)
-        return result
+        return vars(self.value_container)
         
 
     def as_trace_dict(self) -> dict:
@@ -210,41 +202,6 @@ class DynamicDataHandler(RuntimeHandler):
         for tracker in self.template_trackers:
             tracker.destroy()
 
-
-
-class VariableTemplateContext(TemplateContext):
-    def __init__(self, variable_handler: DynamicDataHandler, extra_variable_provider: ExtraVariableProvider = None) -> None:
-        super().__init__(extra_variable_provider)
-        self.variable_handler = variable_handler
-
-
-    def get_data(self):
-        return self.variable_handler.to_dict()
-
-
-# class WorkflowVariableHandler(DynamicDataHandler):
-#     def __init__(self, runtime: WorkflowRuntime, workflowVariables: DynamicData) -> None:
-#         super().__init__(False, runtime, workflowVariables)
-
-
-# class ReactorDataHandler(DynamicDataHandler):
-#     def __init__(self, runtime: WorkflowRuntime, reactorData: DynamicData, workflowVariables: DynamicDataHandler) -> None:
-#         super().__init__(True, runtime, reactorData, workflowVariables)
-
-
-class ConditionHandler():
-    def __init__(self, owner: Any, value_getter: Callable[[dict], bool]):
-        self.owner = owner
-        self.condition_type = getattr(owner, f"_{ATTR_CONDITION}{PROP_ATTR_TYPE_POSTFIX}", None)
-        self.value_getter = value_getter
-        
-    def eval(self, variables: dict):
-        result = self.value_getter(variables)
-        if self.condition_type == PROP_TYPE_TEMPLATE:
-            with trace_node(variables):
-                trace_set_result(result=result)
-
-        return result
 
 
 @dataclass
@@ -343,6 +300,32 @@ class ActionHandler(RuntimeHandler):
         )
 
 
+class ActionEventDataReader:
+    def __init__(self, event_variables: dict) -> None:
+        self.variables = event_variables
+        self.actor_data: dict = event_variables[ATTR_ACTOR][ATTR_DATA]
+
+        self.actor_entity = self.actor_data.get(ATTR_ACTOR_ENTITY, None)
+        self.actor_type = self.actor_data.get(ATTR_ACTOR_TYPE, None)
+        self.actor_action = self.actor_data.get(ATTR_ACTOR_ACTION, None)
+        self.actor_id = self.actor_data.get(ATTR_ACTOR_ID, None)
+
+
+
+class ConditionHandler():
+    def __init__(self, owner: ReactionHandler):
+        self.owner = owner
+        self.condition_type = getattr(owner, f"_{ATTR_CONDITION}{PROP_ATTR_TYPE_POSTFIX}", None)
+        
+    def eval(self, action_event_data_reader: ActionEventDataReader, template_context_data_provider: TemplateContextDataProvider):
+        result = self.owner.jit_render(ATTR_CONDITION, template_context_data_provider, True)
+        if self.condition_type == PROP_TYPE_TEMPLATE:
+            with trace_node(action_event_data_reader.variables):
+                trace_set_result(result=result)
+
+        return result
+
+
 class ReactionHandler(RuntimeHandler):
     def __init__(self, runtime: WorkflowRuntime, reactor: Reactor, index: int, template_context: TemplateContext):
         super().__init__(runtime, reactor, template_context)
@@ -350,7 +333,7 @@ class ReactionHandler(RuntimeHandler):
         self.reactor = reactor
         self.index = index
         self.enabled = False
-        self.data_handler = DynamicDataHandler(runtime, reactor.data, template_context)
+        self.data_handler = DynamicDataHandler(True, runtime, reactor.data, template_context)
         
         self.init_attr(True, ATTR_ENTITY, PROP_TYPE_STR)
         self.init_attr(True, ATTR_TYPE, PROP_TYPE_STR)
@@ -359,7 +342,7 @@ class ReactionHandler(RuntimeHandler):
         self.init_attr(True, ATTR_DELAY, PROP_TYPE_INT)
         self.init_attr(True, ATTR_CONDITION, PROP_TYPE_BOOL, True)
 
-        self.condition_handler = ConditionHandler(self, lambda variables: self.jit_render(ATTR_CONDITION, variables[ATTR_ACTOR][ATTR_DATA], True))
+        self.condition_handler = ConditionHandler(self)
 
         self.disconnect_signal_listener = async_dispatcher_connect(runtime.react.hass, SIGNAL_REACT.format(self.runtime.workflow_config.id), self.async_handle)
 
@@ -381,42 +364,43 @@ class ReactionHandler(RuntimeHandler):
 
     @callback
     async def async_handle(self, variables: dict):
-        actor_data = variables[ATTR_ACTOR][ATTR_DATA]
-
+        action_event_data_reader = ActionEventDataReader(variables)
+        template_context_data_provider = ActorTemplateContextDataProvider(self._react, action_event_data_reader)
+        
         with trace_path(TRACE_PATH_CONDITION):
-            if not self.condition_handler.eval(variables):
+            if not self.condition_handler.eval(action_event_data_reader, template_context_data_provider):
                 self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{self.reactor.id}' skipping (condition false)")
                 return
 
         with trace_path(TRACE_PATH_EVENT):
-            with trace_node(variables):
+            with trace_node(action_event_data_reader.variables):
                 if self.reactor.forward_action:
                     # Don't forward toggle actions as they are always accompanied by other actions which will be forwarded
-                    if actor_data.get(ATTR_ACTOR_ACTION) == ACTION_TOGGLE:
-                        self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{actor_data.get(ATTR_ACTOR_ID)}' skipping reactor (action 'toggle' with forward_action): '{self.reactor.id}'")
+                    if action_event_data_reader.actor_action == ACTION_TOGGLE:
+                        self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{action_event_data_reader.actor_id}' skipping reactor (action 'toggle' with forward_action): '{self.reactor.id}'")
                         trace_set_result(message="Skipped, toggle with forward-action")
                         return
                     # Don't forward availabililty actions as reactors don't support them
-                    if actor_data.get(ATTR_ACTOR_ACTION) == ACTION_AVAILABLE or actor_data.get(ATTR_ACTOR_ACTION) == ACTION_UNAVAILABLE:
-                        self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{actor_data.get(ATTR_ACTOR_ID)}' skipping reactor (availability action with forward_action): '{self.reactor.id}'")
+                    if action_event_data_reader.actor_action == ACTION_AVAILABLE or action_event_data_reader.actor_action == ACTION_UNAVAILABLE:
+                        self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{action_event_data_reader.actor_id}' skipping reactor (availability action with forward_action): '{self.reactor.id}'")
                         trace_set_result(message="Skipped, availability action with forward_action")
                         return
                     
 
                 reaction = ReactReaction(self.runtime.react)
                 reaction.data.workflow_id = self.runtime.workflow_config.id
-                reaction.data.actor_id = actor_data.get(ATTR_ACTOR_ID)
-                reaction.data.actor_entity = actor_data.get(ATTR_ACTOR_ENTITY)
-                reaction.data.actor_type = actor_data.get(ATTR_ACTOR_TYPE)
-                reaction.data.actor_action = actor_data.get(ATTR_ACTOR_ACTION)
+                reaction.data.actor_id = action_event_data_reader.actor_id
+                reaction.data.actor_entity = action_event_data_reader.actor_entity
+                reaction.data.actor_type = action_event_data_reader.actor_type
+                reaction.data.actor_action = action_event_data_reader.actor_action
                 reaction.data.reactor_id = self.reactor.id
-                reaction.data.reactor_entity = self.jit_render(ATTR_ENTITY, actor_data)
-                reaction.data.reactor_type = self.jit_render(ATTR_TYPE, actor_data)
-                reaction.data.reactor_action = actor_data.get(ATTR_ACTOR_ACTION) if self.reactor.forward_action else self.jit_render(ATTR_ACTION, actor_data)
-                reaction.data.reset_workflow = self.jit_render(ATTR_RESET_WORKFLOW, actor_data)
+                reaction.data.reactor_entity = self.jit_render(ATTR_ENTITY, template_context_data_provider)
+                reaction.data.reactor_type = self.jit_render(ATTR_TYPE, template_context_data_provider)
+                reaction.data.reactor_action = action_event_data_reader.actor_action if self.reactor.forward_action else self.jit_render(ATTR_ACTION, template_context_data_provider)
+                reaction.data.reset_workflow = self.jit_render(ATTR_RESET_WORKFLOW, template_context_data_provider)
                 reaction.data.overwrite = self.reactor.overwrite
-                reaction.data.datetime = calculate_reaction_datetime(self.reactor.timing, self.reactor.schedule, self.jit_render(ATTR_DELAY, actor_data))
-                reaction.data.data = self.data_handler.jit_render_all(actor_data)
+                reaction.data.datetime = calculate_reaction_datetime(self.reactor.timing, self.reactor.schedule, self.jit_render(ATTR_DELAY, template_context_data_provider))
+                reaction.data.data = self.data_handler.jit_render_all(template_context_data_provider)
 
                 self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{self.reactor.id}' sending reaction: {format_data(entity=reaction.data.reactor_entity, type=reaction.data.reactor_type, action=reaction.data.reactor_action, overwrite=reaction.data.overwrite, reset_workflow=reaction.data.reset_workflow)}")
                 self.runtime.react.reactions.add(reaction)
@@ -525,13 +509,13 @@ class WorkflowRuntime(Updatable):
         self.workflow_config = workflow_config
         self.actor_handlers: list[ActionHandler] = []
         self.reactor_handlers: list[ReactionHandler] = []
-        self.variable_handler = DynamicDataHandler(False, self,  workflow_config.variables, TemplateContext())
+        self.variable_handler = DynamicDataHandler(False, self,  workflow_config.variables, TemplateContext(react))
         self.last_triggered: Union[datetime, None] = None
 
         for ai,actor in enumerate(workflow_config.actors):
-            self.actor_handlers.append(ActionHandler(self, actor, ai, VariableTemplateContext(self.variable_handler)))
+            self.actor_handlers.append(ActionHandler(self, actor, ai, TemplateContext(react, VariableContextDataProvider(react, self.variable_handler))))
         for ri,reactor in enumerate(workflow_config.reactors):
-            self.reactor_handlers.append(ReactionHandler(self, reactor, ri, VariableTemplateContext(self.variable_handler)))
+            self.reactor_handlers.append(ReactionHandler(self, reactor, ri, TemplateContext(react, VariableContextDataProvider(react, self.variable_handler))))
 
         self.all_handlers: list[RuntimeHandler] = self.actor_handlers + self.reactor_handlers
 

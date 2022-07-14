@@ -1,4 +1,5 @@
 from typing import Any, Union
+
 from homeassistant.core import Event, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.event import TrackTemplate, TrackTemplateResult, async_track_template_result
@@ -6,6 +7,7 @@ from homeassistant.helpers.template import Template
 
 from ..base import ReactBase
 from .updatable import Updatable, callable_type
+from .context import TemplateContext, TemplateContextDataProvider
 
 
 class ValueJitter:
@@ -21,34 +23,35 @@ class ValueJitter:
             return self.value
 
 
-class ExtraVariableProvider:
-    extra_variables: Union[dict, None] = None
+# class TemplateContextDataProvider:
+#     extra_variables: Union[dict, None] = None
     
-    def __init__(self) -> None:
-        pass
+#     def __init__(self) -> None:
+#         pass
 
 
-    def provide(self, context_data: dict):
-        if self.extra_variables:
-            context_data = context_data | self.extra_variables
+#     def provide(self, context_data: dict):
+#         if self.extra_variables:
+#             context_data = context_data | self.extra_variables
 
 
-class TemplateContext(Updatable):
-    def __init__(self, extra_variable_provider: ExtraVariableProvider = None) -> None:
-        self.extra_variable_provider = extra_variable_provider
+# class TemplateContext(Updatable):
+#     def __init__(self, react: ReactBase, template_context_data_provider: TemplateContextDataProvider = None) -> None:
+#         super().__init__(react)
+#         self.template_context_data_provider = template_context_data_provider
 
 
-    def get_data(self) -> dict:
-        return {}
+#     def get_data(self) -> dict:
+#         return {}
 
 
-    def get_runtime_variables(self, extra_variable_provider: ExtraVariableProvider = None):
-        result = self.get_data()
-        if (self.extra_variable_provider):
-            self.extra_variable_provider.provide(result)
-        if extra_variable_provider:
-            extra_variable_provider.provide(result)
-        return result
+#     def get_runtime_variables(self, template_context_data_provider: TemplateContextDataProvider = None):
+#         result = self.get_data()
+#         if (self.template_context_data_provider):
+#             self.template_context_data_provider.provide(result)
+#         if template_context_data_provider:
+#             template_context_data_provider.provide(result)
+#         return result
 
 
 class TemplateJitter:
@@ -68,10 +71,10 @@ class TemplateJitter:
         template.hass = react.hass
 
 
-    def render(self, extra_variable_provider: ExtraVariableProvider):
+    def render(self, template_context_data_provider: TemplateContextDataProvider):
         result = None
         try:
-            result = self.template.async_render(self.template_context.get_runtime_variables(extra_variable_provider))
+            result = self.template.async_render(self.template_context.get_runtime_variables(template_context_data_provider))
         except TemplateError as te:
             self.react.log.error(f"Config: Error rendering {self.property}: {result}")
         return result
