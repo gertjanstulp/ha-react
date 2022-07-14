@@ -57,7 +57,7 @@ def get_property(name: str, config: dict, stencil: dict, default: Any = None):
     return result
 
 
-class DataDict():
+class DynamicData():
     def __init__(self, workflow_id: str, config: dict) -> None:
         # self.workflow_id = workflow_id
         self.names: list[str] = []
@@ -145,7 +145,7 @@ class Reactor(Ctor):
     overwrite: Union[bool, str]
     reset_workflow: str
     forward_action: Union[bool, str]
-    data: DataDict
+    data: DynamicData
 
     def __init__(self, id: str, workflow_id: str, entity: str):
         super().__init__(id, entity, ATTR_EVENT)
@@ -162,7 +162,7 @@ class Reactor(Ctor):
         self.overwrite = get_property(ATTR_OVERWRITE, config, stencil, False)
         self.reset_workflow = get_property(ATTR_RESET_WORKFLOW, config, stencil)
         self.forward_action = get_property(ATTR_FORWARD_ACTION, config, stencil, False)
-        self.data = DataDict(None,  get_property(ATTR_DATA, config, stencil, {}))
+        self.data = DynamicData(None,  get_property(ATTR_DATA, config, stencil, {}))
 
 
     def load_schedule(self, config: dict, stencil: dict) -> Schedule:
@@ -196,7 +196,7 @@ class Workflow():
     friendly_name: Union[str, None] = None
     icon: Union[str, None] = None
     trace_config: Union[Any, None] = None
-    variables: Union[DataDict, None] = None
+    variables: Union[DynamicData, None] = None
 
     def __init__(self, workflow_id: str, config: dict):
         self.id = workflow_id
@@ -205,7 +205,7 @@ class Workflow():
         self.friendly_name = config.get(ATTR_FRIENDLY_NAME, None)
         self.icon = config.get(CONF_ICON, None)
         self.trace_config = config.get(CONF_TRACE, None)
-        self.variables = DataDict(id, config.get(ATTR_VARIABLES, {}))
+        self.variables = DynamicData(id, config.get(ATTR_VARIABLES, {}))
 
 
     def load(self, config, stencil):

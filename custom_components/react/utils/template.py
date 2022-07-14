@@ -21,6 +21,36 @@ class ValueJitter:
             return self.value
 
 
+class ExtraVariableProvider:
+    extra_variables: Union[dict, None] = None
+    
+    def __init__(self) -> None:
+        pass
+
+
+    def provide(self, context_data: dict):
+        if self.extra_variables:
+            context_data = context_data | self.extra_variables
+
+
+class TemplateContext(Updatable):
+    def __init__(self, extra_variable_provider: ExtraVariableProvider = None) -> None:
+        self.extra_variable_provider = extra_variable_provider
+
+
+    def get_data(self) -> dict:
+        return {}
+
+
+    def get_runtime_variables(self, extra_variable_provider: ExtraVariableProvider = None):
+        result = self.get_data()
+        if (self.extra_variable_provider):
+            self.extra_variable_provider.provide(result)
+        if extra_variable_provider:
+            extra_variable_provider.provide(result)
+        return result
+
+
 class TemplateJitter:
     owner: Union[Any, None] = None
     react: ReactBase
@@ -29,18 +59,19 @@ class TemplateJitter:
     template: Template
 
 
-    def __init__(self, react: ReactBase, property: str, template: Template, type_converter: Any):
+    def __init__(self, react: ReactBase, property: str, template: Template, type_converter: Any, template_context: TemplateContext):
         self.property = property
         self.template = template
         self.type_converter = type_converter
+        self.template_context = template_context
 
         template.hass = react.hass
 
 
-    def render(self, variables: dict):
+    def render(self, extra_variable_provider: ExtraVariableProvider):
         result = None
         try:
-            result = self.template.async_render(variables)
+            result = self.template.async_render(self.template_context.get_runtime_variables(extra_variable_provider))
         except TemplateError as te:
             self.react.log.error(f"Config: Error rendering {self.property}: {result}")
         return result
@@ -53,17 +84,17 @@ class TemplateTracker(Updatable):
     property: str
     type_converter: Any
     template: Template
-    variables: Union[dict, None] = None
+    template_context: Union[TemplateContext, None] = None
 
 
-    def __init__(self, react: ReactBase, owner: Any, property: str, template: Template, type_converter: Any, variables: dict = {}, update_callback: callable_type = None):
+    def __init__(self, react: ReactBase, owner: Any, property: str, template: Template, type_converter: Any, template_context: TemplateContext, update_callback: callable_type = None):
         super().__init__(react)
         self.react = react
         self.owner = owner
         self.property = property
         self.template = template
         self.type_converter = type_converter
-        self.variables = variables
+        self.template_context = template_context
 
         template.hass = react.hass
         if update_callback:
@@ -72,7 +103,7 @@ class TemplateTracker(Updatable):
 
     def start(self):
         setattr(self.owner, self.property, None)
-        self.track_templates = [TrackTemplate(self.template, self.variables)]
+        self.track_templates = [TrackTemplate(self.template, self.template_context.get_runtime_variables())]
         self.result_info = async_track_template_result(self.react.hass, self.track_templates, self.async_update_template)
         self.async_refresh()
 

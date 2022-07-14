@@ -4,6 +4,7 @@ from copy import copy
 from dataclasses import dataclass
 
 from datetime import datetime
+from statistics import variance
 from typing import Any, Callable, Tuple, Union
 from homeassistant.core import Context, Event, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, async_dispatcher_send
@@ -12,12 +13,12 @@ from homeassistant.helpers.trace import trace_get, trace_path, trace_set_result,
 from homeassistant.util import ulid as ulid_util
 from homeassistant.util.dt import utcnow
 
-from .config import Actor, DataDict, Reactor, Workflow, calculate_reaction_datetime
+from .config import Actor, DynamicData, Reactor, Workflow, calculate_reaction_datetime
 from ..base import ReactBase
 from ..reactions.base import ReactReaction
 from ..utils.updatable import Updatable
 from ..utils.logger import format_data
-from ..utils.template import TemplateJitter, TemplateTracker, ValueJitter
+from ..utils.template import ExtraVariableProvider, TemplateContext, TemplateJitter, TemplateTracker, ValueJitter
 from ..utils.trace import ReactTrace, trace_node, trace_workflow
 
 from ..const import (
@@ -63,11 +64,11 @@ _JITTER_PROPERTY = "{}_jitter"
 
 
 class RuntimeHandler(Updatable):
-    def __init__(self, runtime: WorkflowRuntime, config_source: Any, additional_variables: DataDictHandler) -> None:
+    def __init__(self, runtime: WorkflowRuntime, config_source: Any, template_context: TemplateContext) -> None:
         super().__init__(runtime.react)
         self.runtime = runtime
         self.config_source = config_source
-        self.additional_variables = additional_variables
+        self.template_context = template_context
 
         self.template_trackers: list[TemplateTracker] = []
         self.value_container = type('object', (), {})()
@@ -76,12 +77,12 @@ class RuntimeHandler(Updatable):
     
 
     def start_trackers(self):
-        if self.additional_variables:
+        if self.template_context:
             @callback
             def async_update_template_trackers():
                 for tracker in self.template_trackers:
                     tracker.async_refresh()
-            self.additional_variables.on_update(async_update_template_trackers)
+            self.template_context.on_update(async_update_template_trackers)
         
         for tracker in self.template_trackers:
             tracker.start()
@@ -119,8 +120,8 @@ class RuntimeHandler(Updatable):
                     owner=self.value_container, 
                     property=attr, 
                     template=Template(attr_value),
-                    type_converter=type_converter, 
-                    variables=self.additional_variables.to_dict() if self.additional_variables is not None else None,
+                    type_converter=type_converter,
+                    template_context=self.template_context,
                     update_callback=self.async_update))
             else:
                 set_attr(attr, attr_value, PROP_TYPE_VALUE)
@@ -134,7 +135,7 @@ class RuntimeHandler(Updatable):
         # attr_value = getattr(self.config_source, property, None)
         if attr_value:
             if isinstance(attr_value, str) and is_template_string(attr_value):
-                self.set_jitter(attr, TemplateJitter(self.runtime.react, attr, Template(attr_value), type_converter), PROP_TYPE_TEMPLATE)
+                self.set_jitter(attr, TemplateJitter(self.runtime.react, attr, Template(attr_value), type_converter, self.template_context), PROP_TYPE_TEMPLATE)
             else:
                 self.set_jitter(attr, ValueJitter(attr_value, type_converter), PROP_TYPE_VALUE)
         else:
@@ -150,19 +151,19 @@ class RuntimeHandler(Updatable):
         setattr(self, type_prop, prop_type)
 
 
-    def jit_render(self, attr: str, actor_data: dict, default: Any = None):
+    def jit_render(self, attr: str, extra_variable_provider: ExtraVariableProvider = None, default: Any = None):
         jitter_property = _JITTER_PROPERTY.format(attr)
         attr_jitter: TemplateJitter = getattr(self, jitter_property, None)
         if attr_jitter:
-            return attr_jitter.render(self.additional_variables.to_dict(actor_data) if self.additional_variables else {})
+            return attr_jitter.render(extra_variable_provider)
         else:
             return default
 
 
-    def jit_render_all(self, actor_data: dict):
+    def jit_render_all(self, extra_variable_provider: ExtraVariableProvider = None):
         result = {}
         for attr in self.jit_attrs:
-            result[attr] = self.jit_render(attr, actor_data)
+            result[attr] = self.jit_render(attr, extra_variable_provider)
         return result
 
 
@@ -172,18 +173,18 @@ class RuntimeHandler(Updatable):
         setattr(target, name, value)
 
 
-class DataDictHandler(RuntimeHandler):
-    def __init__(self, is_jit: bool, runtime: WorkflowRuntime, dataDict: DataDict, additional_variables: DataDictHandler = None) -> None:
-        super().__init__(runtime, dataDict, additional_variables)
+class DynamicDataHandler(RuntimeHandler):
+    def __init__(self, is_jit: bool, runtime: WorkflowRuntime, dynamicData: DynamicData, template_context: TemplateContext) -> None:
+        super().__init__(runtime, dynamicData, template_context)
 
-        self.names = dataDict.names
+        self.names = dynamicData.names
 
-        actor_container = {
-            ATTR_ENTITY: None,
-            ATTR_TYPE: None,
-            ATTR_ACTION: None,
-        }
-        setattr(self.value_container, ATTR_ACTOR, actor_container)
+        # actor_container = {
+        #     ATTR_ENTITY: None,
+        #     ATTR_TYPE: None,
+        #     ATTR_ACTION: None,
+        # }
+        # setattr(self.value_container, ATTR_ACTOR, actor_container)
 
         for name in self.names:
             self.init_attr(is_jit, name, PROP_TYPE_STR)
@@ -191,12 +192,12 @@ class DataDictHandler(RuntimeHandler):
         self.start_trackers()
 
 
-    def to_dict(self, actor_data: dict = None) -> dict:
+    def to_dict(self) -> dict:
         result = vars(self.value_container)
-        if actor_data:
-            result[ATTR_ACTOR][ATTR_ENTITY] = actor_data.get(ATTR_ACTOR_ENTITY, None)
-            result[ATTR_ACTOR][ATTR_TYPE] = actor_data.get(ATTR_ACTOR_TYPE, None)
-            result[ATTR_ACTOR][ATTR_ACTION] = actor_data.get(ATTR_ACTOR_ACTION, None)
+        # if actor_data:
+        #     result[ATTR_ACTOR][ATTR_ENTITY] = actor_data.get(ATTR_ACTOR_ENTITY, None)
+        #     result[ATTR_ACTOR][ATTR_TYPE] = actor_data.get(ATTR_ACTOR_TYPE, None)
+        #     result[ATTR_ACTOR][ATTR_ACTION] = actor_data.get(ATTR_ACTOR_ACTION, None)
         return result
         
 
@@ -210,14 +211,25 @@ class DataDictHandler(RuntimeHandler):
             tracker.destroy()
 
 
-class WorkflowVariableHandler(DataDictHandler):
-    def __init__(self, runtime: WorkflowRuntime, workflowVariables: DataDict) -> None:
-        super().__init__(False, runtime, workflowVariables)
+
+class VariableTemplateContext(TemplateContext):
+    def __init__(self, variable_handler: DynamicDataHandler, extra_variable_provider: ExtraVariableProvider = None) -> None:
+        super().__init__(extra_variable_provider)
+        self.variable_handler = variable_handler
 
 
-class ReactorDataHandler(DataDictHandler):
-    def __init__(self, runtime: WorkflowRuntime, reactorData: DataDict, workflowVariables: DataDictHandler) -> None:
-        super().__init__(True, runtime, reactorData, workflowVariables)
+    def get_data(self):
+        return self.variable_handler.to_dict()
+
+
+# class WorkflowVariableHandler(DynamicDataHandler):
+#     def __init__(self, runtime: WorkflowRuntime, workflowVariables: DynamicData) -> None:
+#         super().__init__(False, runtime, workflowVariables)
+
+
+# class ReactorDataHandler(DynamicDataHandler):
+#     def __init__(self, runtime: WorkflowRuntime, reactorData: DynamicData, workflowVariables: DynamicDataHandler) -> None:
+#         super().__init__(True, runtime, reactorData, workflowVariables)
 
 
 class ConditionHandler():
@@ -249,8 +261,8 @@ class ActionHandler(RuntimeHandler):
     action: Union[str, None] = None
     condition: Union[bool, None] = True
     
-    def __init__(self, runtime: WorkflowRuntime, actor: Actor, index: int, additional_variables: WorkflowVariableHandler):
-        super().__init__(runtime, actor, additional_variables)
+    def __init__(self, runtime: WorkflowRuntime, actor: Actor, index: int, template_context: TemplateContext):
+        super().__init__(runtime, actor, template_context)
 
         self.actor = actor
         self.index = index
@@ -332,13 +344,13 @@ class ActionHandler(RuntimeHandler):
 
 
 class ReactionHandler(RuntimeHandler):
-    def __init__(self, runtime: WorkflowRuntime, reactor: Reactor, index: int, additional_variables: WorkflowVariableHandler):
-        super().__init__(runtime, reactor, additional_variables)
+    def __init__(self, runtime: WorkflowRuntime, reactor: Reactor, index: int, template_context: TemplateContext):
+        super().__init__(runtime, reactor, template_context)
         
         self.reactor = reactor
         self.index = index
         self.enabled = False
-        self.data_handler = ReactorDataHandler(runtime, reactor.data, additional_variables)
+        self.data_handler = DynamicDataHandler(runtime, reactor.data, template_context)
         
         self.init_attr(True, ATTR_ENTITY, PROP_TYPE_STR)
         self.init_attr(True, ATTR_TYPE, PROP_TYPE_STR)
@@ -513,13 +525,13 @@ class WorkflowRuntime(Updatable):
         self.workflow_config = workflow_config
         self.actor_handlers: list[ActionHandler] = []
         self.reactor_handlers: list[ReactionHandler] = []
-        self.variable_handler = WorkflowVariableHandler(self, workflow_config.variables)
+        self.variable_handler = DynamicDataHandler(False, self,  workflow_config.variables, TemplateContext())
         self.last_triggered: Union[datetime, None] = None
 
         for ai,actor in enumerate(workflow_config.actors):
-            self.actor_handlers.append(ActionHandler(self, actor, ai, self.variable_handler))
+            self.actor_handlers.append(ActionHandler(self, actor, ai, VariableTemplateContext(self.variable_handler)))
         for ri,reactor in enumerate(workflow_config.reactors):
-            self.reactor_handlers.append(ReactionHandler(self, reactor, ri, self.variable_handler))
+            self.reactor_handlers.append(ReactionHandler(self, reactor, ri, VariableTemplateContext(self.variable_handler)))
 
         self.all_handlers: list[RuntimeHandler] = self.actor_handlers + self.reactor_handlers
 
