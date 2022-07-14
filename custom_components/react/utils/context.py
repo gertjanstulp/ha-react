@@ -54,19 +54,18 @@ class ActorTemplateContextDataProvider(TemplateContextDataProvider):
 class TemplateContext(Updatable):
     def __init__(self, react: ReactBase, template_context_data_provider: TemplateContextDataProvider = None) -> None:
         super().__init__(react)
+        self.runtime_variables = {}
         self.template_context_data_provider = template_context_data_provider
         if template_context_data_provider:
             template_context_data_provider.on_update(self.async_update)
 
 
-    def get_runtime_variables(self, template_context_data_provider: TemplateContextDataProvider = None):
-        result = {}
+    def build(self, template_context_data_provider: TemplateContextDataProvider = None):
         if self.template_context_data_provider:
-            self.template_context_data_provider.provide(result)
+            self.template_context_data_provider.provide(self.runtime_variables)
         if template_context_data_provider:
-            template_context_data_provider.provide(result)
-        return result
-
+            template_context_data_provider.provide(self.runtime_variables)
+            
 
     def destroy(self):
         super().destroy()

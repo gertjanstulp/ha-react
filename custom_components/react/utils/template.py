@@ -74,7 +74,8 @@ class TemplateJitter:
     def render(self, template_context_data_provider: TemplateContextDataProvider):
         result = None
         try:
-            result = self.template.async_render(self.template_context.get_runtime_variables(template_context_data_provider))
+            self.template_context.build()
+            result = self.template.async_render(self.template_context.runtime_variables)
         except TemplateError as te:
             self.react.log.error(f"Config: Error rendering {self.property}: {result}")
         return result
@@ -106,7 +107,8 @@ class TemplateTracker(Updatable):
 
     def start(self):
         setattr(self.owner, self.property, None)
-        self.track_templates = [TrackTemplate(self.template, self.template_context.get_runtime_variables())]
+        self.template_context.build()
+        self.track_templates = [TrackTemplate(self.template, self.template_context.runtime_variables)]
         self.result_info = async_track_template_result(self.react.hass, self.track_templates, self.async_update_template)
         self.async_refresh()
 
@@ -119,6 +121,7 @@ class TemplateTracker(Updatable):
     @callback
     def async_refresh(self):
         if self.result_info:
+            self.template_context.build()
             self.result_info.async_refresh()
 
 
