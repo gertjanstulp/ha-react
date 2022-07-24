@@ -217,6 +217,7 @@ REACTOR_DATA_SCHEMA = ENTITY_DATA_SCHEMA.extend(
         vol.Optional(ATTR_OVERWRITE) : cv.boolean,
         vol.Optional(ATTR_RESET_WORKFLOW) : cv.string,
         vol.Optional(ATTR_FORWARD_ACTION): cv.boolean,
+        vol.Optional(ATTR_DATA): dict,
     }).schema
 )
 

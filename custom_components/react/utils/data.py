@@ -1,4 +1,5 @@
 from datetime import datetime
+from homeassistant.components.input_datetime import ATTR_DATETIME
 from homeassistant.core import callback
 
 from .logger import get_react_logger
@@ -10,7 +11,8 @@ from ..const import (
     ATTR_ACTOR_ACTION, 
     ATTR_ACTOR_ENTITY, 
     ATTR_ACTOR_ID, 
-    ATTR_ACTOR_TYPE, 
+    ATTR_ACTOR_TYPE,
+    ATTR_DATA, 
     ATTR_FORWARD_ACTION, 
     ATTR_OVERWRITE, 
     ATTR_REACTION_DATETIME, 
@@ -25,19 +27,20 @@ from ..const import (
 
 DEFAULT_REACTION_DATA = (
     # ("id", None),
-    ("datetime", None),
-    ("workflow_id", None),
-    ("actor_id", None),
-    ("actor_entity", None),
-    ("actor_type", None),
-    ("actor_action", None),
-    ("reactor_id", None),
-    ("reactor_entity", None),
-    ("reactor_type", None),
-    ("reactor_action", None),
-    ("reset_workflow", None),
-    ("overwrite", None),
-    ("forward_action", None),
+    (ATTR_DATETIME, None),
+    (ATTR_WORKFLOW_ID, None),
+    (ATTR_ACTOR_ID, None),
+    (ATTR_ACTOR_ENTITY, None),
+    (ATTR_ACTOR_TYPE, None),
+    (ATTR_ACTOR_ACTION, None),
+    (ATTR_REACTOR_ID, None),
+    (ATTR_REACTOR_ENTITY, None),
+    (ATTR_REACTOR_TYPE, None),
+    (ATTR_REACTOR_ACTION, None),
+    (ATTR_RESET_WORKFLOW, None),
+    (ATTR_OVERWRITE, None),
+    (ATTR_FORWARD_ACTION, None),
+    (ATTR_DATA, None)
 )
 
 
@@ -141,5 +144,6 @@ class ReactData:
         reaction.data.reset_workflow = reaction_data.get(ATTR_RESET_WORKFLOW)
         reaction.data.overwrite = reaction_data.get(ATTR_OVERWRITE)
         reaction.data.forward_action = reaction_data.get(ATTR_FORWARD_ACTION)
+        reaction.data.data = reaction_data.get(ATTR_DATA)
 
         self.react.reactions.insert(reaction)

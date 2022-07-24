@@ -1,4 +1,5 @@
 from typing import Any, Union
+
 from homeassistant.core import Event, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.event import TrackTemplate, TrackTemplateResult, async_track_template_result
@@ -6,6 +7,7 @@ from homeassistant.helpers.template import Template
 
 from ..base import ReactBase
 from .updatable import Updatable, callable_type
+from .context import TemplateContext, TemplateContextDataProvider
 
 
 class ValueJitter:
@@ -29,18 +31,20 @@ class TemplateJitter:
     template: Template
 
 
-    def __init__(self, react: ReactBase, property: str, template: Template, type_converter: Any):
+    def __init__(self, react: ReactBase, property: str, template: Template, type_converter: Any, template_context: TemplateContext):
         self.property = property
         self.template = template
         self.type_converter = type_converter
+        self.template_context = template_context
 
         template.hass = react.hass
 
 
-    def render(self, variables: dict):
+    def render(self, template_context_data_provider: TemplateContextDataProvider):
         result = None
         try:
-            result = self.template.async_render(variables)
+            self.template_context.build(template_context_data_provider)
+            result = self.template.async_render(self.template_context.runtime_variables)
         except TemplateError as te:
             self.react.log.error(f"Config: Error rendering {self.property}: {result}")
         return result
@@ -53,17 +57,17 @@ class TemplateTracker(Updatable):
     property: str
     type_converter: Any
     template: Template
-    variables: Union[dict, None] = None
+    template_context: Union[TemplateContext, None] = None
 
 
-    def __init__(self, react: ReactBase, owner: Any, property: str, template: Template, type_converter: Any, variables: dict = {}, update_callback: callable_type = None):
+    def __init__(self, react: ReactBase, owner: Any, property: str, template: Template, type_converter: Any, template_context: TemplateContext, update_callback: callable_type = None):
         super().__init__(react)
         self.react = react
         self.owner = owner
         self.property = property
         self.template = template
         self.type_converter = type_converter
-        self.variables = variables
+        self.template_context = template_context
 
         template.hass = react.hass
         if update_callback:
@@ -72,7 +76,8 @@ class TemplateTracker(Updatable):
 
     def start(self):
         setattr(self.owner, self.property, None)
-        self.track_templates = [TrackTemplate(self.template, self.variables)]
+        self.template_context.build()
+        self.track_templates = [TrackTemplate(self.template, self.template_context.runtime_variables)]
         self.result_info = async_track_template_result(self.react.hass, self.track_templates, self.async_update_template)
         self.async_refresh()
 
@@ -85,6 +90,7 @@ class TemplateTracker(Updatable):
     @callback
     def async_refresh(self):
         if self.result_info:
+            self.template_context.build()
             self.result_info.async_refresh()
 
 
@@ -97,7 +103,7 @@ class TemplateTracker(Updatable):
                 return
 
             if hasattr(self.owner, "set_property"):
-                self.owner.set_property(self.property, self.type_converter(result))
+                self.owner.set_property(self.owner, self.property, self.type_converter(result))
             else:
                 setattr(self.owner, self.property, self.type_converter(result))
             self.async_update()

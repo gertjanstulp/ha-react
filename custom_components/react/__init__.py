@@ -17,7 +17,7 @@ from .base import ReactBase, ReactReactions
 from .enums import ReactStage
 from .tasks.manager import ReactTaskManager
 from .lib.config import Workflow
-from .lib.runtime import WorkflowRuntime, WorkflowState
+from .lib.runtime import WorkflowRuntime
 from .reactions.dispatch import ReactDispatch
 from .utils.data import ReactData
 from .utils.logger import format_data, get_react_logger
@@ -155,8 +155,7 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
 
         await super().async_added_to_hass()
 
-        self.workflow_state = WorkflowState(self)
-        self.workflow_runtime = WorkflowRuntime(self.react, self.workflow_state, self.workflow)
+        self.workflow_runtime = WorkflowRuntime(self.react, self.workflow)
         self.workflow_runtime.on_update(self.async_write_ha_state)
 
         if state := await self.async_get_last_state():
