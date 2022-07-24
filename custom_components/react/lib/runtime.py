@@ -43,6 +43,7 @@ from ..const import (
     ATTR_VARIABLES,
     ATTR_WORKFLOW_ID,
     PROP_TYPE_DEFAULT,
+    PROP_TYPE_SOURCE,
     PROP_TYPE_TEMPLATE,
     PROP_TYPE_VALUE,
     EVENT_REACT_ACTION,
@@ -185,7 +186,7 @@ class DynamicDataHandler(RuntimeHandler):
         self.names = dynamicData.names
 
         for name in self.names:
-            self.init_attr(is_jit, name, PROP_TYPE_STR)
+            self.init_attr(is_jit, name, PROP_TYPE_SOURCE)
 
         self.start_trackers()
 
