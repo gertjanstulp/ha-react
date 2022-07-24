@@ -97,6 +97,7 @@ class Ctor():
     action: str
     enabled: bool
     is_list_item: bool
+    data: DynamicData
 
 
     def __init__(self, id: str, entity: str, moniker: str):
@@ -110,6 +111,7 @@ class Ctor():
         self.type = get_property(ATTR_TYPE, config, stencil)
         self.action = get_property(ATTR_ACTION, config, stencil)
         self.condition = get_property(ATTR_CONDITION, config, stencil)
+        self.data = DynamicData(None,  get_property(ATTR_DATA, config, stencil, {}))
 
 
     def as_dict(self, index: int) -> dict:
@@ -124,7 +126,8 @@ class Ctor():
         condition = getattr(self, ATTR_CONDITION)
         if condition is not None:
             result[ATTR_CONDITION] = { ATTR_ENABLED: True, ATTR_TEMPLATE: condition}
-            
+        if self.data is not None:
+            result[self.moniker][ATTR_DATA] = self.data.as_dict()   
         return result
         
 
@@ -145,7 +148,6 @@ class Reactor(Ctor):
     overwrite: Union[bool, str]
     reset_workflow: str
     forward_action: Union[bool, str]
-    data: DynamicData
 
     def __init__(self, id: str, workflow_id: str, entity: str):
         super().__init__(id, entity, ATTR_EVENT)
@@ -162,7 +164,6 @@ class Reactor(Ctor):
         self.overwrite = get_property(ATTR_OVERWRITE, config, stencil, False)
         self.reset_workflow = get_property(ATTR_RESET_WORKFLOW, config, stencil)
         self.forward_action = get_property(ATTR_FORWARD_ACTION, config, stencil, False)
-        self.data = DynamicData(None,  get_property(ATTR_DATA, config, stencil, {}))
 
 
     def load_schedule(self, config: dict, stencil: dict) -> Schedule:
@@ -180,8 +181,6 @@ class Reactor(Ctor):
         }
         if self.schedule:
             self_dict[ATTR_SCHEDULE] = self.schedule.as_dict()
-        if self.data:
-            self_dict[ATTR_DATA] = self.data.as_dict()
 
         return base_dict | self_dict
 

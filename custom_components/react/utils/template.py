@@ -23,37 +23,6 @@ class ValueJitter:
             return self.value
 
 
-# class TemplateContextDataProvider:
-#     extra_variables: Union[dict, None] = None
-    
-#     def __init__(self) -> None:
-#         pass
-
-
-#     def provide(self, context_data: dict):
-#         if self.extra_variables:
-#             context_data = context_data | self.extra_variables
-
-
-# class TemplateContext(Updatable):
-#     def __init__(self, react: ReactBase, template_context_data_provider: TemplateContextDataProvider = None) -> None:
-#         super().__init__(react)
-#         self.template_context_data_provider = template_context_data_provider
-
-
-#     def get_data(self) -> dict:
-#         return {}
-
-
-#     def get_runtime_variables(self, template_context_data_provider: TemplateContextDataProvider = None):
-#         result = self.get_data()
-#         if (self.template_context_data_provider):
-#             self.template_context_data_provider.provide(result)
-#         if template_context_data_provider:
-#             template_context_data_provider.provide(result)
-#         return result
-
-
 class TemplateJitter:
     owner: Union[Any, None] = None
     react: ReactBase
@@ -74,7 +43,7 @@ class TemplateJitter:
     def render(self, template_context_data_provider: TemplateContextDataProvider):
         result = None
         try:
-            self.template_context.build()
+            self.template_context.build(template_context_data_provider)
             result = self.template.async_render(self.template_context.runtime_variables)
         except TemplateError as te:
             self.react.log.error(f"Config: Error rendering {self.property}: {result}")

@@ -36,6 +36,7 @@ from ..const import (
     ATTR_DATA,
     ATTR_DELAY,
     ATTR_ENTITY,
+    ATTR_REACTOR,
     ATTR_RESET_WORKFLOW,
     ATTR_THIS,
     ATTR_TYPE,
@@ -74,18 +75,6 @@ class RuntimeHandler(Updatable):
         self.value_container = type('object', (), {})()
         self.track_attrs = []
         self.jit_attrs = []
-    
-
-    def start_trackers(self):
-        if self.template_context:
-            @callback
-            def async_update_template_trackers():
-                for tracker in self.template_trackers:
-                    tracker.async_refresh()
-            self.template_context.on_update(async_update_template_trackers)
-        
-        for tracker in self.template_trackers:
-            tracker.start()
 
 
     def start(self):
@@ -99,6 +88,18 @@ class RuntimeHandler(Updatable):
         super().destroy()
         if self.template_context:
             self.template_context.destroy()
+    
+
+    def start_trackers(self):
+        if self.template_context:
+            @callback
+            def async_update_template_trackers():
+                for tracker in self.template_trackers:
+                    tracker.async_refresh()
+            self.template_context.on_update(async_update_template_trackers)
+        
+        for tracker in self.template_trackers:
+            tracker.start()
 
 
     def init_attr(self, is_jit: bool, attr: str, type_converter: Any, default: Any = None):
@@ -300,7 +301,7 @@ class ActionHandler(RuntimeHandler):
         )
 
 
-class ActionEventDataReader:
+class ActionEventDataReader(TemplateContextDataProvider):
     def __init__(self, event_variables: dict) -> None:
         self.variables = event_variables
         self.actor_data: dict = event_variables[ATTR_ACTOR][ATTR_DATA]
@@ -310,6 +311,14 @@ class ActionEventDataReader:
         self.actor_action = self.actor_data.get(ATTR_ACTOR_ACTION, None)
         self.actor_id = self.actor_data.get(ATTR_ACTOR_ID, None)
 
+
+    def provide(self, context_data: dict):
+        actor_container = {
+            ATTR_ENTITY: self.actor_entity,
+            ATTR_TYPE: self.actor_type,
+            ATTR_ACTION: self.actor_action,
+        }
+        context_data[ATTR_ACTOR] = actor_container
 
 
 class ConditionHandler():
@@ -367,6 +376,12 @@ class ReactionHandler(RuntimeHandler):
         action_event_data_reader = ActionEventDataReader(variables)
         template_context_data_provider = ActorTemplateContextDataProvider(self._react, action_event_data_reader)
         
+        reactor_data = self.data_handler.jit_render_all(template_context_data_provider)
+
+        variables[ATTR_REACTOR] = {
+            ATTR_DATA: reactor_data
+        }
+        
         with trace_path(TRACE_PATH_CONDITION):
             if not self.condition_handler.eval(action_event_data_reader, template_context_data_provider):
                 self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{self.reactor.id}' skipping (condition false)")
@@ -400,7 +415,7 @@ class ReactionHandler(RuntimeHandler):
                 reaction.data.reset_workflow = self.jit_render(ATTR_RESET_WORKFLOW, template_context_data_provider)
                 reaction.data.overwrite = self.reactor.overwrite
                 reaction.data.datetime = calculate_reaction_datetime(self.reactor.timing, self.reactor.schedule, self.jit_render(ATTR_DELAY, template_context_data_provider))
-                reaction.data.data = self.data_handler.jit_render_all(template_context_data_provider)
+                reaction.data.data = reactor_data
 
                 self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{self.reactor.id}' sending reaction: {format_data(entity=reaction.data.reactor_entity, type=reaction.data.reactor_type, action=reaction.data.reactor_action, overwrite=reaction.data.overwrite, reset_workflow=reaction.data.reset_workflow)}")
                 self.runtime.react.reactions.add(reaction)
