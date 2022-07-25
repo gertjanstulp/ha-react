@@ -301,7 +301,6 @@ class ActionHandler(RuntimeHandler):
                         result = False
                         break
 
-
         if result and not self.enabled:
             self.runtime.react.log.info(f"ActionHandler: '{self.runtime.workflow_config.id}'.'{self.actor.id}' skipping (workflow is disabled)")
             return False
