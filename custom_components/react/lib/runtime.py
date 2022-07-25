@@ -270,7 +270,7 @@ class ActionHandler(RuntimeHandler):
     def async_filter(self, event: Event) -> bool:
         entity,type,action,data = extract_action_event_data(event)
         
-        config_data = self.data_handler.as_trace_dict()
+        config_data = self.data_handler.to_dict()
         result = False
         if (entity == self.value_container.entity and type == self.value_container.type):
             if self.value_container.action is None:
