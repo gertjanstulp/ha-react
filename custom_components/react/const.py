@@ -96,6 +96,8 @@ ATTR_INDEX = "index"
 # events
 EVENT_REACT_ACTION = "ev_react_action"
 EVENT_REACT_REACTION = "ev_react_reaction"
+# This is a copy of homeassistants' const, we need this to not depend on telegram_bot module automatically
+EVENT_TELEGRAM_CALLBACK = "telegram_callback"
 
 # signals
 SIGNAL_ITEM_CREATED = "react_item_created"

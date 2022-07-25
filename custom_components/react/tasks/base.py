@@ -24,6 +24,11 @@ class ReactTask:
 
 
     @property
+    def enabled(self) -> bool:
+        return True
+
+
+    @property
     def slug(self) -> str:
         """Return the check slug."""
         return self.__class__.__module__.rsplit(".", maxsplit=1)[-1]

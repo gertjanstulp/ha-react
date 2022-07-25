@@ -37,12 +37,13 @@ class ReactTaskManager:
         task_files_root = Path(__file__).parent
         task_files_main = Path(f"{task_files_root}/main")
         task_files_transform = Path(f"{task_files_root}/transform")
+        task_files_reaction = Path(f"{task_files_root}/reaction")
         task_modules = (
             {
                 "parent": module.parent.name,
                 "name": module.stem,
             }
-            for module in chain(task_files_main.glob("*.py"), task_files_transform.glob("*.py"))
+            for module in chain(task_files_main.glob("*.py"), task_files_transform.glob("*.py"), task_files_reaction.glob("*.py"))
             if module.name not in ("base.py", "__init__.py", "manager.py", "transform_base.py")
         )
 
