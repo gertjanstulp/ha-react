@@ -1,11 +1,11 @@
-""""Store React data."""
 from __future__ import annotations
 
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
 from homeassistant.core import Event
 
-from ..base import ReactBase
-from .base import ReactTask
+from ..base import ReactTask
+
+from ...base import ReactBase
 
 
 async def async_setup_task(react: ReactBase) -> Task:

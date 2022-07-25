@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from ..base import ReactBase
-from ..enums import ReactDisabledReason, ReactStage
-from .base import ReactTask
+from ..base import ReactTask
+
+from ...base import ReactBase
+from ...enums import ReactStage
 
 
 async def async_setup_task(react: ReactBase) -> Task:

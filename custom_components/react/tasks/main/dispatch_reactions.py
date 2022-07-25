@@ -1,9 +1,9 @@
-""""Starting setup task: Restore"."""
 from __future__ import annotations
 
-from .base import ReactTask
-from ..base import ReactBase
-from ..const import SIGNAL_DISPATCH
+from ..base import ReactTask
+
+from ...base import ReactBase
+from ...const import SIGNAL_DISPATCH
 
 
 async def async_setup_task(react: ReactBase) -> Task:

@@ -1,9 +1,11 @@
-""""Starting setup task: Restore"."""
 from __future__ import annotations
 
-from ..base import ReactBase
-from ..enums import ReactDisabledReason, ReactStage
-from .base import ReactTask
+from homeassistant.components.trace import async_restore_traces
+
+from ..base import ReactTask
+
+from ...base import ReactBase
+from ...enums import ReactStage
 
 
 async def async_setup_task(react: ReactBase) -> Task:
@@ -18,5 +20,4 @@ class Task(ReactTask):
 
     async def async_execute(self) -> None:
         """Execute the task."""
-        if not await self.react.data.async_restore():
-            self.react.disable_react(ReactDisabledReason.RESTORE)
+        await async_restore_traces(self.react.hass)

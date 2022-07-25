@@ -4,12 +4,13 @@ from typing import Any
 
 from homeassistant.core import Event
 
-from .transform_base import BinaryStateData, StateData, StateTransformTask
-from ..base import ReactBase
+from ..transform_base import BinaryStateData, StateData, StateTransformTask
 
-from ..const import (
-    GROUP, 
-    GROUP_PREFIX,
+from ...base import ReactBase
+
+from ...const import (
+    LIGHT, 
+    LIGHT_PREFIX,
 )
 
 
@@ -18,9 +19,9 @@ async def async_setup_task(react: ReactBase) -> Task:
     return Task(react=react)
 
 
-class GroupStateData(BinaryStateData):
+class LightStateData(BinaryStateData):
     def __init__(self, event_data: dict[str, Any]):
-        super().__init__(GROUP_PREFIX, event_data)
+        super().__init__(LIGHT_PREFIX, event_data)
 
 
 class Task(StateTransformTask):
@@ -30,8 +31,8 @@ class Task(StateTransformTask):
 
 
     def __init__(self, react: ReactBase) -> None:
-        super().__init__(react, GROUP_PREFIX, GROUP)
+        super().__init__(react, LIGHT_PREFIX, LIGHT)
 
 
     def read_state_data(self, event: Event) -> StateData:
-        return GroupStateData(event.data)
+        return LightStateData(event.data)

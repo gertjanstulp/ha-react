@@ -1,16 +1,18 @@
-""""Starting setup task: Frontend"."""
 from __future__ import annotations
 
 from aiohttp import web
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.core import HomeAssistant
 
-from ..base import ReactBase
-from ..const import DOMAIN
-from ..enums import ReactStage
-from ..react_frontend import locate_dir
-from ..react_frontend.version import VERSION as FE_VERSION
-from .base import ReactTask
+from ..base import ReactTask
+
+from ...base import ReactBase
+from ...enums import ReactStage
+from ...react_frontend import locate_dir
+from ...react_frontend.version import VERSION as FE_VERSION
+
+from ...const import (
+    DOMAIN,
+)
 
 URL_BASE = "/reactfiles"
 

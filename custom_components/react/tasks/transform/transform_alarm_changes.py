@@ -4,25 +4,28 @@ from typing import Any
 
 from homeassistant.core import Event
 
-from .transform_base import NonBinaryStateData, StateData, StateTransformTask
-from ..base import ReactBase
+from ..transform_base import NonBinaryStateData, StateData, StateTransformTask
 
-from ..const import (
-    DEVICE_TRACKER, 
-    DEVICE_TRACKER_PREFIX,
+from ...base import ReactBase
+
+from ...const import (
+    ALARM,
+    ALARM_PREFIX,
 )
 
 
 async def async_setup_task(react: ReactBase) -> Task:
     """Set up this task."""
     return Task(react=react)
-     
 
-class DeviceTrackerStateData(NonBinaryStateData):
+
+class AlarmStateData(NonBinaryStateData):
     def __init__(self, event_data: dict[str, Any]):
-        super().__init__(DEVICE_TRACKER_PREFIX, event_data)
+        super().__init__(ALARM_PREFIX, event_data)
 
         if self.old_state_value != self.new_state_value:
+            if self.old_state_value != None:
+                self.actions.append(f"un_{self.old_state_value}")
             self.actions.append(self.new_state_value)
 
 
@@ -33,8 +36,8 @@ class Task(StateTransformTask):
 
 
     def __init__(self, react: ReactBase) -> None:
-        super().__init__(react, DEVICE_TRACKER_PREFIX, DEVICE_TRACKER)
+        super().__init__(react, ALARM_PREFIX, ALARM)
 
 
     def read_state_data(self, event: Event) -> StateData:
-        return DeviceTrackerStateData(event.data)
+        return AlarmStateData(event.data)

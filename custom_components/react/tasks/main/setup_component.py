@@ -1,11 +1,10 @@
-""""Starting setup task: Restore"."""
 from __future__ import annotations
 
-from homeassistant.components.trace import async_restore_traces
+from ..base import ReactTask
 
-from ..base import ReactBase
-from ..enums import ReactStage
-from .base import ReactTask
+from ...base import ReactBase
+from ...enums import ReactStage
+from ...utils.component import async_setup_component
 
 
 async def async_setup_task(react: ReactBase) -> Task:
@@ -14,10 +13,10 @@ async def async_setup_task(react: ReactBase) -> Task:
 
 
 class Task(ReactTask):
-    """Restore React data."""
+    """Setup the React sensor platform."""
 
     stages = [ReactStage.SETUP]
 
     async def async_execute(self) -> None:
         """Execute the task."""
-        await async_restore_traces(self.react.hass)
+        await async_setup_component(self.react)

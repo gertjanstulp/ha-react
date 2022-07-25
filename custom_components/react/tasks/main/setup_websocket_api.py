@@ -13,13 +13,15 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.json import ExtendedJSONEncoder
 
-from .base import ReactTask
-from ..base import ReactBase
-from ..enums import ReactStage
+from ..base import ReactTask
 
-from ..const import (
+from ...base import ReactBase
+from ...enums import ReactStage
+
+from ...const import (
     DOMAIN,
 )
+
 
 async def async_setup_task(react: ReactBase) -> TASK_STATUS_IGNORED:
     """Set up this task."""

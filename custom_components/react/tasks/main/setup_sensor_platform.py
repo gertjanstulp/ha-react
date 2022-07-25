@@ -1,14 +1,14 @@
-""""Starting setup task: Sensor"."""
 from __future__ import annotations
 
 from homeassistant.components.sensor import DOMAIN as PLATFORM
 from homeassistant.helpers.discovery import async_load_platform
 
-from .base import ReactTask
-from ..base import ReactBase
-from ..enums import ReactStage
+from ..base import ReactTask
 
-from ..const import (
+from ...base import ReactBase
+from ...enums import ReactStage
+
+from ...const import (
     DOMAIN,
 )
 

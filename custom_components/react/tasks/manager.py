@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from importlib import import_module
+from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING, Union
 
@@ -33,15 +34,20 @@ class ReactTaskManager:
 
     async def async_load(self) -> None:
         """Load all tasks."""
-        task_files = Path(__file__).parent
+        task_files_root = Path(__file__).parent
+        task_files_main = Path(f"{task_files_root}/main")
+        task_files_transform = Path(f"{task_files_root}/transform")
         task_modules = (
-            module.stem
-            for module in task_files.glob("*.py")
+            {
+                "parent": module.parent.name,
+                "name": module.stem,
+            }
+            for module in chain(task_files_main.glob("*.py"), task_files_transform.glob("*.py"))
             if module.name not in ("base.py", "__init__.py", "manager.py", "transform_base.py")
         )
 
-        async def _load_module(module: str):
-            task_module = import_module(f"{__package__}.{module}")
+        async def _load_module(module: dict):
+            task_module = import_module(f"{__package__}.{module['parent']}.{module['name']}")
             if task := await task_module.async_setup_task(react=self.react):
                 self.__tasks[task.slug] = task
 
