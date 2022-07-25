@@ -240,7 +240,8 @@ class ActionHandler(RuntimeHandler):
         self.index = index
         self.complete = False
         self.enabled = False
-
+        self.data_handler = DynamicDataHandler(False, runtime, actor.data, template_context)
+        
         self.init_attr(False, ATTR_ENTITY, PROP_TYPE_STR)
         self.init_attr(False, ATTR_TYPE, PROP_TYPE_STR)
         self.init_attr(False, ATTR_ACTION, PROP_TYPE_STR)
@@ -280,7 +281,8 @@ class ActionHandler(RuntimeHandler):
 
     @callback
     def async_filter(self, event: Event) -> bool:
-        event_entity,even_type,event_action = extract_action_event_data(event)
+        event_entity,even_type,event_action,event_data = extract_action_event_data(event)
+        config_data = self.data_handler.to_dict()
 
         result = False
         if (event_entity == self.get_property(ATTR_ENTITY) and even_type == self.get_property(ATTR_TYPE)):
@@ -289,6 +291,15 @@ class ActionHandler(RuntimeHandler):
                 result = True   
             else:
                 result = event_action == config_action
+            
+            if result and config_data and not event_data:
+                result = False
+
+            if result and event_data and config_data:
+                for name in config_data:
+                    if not name in event_data or event_data[name] != config_data[name]:
+                        result = False
+                        break
 
         if result and not self.enabled:
             self.runtime.react.log.info(f"ActionHandler: '{self.runtime.workflow_config.id}'.'{self.actor.id}' skipping (workflow is disabled)")
@@ -558,7 +569,7 @@ class WorkflowRuntime(Updatable):
 
     
     def create_run_from_action(self, trigger_action_handler: ActionHandler, event: Event) -> WorkflowRun:
-        entity,type,action = extract_action_event_data(event)
+        entity,type,action,data = extract_action_event_data(event)
         return self.create_run_core(
             trigger_action_handler, 
             entity,
@@ -592,11 +603,12 @@ class WorkflowRuntime(Updatable):
         return run
 
 
-def extract_action_event_data(event: Event) -> Tuple[str, str, str]:
+def extract_action_event_data(event: Event) -> Tuple[str, str, str, dict]:
     entity = event.data.get(ATTR_ENTITY, None)
     type = event.data.get(ATTR_TYPE, None)
     action = event.data.get(ATTR_ACTION, None)
-    return entity, type, action
+    data = event.data.get(ATTR_DATA, None)
+    return entity, type, action, data
 
 
 def extract_action_handler_data(action_handler: ActionHandler) -> Tuple[str, str, str]:
