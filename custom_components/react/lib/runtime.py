@@ -269,15 +269,23 @@ class ActionHandler(RuntimeHandler):
     @callback
     def async_filter(self, event: Event) -> bool:
         entity,type,action,data = extract_action_event_data(event)
-        
         config_data = self.data_handler.to_dict()
+
         result = False
         if (entity == self.value_container.entity and type == self.value_container.type):
             if self.value_container.action is None:
                 result = True   
             else:
                 result = action == self.value_container.action
+            
+            if result and config_data and not data:
+                result = False
 
+            if result and data and config_data:
+                for name in config_data:
+                    if not name in data or data[name] != config_data[name]:
+                        result = False
+                        break
 
 
         if result and not self.enabled:
@@ -595,7 +603,7 @@ class WorkflowRuntime(Updatable):
         return run
 
 
-def extract_action_event_data(event: Event) -> Tuple[str, str, str, Any]:
+def extract_action_event_data(event: Event) -> Tuple[str, str, str, dict]:
     entity = event.data.get(ATTR_ENTITY, None)
     type = event.data.get(ATTR_TYPE, None)
     action = event.data.get(ATTR_ACTION, None)
