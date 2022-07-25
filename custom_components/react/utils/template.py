@@ -1,4 +1,6 @@
-from typing import Any, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, Union
 
 from homeassistant.core import Event, callback
 from homeassistant.exceptions import TemplateError
@@ -9,32 +11,46 @@ from ..base import ReactBase
 from .updatable import Updatable, callable_type
 from .context import TemplateContext, TemplateContextDataProvider
 
+if TYPE_CHECKING:
+    from ..lib.runtime import RuntimeHandler
 
-class ValueJitter:
-    def __init__(self, value: Any, type_converter: Any = None) -> None:
-        self.value = value
+
+class BaseJitter:
+    type_converter: Any
+
+
+    def __init__(self, type_converter: Any = None) -> None:
         self.type_converter = type_converter
 
+
+    def render(self, template_context_data_provider: TemplateContextDataProvider):
+        raise NotImplementedError()
+
+
+class ValueJitter(BaseJitter):
+    def __init__(self, value: Any, type_converter: Any = None) -> None:
+        super().__init__(type_converter)
+        self.value = value
+
     
-    def render(self, *args):
+    def render(self, template_context_data_provider: TemplateContextDataProvider):
         if self.type_converter:
             return self.type_converter(self.value)
         else:
             return self.value
 
 
-class TemplateJitter:
-    owner: Union[Any, None] = None
+class TemplateJitter(BaseJitter):
     react: ReactBase
     property: str
-    type_converter: Any
     template: Template
 
 
     def __init__(self, react: ReactBase, property: str, template: Template, type_converter: Any, template_context: TemplateContext):
+        super().__init__(type_converter)
+
         self.property = property
         self.template = template
-        self.type_converter = type_converter
         self.template_context = template_context
 
         template.hass = react.hass
@@ -52,7 +68,7 @@ class TemplateJitter:
 
 class TemplateTracker(Updatable):
     
-    owner: Union[Any, None] = None
+    owner: Union[RuntimeHandler, None] = None
     react: ReactBase
     property: str
     type_converter: Any
@@ -60,7 +76,7 @@ class TemplateTracker(Updatable):
     template_context: Union[TemplateContext, None] = None
 
 
-    def __init__(self, react: ReactBase, owner: Any, property: str, template: Template, type_converter: Any, template_context: TemplateContext, update_callback: callable_type = None):
+    def __init__(self, react: ReactBase, owner: RuntimeHandler, property: str, template: Template, type_converter: Any, template_context: TemplateContext, update_callback: callable_type = None):
         super().__init__(react)
         self.react = react
         self.owner = owner
@@ -75,7 +91,7 @@ class TemplateTracker(Updatable):
 
 
     def start(self):
-        setattr(self.owner, self.property, None)
+        self.owner.set_property(self.property, None)
         self.template_context.build()
         self.track_templates = [TrackTemplate(self.template, self.template_context.runtime_variables)]
         self.result_info = async_track_template_result(self.react.hass, self.track_templates, self.async_update_template)
@@ -102,8 +118,5 @@ class TemplateTracker(Updatable):
                 self.react.log.error(f"Config: Error rendering {self.property}: {result}")
                 return
 
-            if hasattr(self.owner, "set_property"):
-                self.owner.set_property(self.owner, self.property, self.type_converter(result))
-            else:
-                setattr(self.owner, self.property, self.type_converter(result))
+            self.owner.set_property(self.property, self.type_converter(result))
             self.async_update()
