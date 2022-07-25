@@ -12,13 +12,13 @@ from homeassistant.helpers.trace import trace_get, trace_path, trace_set_result,
 from homeassistant.util import ulid as ulid_util
 from homeassistant.util.dt import utcnow
 
-from .config import Actor, DynamicData, Reactor, Workflow, calculate_reaction_datetime
+from .config import Actor, DynamicData, Reactor, Workflow, calculate_reaction_datetime, get_property
 from ..base import ReactBase
 from ..reactions.base import ReactReaction
 from ..utils.context import ActorTemplateContextDataProvider, TemplateContext, TemplateContextDataProvider, VariableContextDataProvider
 from ..utils.updatable import Updatable
 from ..utils.logger import format_data
-from ..utils.template import TemplateJitter, TemplateTracker, ValueJitter
+from ..utils.template import BaseJitter, TemplateJitter, TemplateTracker, ValueJitter
 from ..utils.trace import ReactTrace, trace_node, trace_workflow
 
 from ..const import (
@@ -74,7 +74,6 @@ class RuntimeHandler(Updatable):
 
         self.template_trackers: list[TemplateTracker] = []
         self.value_container = type('object', (), {})()
-        self.track_attrs = []
         self.jit_attrs = []
 
 
@@ -113,18 +112,17 @@ class RuntimeHandler(Updatable):
     
 
     def add_tracker(self, attr: str, attr_value: Any, type_converter: Any, default: Any = None):
-        type_prop = f"_{attr}{PROP_ATTR_TYPE_POSTFIX}"
         
         def set_attr(attr: str, value: Any, prop_type: str):
-            self.set_property(self.value_container, attr, value)
-            setattr(self.value_container, type_prop, prop_type)
+            self.set_property(attr, value)
+            self.set_property_type(attr, prop_type)
 
         if attr_value:
             if isinstance(attr_value, str) and is_template_string(attr_value):
                 set_attr(attr, None, PROP_TYPE_TEMPLATE)
                 self.template_trackers.append(TemplateTracker(
                     react=self.runtime.react,
-                    owner=self.value_container, 
+                    owner=self, 
                     property=attr, 
                     template=Template(attr_value),
                     type_converter=type_converter,
@@ -134,8 +132,6 @@ class RuntimeHandler(Updatable):
                 set_attr(attr, attr_value, PROP_TYPE_VALUE)
         else:
             set_attr(attr, default, PROP_TYPE_DEFAULT)
-
-        self.track_attrs.append(attr)
 
 
     def add_jitter(self, attr: str, attr_value: Any, type_converter: Any, default: Any = None):
@@ -150,16 +146,13 @@ class RuntimeHandler(Updatable):
         self.jit_attrs.append(attr)
 
 
-    def set_jitter(self, attr: str, value: Any, prop_type: str):
-        jitter_prop = _JITTER_PROPERTY.format(attr)
-        type_prop = f"_{attr}{PROP_ATTR_TYPE_POSTFIX}"
-        setattr(self, jitter_prop, value)
-        setattr(self, type_prop, prop_type)
+    def set_jitter(self, attr: str, value: BaseJitter, prop_type: str):
+        self.set_jitter_prop(attr, value)
+        self.set_property_type(attr, prop_type)
 
 
     def jit_render(self, attr: str, template_context_data_provider: TemplateContextDataProvider = None, default: Any = None):
-        jitter_property = _JITTER_PROPERTY.format(attr)
-        attr_jitter: TemplateJitter = getattr(self, jitter_property, None)
+        attr_jitter = self.get_jitter_prop(attr)
         if attr_jitter:
             return attr_jitter.render(template_context_data_provider)
         else:
@@ -173,10 +166,34 @@ class RuntimeHandler(Updatable):
         return result
 
 
-    def set_property(self, target: Any, name: str, value: Any):
-        if hasattr(target, name) and getattr(target, name) == value: 
+    def set_property(self, name: str, value: Any):
+        if hasattr(self.value_container, name) and getattr(self.value_container, name) == value: 
             return
-        setattr(target, name, value)
+        setattr(self.value_container, name, value)
+
+
+    def get_property(self, name: str, default: Any = None) -> Any:
+        return getattr(self.value_container, name, default)
+
+
+    def set_property_type(self, attr: str, prop_type: str):
+        type_prop = f"_{attr}{PROP_ATTR_TYPE_POSTFIX}"
+        setattr(self, type_prop, prop_type)
+
+
+    def get_property_type(self, attr: str) -> str:
+        type_prop = f"_{attr}{PROP_ATTR_TYPE_POSTFIX}"
+        return getattr(self, type_prop, PROP_TYPE_DEFAULT)
+
+    
+    def set_jitter_prop(self, attr: str, value: BaseJitter):
+        jitter_prop = _JITTER_PROPERTY.format(attr)
+        setattr(self, jitter_prop, value)
+        
+
+    def get_jitter_prop(self, attr: str) -> BaseJitter:
+        jitter_prop = _JITTER_PROPERTY.format(attr)
+        return getattr(self, jitter_prop, None)
 
 
 class DynamicDataHandler(RuntimeHandler):
@@ -196,7 +213,7 @@ class DynamicDataHandler(RuntimeHandler):
         
 
     def as_trace_dict(self) -> dict:
-        return { name : getattr(self.value_container, name, None) for name in self.names }
+        return { name : self.get_property(name) for name in self.names }
 
     
     def destroy(self):
@@ -215,10 +232,6 @@ class ActionContext():
      
 
 class ActionHandler(RuntimeHandler):
-    entity: Union[str, None] = None
-    type: Union[str, None] = None
-    action: Union[str, None] = None
-    condition: Union[bool, None] = True
     
     def __init__(self, runtime: WorkflowRuntime, actor: Actor, index: int, template_context: TemplateContext):
         super().__init__(runtime, actor, template_context)
@@ -238,14 +251,14 @@ class ActionHandler(RuntimeHandler):
         self.disconnect_event_listener = self.runtime.react.hass.bus.async_listen(EVENT_REACT_ACTION, self.async_handle, self.async_filter)
 
 
-    def set_property(self, target: ActionHandler, name: str, value: Any):
-        super().set_property(target, name, value)
+    def set_property(self, name: str, value: Any):
+        super().set_property(name, value)
 
         if (name == ATTR_ENTITY or name == ATTR_TYPE):
-            entity = getattr(target, ATTR_ENTITY, None)
-            type = getattr(target, ATTR_TYPE, None)
+            entity = self.get_property(ATTR_ENTITY)
+            type = self.get_property(ATTR_TYPE)
             if entity and type and not self.complete:
-                target.complete = True
+                self.complete = True
                 async_dispatcher_send(self.runtime.react.hass, SIGNAL_PROPERTY_COMPLETE, entity, type)
 
 
@@ -267,24 +280,21 @@ class ActionHandler(RuntimeHandler):
 
     @callback
     def async_filter(self, event: Event) -> bool:
-        entity, type, action = extract_action_event_data(event)
+        event_entity,even_type,event_action = extract_action_event_data(event)
 
         result = False
-        if (entity == self.value_container.entity and type == self.value_container.type):
-            if self.value_container.action is None:
+        if (event_entity == self.get_property(ATTR_ENTITY) and even_type == self.get_property(ATTR_TYPE)):
+            config_action = self.get_property(ATTR_ACTION)
+            if config_action is None:
                 result = True   
             else:
-                result = action == self.value_container.action
+                result = event_action == config_action
 
         if result and not self.enabled:
             self.runtime.react.log.info(f"ActionHandler: '{self.runtime.workflow_config.id}'.'{self.actor.id}' skipping (workflow is disabled)")
             return False
 
         return result
-
-
-    def check_condition(self) -> bool:
-        return self.condition
 
 
     @callback
@@ -295,14 +305,14 @@ class ActionHandler(RuntimeHandler):
 
     def get_run_context(self) -> ActionContext:
         return ActionContext(
-            condition=self.condition,
+            condition=self.get_property(ATTR_CONDITION, True),
             index=self.index,
             actor_id=self.actor.id,
-            condition_type=getattr(self, f"_{ATTR_CONDITION}{PROP_ATTR_TYPE_POSTFIX}", None)
+            condition_type=self.get_property_type(ATTR_CONDITION)
         )
 
 
-class ActionEventDataReader(TemplateContextDataProvider):
+class ActionEventDataReader():
     def __init__(self, event_variables: dict) -> None:
         self.variables = event_variables
         self.actor_data: dict = event_variables[ATTR_ACTOR][ATTR_DATA]
@@ -313,19 +323,11 @@ class ActionEventDataReader(TemplateContextDataProvider):
         self.actor_id = self.actor_data.get(ATTR_ACTOR_ID, None)
 
 
-    def provide(self, context_data: dict):
-        actor_container = {
-            ATTR_ENTITY: self.actor_entity,
-            ATTR_TYPE: self.actor_type,
-            ATTR_ACTION: self.actor_action,
-        }
-        context_data[ATTR_ACTOR] = actor_container
-
-
 class ConditionHandler():
     def __init__(self, owner: ReactionHandler):
         self.owner = owner
-        self.condition_type = getattr(owner, f"_{ATTR_CONDITION}{PROP_ATTR_TYPE_POSTFIX}", None)
+        self.condition_type = owner.get_property_type(ATTR_CONDITION)
+
         
     def eval(self, action_event_data_reader: ActionEventDataReader, template_context_data_provider: TemplateContextDataProvider):
         result = self.owner.jit_render(ATTR_CONDITION, template_context_data_provider, True)
@@ -344,6 +346,7 @@ class ReactionHandler(RuntimeHandler):
         self.index = index
         self.enabled = False
         self.data_handler = DynamicDataHandler(True, runtime, reactor.data, template_context)
+        self.condition_handler = ConditionHandler(self)
         
         self.init_attr(True, ATTR_ENTITY, PROP_TYPE_STR)
         self.init_attr(True, ATTR_TYPE, PROP_TYPE_STR)
@@ -351,8 +354,6 @@ class ReactionHandler(RuntimeHandler):
         self.init_attr(True, ATTR_RESET_WORKFLOW, PROP_TYPE_STR)
         self.init_attr(True, ATTR_DELAY, PROP_TYPE_INT)
         self.init_attr(True, ATTR_CONDITION, PROP_TYPE_BOOL, True)
-
-        self.condition_handler = ConditionHandler(self)
 
         self.disconnect_signal_listener = async_dispatcher_connect(runtime.react.hass, SIGNAL_REACT.format(self.runtime.workflow_config.id), self.async_handle)
 
