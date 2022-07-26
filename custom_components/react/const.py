@@ -93,11 +93,27 @@ ATTR_TRIGGER = "trigger"
 ATTR_EVENT = "event"
 ATTR_INDEX = "index"
 
+# Event custom attributes
+ATTR_EVENT_MESSAGE = "message"
+ATTR_EVENT_FEEDBACK_ITEMS = "feedback_items"
+ATTR_EVENT_FEEDBACK_ITEM_TITLE = "title"
+ATTR_EVENT_FEEDBACK_ITEM_COMMAND = "command"
+ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT = "acknowledgement"
+
+# Service data attributes
+ATTR_SERVICE_DATA_INLINE_KEYBOARD = "inline_keyboard"
+
 # events
 EVENT_REACT_ACTION = "ev_react_action"
 EVENT_REACT_REACTION = "ev_react_reaction"
 # This is a copy of homeassistants' const, we need this to not depend on telegram_bot module automatically
 EVENT_TELEGRAM_CALLBACK = "telegram_callback"
+
+# React types
+REACT_TYPE_NOTIFY = "notify"
+
+# React actions
+REACT_ACTION_SEND_MESSAGE = "send_message"
 
 # signals
 SIGNAL_ITEM_CREATED = "react_item_created"

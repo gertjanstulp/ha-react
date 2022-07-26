@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 from datetime import datetime
 from typing import Any, Tuple, Union
+from config.custom_components.react.utils.events import ActionEventDataReader
 from homeassistant.core import Context, Event, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, async_dispatcher_send
 from homeassistant.helpers.template import Template, is_template_string
@@ -16,10 +17,11 @@ from .config import Actor, DynamicData, Reactor, Workflow, calculate_reaction_da
 from ..base import ReactBase
 from ..reactions.base import ReactReaction
 from ..utils.context import ActorTemplateContextDataProvider, TemplateContext, TemplateContextDataProvider, VariableContextDataProvider
-from ..utils.updatable import Updatable
+from ..utils.signals import ReactSignalDataReader
 from ..utils.logger import format_data
 from ..utils.template import BaseJitter, TemplateJitter, TemplateTracker, ValueJitter
 from ..utils.trace import ReactTrace, trace_node, trace_workflow
+from ..utils.updatable import Updatable
 
 from ..const import (
     ACTION_AVAILABLE,
@@ -281,23 +283,23 @@ class ActionHandler(RuntimeHandler):
 
     @callback
     def async_filter(self, event: Event) -> bool:
-        event_entity,even_type,event_action,event_data = extract_action_event_data(event)
+        event_reader = ActionEventDataReader(event)
         config_data = self.data_handler.to_dict()
 
         result = False
-        if (event_entity == self.get_property(ATTR_ENTITY) and even_type == self.get_property(ATTR_TYPE)):
+        if (event_reader.entity == self.get_property(ATTR_ENTITY) and event_reader.type == self.get_property(ATTR_TYPE)):
             config_action = self.get_property(ATTR_ACTION)
             if config_action is None:
                 result = True   
             else:
-                result = event_action == config_action
+                result = event_reader.action == config_action
             
-            if result and config_data and not event_data:
+            if result and config_data and not event_reader.data:
                 result = False
 
-            if result and event_data and config_data:
+            if result and event_reader.data and config_data:
                 for name in config_data:
-                    if not name in event_data or event_data[name] != config_data[name]:
+                    if not name in event_reader.data or event_reader.data[name] != config_data[name]:
                         result = False
                         break
 
@@ -323,27 +325,16 @@ class ActionHandler(RuntimeHandler):
         )
 
 
-class ActionEventDataReader():
-    def __init__(self, event_variables: dict) -> None:
-        self.variables = event_variables
-        self.actor_data: dict = event_variables[ATTR_ACTOR][ATTR_DATA]
-
-        self.actor_entity = self.actor_data.get(ATTR_ACTOR_ENTITY, None)
-        self.actor_type = self.actor_data.get(ATTR_ACTOR_TYPE, None)
-        self.actor_action = self.actor_data.get(ATTR_ACTOR_ACTION, None)
-        self.actor_id = self.actor_data.get(ATTR_ACTOR_ID, None)
-
-
 class ConditionHandler():
     def __init__(self, owner: ReactionHandler):
         self.owner = owner
         self.condition_type = owner.get_property_type(ATTR_CONDITION)
 
         
-    def eval(self, action_event_data_reader: ActionEventDataReader, template_context_data_provider: TemplateContextDataProvider):
+    def eval(self, react_signal_data_reader: ReactSignalDataReader, template_context_data_provider: TemplateContextDataProvider):
         result = self.owner.jit_render(ATTR_CONDITION, template_context_data_provider, True)
         if self.condition_type == PROP_TYPE_TEMPLATE:
-            with trace_node(action_event_data_reader.variables):
+            with trace_node(react_signal_data_reader.variables):
                 trace_set_result(result=result)
 
         return result
@@ -386,8 +377,8 @@ class ReactionHandler(RuntimeHandler):
 
     @callback
     async def async_handle(self, variables: dict):
-        action_event_data_reader = ActionEventDataReader(variables)
-        template_context_data_provider = ActorTemplateContextDataProvider(self._react, action_event_data_reader)
+        react_signal_data_reader = ReactSignalDataReader(variables)
+        template_context_data_provider = ActorTemplateContextDataProvider(self._react, react_signal_data_reader)
         
         reactor_data = self.data_handler.jit_render_all(template_context_data_provider)
 
@@ -396,35 +387,35 @@ class ReactionHandler(RuntimeHandler):
         }
         
         with trace_path(TRACE_PATH_CONDITION):
-            if not self.condition_handler.eval(action_event_data_reader, template_context_data_provider):
+            if not self.condition_handler.eval(react_signal_data_reader, template_context_data_provider):
                 self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{self.reactor.id}' skipping (condition false)")
                 return
 
         with trace_path(TRACE_PATH_EVENT):
-            with trace_node(action_event_data_reader.variables):
+            with trace_node(react_signal_data_reader.variables):
                 if self.reactor.forward_action:
                     # Don't forward toggle actions as they are always accompanied by other actions which will be forwarded
-                    if action_event_data_reader.actor_action == ACTION_TOGGLE:
-                        self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{action_event_data_reader.actor_id}' skipping reactor (action 'toggle' with forward_action): '{self.reactor.id}'")
+                    if react_signal_data_reader.actor_action == ACTION_TOGGLE:
+                        self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{react_signal_data_reader.actor_id}' skipping reactor (action 'toggle' with forward_action): '{self.reactor.id}'")
                         trace_set_result(message="Skipped, toggle with forward-action")
                         return
                     # Don't forward availabililty actions as reactors don't support them
-                    if action_event_data_reader.actor_action == ACTION_AVAILABLE or action_event_data_reader.actor_action == ACTION_UNAVAILABLE:
-                        self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{action_event_data_reader.actor_id}' skipping reactor (availability action with forward_action): '{self.reactor.id}'")
+                    if react_signal_data_reader.actor_action == ACTION_AVAILABLE or react_signal_data_reader.actor_action == ACTION_UNAVAILABLE:
+                        self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{react_signal_data_reader.actor_id}' skipping reactor (availability action with forward_action): '{self.reactor.id}'")
                         trace_set_result(message="Skipped, availability action with forward_action")
                         return
                     
 
                 reaction = ReactReaction(self.runtime.react)
                 reaction.data.workflow_id = self.runtime.workflow_config.id
-                reaction.data.actor_id = action_event_data_reader.actor_id
-                reaction.data.actor_entity = action_event_data_reader.actor_entity
-                reaction.data.actor_type = action_event_data_reader.actor_type
-                reaction.data.actor_action = action_event_data_reader.actor_action
+                reaction.data.actor_id = react_signal_data_reader.actor_id
+                reaction.data.actor_entity = react_signal_data_reader.actor_entity
+                reaction.data.actor_type = react_signal_data_reader.actor_type
+                reaction.data.actor_action = react_signal_data_reader.actor_action
                 reaction.data.reactor_id = self.reactor.id
                 reaction.data.reactor_entity = self.jit_render(ATTR_ENTITY, template_context_data_provider)
                 reaction.data.reactor_type = self.jit_render(ATTR_TYPE, template_context_data_provider)
-                reaction.data.reactor_action = action_event_data_reader.actor_action if self.reactor.forward_action else self.jit_render(ATTR_ACTION, template_context_data_provider)
+                reaction.data.reactor_action = react_signal_data_reader.actor_action if self.reactor.forward_action else self.jit_render(ATTR_ACTION, template_context_data_provider)
                 reaction.data.reset_workflow = self.jit_render(ATTR_RESET_WORKFLOW, template_context_data_provider)
                 reaction.data.overwrite = self.reactor.overwrite
                 reaction.data.datetime = calculate_reaction_datetime(self.reactor.timing, self.reactor.schedule, self.jit_render(ATTR_DELAY, template_context_data_provider))
@@ -569,13 +560,13 @@ class WorkflowRuntime(Updatable):
 
     
     def create_run_from_action(self, trigger_action_handler: ActionHandler, event: Event) -> WorkflowRun:
-        entity,type,action,data = extract_action_event_data(event)
+        event_reader = ActionEventDataReader(event)
         return self.create_run_core(
             trigger_action_handler, 
-            entity,
-            type, 
-            action, 
-            event.context)
+            event_reader.entity,
+            event_reader.type, 
+            event_reader.action, 
+            event_reader.context)
 
 
     def create_run_from_service_call(self, context: Context) -> WorkflowRun:
@@ -601,14 +592,6 @@ class WorkflowRuntime(Updatable):
         self.last_triggered = utcnow()
         self.async_update()
         return run
-
-
-def extract_action_event_data(event: Event) -> Tuple[str, str, str, dict]:
-    entity = event.data.get(ATTR_ENTITY, None)
-    type = event.data.get(ATTR_TYPE, None)
-    action = event.data.get(ATTR_ACTION, None)
-    data = event.data.get(ATTR_DATA, None)
-    return entity, type, action, data
 
 
 def extract_action_handler_data(action_handler: ActionHandler) -> Tuple[str, str, str]:

@@ -29,6 +29,13 @@ class Task(ReactTask):
         self.events_with_filters = [(EVENT_TELEGRAM_CALLBACK, self.async_filter)]
 
 
+    @callback
+    def async_filter(self, event: Event) -> bool:
+        if ATTR_COMMAND in event.data and event.data[ATTR_COMMAND] == "/react":
+            return True
+        return False
+
+
     async def async_execute(self, event: Event) -> None:
         args = event.data.get("args", [])
         command = None
@@ -49,10 +56,3 @@ class Task(ReactTask):
             ATTR_ACTION: command
         }
         self.react.hass.bus.async_fire(EVENT_REACT_ACTION, react_event)
-
-
-    @callback
-    def async_filter(self, event: Event) -> bool:
-        if ATTR_COMMAND in event.data and event.data[ATTR_COMMAND] == "/telegram_react":
-            return True
-        return False

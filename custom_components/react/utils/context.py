@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ..base import ReactBase
 from .updatable import Updatable
+from .signals import ReactSignalDataReader
+from ..base import ReactBase
 
 if TYPE_CHECKING:
-    from ..lib.runtime import ActionEventDataReader, DynamicDataHandler
+    from ..lib.runtime import DynamicDataHandler
 
 from ..const import (
     ATTR_ACTION,
@@ -37,16 +38,16 @@ class VariableContextDataProvider(TemplateContextDataProvider):
 
 
 class ActorTemplateContextDataProvider(TemplateContextDataProvider):
-    def __init__(self, react: ReactBase, action_event_data_reader: ActionEventDataReader) -> None:
+    def __init__(self, react: ReactBase, react_signal_data_reader: ReactSignalDataReader) -> None:
         super().__init__(react)
-        self.action_event_data_reader = action_event_data_reader
+        self.react_signal_data_reader = react_signal_data_reader
 
 
     def provide(self, context_data: dict):
         actor_container = {
-            ATTR_ENTITY: self.action_event_data_reader.actor_entity,
-            ATTR_TYPE: self.action_event_data_reader.actor_type,
-            ATTR_ACTION: self.action_event_data_reader.actor_action,
+            ATTR_ENTITY: self.react_signal_data_reader.actor_entity,
+            ATTR_TYPE: self.react_signal_data_reader.actor_type,
+            ATTR_ACTION: self.react_signal_data_reader.actor_action,
         }
         context_data[ATTR_ACTOR] = actor_container
 
