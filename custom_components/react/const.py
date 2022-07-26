@@ -29,6 +29,8 @@ PACKAGE_NAME = "custom_components.react"
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 CONF_FRONTEND_REPO_URL = "frontend_repo_url"
+CONF_ENTITY_MAPS = "entity_maps"
+CONF_IMPL = "impl"
 CONF_WORKFLOW = "workflow"
 CONF_STENCIL = "stencil"
 
@@ -93,7 +95,12 @@ ATTR_TRIGGER = "trigger"
 ATTR_EVENT = "event"
 ATTR_INDEX = "index"
 
+# impl attributes
+ATTR_NOTIFY = "notify"
+
 # Event custom attributes
+ATTR_EVENT_TYPE = "event_type"
+ATTR_ARGS = "args"
 ATTR_EVENT_MESSAGE = "message"
 ATTR_EVENT_FEEDBACK_ITEMS = "feedback_items"
 ATTR_EVENT_FEEDBACK_ITEM_TITLE = "title"
@@ -109,11 +116,17 @@ EVENT_REACT_REACTION = "ev_react_reaction"
 # This is a copy of homeassistants' const, we need this to not depend on telegram_bot module automatically
 EVENT_TELEGRAM_CALLBACK = "telegram_callback"
 
+# event data
+EVENTDATA_COMMAND_REACT = "/react"
+
 # React types
 REACT_TYPE_NOTIFY = "notify"
 
 # React actions
 REACT_ACTION_SEND_MESSAGE = "send_message"
+REACT_ACTION_FEEDBACK = "feedback"
+
+
 
 # signals
 SIGNAL_ITEM_CREATED = "react_item_created"
@@ -267,4 +280,8 @@ WORKFLOW_SCHEMA = vol.Schema({
         vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(CONF_TRACE, default={}): TRACE_CONFIG_SCHEMA,
     }, None)
+})
+
+IMPL_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_NOTIFY): cv.string
 })

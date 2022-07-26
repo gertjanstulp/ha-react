@@ -35,16 +35,13 @@ class ReactTaskManager:
     async def async_load(self) -> None:
         """Load all tasks."""
         task_files_root = Path(__file__).parent
-        task_files_main = Path(f"{task_files_root}/main")
-        task_files_transform = Path(f"{task_files_root}/transform")
-        task_files_reaction = Path(f"{task_files_root}/reaction")
         task_modules = (
             {
-                "parent": module.parent.name,
+                "parent": str(module.relative_to(task_files_root).parent).replace("/", "."),
                 "name": module.stem,
             }
-            for module in chain(task_files_main.glob("*.py"), task_files_transform.glob("*.py"), task_files_reaction.glob("*.py"))
-            if module.name not in ("base.py", "__init__.py", "manager.py", "transform_base.py")
+            for module in task_files_root.rglob("*.py")
+            if module.name not in ("base.py", "__init__.py", "manager.py", "transform_base.py", "default_task.py")
         )
 
         async def _load_module(module: dict):

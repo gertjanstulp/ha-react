@@ -18,6 +18,7 @@ from ..const import (
     ATTR_EVENT,
     ATTR_FORWARD_ACTION,
     ATTR_INDEX,
+    ATTR_NOTIFY,
     ATTR_OVERWRITE,
     ATTR_PARALLEL,
     ATTR_REACTOR,
@@ -31,6 +32,8 @@ from ..const import (
     ATTR_TRIGGER,
     ATTR_TYPE,
     ATTR_VARIABLES,
+    CONF_ENTITY_MAPS,
+    CONF_IMPL,
     CONF_STENCIL,
     CONF_TRACE,
     CONF_WORKFLOW,
@@ -275,6 +278,17 @@ class Workflow():
         return result
 
 
+class ImplConfiguration:
+    notify: Union[str, None] = None
+
+    def __init__(self) -> None:
+        pass
+
+    def load(self, react_config: ConfigType) -> None:
+        impl_config = react_config.get(CONF_IMPL, {})
+        self.notify = impl_config.get(ATTR_NOTIFY, None)
+
+
 class WorkflowConfiguration:
     workflows: Union[list[Workflow], None] = None
 
@@ -296,6 +310,7 @@ class WorkflowConfiguration:
         if react_config:
             _LOGGER.debug("Config: found react configuration, processing")
 
+            self.entity_maps_config = react_config.get(CONF_ENTITY_MAPS, {})
             self.stencil_config = react_config.get(CONF_STENCIL, {})
             self.workflow_config = react_config.get(CONF_WORKFLOW, {})
 

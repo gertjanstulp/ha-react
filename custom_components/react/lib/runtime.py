@@ -283,7 +283,7 @@ class ActionHandler(RuntimeHandler):
 
     @callback
     def async_filter(self, event: Event) -> bool:
-        event_reader = ActionEventDataReader(event)
+        event_reader = ActionEventDataReader(self.runtime.react, event)
         config_data = self.data_handler.to_dict()
 
         result = False
@@ -560,7 +560,7 @@ class WorkflowRuntime(Updatable):
 
     
     def create_run_from_action(self, trigger_action_handler: ActionHandler, event: Event) -> WorkflowRun:
-        event_reader = ActionEventDataReader(event)
+        event_reader = ActionEventDataReader(self.react, event)
         return self.create_run_core(
             trigger_action_handler, 
             event_reader.entity,

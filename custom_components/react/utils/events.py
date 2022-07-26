@@ -1,11 +1,14 @@
 
-from dataclasses import dataclass
-from ntpath import join
 from typing import Union
+from homeassistant.components.telegram_bot import ATTR_CHAT_ID, ATTR_USER_ID
+from homeassistant.const import ATTR_COMMAND
 from homeassistant.core import Event
+
+from ..base import ReactBase
 
 from ..const import (
     ATTR_ACTION,
+    ATTR_ARGS,
     ATTR_DATA,
     ATTR_ENTITY,
     ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT,
@@ -15,36 +18,48 @@ from ..const import (
     ATTR_EVENT_MESSAGE,
     ATTR_REACTOR_ID,
     ATTR_TYPE,
+    EVENT_TELEGRAM_CALLBACK,
+    EVENTDATA_COMMAND_REACT,
     REACT_ACTION_SEND_MESSAGE,
     REACT_TYPE_NOTIFY,
 )
 
-EVENT_READER_PROP = "event_reader"
 
-class ReactEventDataReader():
+class EventDataReader():
+    def __init__(self, react: ReactBase, event: Event) -> None:
+        self.event = event
+        self.react = react
+        self.context = event.context
+
+
+    @property
+    def applies(self) -> bool:
+        raise NotImplementedError()
+        
+
+class ReactEventDataReader(EventDataReader):
     entity: Union[str, None] = None
     type: Union[str, None] = None
     action: Union[str, None] = None
     data: Union[dict, None] = None
 
-    def __init__(self, event: Event) -> None:
-        self.event = event
+    def __init__(self, react: ReactBase, event: Event) -> None:
+        super().__init__(react, event)
 
         self.entity = event.data.get(ATTR_ENTITY, None)
         self.type = event.data.get(ATTR_TYPE, None)
         self.action = event.data.get(ATTR_ACTION, None)
         self.data = event.data.get(ATTR_DATA, None)
-        self.context = event.context
 
 
 class ActionEventDataReader(ReactEventDataReader):
-    def __init__(self, event: Event) -> None:
-        super().__init__(event)
+    def __init__(self, react: ReactBase, event: Event) -> None:
+        super().__init__(react, event)
 
 
 class ReactionEventDataReader(ReactEventDataReader):
-    def __init__(self, event: Event) -> None:
-        super().__init__(event)
+    def __init__(self, react: ReactBase, event: Event) -> None:
+        super().__init__(react, event)
         self.reactor_id =  event.data.get(ATTR_REACTOR_ID, None)
 
 
@@ -53,8 +68,8 @@ class NotifySendMessageReactionEventDataReader(ReactionEventDataReader):
     inline_keyboard: Union[str, None] = None
 
 
-    def __init__(self, event: Event) -> None:
-        super().__init__(event)
+    def __init__(self, react: ReactBase, event: Event) -> None:
+        super().__init__(react, event)
 
         if self.data:
             self.message = self.data.get(ATTR_EVENT_MESSAGE, None)
@@ -75,5 +90,16 @@ class NotifySendMessageReactionEventDataReader(ReactionEventDataReader):
         return (
             self.type == REACT_TYPE_NOTIFY and
             self.action == REACT_ACTION_SEND_MESSAGE and
-            self.message
+            self.message is not None
         )
+
+
+class NotifyFeedbackEventDataReader(EventDataReader):
+    event_type: Union[str, None] = None
+    telegram_command: Union[str, None] = None
+    command: Union[str, None] = None
+    acknowledgement: Union[str, None] = None
+    entity: Union[str, None] = None
+
+    def __init__(self, react: ReactBase, event: Event) -> None:
+        super().__init__(react, event)

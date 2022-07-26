@@ -15,7 +15,7 @@ from homeassistant.loader import Integration
 
 from .enums import ReactStage, ReactDisabledReason
 from .exceptions import ReactException
-from .lib.config import WorkflowConfiguration
+from .lib.config import ImplConfiguration, WorkflowConfiguration
 from .reactions.base import ReactReaction
 from .reactions.dispatch import ReactDispatch
 from .utils.logger import get_react_logger
@@ -29,6 +29,7 @@ from .const import (
 if TYPE_CHECKING:
     from .tasks.manager import ReactTaskManager
     from .utils.data import ReactData
+    from .impl.impl_factory import ImplFactory
 
 
 @dataclass
@@ -163,6 +164,7 @@ class ReactConfiguration:
     theme_path: str = "themes/"
     theme: bool = False
     workflow_config = WorkflowConfiguration()
+    impl_config = ImplConfiguration()
     
     def to_json(self) -> str:
         """Return a json string."""
@@ -177,6 +179,7 @@ class ReactConfiguration:
             self.__setattr__(key, data[key])
 
         self.workflow_config.load(self.config)
+        self.impl_config.load(self.config)
 
 
 @dataclass
@@ -220,7 +223,7 @@ class ReactBase():
     system = ReactSystem()
     tasks: Union[ReactTaskManager, None] = None
     version: Union[str, None] = None
-
+    impl_factory: Union[ImplFactory, None] = None
     
     @property
     def integration_dir(self) -> pathlib.Path:

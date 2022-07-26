@@ -4,12 +4,11 @@ from typing import Dict, TypedDict
 from homeassistant.const import ATTR_COMMAND, Platform
 from homeassistant.core import Event, callback
 
-from ..base import ReactTask
+from ..default_task import DefaultTask
+from ....base import ReactBase
+from ....utils.events import NotifySendMessageReactionEventDataReader, ReactionEventDataReader
 
-from ...base import ReactBase
-from ...utils.events import NotifySendMessageReactionEventDataReader, ReactionEventDataReader
-
-from ...const import (
+from ....const import (
      ATTR_DATA,
      ATTR_EVENT_MESSAGE,
      ATTR_SERVICE_DATA_INLINE_KEYBOARD,
@@ -21,26 +20,14 @@ async def async_setup_task(react: ReactBase) -> Task:
     return Task(react=react)
 
 
-class Task(ReactTask):
-
-    readers: Dict[str, NotifySendMessageReactionEventDataReader] = {}
+class Task(DefaultTask[NotifySendMessageReactionEventDataReader]):
 
     def __init__(self, react: ReactBase) -> None:
-        super().__init__(react)
+        super().__init__(react, NotifySendMessageReactionEventDataReader)
         self.events_with_filters = [(EVENT_REACT_REACTION, self.async_filter)]
 
 
-    @callback
-    def async_filter(self, event: Event) -> bool:
-        event_reader = NotifySendMessageReactionEventDataReader(event)
-        if event_reader.applies:
-            self.readers[id(event)] = event_reader
-            return True
-        return False
-
-
-    async def async_execute(self, event: Event) -> None:
-        event_reader = self.readers.get(id(event))
+    async def async_execute_default(self, event_reader: NotifySendMessageReactionEventDataReader):
         notify_data = {
             ATTR_EVENT_MESSAGE: event_reader.message,
         }
