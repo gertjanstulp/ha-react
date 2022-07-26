@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from .updatable import Updatable
 from .signals import ReactSignalDataReader
 from ..base import ReactBase
+from ..utils.events import ActionEventDataReader
 
 if TYPE_CHECKING:
     from ..lib.runtime import DynamicDataHandler
@@ -12,6 +13,7 @@ if TYPE_CHECKING:
 from ..const import (
     ATTR_ACTION,
     ATTR_ACTOR,
+    ATTR_DATA,
     ATTR_ENTITY,
     ATTR_TYPE
 )
@@ -38,18 +40,13 @@ class VariableContextDataProvider(TemplateContextDataProvider):
 
 
 class ActorTemplateContextDataProvider(TemplateContextDataProvider):
-    def __init__(self, react: ReactBase, react_signal_data_reader: ReactSignalDataReader) -> None:
+    def __init__(self, react: ReactBase, event_reader: ActionEventDataReader) -> None:
         super().__init__(react)
-        self.react_signal_data_reader = react_signal_data_reader
+        self.event_reader = event_reader
 
 
     def provide(self, context_data: dict):
-        actor_container = {
-            ATTR_ENTITY: self.react_signal_data_reader.actor_entity,
-            ATTR_TYPE: self.react_signal_data_reader.actor_type,
-            ATTR_ACTION: self.react_signal_data_reader.actor_action,
-        }
-        context_data[ATTR_ACTOR] = actor_container
+        context_data[ATTR_ACTOR] = self.event_reader.to_dict()
 
 
 class TemplateContext(Updatable):

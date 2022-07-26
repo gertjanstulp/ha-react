@@ -52,5 +52,3 @@ class Task(DefaultTask[NotifyFeedbackEventDataReader]):
             }
         }
         self.react.hass.bus.async_fire(EVENT_REACT_ACTION, react_event)
-
-    # async def acknowledge_feedback(self, event_reader: NotifyFeedbackEventDataReader):

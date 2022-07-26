@@ -48,9 +48,9 @@ class NotifyFeedbackTelegramEventDataReader(NotifyFeedbackEventDataReader):
         self.user_id = event.data.get(ATTR_USER_ID, None)
         self.chat_id = event.data.get(ATTR_CHAT_ID, None)
         if self.user_id:
-            self.entity = self.react.configuration.workflow_config.entity_maps_config.get(self.user_id, None)
+            self.entity = react.configuration.workflow_config.entity_maps_config.get(self.user_id, None)
         if not self.entity and self.chat_id:
-            self.entity = self.react.configuration.workflow_config.entity_maps_config.get(self.chat_id)
+            self.entity = react.configuration.workflow_config.entity_maps_config.get(self.chat_id)
         if not self.entity:
             self.entity = "unknown"
 
@@ -95,4 +95,3 @@ class TelegramNotifyProvider(NotifyProvider):
             SERVICE_EDIT_MESSAGE,
             feedback_data, 
             context=event_reader.context)
-        test = 1

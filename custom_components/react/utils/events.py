@@ -1,7 +1,5 @@
 
 from typing import Union
-from homeassistant.components.telegram_bot import ATTR_CHAT_ID, ATTR_USER_ID
-from homeassistant.const import ATTR_COMMAND
 from homeassistant.core import Event
 
 from ..base import ReactBase
@@ -18,8 +16,6 @@ from ..const import (
     ATTR_EVENT_MESSAGE,
     ATTR_REACTOR_ID,
     ATTR_TYPE,
-    EVENT_TELEGRAM_CALLBACK,
-    EVENTDATA_COMMAND_REACT,
     REACT_ACTION_SEND_MESSAGE,
     REACT_TYPE_NOTIFY,
 )
@@ -27,8 +23,6 @@ from ..const import (
 
 class EventDataReader():
     def __init__(self, react: ReactBase, event: Event) -> None:
-        self.event = event
-        self.react = react
         self.context = event.context
 
 
@@ -50,6 +44,15 @@ class ReactEventDataReader(EventDataReader):
         self.type = event.data.get(ATTR_TYPE, None)
         self.action = event.data.get(ATTR_ACTION, None)
         self.data = event.data.get(ATTR_DATA, None)
+
+
+    def to_dict(self):
+        return {
+            ATTR_ENTITY: self.entity,
+            ATTR_TYPE: self.type,
+            ATTR_ACTION: self.action,
+            ATTR_DATA: self.data,
+        }
 
 
 class ActionEventDataReader(ReactEventDataReader):

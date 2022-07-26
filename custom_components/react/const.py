@@ -40,6 +40,7 @@ ATTR_ACTOR_ID = "actor_id"
 ATTR_ACTOR_ENTITY = "actor_entity"
 ATTR_ACTOR_TYPE = "actor_type"
 ATTR_ACTOR_ACTION = "actor_action"
+ATTR_ACTOR_DATA = "actor_data"
 
 # reactor attributes
 ATTR_REACTOR = "reactor"
