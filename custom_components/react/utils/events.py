@@ -23,7 +23,7 @@ from ..const import (
 
 class EventDataReader():
     def __init__(self, react: ReactBase, event: Event) -> None:
-        self.context = event.context
+        self.hass_context = event.context
 
 
     @property

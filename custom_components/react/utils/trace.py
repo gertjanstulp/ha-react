@@ -22,7 +22,7 @@ class ReactTrace(ActionTrace):
     _domain = DOMAIN
 
     def __init__(self, workflow_config: Workflow, workflow_run: WorkflowRun) -> None:
-        super().__init__(workflow_config.id, workflow_config.as_dict(workflow_run.actor_id), {}, workflow_run.run_context)
+        super().__init__(workflow_config.id, workflow_config.as_dict(workflow_run.run_context.action_context.actor_id), {}, workflow_run.run_context.hass_run_context)
         self._actor_description: str | None = None
 
     def set_actor_description(self, trigger: str) -> None:

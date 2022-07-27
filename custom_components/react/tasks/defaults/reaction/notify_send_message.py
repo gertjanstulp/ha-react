@@ -39,5 +39,5 @@ class Task(DefaultTask[NotifySendMessageReactionEventDataReader]):
             Platform.NOTIFY, 
             event_reader.entity,
             notify_data, 
-            context=event_reader.context)
+            context=event_reader.hass_context)
         test = 1

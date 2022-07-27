@@ -94,4 +94,4 @@ class TelegramNotifyProvider(NotifyProvider):
             DOMAIN,
             SERVICE_EDIT_MESSAGE,
             feedback_data, 
-            context=event_reader.context)
+            context=event_reader.hass_context)
