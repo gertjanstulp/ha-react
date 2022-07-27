@@ -46,12 +46,12 @@ class TemplateJitter(BaseJitter):
     template: Template
 
 
-    def __init__(self, react: ReactBase, property: str, template: Template, type_converter: Any, template_context: TemplateContext):
+    def __init__(self, react: ReactBase, property: str, template: Template, type_converter: Any, tctx: TemplateContext):
         super().__init__(type_converter)
 
         self.property = property
         self.template = template
-        self.template_context = template_context
+        self.tctx = tctx
 
         template.hass = react.hass
 
@@ -59,8 +59,8 @@ class TemplateJitter(BaseJitter):
     def render(self, template_context_data_provider: TemplateContextDataProvider):
         result = None
         try:
-            self.template_context.build(template_context_data_provider)
-            result = self.template.async_render(self.template_context.runtime_variables)
+            self.tctx.build(template_context_data_provider)
+            result = self.template.async_render(self.tctx.runtime_variables)
         except TemplateError as te:
             self.react.log.error(f"Config: Error rendering {self.property}: {result}")
         return result
@@ -73,17 +73,17 @@ class TemplateTracker(Updatable):
     property: str
     type_converter: Any
     template: Template
-    template_context: Union[TemplateContext, None] = None
+    tctx: Union[TemplateContext, None] = None
 
 
-    def __init__(self, react: ReactBase, owner: RuntimeHandler, property: str, template: Template, type_converter: Any, template_context: TemplateContext, update_callback: callable_type = None):
+    def __init__(self, react: ReactBase, owner: RuntimeHandler, property: str, template: Template, type_converter: Any, tctx: TemplateContext, update_callback: callable_type = None):
         super().__init__(react)
         self.react = react
         self.owner = owner
         self.property = property
         self.template = template
         self.type_converter = type_converter
-        self.template_context = template_context
+        self.tctx = tctx
 
         template.hass = react.hass
         if update_callback:
@@ -92,8 +92,8 @@ class TemplateTracker(Updatable):
 
     def start(self):
         self.owner.set_property(self.property, None)
-        self.template_context.build()
-        self.track_templates = [TrackTemplate(self.template, self.template_context.runtime_variables)]
+        self.tctx.build()
+        self.track_templates = [TrackTemplate(self.template, self.tctx.runtime_variables)]
         self.result_info = async_track_template_result(self.react.hass, self.track_templates, self.async_update_template)
         self.async_refresh()
 
@@ -106,7 +106,7 @@ class TemplateTracker(Updatable):
     @callback
     def async_refresh(self):
         if self.result_info:
-            self.template_context.build()
+            self.tctx.build()
             self.result_info.async_refresh()
 
 

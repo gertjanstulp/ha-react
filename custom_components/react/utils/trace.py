@@ -12,7 +12,7 @@ from homeassistant.helpers.trace import TraceElement, trace_append_element, trac
 from ..lib.config import Workflow
 
 if TYPE_CHECKING:
-    from ..lib.runtime import WorkflowRun
+    from ..lib.runtime import WorkflowRun, WorkflowRunContext
 
 from ..const import (
     DOMAIN
@@ -21,8 +21,8 @@ from ..const import (
 class ReactTrace(ActionTrace):
     _domain = DOMAIN
 
-    def __init__(self, workflow_config: Workflow, workflow_run: WorkflowRun) -> None:
-        super().__init__(workflow_config.id, workflow_config.as_dict(workflow_run.run_context.action_context.actor_id), {}, workflow_run.run_context.hass_run_context)
+    def __init__(self, wctx: WorkflowRunContext) -> None:
+        super().__init__(wctx.workflow_config.id, wctx.workflow_config.as_dict(wctx.actx.actor_id), {}, wctx.hass_run_context)
         self._actor_description: str | None = None
 
     def set_actor_description(self, trigger: str) -> None:
@@ -40,20 +40,19 @@ class ReactTrace(ActionTrace):
 @contextmanager
 def trace_workflow(workflow_run: WorkflowRun) -> Iterator[ReactTrace]:
     """Trace execution of a script."""
-    workflow_config = workflow_run.runtime.workflow_config
-    trace = ReactTrace(workflow_config, workflow_run)
+    trace = ReactTrace(workflow_run.wctx)
     
-    async_store_trace(workflow_run.runtime.react.hass, trace, workflow_config.trace_config[CONF_STORED_TRACES])
+    async_store_trace(workflow_run.wctx.react.hass, trace, workflow_run.wctx.workflow_config.trace_config[CONF_STORED_TRACES])
 
     try:
         workflow_run.set_trace(trace)
         yield trace
     except Exception as ex:
-        if workflow_config.id:
+        if workflow_run.wctx.workflow_config.id:
             trace.set_error(ex)
         raise ex
     finally:
-        if workflow_config.id:
+        if workflow_run.wctx.workflow_config.id:
             trace.finished()
 
 
