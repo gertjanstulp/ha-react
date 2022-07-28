@@ -12,10 +12,30 @@ from .updatable import Updatable, callable_type
 from .context import TemplateContext, TemplateContextDataProvider
 
 if TYPE_CHECKING:
-    from ..lib.runtime import RuntimeHandler
+    from ..lib.runtime import RuntimeHandler, DynamicDataHandler
 
 
-class BaseJitter:
+class MultiItemJitter(Updatable):
+    property: str
+    handler: DynamicDataHandler
+
+    def __init__(self, react: ReactBase, property: str, handler: DynamicDataHandler) -> None:
+        super().__init__(react)
+        self.property = property
+        self.handler = handler
+
+
+class ObjectJitter(Updatable):
+    property: str
+    handler: DynamicDataHandler
+
+    def __init__(self, react: ReactBase, property: str, handler: DynamicDataHandler) -> None:
+        super().__init__(react)
+        self.property = property
+        self.handler = handler
+
+
+class BasePropertyJitter:
     type_converter: Any
 
 
@@ -27,7 +47,7 @@ class BaseJitter:
         raise NotImplementedError()
 
 
-class ValueJitter(BaseJitter):
+class ValuePropertyJitter(BasePropertyJitter):
     def __init__(self, value: Any, type_converter: Any = None) -> None:
         super().__init__(type_converter)
         self.value = value
@@ -40,7 +60,7 @@ class ValueJitter(BaseJitter):
             return self.value
 
 
-class TemplateJitter(BaseJitter):
+class TemplatePropertyJitter(BasePropertyJitter):
     react: ReactBase
     property: str
     template: Template
@@ -66,7 +86,36 @@ class TemplateJitter(BaseJitter):
         return result
 
 
-class TemplateTracker(Updatable):
+
+class MultiItemTracker(Updatable):
+    property: str
+    handler: DynamicDataHandler
+
+    def __init__(self, react: ReactBase, property: str, handler: DynamicDataHandler) -> None:
+        super().__init__(react)
+        self.property = property
+        self.handler = handler
+
+    def start(self):
+        self.handler.start_trackers()
+    
+
+
+class ObjectTracker(Updatable):
+    property: str
+    handler: DynamicDataHandler
+
+    def __init__(self, react: ReactBase, property: str, handler: DynamicDataHandler) -> None:
+        super().__init__(react)
+        self.property = property
+        self.handler = handler
+
+
+    def start(self):
+        self.handler.start_trackers()
+
+
+class TemplatePropertyTracker(Updatable):
     
     owner: Union[RuntimeHandler, None] = None
     react: ReactBase

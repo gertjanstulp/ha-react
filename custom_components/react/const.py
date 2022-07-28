@@ -186,15 +186,18 @@ PROP_ATTR_TYPE_POSTFIX = "_attr_type"
 PROP_TYPE_TEMPLATE = "template"
 PROP_TYPE_VALUE = "value"
 PROP_TYPE_DEFAULT = "default"
+PROP_TYPE_OBJECT = "object"
+PROP_TYPE_LIST = "list"
+PROP_TYPE_MULTI_ITEM = "multiitem"
 
 def is_list_of_strings(obj):
     return bool(obj) and isinstance(obj, list) and all(isinstance(elem, str) for elem in obj)
 
 
-def entities(value: Union[str, list]) -> list[str]:
+def list(value: Union[str, list]) -> list[str]:
     if is_list_of_strings(value):
         return value
-    raise vol.Invalid("Not a valid list of entities")
+    raise vol.Invalid("Not a valid list")
 
 # template tracker type conversion
 def result_as_string(value):
@@ -234,9 +237,9 @@ SCHEDULE_SCHEMA = vol.Schema({
 
 # schema for common elements of actors/reactors
 ENTITY_DATA_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY) : vol.Any(entities, cv.string),
-    vol.Optional(ATTR_TYPE) : cv.string,
-    vol.Optional(ATTR_ACTION) : cv.string,
+    vol.Optional(ATTR_ENTITY) : vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(ATTR_TYPE) : vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(ATTR_ACTION) : vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_CONDITION) : cv.string,
     vol.Optional(ATTR_DATA): dict,
 })

@@ -11,6 +11,7 @@ from homeassistant.const import (
 
 from .base import ReactTask
 from ..base import ReactBase
+from ..lib.config import MultiItem
 
 from ..const import (
     ACTION_AVAILABLE,
@@ -113,6 +114,7 @@ class StateTransformTask(ReactTask):
 
 
     @callback
-    def async_register_entity(self, entity: str, type: str):
-        if type == self.type:
-            self.entities.append(entity)
+    def async_register_entity(self, entity: MultiItem, type: MultiItem):
+        if self.type in type:
+            self.entities.extend(entity)
+            test = 1

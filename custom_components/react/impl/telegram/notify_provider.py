@@ -38,19 +38,21 @@ class NotifyFeedbackTelegramEventDataReader(NotifyFeedbackEventDataReader):
         self.event_type = event.event_type
         self.telegram_command = event.data.get(ATTR_COMMAND, None)
         
-        args: list = event.data.get(ATTR_ARGS, None)
+
+    def load(self):
+        args: list = self.event.data.get(ATTR_ARGS, None)
         if args:
             self.command = args[0] if len(args) > 0 else None
             self.acknowledgement = args[1] if len(args) > 1 else None
         
-        self.message = event.data.get(ATTR_MESSAGE, None)
+        self.message = self.event.data.get(ATTR_MESSAGE, None)
         
-        self.user_id = event.data.get(ATTR_USER_ID, None)
-        self.chat_id = event.data.get(ATTR_CHAT_ID, None)
+        self.user_id = self.event.data.get(ATTR_USER_ID, None)
+        self.chat_id = self.event.data.get(ATTR_CHAT_ID, None)
         if self.user_id:
-            self.entity = react.configuration.workflow_config.entity_maps_config.get(self.user_id, None)
+            self.entity = self.react.configuration.workflow_config.entity_maps_config.get(self.user_id, None)
         if not self.entity and self.chat_id:
-            self.entity = react.configuration.workflow_config.entity_maps_config.get(self.chat_id)
+            self.entity = self.react.configuration.workflow_config.entity_maps_config.get(self.chat_id)
         if not self.entity:
             self.entity = "unknown"
 
@@ -63,8 +65,7 @@ class NotifyFeedbackTelegramEventDataReader(NotifyFeedbackEventDataReader):
     def applies(self) -> bool:
         return (
             self.event_type == EVENT_TELEGRAM_CALLBACK and
-            self.telegram_command == EVENTDATA_COMMAND_REACT and
-            self.command is not None
+            self.telegram_command == EVENTDATA_COMMAND_REACT
         )
 
 

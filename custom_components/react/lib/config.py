@@ -1,11 +1,12 @@
 from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, Union
+from typing import Any, Callable, Dict, MutableMapping, Union
 
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ID, CONF_ICON
 from homeassistant.helpers.typing import ConfigType
 
 from ..exceptions import ReactException
 from ..utils.logger import get_react_logger
+from ..utils.struct import DynamicData, MultiItem
 
 from ..const import (
     ATTR_ACTION,
@@ -45,43 +46,88 @@ from ..const import (
 
 _LOGGER = get_react_logger()
 
-def get_property(name: str, config: dict, stencil: dict, default: Any = None):
-    result = config.get(name, None) if config else None
-    if not result and stencil:
-        stencil_value = stencil.get(name, None)
-        if isinstance(stencil_value, list):
-            result = stencil_value[:]
-        else:
-            result = stencil_value
 
-    if result is None:
-        result = default
+# class DynamicData():
+#     def __init__(self, config: dict) -> None:
+#         self.names: list[str] = []
+#         if not config: return
 
-    return result
+#         type_hints: dict = {}
+#         if hasattr(self, "type_hints"):
+#             type_hints = getattr(self, "type_hints")
 
+#         def type_hint(key):
+#             return type_hints.get(key, DynamicData)
 
-class DynamicData():
-    def __init__(self, workflow_id: str, config: dict) -> None:
-        # self.workflow_id = workflow_id
-        self.names: list[str] = []
-
-        for k,v in config.items():
-            setattr(self, k, v)
-            self.names.append(k)
-
-    def as_dict(self) -> dict:
-        return {
-            a: getattr(self, a)
-            for a in self.names
-            if getattr(self, a) is not None
-        }
+#         for k,v in config.items():
+#             self.names.append(k)
+#             if isinstance(v, dict):
+#                 setattr(self, k, type_hint(k)(v))
+#             elif isinstance(v, list):
+#                 if len(v) > 0 and isinstance(v[0], dict):
+#                     items = []
+#                     for item in v:
+#                         items.append(type_hint(k)(item))
+#                     setattr(self, k, items)
+#                 else:
+#                     # items.append(type_hint(k)({"_value_" : item}))
+#                     setattr(self, k, MultiItem( {f"_{index}":item for index,item in enumerate(v)} ))
+#             else:
+#                 setattr(self, k, v)
 
 
-class Schedule():
-    def __init__(self, config: dict, stencil: dict):
-        if not (config or stencil): return
-        self.at = get_property(ATTR_SCHEDULE_AT, config, stencil)
-        self.weekdays = get_property(ATTR_SCHEDULE_WEEKDAYS, config, stencil, [])
+#     def as_dict(self) -> dict:
+#         result = {}
+
+#         for name in self.names:
+#             v = getattr(self, name)
+#             if isinstance(v, DynamicData):
+#                 result[name] = v.as_dict()
+#             elif isinstance(v, list):
+#                 if isinstance(v[0], DynamicData):
+#                     result[name] = [ x.as_dict() for x in v ]
+#                 else:
+#                     result[name] = v
+#             else:
+#                 result[name] = v
+        
+#         return result
+
+
+# class MultiItem(DynamicData):
+#     def __init__(self, config: dict) -> None:
+#         super().__init__(config)
+
+#     class MultiItemIterator:
+#         def __init__(self, parent: Any):
+#             self.parent = parent
+#             self.num = 0
+#             self.end = len(getattr(parent, "names")) - 1
+
+
+#         def __next__(self):
+#             if self.num > self.end:
+#                 raise StopIteration
+#             else:
+#                 result = getattr(self.parent, f"_{self.num}")
+#                 self.num += 1
+#                 return result
+
+
+#     def as_dict(self):
+#         return [getattr(self, name) for name in self.names]
+
+
+#     def __iter__(self):
+#         return MultiItem.MultiItemIterator(self)
+
+
+class Schedule(DynamicData):
+    at: datetime = None
+    weekdays: list[str] = []
+
+    def __init__(self, config: dict):
+        super().__init__(config)
 
 
     def as_dict(self) -> dict:
@@ -93,28 +139,28 @@ class Schedule():
         return result
 
 
-class Ctor():
-    id: str
-    entity: str
-    type: str
-    action: str
+
+
+class Ctor(DynamicData):
+    id: str = None
     enabled: bool
     is_list_item: bool
-    data: DynamicData
-
-
-    def __init__(self, id: str, entity: str, moniker: str):
-        self.id = id
-        self.entity = entity
-        self.enabled = True
-        self.moniker = moniker
-
     
-    def load(self, config: Any, stencil: dict):
-        self.type = get_property(ATTR_TYPE, config, stencil)
-        self.action = get_property(ATTR_ACTION, config, stencil)
-        self.condition = get_property(ATTR_CONDITION, config, stencil)
-        self.data = DynamicData(None,  get_property(ATTR_DATA, config, stencil, {}))
+    entity: str = None
+    type: str = None
+    action: str = None
+    condition: str = None
+    data: DynamicData = DynamicData(None)
+
+    type_hints: dict = {ATTR_ENTITY: MultiItem}
+
+
+    def __init__(self, config: dict, id: str, moniker: str):
+        super().__init__(config)
+
+        self.id = id
+        self.moniker = moniker
+        self.enabled = True
 
 
     def as_dict(self, index: int) -> dict:
@@ -135,44 +181,41 @@ class Ctor():
         
 
 class Actor(Ctor):
-    def __init__(self, id: str, workflow_id: str, entity: str):
-        super().__init__(id, entity, ATTR_TRIGGER)
+    def __init__(self, config: dict, id: str, workflow_id: str):
+        super().__init__(config, id, ATTR_TRIGGER)
         self.workflow_id = workflow_id
-
-
-    def load(self, config: Any, stencil: dict):
-        _LOGGER.debug(f"Config: '{self.workflow_id}' loading actor: '{self.id}'")
-        return super().load(config, stencil)
 
 
 class Reactor(Ctor):
-    timing: str
-    delay: Union[int, str] 
-    overwrite: Union[bool, str]
-    reset_workflow: str
-    forward_action: Union[bool, str]
+    timing: str = REACTOR_TIMING_IMMEDIATE
+    delay: Union[int, str] = None
+    schedule: Schedule = None
+    overwrite: Union[bool, str] = False
+    reset_workflow: str = None
+    forward_action: Union[bool, str] = False
 
-    def __init__(self, id: str, workflow_id: str, entity: str):
-        super().__init__(id, entity, ATTR_EVENT)
+    type_hints: dict = {ATTR_SCHEDULE: Schedule}
+
+    def __init__(self, config: dict, id: str, workflow_id: str):
+        super().__init__(config, id, ATTR_EVENT)
         self.workflow_id = workflow_id
 
+    # def load(self, config: dict):
+    #     _LOGGER.debug(f"Config: '{self.workflow_id}' loading reactor: '{self.id}'")
+    #     super().load(config)
 
-    def load(self, config: dict, stencil: dict):
-        _LOGGER.debug(f"Config: '{self.workflow_id}' loading reactor: '{self.id}'")
-        super().load(config, stencil)
-
-        self.timing = get_property(ATTR_TIMING, config,  stencil, 'immediate')
-        self.delay = get_property(ATTR_DELAY, config, stencil)
-        self.schedule =  self.load_schedule(config, stencil)
-        self.overwrite = get_property(ATTR_OVERWRITE, config, stencil, False)
-        self.reset_workflow = get_property(ATTR_RESET_WORKFLOW, config, stencil)
-        self.forward_action = get_property(ATTR_FORWARD_ACTION, config, stencil, False)
+    #     self.timing = config.get(ATTR_TIMING, REACTOR_TIMING_IMMEDIATE)
+    #     self.delay = config.get(ATTR_DELAY, None)
+    #     self.schedule =  self.load_schedule(config)
+    #     self.overwrite = config.get(ATTR_OVERWRITE, False)
+    #     self.reset_workflow = config.get(ATTR_RESET_WORKFLOW, None)
+    #     self.forward_action = config.get(ATTR_FORWARD_ACTION, False)
 
 
-    def load_schedule(self, config: dict, stencil: dict) -> Schedule:
-        if ATTR_SCHEDULE in config or ATTR_SCHEDULE in stencil:
-            return Schedule(config.get(ATTR_SCHEDULE, None), stencil.get(ATTR_SCHEDULE, None))
-        return None
+    # def load_schedule(self, config: dict) -> Schedule:
+    #     if ATTR_SCHEDULE in config:
+    #         return Schedule(config.get(ATTR_SCHEDULE, None))
+    #     return None
 
 
     def as_dict(self, index: int) -> dict:
@@ -188,7 +231,7 @@ class Reactor(Ctor):
         return base_dict | self_dict
 
 
-ctor_type = Callable[[str, str, str], Union[Actor, Reactor] ]
+ctor_type = Callable[[dict, str, str], Union[Actor, Reactor] ]
 
 
 class Workflow():
@@ -199,57 +242,52 @@ class Workflow():
     icon: Union[str, None] = None
     trace_config: Union[Any, None] = None
     variables: Union[DynamicData, None] = None
+    actors: Union[list[Actor], None] = None
+    reactors: Union[list[Reactor], None] = None
 
     def __init__(self, workflow_id: str, config: dict):
         self.id = workflow_id
         self.entity_id = ENTITY_ID_FORMAT.format(workflow_id)
-        self.stencil = config.get(ATTR_STENCIL, None)
+        self.stencil = config.get(ATTR_STENCIL, {})
         self.friendly_name = config.get(ATTR_FRIENDLY_NAME, None)
         self.icon = config.get(CONF_ICON, None)
         self.trace_config = config.get(CONF_TRACE, None)
-        self.variables = DynamicData(id, config.get(ATTR_VARIABLES, {}))
+        self.variables = DynamicData(config.get(ATTR_VARIABLES, {}))
 
 
-    def load(self, config, stencil):
-        self.actors: list[Actor] = self.load_items(config, stencil, ATTR_ACTOR, Actor)
-        self.reactors: list[Reactor] = self.load_items(config, stencil, ATTR_REACTOR, Reactor)
+    def load(self, config: dict, stencil: dict):
+        merged_config = dict_merge(stencil, config)
+        self.actors: list[Actor] = self.load_items(merged_config, ATTR_ACTOR, Actor)
+        self.reactors: list[Reactor] = self.load_items(merged_config, ATTR_REACTOR, Reactor)
 
 
-    def load_items(self, config: Any, stencil: dict, item_property: str, item_type: ctor_type) -> list[Union[Actor, Reactor]]:
+    def load_items(self, config: dict, item_property: str, item_type: ctor_type) -> list[Union[Actor, Reactor]]:
         if not config: return []
-        items_config = get_property(item_property, config, None, {})
-        items_stencil = stencil.get(item_property, {})
+        items_config = config.get(item_property, {})
 
         result = []
         for id,item_config in items_config.items():
-            item_stencil = items_stencil.get(id, {})
-            self.load_entities(id, item_config, item_stencil, item_type, result)
-
-        for id,item_stencil in items_stencil.items():
-            # Check for any stencil item that is not part of the workflow yet.
-            # Add an entity for each match.
-            if not any(item.id == id or item.id == f"{id}_0" for item in result):
-                self.load_entities(id, {}, item_stencil, item_type, result)
+            self.load_entity(id, item_config, item_type, result, False)
+            # self.load_entities(id, item_config, item_type, result)
 
         return result
 
 
-    def load_entities(self, id: str, item_config: dict, item_stencil: dict, item_type: ctor_type, result: list):
-        entity_data = get_property(ATTR_ENTITY, item_config, item_stencil)
+    def load_entities(self, id: str, item_config: dict, item_type: ctor_type, result: list):
+        entity_data = item_config.get(ATTR_ENTITY, None)
         if isinstance(entity_data, str):
-            self.load_entity(id, item_config, item_stencil, item_type, result, entity_data, False)
-        elif isinstance(entity_data, list):
-            is_list_item = len(entity_data) > 1
-            for i,entity in enumerate(entity_data):
-                item_id = f"{id}_{i}" if is_list_item else id
-                self.load_entity(item_id, item_config, item_stencil, item_type, result, entity, is_list_item)
+            self.load_entity(id, item_config, item_type, result, False)
+        # elif isinstance(entity_data, list):
+        #     is_list_item = len(entity_data) > 1
+        #     for i,e in enumerate(entity_data):
+        #         item_id = f"{id}_{i}" if is_list_item else id
+        #         self.load_entity(item_id, item_config, item_type, result, is_list_item)
         elif entity_data is None:
-            self.load_entity(id, item_config, item_stencil, item_type, result, None, False)
+            self.load_entity(id, item_config, item_type, result, False)
 
 
-    def load_entity(self, item_id: str, item_config: dict, item_stencil: dict, item_type: ctor_type, result: list, entity: str, is_list_item: bool):
-        item: Ctor = item_type(item_id, self.id, entity)
-        item.load(item_config, item_stencil)
+    def load_entity(self, item_id: str, item_config: dict, item_type: ctor_type, result: list, is_list_item: bool):
+        item: Ctor = item_type(item_config, item_id, self.id)
         item.is_list_item = is_list_item
         result.append(item)
 
@@ -381,4 +419,22 @@ def calculate_next_schedule_hit(schedule: Schedule) -> datetime:
                 if (attempt > 7): raise ReactException("could not calculate next schedule hit")
 
     return next_try
+
+
+def dict_merge(dct: dict, merge_dct: dict) -> dict:
+    rtn_dct = dct.copy()
     
+    for k, v in merge_dct.items():
+        if not rtn_dct.get(k):
+            rtn_dct[k] = v
+        elif k in rtn_dct and type(v) != type(rtn_dct[k]):
+            raise TypeError(f"Overlapping keys exist with different types: original is {type(rtn_dct[k])}, new value is {type(v)}")
+        elif isinstance(rtn_dct[k], dict) and isinstance(merge_dct[k], dict):
+            rtn_dct[k] = dict_merge(rtn_dct[k], merge_dct[k])
+        elif isinstance(v, list):
+            for list_value in v:
+                if list_value not in rtn_dct[k]:
+                    rtn_dct[k].append(list_value)
+        else:
+            rtn_dct[k] = v
+    return rtn_dct

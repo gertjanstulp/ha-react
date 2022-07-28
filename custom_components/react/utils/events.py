@@ -23,7 +23,14 @@ from ..const import (
 
 class EventDataReader():
     def __init__(self, react: ReactBase, event: Event) -> None:
+        self.event = event
+        self.react = react
         self.hass_context = event.context
+        
+
+
+    def load(self):
+        pass
 
 
     @property
@@ -71,18 +78,17 @@ class NotifySendMessageReactionEventDataReader(ReactionEventDataReader):
     inline_keyboard: Union[str, None] = None
 
 
-    def __init__(self, react: ReactBase, event: Event) -> None:
-        super().__init__(react, event)
 
+    def load(self):
         if self.data:
             self.message = self.data.get(ATTR_EVENT_MESSAGE, None)
             feedback_items_raw: list[dict] = self.data.get(ATTR_EVENT_FEEDBACK_ITEMS, None)
             if feedback_items_raw:
                 self.inline_keyboard = ", ".join(
                     map(lambda x: " ".join([
-                        f"{x.get(ATTR_EVENT_FEEDBACK_ITEM_TITLE, None)}:/react" , 
-                        x.get(ATTR_EVENT_FEEDBACK_ITEM_COMMAND, None), 
-                        x.get(ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT, None)
+                        f"{x.title}:/react", 
+                        x.command, 
+                        x.acknowledgement
                     ]), 
                     feedback_items_raw)
                 )
@@ -92,8 +98,7 @@ class NotifySendMessageReactionEventDataReader(ReactionEventDataReader):
     def applies(self) -> bool:
         return (
             self.type == REACT_TYPE_NOTIFY and
-            self.action == REACT_ACTION_SEND_MESSAGE and
-            self.message is not None
+            self.action == REACT_ACTION_SEND_MESSAGE
         )
 
 
@@ -103,6 +108,3 @@ class NotifyFeedbackEventDataReader(EventDataReader):
     command: Union[str, None] = None
     acknowledgement: Union[str, None] = None
     entity: Union[str, None] = None
-
-    def __init__(self, react: ReactBase, event: Event) -> None:
-        super().__init__(react, event)

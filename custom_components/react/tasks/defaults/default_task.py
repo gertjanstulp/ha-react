@@ -22,6 +22,7 @@ class DefaultTask(ReactTask, Generic[T]):
     def async_filter(self, event: Event) -> bool:
         event_reader = self.cls(self.react, event)
         if event_reader.applies:
+            event_reader.load()
             self.set_reader(event, event_reader)
             return True
         return False
