@@ -3,32 +3,40 @@ from typing import Any
 
 
 class DynamicData():
-    def __init__(self, source: dict) -> None:
+    def __init__(self, source: dict = None) -> None:
         self.names: list[str] = []
+
+        if not hasattr(self, "type_hints"):
+            self.type_hints = {}
+
         if not source: return
-
-        type_hints: dict = {}
-        if hasattr(self, "type_hints"):
-            type_hints = getattr(self, "type_hints")
-
-        def type_hint(key):
-            return type_hints.get(key, DynamicData)
-
+        
         for k,v in source.items():
-            self.names.append(k)
-            if isinstance(v, dict):
-                setattr(self, k, type_hint(k)(v))
-            elif isinstance(v, list):
-                if len(v) > 0 and isinstance(v[0], dict):
-                    items = []
-                    for item in v:
-                        items.append(type_hint(k)(item))
-                    setattr(self, k, items)
-                else:
-                    # items.append(type_hint(k)({"_value_" : item}))
-                    setattr(self, k, MultiItem( {f"_{index}":item for index,item in enumerate(v)} ))
+            self.set(k, v)
+
+
+    def type_hint(self, key):
+        return self.type_hints.get(key, DynamicData)
+
+
+    def set(self, key: str, value: Any):
+        self.names.append(key)
+        if isinstance(value, (MultiItem, DynamicData)):
+            setattr(self, key, value)
+        elif isinstance(value, dict):
+            setattr(self, key, self.type_hint(key)(value))
+        elif isinstance(value, list):
+            if isinstance(value[0], dict):
+                items = []
+                for item in value:
+                    items.append(self.type_hint(key)(item))
+                setattr(self, key, items)
+            elif isinstance(value[0], DynamicData):
+                setattr(self, key, value)
             else:
-                setattr(self, k, v)
+                setattr(self, key, MultiItem( {f"_{index}":item for index,item in enumerate(value)} ))
+        else:
+            setattr(self, key, value)
 
 
     def as_dict(self) -> dict:

@@ -5,10 +5,9 @@ from dataclasses import dataclass
 
 from datetime import datetime
 from itertools import product
-import types
-from typing import Any, Tuple, Union
+from typing import Any, Union
 from homeassistant.const import ATTR_ID
-from homeassistant.core import Context, Event, EventOrigin, callback
+from homeassistant.core import Context, Event, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, async_dispatcher_send
 from homeassistant.helpers.template import Template, is_template_string
 from homeassistant.helpers.trace import trace_get, trace_path, trace_set_result, trace_path_stack_cv
@@ -18,12 +17,11 @@ from homeassistant.util.dt import utcnow
 from .config import Actor, DynamicData, MultiItem, Reactor, Workflow, calculate_reaction_datetime
 from ..base import ReactBase
 from ..reactions.base import ReactReaction
-from ..utils.context import ActorTemplateContextDataProvider, TemplateContext, TemplateContextDataProvider, VariableContextDataProvider
+from ..utils.context import ActorTemplateContextDataProvider, TemplateContext, VariableContextDataProvider
 from ..utils.events import ActionEventDataReader
 from ..utils.logger import format_data
-from ..utils.signals import ReactSignalDataReader
 from ..utils.struct import DynamicData, MultiItem
-from ..utils.template import BasePropertyJitter, MultiItemJitter, ObjectJitter, TemplatePropertyJitter, MultiItemTracker, ObjectTracker, TemplatePropertyTracker, ValuePropertyJitter
+from ..utils.template import BaseJitter, ListJitter, MultiItemJitter, ObjectJitter, TemplatePropertyJitter, MultiItemTracker, ObjectTracker, TemplatePropertyTracker, ValuePropertyJitter
 from ..utils.trace import ReactTrace, trace_node, trace_workflow
 from ..utils.updatable import Updatable
 
@@ -74,13 +72,17 @@ class RuntimeHandler(Updatable):
         self.tctx = tctx
 
         self.template_trackers: list[TemplatePropertyTracker] = []
-        self.value_container = type('object', (), {})()
+        self.value_container = self.create_value_container()
         self.jit_attrs = []
         if is_jit:
-            self.jitter = ObjectJitter(runtime.react, "root", self)
+            self.jitter = ObjectJitter("root", self)
 
         for attr in config_source.names:
             self.init_attr(is_jit, attr, PROP_TYPE_SOURCE)
+
+
+    def create_value_container(self) -> DynamicData:
+        return DynamicData({})
 
 
     def start(self):
@@ -127,21 +129,11 @@ class RuntimeHandler(Updatable):
         if isinstance(attr_value, MultiItem):
             handler = MultiItemHandler(False, self.runtime, attr_value, self.tctx)
             set_attr(attr, handler.value_container, PROP_TYPE_MULTI_ITEM)
-
-            self.template_trackers.append(MultiItemTracker(
-                react=self.runtime.react,
-                property=attr,
-                handler=handler
-            ))
+            self.template_trackers.append(MultiItemTracker(self.runtime.react, attr, handler))
         elif isinstance(attr_value, DynamicData):
             handler = DynamicDataHandler(False, self.runtime, attr_value, self.tctx)
             set_attr(attr, handler.value_container, PROP_TYPE_OBJECT)
-            
-            self.template_trackers.append(ObjectTracker(
-                react=self.runtime.react,
-                property=attr,
-                handler=handler
-            ))
+            self.template_trackers.append(ObjectTracker(self.runtime.react, attr, handler))
         elif isinstance(attr_value, list):
             if len(attr_value) > 0 and isinstance(attr_value[0], DynamicData):
                 handlers = [ DynamicDataHandler(False, self.runtime, item, self.tctx) for item in attr_value ]
@@ -151,14 +143,7 @@ class RuntimeHandler(Updatable):
         elif attr_value:
             if isinstance(attr_value, str) and is_template_string(attr_value):
                 set_attr(attr, None, PROP_TYPE_TEMPLATE)
-                self.template_trackers.append(TemplatePropertyTracker(
-                    react=self.runtime.react,
-                    owner=self, 
-                    property=attr, 
-                    template=Template(attr_value),
-                    type_converter=type_converter,
-                    tctx=self.tctx,
-                    update_callback=self.async_update))
+                self.template_trackers.append(TemplatePropertyTracker(self.runtime.react, self, attr, Template(attr_value), type_converter, self.tctx, self.async_update))
             else:
                 set_attr(attr, attr_value, PROP_TYPE_VALUE)
         else:
@@ -167,54 +152,37 @@ class RuntimeHandler(Updatable):
 
     def add_jitter(self, attr: str, attr_value: Any, type_converter: Any, default: Any = None):
 
-        def set_jitter(attr: str, value: Any, prop_type: str, target: Any = None):
+        def set_jitter(attr: str, value: Any, prop_type: str):
             self.set_jitter_prop(attr, value)
             self.set_property_type(attr, prop_type)
-            # if target:
-            #     self.set_property(attr, target)
 
         if isinstance(attr_value, MultiItem):
             handler = MultiItemHandler(True, self.runtime, attr_value, self.tctx)
-            set_jitter(attr, MultiItemJitter(self.runtime.react, attr, handler), PROP_TYPE_MULTI_ITEM, handler.value_container)
+            set_jitter(attr, MultiItemJitter(attr, handler), PROP_TYPE_MULTI_ITEM)
         elif isinstance(attr_value, DynamicData):
             handler = DynamicDataHandler(True, self.runtime, attr_value, self.tctx)
-            set_jitter(attr, ObjectJitter(self.runtime.react, attr, handler), PROP_TYPE_OBJECT, handler.value_container)
+            set_jitter(attr, ObjectJitter(attr, handler), PROP_TYPE_OBJECT)
         elif isinstance(attr_value, list):
             if len(attr_value) > 0 and isinstance(attr_value[0], DynamicData):
                 handlers = [ DynamicDataHandler(True, self.runtime, item, self.tctx) for item in attr_value ]
-                set_jitter(attr, [ObjectJitter(self.runtime.react, attr, handler) for handler in handlers], PROP_TYPE_LIST, [handler.value_container for handler in handlers])
+                set_jitter(attr, ListJitter(attr, handlers), PROP_TYPE_LIST)
             else:
                 pass
         elif attr_value:
             if isinstance(attr_value, str) and is_template_string(attr_value):
-                set_jitter(attr, TemplatePropertyJitter(self, attr, Template(attr_value), type_converter, self.tctx), PROP_TYPE_TEMPLATE)
+                set_jitter(attr, TemplatePropertyJitter(attr, Template(attr_value), type_converter, self.tctx, self.runtime.react), PROP_TYPE_TEMPLATE)
             else:
-                set_jitter(attr, ValuePropertyJitter(self, attr, attr_value, type_converter), PROP_TYPE_VALUE)
+                set_jitter(attr, ValuePropertyJitter(attr, attr_value, type_converter), PROP_TYPE_VALUE)
         else:
-            set_jitter(attr, ValuePropertyJitter(self, attr, default, type_converter), PROP_TYPE_DEFAULT)
+            set_jitter(attr, ValuePropertyJitter(attr, default, type_converter), PROP_TYPE_DEFAULT)
             
         self.jit_attrs.append(attr)
 
 
-    # def jit_render(self, attr: str, template_context_data_provider: TemplateContextDataProvider = None, default: Any = None):
-    #     attr_jitter = self.get_jitter_prop(attr)
-    #     if attr_jitter:
-    #         return attr_jitter.render(template_context_data_provider)
-    #     else:
-    #         return default
-
-
-    # def jit_render_all(self, template_context_data_provider: TemplateContextDataProvider = None):
-    #     result = {}
-    #     for attr in self.jit_attrs:
-    #         result[attr] = self.jit_render(attr, template_context_data_provider)
-    #     return result
-
-
-    def set_property(self, name: str, value: Any):
-        if hasattr(self.value_container, name) and getattr(self.value_container, name) == value: 
+    def set_property(self, attr: str, value: Any):
+        if hasattr(self.value_container, attr) and getattr(self.value_container, attr) == value: 
             return
-        setattr(self.value_container, name, value)
+        self.value_container.set(attr, value)
 
 
     def get_property(self, name: str, default: Any = None) -> Any:
@@ -231,24 +199,21 @@ class RuntimeHandler(Updatable):
         return getattr(self, type_prop, PROP_TYPE_DEFAULT)
 
     
-    def set_jitter_prop(self, attr: str, value: BasePropertyJitter):
+    def set_jitter_prop(self, attr: str, value: BaseJitter):
         jitter_prop = _JITTER_PROPERTY.format(attr)
         setattr(self, jitter_prop, value)
         
 
-    def get_jitter_prop(self, attr: str) -> BasePropertyJitter:
+    def get_jitter_prop(self, attr: str) -> BaseJitter:
         jitter_prop = _JITTER_PROPERTY.format(attr)
         return getattr(self, jitter_prop, None)
 
 
 class DynamicDataHandler(RuntimeHandler):
-    def __init__(self, is_jit: bool, runtime: WorkflowRuntime, dynamicData: DynamicData, tctx: TemplateContext) -> None:
-        super().__init__(is_jit, runtime, dynamicData, tctx)
+    def __init__(self, is_jit: bool, runtime: WorkflowRuntime, config_source: DynamicData, tctx: TemplateContext) -> None:
+        super().__init__(is_jit, runtime, config_source, tctx)
 
-        self.names = dynamicData.names
-
-        # for name in self.names:
-        #     self.init_attr(is_jit, name, PROP_TYPE_SOURCE)
+        self.names = config_source.names
 
         self.start_trackers()
 
@@ -268,16 +233,12 @@ class DynamicDataHandler(RuntimeHandler):
 
 
 class MultiItemHandler(DynamicDataHandler):
-    def __init__(self, is_jit: bool, runtime: WorkflowRuntime, multi_item: MultiItem, tctx: TemplateContext) -> None:
-        super().__init__(is_jit, runtime, multi_item, tctx)
+    def __init__(self, is_jit: bool, runtime: WorkflowRuntime, config_source: MultiItem, tctx: TemplateContext) -> None:
+        super().__init__(is_jit, runtime, config_source, tctx)
 
-        this = self
-        def iter(self):
-            return MultiItem.MultiItemIterator(self, this.names)
-        class newclass(self.value_container.__class__):
-            pass
-        setattr(newclass, "__iter__", iter)
-        self.value_container.__class__ = newclass
+
+    def create_value_container(self) -> DynamicData:
+        return MultiItem({})
 
 
 @dataclass
@@ -288,10 +249,6 @@ class ActionContext():
     actor_id: Union[str, None] = None
      
 
-class TraceContext():
-    variables: dict = {}
-
-
 class ActionHandler(RuntimeHandler):
     complete: bool = False
     enabled: bool = False
@@ -299,14 +256,11 @@ class ActionHandler(RuntimeHandler):
     def __init__(self, runtime: WorkflowRuntime, actor: Actor, index: int, tctx: TemplateContext):
         super().__init__(False, runtime, actor, tctx)
 
+        self.value_container.set(ATTR_CONDITION, True)
+        self.value_container.set(ATTR_DATA, None)
+
         self.actor = actor
         self.index = index
-        # self.data_handler = DynamicDataHandler(False, runtime, actor.data, tctx)
-        
-        # self.init_attr(False, ATTR_ENTITY, PROP_TYPE_STR)
-        # self.init_attr(False, ATTR_TYPE, PROP_TYPE_STR)
-        # self.init_attr(False, ATTR_ACTION, PROP_TYPE_STR)
-        # self.init_attr(False, ATTR_CONDITION, PROP_TYPE_BOOL, True)
 
         self.start_trackers()
 
@@ -343,7 +297,7 @@ class ActionHandler(RuntimeHandler):
     @callback
     def async_filter(self, event: Event) -> bool:
         event_reader = ActionEventDataReader(self.runtime.react, event)
-        config_data = self.value_container.data if hasattr(self.value_container, ATTR_DATA) else None
+        config_data = self.value_container.data
 
         result = False
         if (event_reader.entity in self.get_property(ATTR_ENTITY) and event_reader.type in self.get_property(ATTR_TYPE)):
@@ -399,18 +353,13 @@ class ReactionHandler(RuntimeHandler):
 
     def __init__(self, runtime: WorkflowRuntime, reactor: Reactor, index: int, tctx: TemplateContext):
         super().__init__(True, runtime, reactor, tctx)
+
+        self.value_container.set(ATTR_CONDITION, True)
+        self.value_container.set(ATTR_DATA, None)
         
         self.reactor = reactor
         self.index = index
-        # self.data_handler = DynamicDataHandler(True, runtime, reactor.data, tctx)
         
-        # self.init_attr(True, ATTR_ENTITY, PROP_TYPE_STR)
-        # self.init_attr(True, ATTR_TYPE, PROP_TYPE_STR)
-        # self.init_attr(True, ATTR_ACTION, PROP_TYPE_STR)
-        # self.init_attr(True, ATTR_RESET_WORKFLOW, PROP_TYPE_STR)
-        # self.init_attr(True, ATTR_DELAY, PROP_TYPE_INT)
-        # self.init_attr(True, ATTR_CONDITION, PROP_TYPE_BOOL, True)
-
         self.disconnect_signal_listener = async_dispatcher_connect(runtime.react.hass, SIGNAL_REACT.format(self.runtime.workflow_config.id), self.async_handle)
 
 
@@ -433,10 +382,10 @@ class ReactionHandler(RuntimeHandler):
     async def async_handle(self, wctx: WorkflowRunContext):
         template_context_data_provider = ActorTemplateContextDataProvider(self._react, wctx.event_reader)
         
-        rendered_reactor = self.jitter.render(template_context_data_provider)
+        self.jitter.render(None, template_context_data_provider)
 
         # reactor_data = self.get_jitter_prop(ATTR_DATA)
-        reactor_data = self.value_container.data if hasattr(self.value_container, ATTR_DATA) else None
+        reactor_data = self.value_container.data
 
         wctx.trace_variables_set_reactor_data(reactor_data)
         

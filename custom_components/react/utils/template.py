@@ -16,91 +16,105 @@ if TYPE_CHECKING:
     from ..lib.runtime import RuntimeHandler, DynamicDataHandler
 
 
-class BasePropertyJitter:
+class BaseJitter:
     type_converter: Any
+    attr: str
 
 
-    def __init__(self, type_converter: Any = None) -> None:
+    def __init__(self, attr: str, type_converter: Any = None) -> None:
+        self.attr = attr
         self.type_converter = type_converter
 
 
-    def render(self, template_context_data_provider: TemplateContextDataProvider) -> Any:
+    def render(self, target: DynamicData, template_context_data_provider: TemplateContextDataProvider) -> Any:
         raise NotImplementedError()
 
 
-class MultiItemJitter(BasePropertyJitter):
-    property: str
+class MultiItemJitter(BaseJitter):
     handler: DynamicDataHandler
 
-    def __init__(self, react: ReactBase, property: str, handler: DynamicDataHandler) -> None:
-        super().__init__(react)
-        self.property = property
+    def __init__(self, attr: str, handler: DynamicDataHandler) -> None:
+        super().__init__(attr)
+
         self.handler = handler
 
 
-    def render(self, target: Any, template_context_data_provider: TemplateContextDataProvider) -> Any:
+    def render(self, target: DynamicData, template_context_data_provider: TemplateContextDataProvider) -> Any:
         for attr in self.handler.jit_attrs:
             self.handler.get_jitter_prop(attr).render(self.handler.value_container, template_context_data_provider)
-        setattr(target, self.property, self.handler.value_container)
-        pass
+        target.set(self.attr, self.handler.value_container)
 
 
-class ObjectJitter(BasePropertyJitter):
-    property: str
+class ObjectJitter(BaseJitter):
     handler: DynamicDataHandler
 
-    def __init__(self, react: ReactBase, property: str, handler: DynamicDataHandler) -> None:
-        super().__init__(react)
-        self.property = property
+    def __init__(self, attr: str, handler: DynamicDataHandler) -> None:
+        super().__init__(attr)
+        
         self.handler = handler
 
 
-    def render(self, target: Any, template_context_data_provider: TemplateContextDataProvider):
-        # for attr in self.handler.jit_attrs:
-        #     self.handler.get_jitter_prop(attr).render(self.handler.value_container, template_context_data_provider)
-        # return DynamicData({attr: self.handler.get_jitter_prop(attr).render(template_context_data_provider) for attr in self.handler.jit_attrs})
+    def render(self, target: DynamicData, template_context_data_provider: TemplateContextDataProvider):
         for attr in self.handler.jit_attrs:
             self.handler.get_jitter_prop(attr).render(self.handler.value_container, template_context_data_provider)
-        setattr(target, self.property, self.handler.value_container)
+        if target:
+            target.set(self.attr, self.handler.value_container)
 
 
-class ValuePropertyJitter(BasePropertyJitter):
-    def __init__(self, handler: RuntimeHandler, attr: str, value: Any, type_converter: Any = None) -> None:
-        super().__init__(type_converter)
-        self.handler = handler
-        self.attr = attr
+class ListJitter(BaseJitter):
+    handlers: list[DynamicDataHandler]
+
+    def __init__(self, attr: str, handlers: list[DynamicDataHandler]) -> None:
+        super().__init__(attr)
+
+        self.handlers = handlers
+
+
+    def render(self, target: DynamicData, template_context_data_provider: TemplateContextDataProvider) -> Any:
+        for handler in self.handlers:
+            for attr in handler.jit_attrs:
+                handler.get_jitter_prop(attr).render(handler.value_container, template_context_data_provider)
+        if target:
+            target.set(self.attr, [handler.value_container for handler in self.handlers])
+
+
+
+class ValuePropertyJitter(BaseJitter):
+    def __init__(self, attr: str, value: Any, type_converter: Any = None) -> None:
+        super().__init__(attr, type_converter)
+        
         self.value = value
 
     
-    def render(self, target: Any, template_context_data_provider: TemplateContextDataProvider) -> Any:
-        return self.type_converter(self.value) if self.type_converter else self.value
+    def render(self, target: DynamicData, template_context_data_provider: TemplateContextDataProvider) -> Any:
+        target.set(self.attr, self.type_converter(self.value) if self.type_converter else self.value)
 
 
-class TemplatePropertyJitter(BasePropertyJitter):
+class TemplatePropertyJitter(BaseJitter):
     react: ReactBase
     attr: str
     template: Template
 
 
-    def __init__(self, handler: RuntimeHandler, attr: str, template: Template, type_converter: Any, tctx: TemplateContext):
-        super().__init__(type_converter)
+    def __init__(self, attr: str, template: Template, type_converter: Any, tctx: TemplateContext, react: ReactBase):
+        super().__init__(attr, type_converter)
 
-        self.handler = handler
+        self.react = react
         self.attr = attr
         self.template = template
         self.tctx = tctx
 
-        template.hass = handler.runtime.react.hass
+        template.hass = self.react.hass
 
 
-    def render(self, template_context_data_provider: TemplateContextDataProvider):
-        result = None
+    def render(self, target: DynamicData, template_context_data_provider: TemplateContextDataProvider):
+        value = None
         try:
             self.tctx.build(template_context_data_provider)
-            result = self.template.async_render(self.tctx.runtime_variables)
+            value = self.template.async_render(self.tctx.runtime_variables)
         except TemplateError as te:
-            self.react.log.error(f"Config: Error rendering {self.attr}: {result}")
-        return result
+            self.react.log.error(f"Config: Error rendering {self.attr}: {te}")
+        target.set(self.attr, self.type_converter(value) if self.type_converter else value)
 
 
 class BaseTracker(Updatable):
