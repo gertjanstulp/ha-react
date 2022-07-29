@@ -23,7 +23,7 @@ from ..utils.events import ActionEventDataReader
 from ..utils.logger import format_data
 from ..utils.signals import ReactSignalDataReader
 from ..utils.struct import DynamicData, MultiItem
-from ..utils.template import BasePropertyJitter, TemplatePropertyJitter, MultiItemTracker, ObjectTracker, TemplatePropertyTracker, ValuePropertyJitter
+from ..utils.template import BasePropertyJitter, MultiItemJitter, ObjectJitter, TemplatePropertyJitter, MultiItemTracker, ObjectTracker, TemplatePropertyTracker, ValuePropertyJitter
 from ..utils.trace import ReactTrace, trace_node, trace_workflow
 from ..utils.updatable import Updatable
 
@@ -76,6 +76,8 @@ class RuntimeHandler(Updatable):
         self.template_trackers: list[TemplatePropertyTracker] = []
         self.value_container = type('object', (), {})()
         self.jit_attrs = []
+        if is_jit:
+            self.jitter = ObjectJitter(runtime.react, "root", self)
 
         for attr in config_source.names:
             self.init_attr(is_jit, attr, PROP_TYPE_SOURCE)
@@ -165,49 +167,48 @@ class RuntimeHandler(Updatable):
 
     def add_jitter(self, attr: str, attr_value: Any, type_converter: Any, default: Any = None):
 
-        def set_jitter(attr: str, value: Any, prop_type: str):
+        def set_jitter(attr: str, value: Any, prop_type: str, target: Any = None):
             self.set_jitter_prop(attr, value)
             self.set_property_type(attr, prop_type)
+            # if target:
+            #     self.set_property(attr, target)
 
         if isinstance(attr_value, MultiItem):
             handler = MultiItemHandler(True, self.runtime, attr_value, self.tctx)
-            set_jitter(attr, handler.value_container, PROP_TYPE_MULTI_ITEM)
+            set_jitter(attr, MultiItemJitter(self.runtime.react, attr, handler), PROP_TYPE_MULTI_ITEM, handler.value_container)
         elif isinstance(attr_value, DynamicData):
             handler = DynamicDataHandler(True, self.runtime, attr_value, self.tctx)
-            set_jitter(attr, handler.value_container, PROP_TYPE_OBJECT)
+            set_jitter(attr, ObjectJitter(self.runtime.react, attr, handler), PROP_TYPE_OBJECT, handler.value_container)
         elif isinstance(attr_value, list):
             if len(attr_value) > 0 and isinstance(attr_value[0], DynamicData):
                 handlers = [ DynamicDataHandler(True, self.runtime, item, self.tctx) for item in attr_value ]
-                set_jitter(attr, [handler.value_container for handler in handlers], PROP_TYPE_LIST)
+                set_jitter(attr, [ObjectJitter(self.runtime.react, attr, handler) for handler in handlers], PROP_TYPE_LIST, [handler.value_container for handler in handlers])
             else:
                 pass
         elif attr_value:
             if isinstance(attr_value, str) and is_template_string(attr_value):
-                set_jitter(attr, TemplatePropertyJitter(self.runtime.react, attr, Template(attr_value), type_converter, self.tctx), PROP_TYPE_TEMPLATE)
+                set_jitter(attr, TemplatePropertyJitter(self, attr, Template(attr_value), type_converter, self.tctx), PROP_TYPE_TEMPLATE)
             else:
-                set_jitter(attr, ValuePropertyJitter(attr_value, type_converter), PROP_TYPE_VALUE)
+                set_jitter(attr, ValuePropertyJitter(self, attr, attr_value, type_converter), PROP_TYPE_VALUE)
         else:
-            set_jitter(attr, ValuePropertyJitter(default, type_converter), PROP_TYPE_DEFAULT)
+            set_jitter(attr, ValuePropertyJitter(self, attr, default, type_converter), PROP_TYPE_DEFAULT)
             
         self.jit_attrs.append(attr)
 
 
-    
+    # def jit_render(self, attr: str, template_context_data_provider: TemplateContextDataProvider = None, default: Any = None):
+    #     attr_jitter = self.get_jitter_prop(attr)
+    #     if attr_jitter:
+    #         return attr_jitter.render(template_context_data_provider)
+    #     else:
+    #         return default
 
 
-    def jit_render(self, attr: str, template_context_data_provider: TemplateContextDataProvider = None, default: Any = None):
-        attr_jitter = self.get_jitter_prop(attr)
-        if attr_jitter:
-            return attr_jitter.render(template_context_data_provider)
-        else:
-            return default
-
-
-    def jit_render_all(self, template_context_data_provider: TemplateContextDataProvider = None):
-        result = {}
-        for attr in self.jit_attrs:
-            result[attr] = self.jit_render(attr, template_context_data_provider)
-        return result
+    # def jit_render_all(self, template_context_data_provider: TemplateContextDataProvider = None):
+    #     result = {}
+    #     for attr in self.jit_attrs:
+    #         result[attr] = self.jit_render(attr, template_context_data_provider)
+    #     return result
 
 
     def set_property(self, name: str, value: Any):
@@ -232,12 +233,12 @@ class RuntimeHandler(Updatable):
     
     def set_jitter_prop(self, attr: str, value: BasePropertyJitter):
         jitter_prop = _JITTER_PROPERTY.format(attr)
-        setattr(self.value_container, jitter_prop, value)
+        setattr(self, jitter_prop, value)
         
 
     def get_jitter_prop(self, attr: str) -> BasePropertyJitter:
         jitter_prop = _JITTER_PROPERTY.format(attr)
-        return getattr(self.value_container, jitter_prop, None)
+        return getattr(self, jitter_prop, None)
 
 
 class DynamicDataHandler(RuntimeHandler):
@@ -266,7 +267,6 @@ class DynamicDataHandler(RuntimeHandler):
             tracker.destroy()
 
 
-
 class MultiItemHandler(DynamicDataHandler):
     def __init__(self, is_jit: bool, runtime: WorkflowRuntime, multi_item: MultiItem, tctx: TemplateContext) -> None:
         super().__init__(is_jit, runtime, multi_item, tctx)
@@ -274,15 +274,10 @@ class MultiItemHandler(DynamicDataHandler):
         this = self
         def iter(self):
             return MultiItem.MultiItemIterator(self, this.names)
-        def add_method(object, method, name=None):
-            if name is None: name = method.func_name
-            class newclass(object.__class__):
-                pass
-            setattr(newclass, name, method)
-            object.__class__ = newclass
-
-        add_method(self.value_container, iter, "__iter__")
-
+        class newclass(self.value_container.__class__):
+            pass
+        setattr(newclass, "__iter__", iter)
+        self.value_container.__class__ = newclass
 
 
 @dataclass
@@ -348,7 +343,7 @@ class ActionHandler(RuntimeHandler):
     @callback
     def async_filter(self, event: Event) -> bool:
         event_reader = ActionEventDataReader(self.runtime.react, event)
-        config_data = self.data_handler.to_dict()
+        config_data = self.value_container.data if hasattr(self.value_container, ATTR_DATA) else None
 
         result = False
         if (event_reader.entity in self.get_property(ATTR_ENTITY) and event_reader.type in self.get_property(ATTR_TYPE)):
@@ -438,7 +433,10 @@ class ReactionHandler(RuntimeHandler):
     async def async_handle(self, wctx: WorkflowRunContext):
         template_context_data_provider = ActorTemplateContextDataProvider(self._react, wctx.event_reader)
         
-        reactor_data = self.data_handler.jit_render_all(template_context_data_provider)
+        rendered_reactor = self.jitter.render(template_context_data_provider)
+
+        # reactor_data = self.get_jitter_prop(ATTR_DATA)
+        reactor_data = self.value_container.data if hasattr(self.value_container, ATTR_DATA) else None
 
         wctx.trace_variables_set_reactor_data(reactor_data)
         
@@ -480,9 +478,9 @@ class ReactionHandler(RuntimeHandler):
                 reaction.data.actor_type = wctx.event_reader.type
                 reaction.data.actor_action = wctx.event_reader.action
                 reaction.data.reactor_id = self.reactor.id
-                reaction.data.reactor_entity = self.jit_render(ATTR_ENTITY, template_context_data_provider)
-                reaction.data.reactor_type = self.jit_render(ATTR_TYPE, template_context_data_provider)
-                reaction.data.reactor_action = wctx.event_reader.action if self.reactor.forward_action else self.jit_render(ATTR_ACTION, template_context_data_provider)
+                reaction.data.reactor_entity = reactor_entity
+                reaction.data.reactor_type = reactor_type
+                reaction.data.reactor_action = reactor_action
                 reaction.data.reset_workflow = self.jit_render(ATTR_RESET_WORKFLOW, template_context_data_provider)
                 reaction.data.overwrite = self.reactor.overwrite
                 reaction.data.datetime = calculate_reaction_datetime(self.reactor.timing, self.reactor.schedule, self.jit_render(ATTR_DELAY, template_context_data_provider))

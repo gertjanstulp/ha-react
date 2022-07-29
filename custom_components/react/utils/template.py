@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Union
+from config.custom_components.react.utils.struct import DynamicData, MultiItem
 
 from homeassistant.core import Event, callback
 from homeassistant.exceptions import TemplateError
@@ -15,26 +16,6 @@ if TYPE_CHECKING:
     from ..lib.runtime import RuntimeHandler, DynamicDataHandler
 
 
-class MultiItemJitter(Updatable):
-    property: str
-    handler: DynamicDataHandler
-
-    def __init__(self, react: ReactBase, property: str, handler: DynamicDataHandler) -> None:
-        super().__init__(react)
-        self.property = property
-        self.handler = handler
-
-
-class ObjectJitter(Updatable):
-    property: str
-    handler: DynamicDataHandler
-
-    def __init__(self, react: ReactBase, property: str, handler: DynamicDataHandler) -> None:
-        super().__init__(react)
-        self.property = property
-        self.handler = handler
-
-
 class BasePropertyJitter:
     type_converter: Any
 
@@ -43,37 +24,73 @@ class BasePropertyJitter:
         self.type_converter = type_converter
 
 
-    def render(self, template_context_data_provider: TemplateContextDataProvider):
+    def render(self, template_context_data_provider: TemplateContextDataProvider) -> Any:
         raise NotImplementedError()
 
 
+class MultiItemJitter(BasePropertyJitter):
+    property: str
+    handler: DynamicDataHandler
+
+    def __init__(self, react: ReactBase, property: str, handler: DynamicDataHandler) -> None:
+        super().__init__(react)
+        self.property = property
+        self.handler = handler
+
+
+    def render(self, target: Any, template_context_data_provider: TemplateContextDataProvider) -> Any:
+        for attr in self.handler.jit_attrs:
+            self.handler.get_jitter_prop(attr).render(self.handler.value_container, template_context_data_provider)
+        setattr(target, self.property, self.handler.value_container)
+        pass
+
+
+class ObjectJitter(BasePropertyJitter):
+    property: str
+    handler: DynamicDataHandler
+
+    def __init__(self, react: ReactBase, property: str, handler: DynamicDataHandler) -> None:
+        super().__init__(react)
+        self.property = property
+        self.handler = handler
+
+
+    def render(self, target: Any, template_context_data_provider: TemplateContextDataProvider):
+        # for attr in self.handler.jit_attrs:
+        #     self.handler.get_jitter_prop(attr).render(self.handler.value_container, template_context_data_provider)
+        # return DynamicData({attr: self.handler.get_jitter_prop(attr).render(template_context_data_provider) for attr in self.handler.jit_attrs})
+        for attr in self.handler.jit_attrs:
+            self.handler.get_jitter_prop(attr).render(self.handler.value_container, template_context_data_provider)
+        setattr(target, self.property, self.handler.value_container)
+
+
 class ValuePropertyJitter(BasePropertyJitter):
-    def __init__(self, value: Any, type_converter: Any = None) -> None:
+    def __init__(self, handler: RuntimeHandler, attr: str, value: Any, type_converter: Any = None) -> None:
         super().__init__(type_converter)
+        self.handler = handler
+        self.attr = attr
         self.value = value
 
     
-    def render(self, template_context_data_provider: TemplateContextDataProvider):
-        if self.type_converter:
-            return self.type_converter(self.value)
-        else:
-            return self.value
+    def render(self, target: Any, template_context_data_provider: TemplateContextDataProvider) -> Any:
+        return self.type_converter(self.value) if self.type_converter else self.value
 
 
 class TemplatePropertyJitter(BasePropertyJitter):
     react: ReactBase
-    property: str
+    attr: str
     template: Template
 
 
-    def __init__(self, react: ReactBase, property: str, template: Template, type_converter: Any, tctx: TemplateContext):
+    def __init__(self, handler: RuntimeHandler, attr: str, template: Template, type_converter: Any, tctx: TemplateContext):
         super().__init__(type_converter)
 
-        self.property = property
+        self.handler = handler
+        self.attr = attr
         self.template = template
         self.tctx = tctx
 
-        template.hass = react.hass
+        template.hass = handler.runtime.react.hass
 
 
     def render(self, template_context_data_provider: TemplateContextDataProvider):
@@ -82,12 +99,24 @@ class TemplatePropertyJitter(BasePropertyJitter):
             self.tctx.build(template_context_data_provider)
             result = self.template.async_render(self.tctx.runtime_variables)
         except TemplateError as te:
-            self.react.log.error(f"Config: Error rendering {self.property}: {result}")
+            self.react.log.error(f"Config: Error rendering {self.attr}: {result}")
         return result
 
 
+class BaseTracker(Updatable):
+    def __init__(self, react: ReactBase) -> None:
+        super().__init__(react)
 
-class MultiItemTracker(Updatable):
+    def start(self):
+        pass
+
+
+    @callback
+    def async_refresh(self):
+        pass
+
+
+class MultiItemTracker(BaseTracker):
     property: str
     handler: DynamicDataHandler
 
@@ -98,10 +127,9 @@ class MultiItemTracker(Updatable):
 
     def start(self):
         self.handler.start_trackers()
-    
 
 
-class ObjectTracker(Updatable):
+class ObjectTracker(BaseTracker):
     property: str
     handler: DynamicDataHandler
 
@@ -115,7 +143,7 @@ class ObjectTracker(Updatable):
         self.handler.start_trackers()
 
 
-class TemplatePropertyTracker(Updatable):
+class TemplatePropertyTracker(BaseTracker):
     
     owner: Union[RuntimeHandler, None] = None
     react: ReactBase
