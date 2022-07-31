@@ -3,19 +3,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from .updatable import Updatable
-from .signals import ReactSignalDataReader
 from ..base import ReactBase
 from ..utils.events import ActionEventDataReader
 
 if TYPE_CHECKING:
-    from ..lib.runtime import DynamicDataHandler
+    from ..lib.runtime import TrackHandler
 
 from ..const import (
-    ATTR_ACTION,
     ATTR_ACTOR,
-    ATTR_DATA,
-    ATTR_ENTITY,
-    ATTR_TYPE
 )
 
 class TemplateContextDataProvider(Updatable):
@@ -28,7 +23,7 @@ class TemplateContextDataProvider(Updatable):
 
 
 class VariableContextDataProvider(TemplateContextDataProvider):
-    def __init__(self, react: ReactBase, variable_handler: DynamicDataHandler) -> None:
+    def __init__(self, react: ReactBase, variable_handler: TrackHandler) -> None:
         super().__init__(react)
         self.variable_handler = variable_handler
         variable_handler.on_update(self.async_update)

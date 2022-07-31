@@ -1,12 +1,12 @@
 from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, MutableMapping, Union
+from typing import Any, Callable, Union
 
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ID, CONF_ICON
 from homeassistant.helpers.typing import ConfigType
 
 from ..exceptions import ReactException
 from ..utils.logger import get_react_logger
-from ..utils.struct import DynamicData, MultiItem
+from ..utils.struct import ActorData, CtorData, DynamicData, MultiItem, ReactorData, ScheduleData
 
 from ..const import (
     ATTR_ACTION,
@@ -16,7 +16,6 @@ from ..const import (
     ATTR_DELAY,
     ATTR_ENABLED,
     ATTR_ENTITY,
-    ATTR_EVENT,
     ATTR_FORWARD_ACTION,
     ATTR_INDEX,
     ATTR_NOTIFY,
@@ -30,7 +29,6 @@ from ..const import (
     ATTR_STENCIL,
     ATTR_TEMPLATE,
     ATTR_TIMING,
-    ATTR_TRIGGER,
     ATTR_TYPE,
     ATTR_VARIABLES,
     CONF_ENTITY_MAPS,
@@ -47,9 +45,7 @@ from ..const import (
 _LOGGER = get_react_logger()
 
 
-class Schedule(DynamicData):
-    at: datetime = None
-    weekdays: list[str] = []
+class Schedule(ScheduleData):
 
     def __init__(self, config: dict):
         super().__init__(config)
@@ -64,81 +60,50 @@ class Schedule(DynamicData):
         return result
 
 
-class Ctor(DynamicData):
+class Ctor(CtorData):
     id: str = None
     enabled: bool
     is_list_item: bool
     
-    entity: str = None
-    type: str = None
-    action: str = None
-    condition: str = None
-    data: DynamicData = DynamicData(None)
-
     type_hints: dict = {ATTR_ENTITY: MultiItem}
 
 
-    def __init__(self, config: dict, id: str, moniker: str):
+    def __init__(self, config: dict, id: str):
         super().__init__(config)
 
         self.id = id
-        self.moniker = moniker
         self.enabled = True
 
 
     def as_dict(self, index: int) -> dict:
         result = {
             ATTR_INDEX: index,
-            self.moniker: {
-                a: getattr(self, a)
+            ATTR_DATA : {
+                a: self.get(a)
                 for a in [ATTR_ID, ATTR_ENABLED, ATTR_ENTITY, ATTR_TYPE, ATTR_ACTION]
-                if getattr(self, a) is not None
+                if self.get(a) is not None
             }
         }
-        condition = getattr(self, ATTR_CONDITION)
-        if condition is not None:
-            result[ATTR_CONDITION] = { ATTR_ENABLED: True, ATTR_TEMPLATE: condition}
+        if ATTR_CONDITION in self.names and self.get(ATTR_CONDITION) != None:
+            result[ATTR_CONDITION] = { ATTR_ENABLED: True, ATTR_TEMPLATE: self.get(ATTR_CONDITION)}
         if self.data is not None:
-            result[self.moniker][ATTR_DATA] = self.data.as_dict()   
+            result[ATTR_DATA][ATTR_DATA] = self.data.as_dict()   
         return result
         
 
-class Actor(Ctor):
+class Actor(Ctor, ActorData):
     def __init__(self, config: dict, id: str, workflow_id: str):
-        super().__init__(config, id, ATTR_TRIGGER)
+        super().__init__(config, id)
         self.workflow_id = workflow_id
 
 
-class Reactor(Ctor):
-    timing: str = REACTOR_TIMING_IMMEDIATE
-    delay: Union[int, str] = None
-    schedule: Schedule = None
-    overwrite: Union[bool, str] = False
-    reset_workflow: str = None
-    forward_action: Union[bool, str] = False
+class Reactor(Ctor, ReactorData):
 
     type_hints: dict = {ATTR_SCHEDULE: Schedule}
 
     def __init__(self, config: dict, id: str, workflow_id: str):
-        super().__init__(config, id, ATTR_EVENT)
+        super().__init__(config, id)
         self.workflow_id = workflow_id
-
-    # def load(self, config: dict):
-    #     _LOGGER.debug(f"Config: '{self.workflow_id}' loading reactor: '{self.id}'")
-    #     super().load(config)
-
-    #     self.timing = config.get(ATTR_TIMING, REACTOR_TIMING_IMMEDIATE)
-    #     self.delay = config.get(ATTR_DELAY, None)
-    #     self.schedule =  self.load_schedule(config)
-    #     self.overwrite = config.get(ATTR_OVERWRITE, False)
-    #     self.reset_workflow = config.get(ATTR_RESET_WORKFLOW, None)
-    #     self.forward_action = config.get(ATTR_FORWARD_ACTION, False)
-
-
-    # def load_schedule(self, config: dict) -> Schedule:
-    #     if ATTR_SCHEDULE in config:
-    #         return Schedule(config.get(ATTR_SCHEDULE, None))
-    #     return None
 
 
     def as_dict(self, index: int) -> dict:
@@ -191,7 +156,6 @@ class Workflow():
         result = []
         for id,item_config in items_config.items():
             self.load_entity(id, item_config, item_type, result, False)
-            # self.load_entities(id, item_config, item_type, result)
 
         return result
 
@@ -200,11 +164,6 @@ class Workflow():
         entity_data = item_config.get(ATTR_ENTITY, None)
         if isinstance(entity_data, str):
             self.load_entity(id, item_config, item_type, result, False)
-        # elif isinstance(entity_data, list):
-        #     is_list_item = len(entity_data) > 1
-        #     for i,e in enumerate(entity_data):
-        #         item_id = f"{id}_{i}" if is_list_item else id
-        #         self.load_entity(item_id, item_config, item_type, result, is_list_item)
         elif entity_data is None:
             self.load_entity(id, item_config, item_type, result, False)
 
@@ -221,7 +180,7 @@ class Workflow():
             for a in [ATTR_ID, ATTR_STENCIL, ATTR_FRIENDLY_NAME]
             if getattr(self, a) is not None
         }
-        if len(self.variables.names) > 0:
+        if self.variables.any:
             result[ATTR_VARIABLES] = self.variables.as_dict()
         result[ATTR_ACTOR] = []
         result[ATTR_REACTOR] = []
@@ -330,7 +289,7 @@ def calculate_next_schedule_hit(schedule: Schedule) -> datetime:
     if next_try < now:
         next_try = next_try + timedelta(days=1)
 
-    if weekdays and len(weekdays) > 0:
+    if weekdays and weekdays.any:
         attempt = 1
         while True:
             day_name = next_try.strftime("%A")[0:3].lower()

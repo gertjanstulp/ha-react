@@ -1,5 +1,4 @@
 
-
 from ..const import (
     ATTR_ACTOR,
     ATTR_ACTOR_ACTION,

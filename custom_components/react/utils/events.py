@@ -9,9 +9,6 @@ from ..const import (
     ATTR_ARGS,
     ATTR_DATA,
     ATTR_ENTITY,
-    ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT,
-    ATTR_EVENT_FEEDBACK_ITEM_COMMAND,
-    ATTR_EVENT_FEEDBACK_ITEM_TITLE,
     ATTR_EVENT_FEEDBACK_ITEMS,
     ATTR_EVENT_MESSAGE,
     ATTR_REACTOR_ID,
@@ -76,7 +73,6 @@ class ReactionEventDataReader(ReactEventDataReader):
 class NotifySendMessageReactionEventDataReader(ReactionEventDataReader):
     message: Union[str, None] = None
     inline_keyboard: Union[str, None] = None
-
 
 
     def load(self):

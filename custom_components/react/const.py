@@ -92,8 +92,6 @@ ATTR_CONTEXT = "context"
 ATTR_PARALLEL = "parallel"
 ATTR_ENABLED = "enabled"
 ATTR_TEMPLATE = "template"
-ATTR_TRIGGER = "trigger"
-ATTR_EVENT = "event"
 ATTR_INDEX = "index"
 
 # impl attributes
@@ -135,8 +133,9 @@ SIGNAL_ITEM_UPDATED = "react_item_updated"
 SIGNAL_ITEM_REMOVED = "react_item_removed"
 SIGNAL_PROPERTY_COMPLETE = "signal_property_complete"
 SIGNAL_REACTION_READY = "signal_reaction_ready"
-SIGNAL_REACT = "signal_react_{}"
+# SIGNAL_REACT = "signal_react_{}"
 SIGNAL_DISPATCH = "dispatch"
+SIGNAL_TRACK_UPDATE = "track_update"
 
 # transformer types
 BINARY_SENSOR = "binary_sensor"
@@ -175,11 +174,10 @@ ATTR_LAST_TRIGGERED = "last_triggered"
 
 # trace
 TRACE_PATH_CONDITION = "condition"
-TRACE_PATH_TRIGGER = "trigger"
 TRACE_PATH_PARALLEL = "parallel"
-TRACE_PATH_EVENT = "event"
 TRACE_PATH_ACTOR = "actor"
 TRACE_PATH_REACTOR = "reactor"
+TRACE_PATH_DATA = "data"
 
 # dynamic properties
 PROP_ATTR_TYPE_POSTFIX = "_attr_type"
@@ -248,7 +246,7 @@ ENTITY_DATA_SCHEMA = vol.Schema({
 REACTOR_DATA_SCHEMA = ENTITY_DATA_SCHEMA.extend(
     vol.Schema({
         vol.Optional(ATTR_TIMING) : vol.In([REACTOR_TIMING_IMMEDIATE, REACTOR_TIMING_DELAYED, REACTOR_TIMING_SCHEDULED]),
-        vol.Optional(ATTR_DELAY) : cv.string,
+        vol.Optional(ATTR_DELAY) : vol.Coerce(int),
         vol.Optional(ATTR_SCHEDULE) : SCHEDULE_SCHEMA,
         vol.Optional(ATTR_OVERWRITE) : cv.boolean,
         vol.Optional(ATTR_RESET_WORKFLOW) : cv.string,
