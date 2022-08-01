@@ -115,15 +115,28 @@ class MultiItem(DynamicData):
         return None
 
 
-class CtorData(DynamicData):
-    def __init__(self, source: dict = None) -> None:
-        super().__init__(source)
-
+class CtorConfig(DynamicData):
     entity: Union[MultiItem, str] = None
     type: Union[MultiItem, str] = None
     action: Union[MultiItem, str] = None
-    condition: Union[bool, str] = True
-    data: DynamicData = DynamicData(None)
+    condition: str = None
+    data: DynamicData = None
+
+
+    def __init__(self, source: dict = None) -> None:
+        super().__init__(source)
+
+
+class CtorRuntime(DynamicData):
+    entity: MultiItem = None
+    type: MultiItem = None
+    action: MultiItem = None
+    condition: bool = True
+    data: DynamicData = None
+
+
+    def __init__(self) -> None:
+        super().__init__(None)
 
 
 class ScheduleData(DynamicData):
@@ -135,18 +148,36 @@ class ScheduleData(DynamicData):
     weekdays: MultiItem = None
 
 
-class ActorData(CtorData):
+class ActorConfig(CtorConfig):
     def __init__(self, source: dict = None) -> None:
         super().__init__(source)
 
 
-class ReactorData(CtorData):
-    def __init__(self, source: dict = None) -> None:
-        super().__init__(source)
+class ActorRuntime(CtorRuntime):
+    def __init__(self) -> None:
+        super().__init__()
 
+
+class ReactorConfig(CtorConfig):
     timing: str = REACTOR_TIMING_IMMEDIATE
     delay: Union[int, str] = None
     schedule: ScheduleData = None
     overwrite: Union[bool, str] = False
-    reset_workflow: str = None
-    forward_action: Union[bool, str] = False
+    reset_workflow: Union[bool, str] = None
+    forward_action: Union[bool, str] = None
+
+
+    def __init__(self, source: dict = None) -> None:
+        super().__init__(source)
+
+
+class ReactorRuntime(CtorRuntime):
+    def __init__(self) -> None:
+        super().__init__()
+
+    timing: str = REACTOR_TIMING_IMMEDIATE
+    delay: int = None
+    schedule: ScheduleData = None
+    overwrite: bool = False
+    reset_workflow: bool = False
+    forward_action: bool = False

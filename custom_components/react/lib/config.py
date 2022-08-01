@@ -6,7 +6,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from ..exceptions import ReactException
 from ..utils.logger import get_react_logger
-from ..utils.struct import ActorData, CtorData, DynamicData, MultiItem, ReactorData, ScheduleData
+from ..utils.struct import ActorConfig, CtorConfig, DynamicData, MultiItem, ReactorConfig, ScheduleData
 
 from ..const import (
     ATTR_ACTION,
@@ -60,10 +60,9 @@ class Schedule(ScheduleData):
         return result
 
 
-class Ctor(CtorData):
+class Ctor(CtorConfig):
     id: str = None
     enabled: bool
-    is_list_item: bool
     
     type_hints: dict = {ATTR_ENTITY: MultiItem}
 
@@ -84,20 +83,20 @@ class Ctor(CtorData):
                 if self.get(a) is not None
             }
         }
-        if ATTR_CONDITION in self.names and self.get(ATTR_CONDITION) != None:
-            result[ATTR_CONDITION] = { ATTR_ENABLED: True, ATTR_TEMPLATE: self.get(ATTR_CONDITION)}
+        if ATTR_CONDITION in self.names and self.condition != None:
+            result[ATTR_CONDITION] = { ATTR_ENABLED: True, ATTR_TEMPLATE: self.condition}
         if self.data is not None:
             result[ATTR_DATA][ATTR_DATA] = self.data.as_dict()   
         return result
         
 
-class Actor(Ctor, ActorData):
+class Actor(Ctor, ActorConfig):
     def __init__(self, config: dict, id: str, workflow_id: str):
         super().__init__(config, id)
         self.workflow_id = workflow_id
 
 
-class Reactor(Ctor, ReactorData):
+class Reactor(Ctor, ReactorConfig):
 
     type_hints: dict = {ATTR_SCHEDULE: Schedule}
 
@@ -155,23 +154,10 @@ class Workflow():
 
         result = []
         for id,item_config in items_config.items():
-            self.load_entity(id, item_config, item_type, result, False)
+            item: Ctor = item_type(item_config, id, self.id)
+            result.append(item)
 
         return result
-
-
-    def load_entities(self, id: str, item_config: dict, item_type: ctor_type, result: list):
-        entity_data = item_config.get(ATTR_ENTITY, None)
-        if isinstance(entity_data, str):
-            self.load_entity(id, item_config, item_type, result, False)
-        elif entity_data is None:
-            self.load_entity(id, item_config, item_type, result, False)
-
-
-    def load_entity(self, item_id: str, item_config: dict, item_type: ctor_type, result: list, is_list_item: bool):
-        item: Ctor = item_type(item_config, item_id, self.id)
-        item.is_list_item = is_list_item
-        result.append(item)
 
     
     def as_dict(self, actor_id: str = None) -> dict:
@@ -185,10 +171,11 @@ class Workflow():
         result[ATTR_ACTOR] = []
         result[ATTR_REACTOR] = []
         for index, actor in enumerate(self.actors):
-            if (actor_id is None or
-                not actor.is_list_item or
-                actor.id == actor_id):
-                result[ATTR_ACTOR].append(actor.as_dict(index))
+            # if (actor_id is None or
+            #     not actor.is_list_item or
+            #     actor.id == actor_id):
+            #     result[ATTR_ACTOR].append(actor.as_dict(index))
+            result[ATTR_ACTOR].append(actor.as_dict(index))
         for index, reactor in enumerate(self.reactors):
             result[ATTR_REACTOR].append(reactor.as_dict(index))
 
