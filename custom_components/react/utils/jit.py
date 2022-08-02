@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any, Generic, Type, TypeVar
+from homeassistant.const import ATTR_ID
 
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.template import Template, is_template_string
@@ -86,6 +87,7 @@ class JitHandler(Generic[T]):
 
     def render(self, template_context_data_provider: TemplateContextDataProvider) -> T:
         target = self.t_type()
+        target.set(ATTR_ID, self.config_source.get(ATTR_ID))
         for attr in self.jit_attrs:
             self.get_jitter_prop(attr).render(target, template_context_data_provider)
         return target

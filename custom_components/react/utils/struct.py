@@ -36,6 +36,13 @@ class DynamicData():
             return default
 
 
+    def get_flattened(self, key: str, default: Any = None) -> Any:
+        result = self.get(key, default)
+        if isinstance(result, MultiItem) and len(result) == 1:
+            result = result.first
+        return result
+
+
     def set(self, key: str, value: Any):
         self.names.append(key)
         if isinstance(value, (MultiItem, DynamicData)):
@@ -108,11 +115,19 @@ class MultiItem(DynamicData):
         return MultiItem.MultiItemIterator(self, self.names)
 
 
+    def __len__(self):
+        return len(self.names)
+
+
     @property
     def first(self) -> Any:
         if self.any:
             return self.get(self.names[0])
         return None
+
+    
+    def len(self):
+        return len(self.names)
 
 
 class CtorConfig(DynamicData):
@@ -163,7 +178,7 @@ class ReactorConfig(CtorConfig):
     delay: Union[int, str] = None
     schedule: ScheduleData = None
     overwrite: Union[bool, str] = False
-    reset_workflow: Union[bool, str] = None
+    reset_workflow: str = None
     forward_action: Union[bool, str] = None
 
 
@@ -179,5 +194,5 @@ class ReactorRuntime(CtorRuntime):
     delay: int = None
     schedule: ScheduleData = None
     overwrite: bool = False
-    reset_workflow: bool = False
+    reset_workflow: str = None
     forward_action: bool = False

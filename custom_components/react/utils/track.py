@@ -3,6 +3,7 @@
 from typing import Generic, Type, TypeVar, Union
 
 from anyio import Any
+from homeassistant.const import ATTR_ID
 from homeassistant.core import Event, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -43,6 +44,7 @@ class TrackHandler(Updatable, Generic[T]):
 
         self.template_trackers: list[TemplatePropertyTracker] = []
         self.value_container = t_type()
+        self.value_container.set(ATTR_ID, self.config_source.get(ATTR_ID))
 
         for attr in config_source.names:
             self.add_tracker(attr, PROP_TYPE_SOURCE)

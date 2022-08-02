@@ -209,7 +209,6 @@ class ReactionHandler(BaseHandler):
     async def async_handle(self, wctx: WorkflowRunContext):
         template_context_data_provider = ActorTemplateContextDataProvider(self.runtime.react, wctx.event_reader)
         reactor_runtime = self.jit_handler.render(template_context_data_provider)
-        wctx.trace_variables_set_reactor_data(reactor_runtime.data.as_dict())
         
         with trace_path(TRACE_PATH_CONDITION):
             condition_result = reactor_runtime.condition
@@ -221,7 +220,6 @@ class ReactionHandler(BaseHandler):
                 return
 
         with trace_path(TRACE_PATH_DATA):
-            # for entity, type, action in product(reactor_runtime.entity or [_EMPTY_], reactor_runtime.type or [_EMPTY_], reactor_action or [_EMPTY_]):
             for reaction in create_reactions(self.runtime.react, wctx, self.reactor_config, reactor_runtime):
                 with trace_node(wctx.trace_variables):
                     if reaction.is_forward_toggle:
@@ -306,12 +304,6 @@ class WorkflowRunContext:
 
     def trace_variables_set_hass_context(self):
         self.trace_variables[ATTR_CONTEXT] = self.event_reader.hass_context
-
-
-    def trace_variables_set_reactor_data(self, reactor_data: dict):
-        self.trace_variables[ATTR_REACTOR] = {
-            ATTR_DATA: reactor_data
-        }
         
 
     def create_hass_run_context(self):

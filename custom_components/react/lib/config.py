@@ -70,15 +70,15 @@ class Ctor(CtorConfig):
     def __init__(self, config: dict, id: str):
         super().__init__(config)
 
-        self.id = id
-        self.enabled = True
+        self.set(ATTR_ID, id)
+        self.set(ATTR_ENABLED, True)
 
 
     def as_dict(self, index: int) -> dict:
         result = {
             ATTR_INDEX: index,
             ATTR_DATA : {
-                a: self.get(a)
+                a: self.get_flattened(a)
                 for a in [ATTR_ID, ATTR_ENABLED, ATTR_ENTITY, ATTR_TYPE, ATTR_ACTION]
                 if self.get(a) is not None
             }
