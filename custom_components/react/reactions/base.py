@@ -11,6 +11,9 @@ from homeassistant.core import CALLBACK_TYPE
 from homeassistant.helpers.event import async_track_point_in_time
 
 from ..const import (
+    ACTION_AVAILABLE,
+    ACTION_TOGGLE,
+    ACTION_UNAVAILABLE,
     ATTR_ACTION,
     ATTR_DATA,
     ATTR_ENTITY,
@@ -71,6 +74,22 @@ class ReactReaction:
 
     def needs_sensor(self) -> bool:
         return self.data.datetime is not None
+
+
+    @property
+    def is_forward_action(self):
+        return self.data.forward_action if self.data else False
+
+
+    @property
+    def is_forward_toggle(self):
+        return self.is_forward_action and self.data.actor_action == ACTION_TOGGLE if self.data else False
+
+
+    @property
+    def is_forward_availability(self):
+        return self.is_forward_action and (self.data.actor_action == ACTION_AVAILABLE or self.data.actor_action == ACTION_UNAVAILABLE) if self.data else False
+        
 
     def schedule(self, callback: CALLBACK_TYPE, dt: datetime):
         self.cancel_schedule()

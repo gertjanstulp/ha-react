@@ -20,7 +20,7 @@ from ..reactions.base import ReactReaction
 from ..utils.context import ActorTemplateContextDataProvider, TemplateContext, VariableContextDataProvider
 from ..utils.events import ActionEventDataReader
 from ..utils.logger import format_data
-from ..utils.struct import ActorRuntime, ReactorRuntime
+from ..utils.struct import ActorRuntime, ReactorConfig, ReactorRuntime
 from ..utils.jit import JitHandler
 from ..utils.trace import ReactTrace, trace_node, trace_workflow
 from ..utils.track import TrackHandler
@@ -208,10 +208,8 @@ class ReactionHandler(BaseHandler):
     @callback
     async def async_handle(self, wctx: WorkflowRunContext):
         template_context_data_provider = ActorTemplateContextDataProvider(self.runtime.react, wctx.event_reader)
-        
         reactor_runtime = self.jit_handler.render(template_context_data_provider)
-
-        # wctx.trace_variables_set_reactor_data(reactor_data.data.as_dict())
+        wctx.trace_variables_set_reactor_data(reactor_runtime.data.as_dict())
         
         with trace_path(TRACE_PATH_CONDITION):
             condition_result = reactor_runtime.condition
@@ -223,41 +221,20 @@ class ReactionHandler(BaseHandler):
                 return
 
         with trace_path(TRACE_PATH_DATA):
-            reactor_action = [wctx.event_reader.action] if reactor_runtime.forward_action else reactor_runtime.action
-            
-            for entity, type, action in product(reactor_runtime.entity or [_EMPTY_], reactor_runtime.type or [_EMPTY_], reactor_action or [_EMPTY_]):
+            # for entity, type, action in product(reactor_runtime.entity or [_EMPTY_], reactor_runtime.type or [_EMPTY_], reactor_action or [_EMPTY_]):
+            for reaction in create_reactions(self.runtime.react, wctx, self.reactor_config, reactor_runtime):
                 with trace_node(wctx.trace_variables):
-                    if self.reactor_config.forward_action:
+                    if reaction.is_forward_toggle:
                         # Don't forward toggle actions as they are always accompanied by other actions which will be forwarded
-                        if wctx.event_reader.action == ACTION_TOGGLE:
-                            self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{wctx.actx.actor_id}' skipping reactor (action 'toggle' with forward_action): '{self.reactor_config.id}'")
-                            trace_set_result(message="Skipped, toggle with forward-action")
-                            return
+                        self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{wctx.actx.actor_id}' skipping reactor (action 'toggle' with forward_action): '{self.reactor_config.id}'")
+                        trace_set_result(message="Skipped, toggle with forward-action")
+                        return
+
+                    if reaction.is_forward_availability:
                         # Don't forward availabililty actions as reactors don't support them
-                        if wctx.event_reader.action == ACTION_AVAILABLE or wctx.event_reader.action == ACTION_UNAVAILABLE:
-                            self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{wctx.actx.actor_id}' skipping reactor (availability action with forward_action): '{self.reactor_config.id}'")
-                            trace_set_result(message="Skipped, availability action with forward_action")
-                            return
-
-                    reaction = ReactReaction(self.runtime.react)
-
-                    reaction.data.workflow_id = self.runtime.workflow_config.id
-
-                    reaction.data.actor_id = wctx.actx.actor_id
-
-                    reaction.data.actor_entity = wctx.event_reader.entity
-                    reaction.data.actor_type = wctx.event_reader.type
-                    reaction.data.actor_action = wctx.event_reader.action
-
-                    reaction.data.reactor_id = self.reactor_config.id
-                    
-                    reaction.data.reactor_entity = entity
-                    reaction.data.reactor_type = type
-                    reaction.data.reactor_action = action
-                    reaction.data.reset_workflow = reactor_runtime.reset_workflow
-                    reaction.data.overwrite = reactor_runtime.overwrite
-                    reaction.data.datetime = calculate_reaction_datetime(reactor_runtime.timing, reactor_runtime.schedule, reactor_runtime.delay)
-                    reaction.data.data = reactor_runtime.data
+                        self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{wctx.actx.actor_id}' skipping reactor (availability action with forward_action): '{self.reactor_config.id}'")
+                        trace_set_result(message="Skipped, availability action with forward_action")
+                        return
 
                     self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{self.reactor_config.id}' sending reaction: {format_data(entity=reaction.data.reactor_entity, type=reaction.data.reactor_type, action=reaction.data.reactor_action, overwrite=reaction.data.overwrite, reset_workflow=reaction.data.reset_workflow)}")
                     self.runtime.react.reactions.add(reaction)
@@ -266,10 +243,39 @@ class ReactionHandler(BaseHandler):
                     trace_set_result(reaction=reaction.data.to_json())
 
 
+def create_reactions(react: ReactBase, wctx: WorkflowRunContext, reactor_config: ReactorConfig, reactor_runtime: ReactorRuntime):
+    result: list[ReactReaction] = []
+    reactor_action = [wctx.event_reader.action] if reactor_runtime.forward_action else reactor_runtime.action
+
+    for entity, type, action in product(reactor_runtime.entity or [_EMPTY_], reactor_runtime.type or [_EMPTY_], reactor_action or [_EMPTY_]):
+        reaction = ReactReaction(react)
+
+        reaction.data.workflow_id = wctx.workflow_id
+        reaction.data.actor_id = wctx.actx.actor_id
+        reaction.data.reactor_id = reactor_config.id
+
+        reaction.data.actor_entity = wctx.event_reader.entity
+        reaction.data.actor_type = wctx.event_reader.type
+        reaction.data.actor_action = wctx.event_reader.action
+        
+        reaction.data.reactor_entity = entity
+        reaction.data.reactor_type = type
+        reaction.data.reactor_action = action
+        reaction.data.reset_workflow = reactor_runtime.reset_workflow
+        reaction.data.overwrite = reactor_runtime.overwrite
+        reaction.data.datetime = calculate_reaction_datetime(reactor_runtime.timing, reactor_runtime.schedule, reactor_runtime.delay)
+        reaction.data.data = reactor_runtime.data
+
+        result.append(reaction)
+
+    return result
+
+
 class WorkflowRunContext:
     actx: ActionContext = None
     event_reader: ActionEventDataReader = None
     trace_variables: dict = None
+    workflow_id: str = None
 
 
     def __init__(self, react: ReactBase, workflow_config: Workflow, variable_handler: TrackHandler, actx: ActionContext, event_reader: ActionEventDataReader) -> None:
@@ -278,7 +284,9 @@ class WorkflowRunContext:
         self.variable_handler = variable_handler
         self.actx = actx
         self.event_reader = event_reader
+        
         self.trace_variables = {}
+        self.workflow_id = workflow_config.id
 
 
     def trace_variables_init(self):
