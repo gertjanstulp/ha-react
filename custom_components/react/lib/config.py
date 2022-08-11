@@ -34,7 +34,7 @@ from ..const import (
     ATTR_TYPE,
     ATTR_VARIABLES,
     CONF_ENTITY_MAPS,
-    CONF_IMPL,
+    CONF_PLUGIN,
     CONF_STENCIL,
     CONF_TRACE,
     CONF_WORKFLOW,
@@ -190,14 +190,14 @@ class Workflow():
         return result
 
 
-class ImplConfiguration:
+class PluginConfiguration:
 
     def __init__(self) -> None:
         self.notify: Union[str, None] = None
 
     def load(self, react_config: ConfigType) -> None:
-        impl_config = react_config.get(CONF_IMPL, {})
-        self.notify = impl_config.get(ATTR_NOTIFY, None)
+        plugin_config = react_config.get(CONF_PLUGIN, {})
+        self.notify = plugin_config.get(ATTR_NOTIFY, None)
 
 
 class WorkflowConfiguration:

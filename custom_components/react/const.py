@@ -30,7 +30,7 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 CONF_FRONTEND_REPO_URL = "frontend_repo_url"
 CONF_ENTITY_MAPS = "entity_maps"
-CONF_IMPL = "impl"
+CONF_PLUGIN = "plugin"
 CONF_WORKFLOW = "workflow"
 CONF_STENCIL = "stencil"
 
@@ -99,7 +99,7 @@ ATTR_INDEX = "index"
 ATTR_TRIGGER = "trigger"
 ATTR_EVENT = "event"
 
-# impl attributes
+# plugin attributes
 ATTR_NOTIFY = "notify"
 
 # Event custom attributes
@@ -108,17 +108,14 @@ ATTR_ARGS = "args"
 ATTR_EVENT_MESSAGE = "message"
 ATTR_EVENT_FEEDBACK_ITEMS = "feedback_items"
 ATTR_EVENT_FEEDBACK_ITEM_TITLE = "title"
-ATTR_EVENT_FEEDBACK_ITEM_COMMAND = "command"
+ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK = "feedback"
 ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT = "acknowledgement"
 
-# Service data attributes
-ATTR_SERVICE_DATA_INLINE_KEYBOARD = "inline_keyboard"
 
 # events
 EVENT_REACT_ACTION = "ev_react_action"
 EVENT_REACT_REACTION = "ev_react_reaction"
-# This is a copy of homeassistants' const, we need this to not depend on telegram_bot module automatically
-EVENT_TELEGRAM_CALLBACK = "telegram_callback"
+
 
 # event data
 EVENTDATA_COMMAND_REACT = "/react"
@@ -295,6 +292,6 @@ WORKFLOW_SCHEMA = vol.Schema({
     }, None)
 })
 
-IMPL_SCHEMA = vol.Schema({
+PLUGIN_SCHEMA = vol.Schema({
     vol.Optional(ATTR_NOTIFY): cv.string
 })

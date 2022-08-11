@@ -1,5 +1,4 @@
-group:
-  test_group:
-    name: test_group
-    entities:
-      - binary_sensor.test_binary_sensor
+test_group:
+  name: test_group
+  entities:
+    - binary_sensor.test_binary_sensor

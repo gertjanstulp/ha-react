@@ -1,11 +1,10 @@
-from asyncio import sleep
-from typing import Any, Callable, Coroutine
 import pytest
 
 from homeassistant.core import HomeAssistant
-from homeassistant.components import binary_sensor
 
-from custom_components.react.const import ATTR_ACTION
+from custom_components.react.const import DOMAIN
+from custom_components.react.base import ReactBase
+
 from tests.tst_context import TstContext
 
 FIXTURE_TEST_NAME = "test_name"
@@ -714,6 +713,7 @@ async def test_react_device_tracker(hass: HomeAssistant, test_name, react_compon
     tc = TstContext(hass, test_name)
     async with tc.async_listen_reaction_event():
         tc.verify_reaction_entity_not_found()
+        await device_tracker_component.async_see("test_device_tracker", "not_home")
         await device_tracker_component.async_see("test_device_tracker", "home")
         await hass.async_block_till_done()
         await tc.async_verify_reaction_event_received()
@@ -735,9 +735,28 @@ async def test_react_person(hass: HomeAssistant, test_name, react_component, dev
     async with tc.async_listen_reaction_event():
         tc.verify_reaction_entity_not_found()
         await device_tracker_component.async_see("test_device_tracker", "home")
+        await device_tracker_component.async_see("test_device_tracker", "not_home")
         await hass.async_block_till_done()
         await tc.async_verify_reaction_event_received()
         tc.verify_reaction_event_data()
         tc.verify_trace_record()
 
     await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(FIXTURE_TEST_NAME, ["actionable_notification"])
+async def test_react_actionable_notification(hass: HomeAssistant, test_name, react_component):
+    """
+    Test for actionable notifications
+    """
+
+    await react_component.async_setup(test_name, init_notify_plugin=True)
+    react: ReactBase = hass.data[DOMAIN]
+    notify_plugin = react.plugin_factory.get_notify_plugin()
+    
+    tc = TstContext(hass, test_name)
+    notify_plugin.hook_test(tc)
+    async with tc.async_listen_reaction_event():
+        tc.verify_reaction_entity_not_found()
+        await tc.async_send_action_event()
+        tc.verify_notification_send()

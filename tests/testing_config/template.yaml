@@ -1,5 +1,4 @@
-template:
-  - binary_sensor:
-      - name: test_binary_sensor
-        state: "{{ states('input_boolean.test_boolean') }}"
+- binary_sensor:
+    - name: test_binary_sensor
+      state: "{{ states('input_boolean.test_boolean') }}"
     

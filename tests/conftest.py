@@ -31,6 +31,8 @@ from tests.common import (
 )
 
 from custom_components.react.const import (
+    ATTR_NOTIFY,
+    CONF_PLUGIN,
     CONF_STENCIL,
     CONF_WORKFLOW,
     DOMAIN as REACT_DOMAIN
@@ -194,7 +196,7 @@ def mock_get_source_ip():
 
 @pytest.fixture
 async def react_component(hass):
-    async def async_setup(test_name: str, additional_workflows: list[str] = []):
+    async def async_setup(test_name: str, additional_workflows: list[str] = [], init_notify_plugin: bool = False):
         data = None
         workflow_name = f"workflow_{test_name}"
         with open(get_test_config_dir(REACT_CONFIG)) as f:
@@ -205,6 +207,11 @@ async def react_component(hass):
                     workflow_name : raw_data.get(CONF_WORKFLOW, {}).get(workflow_name, {}),
                 }
             }
+
+            if init_notify_plugin:
+                data[CONF_PLUGIN] = {
+                    ATTR_NOTIFY: "tests.plugins.test_notify_plugin"
+                }
                     
         for workflow in additional_workflows:
             additional_workflow_name = workflow_name = f"workflow_{workflow}"
@@ -233,7 +240,7 @@ async def template_component(hass: HomeAssistant):
     assert await async_setup_component(
         hass,
         template.DOMAIN,
-        data,
+        { template.DOMAIN: data },
     )
     await hass.async_block_till_done()
     await hass.async_start()
@@ -248,7 +255,7 @@ async def input_boolean_component(hass: HomeAssistant):
     assert await async_setup_component(
         hass,
         input_boolean.DOMAIN,
-        data,
+        { input_boolean.DOMAIN: data },
     )
     await hass.async_block_till_done()
     await hass.async_start()
@@ -288,7 +295,7 @@ async def input_text_component(hass: HomeAssistant):
     assert await async_setup_component(
         hass,
         input_text.DOMAIN,
-        data,
+        { input_text.DOMAIN: data },
     )
     await hass.async_block_till_done()
     await hass.async_start()
@@ -318,7 +325,7 @@ async def group_component(hass: HomeAssistant):
     assert await async_setup_component(
         hass,
         group.DOMAIN,
-        data,
+        { group.DOMAIN: data },
     )
     await hass.async_block_till_done()
     await hass.async_start()
@@ -375,8 +382,16 @@ async def person_component(hass: HomeAssistant):
     assert await async_setup_component(
         hass,
         person.DOMAIN,
-        data,
+        { person.DOMAIN: data },
     )
     await hass.async_block_till_done()
     await hass.async_start()
     await hass.async_block_till_done()
+
+# @pytest.fixture
+# def notify_plugin():
+#     with patch(
+#         "homeassistant.components.network.network.async_load_adapters",
+#         return_value=[mock_adapter],
+#     ):
+#         yield

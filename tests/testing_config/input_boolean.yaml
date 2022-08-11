@@ -1,4 +1,3 @@
-input_boolean:
-  test_boolean:
-    name: test_boolean
-    initial: False
+test_boolean:
+  name: test_boolean
+  initial: False

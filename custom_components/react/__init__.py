@@ -15,7 +15,7 @@ from homeassistant.util.dt import parse_datetime
 
 from .base import ReactBase, ReactReactions
 from .enums import ReactStage
-from .impl.impl_factory import ImplFactory
+from .plugin.plugin_factory import PluginFactory
 from .lib.config import Workflow
 from .lib.runtime import WorkflowRuntime
 from .reactions.dispatch import ReactDispatch
@@ -27,14 +27,14 @@ from .const import (
     ATTR_LAST_TRIGGERED,
     ATTR_WORKFLOW_ID,
     CONF_ENTITY_MAPS,
-    CONF_IMPL,
+    CONF_PLUGIN,
     CONF_FRONTEND_REPO_URL,
     CONF_STENCIL,
     CONF_WORKFLOW,
     DEFAULT_INITIAL_STATE, 
     DOMAIN,
     ENTITY_ID_FORMAT,
-    IMPL_SCHEMA,
+    PLUGIN_SCHEMA,
     STARTUP,
     STENCIL_SCHEMA, 
     WORKFLOW_SCHEMA,
@@ -43,7 +43,7 @@ from .const import (
 CONFIG_SCHEMA = vol.Schema({
     vol.Optional(DOMAIN, default={}): vol.Schema({
         vol.Optional(CONF_FRONTEND_REPO_URL): cv.string,
-        vol.Optional(CONF_IMPL): IMPL_SCHEMA,
+        vol.Optional(CONF_PLUGIN): PLUGIN_SCHEMA,
         vol.Optional(CONF_ENTITY_MAPS): dict,
         vol.Optional(CONF_WORKFLOW): WORKFLOW_SCHEMA,
         vol.Optional(CONF_STENCIL): STENCIL_SCHEMA,
@@ -92,7 +92,7 @@ async def async_initialize_integration(
     react.system.running = True
     react.tasks = ReactTaskManager(react=react)
     react.version = integration.version
-    react.impl_factory = ImplFactory(react=react)
+    react.plugin_factory = PluginFactory(react=react)
     
     if react.core.ha_version is None:
         react.core.ha_version = AwesomeVersion(HAVERSION)

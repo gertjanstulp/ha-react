@@ -8,7 +8,7 @@ from custom_components.react.utils.struct import MultiItem
 
 from homeassistant.components.trace.const import DATA_TRACE
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_STATE, STATE_ON
-from homeassistant.core import Event, HomeAssistant, State
+from homeassistant.core import Event, HomeAssistant, State, Context
 
 from unittest.mock import Mock
 
@@ -22,6 +22,7 @@ from custom_components.react.const import (
     ATTR_ACTOR_ID,
     ATTR_ACTOR_TYPE,
     ATTR_CONDITION,
+    ATTR_CONTEXT,
     ATTR_DATA,
     ATTR_ENTITY,
     ATTR_EVENT,
@@ -76,9 +77,7 @@ TRACE_ITEM_ID = "item_id"
 TRACE_MESSAGE = "message"
 
 class TstContext():
-    hass: HomeAssistant = None
-    event_mock: Mock = None
-
+    
     def __init__(self, hass: HomeAssistant, test: str) -> None:
         self.hass = hass
         self.react: ReactBase = self.hass.data[DOMAIN]
@@ -87,6 +86,8 @@ class TstContext():
 
         self.workflow_id = f"workflow_{self.test}"
         self.workflow_config = self.react.configuration.workflow_config.workflows.get(self.workflow_id)
+
+        self.notifications = list[dict]()
 
     
     async def async_send_action_event(self, 
@@ -407,6 +408,19 @@ class TstContext():
                 trace_trace_reactor_variables = trace_trace_reactor.assert_property_not_none(TRACE_CHANGED_VARIABLES)
                 trace_trace_reactor_variables.assert_property_not_none(TRACE_CONTEXT)
             
+
+    def notify(self, entity: str, data: dict, context: Context):
+        self.notifications.append({
+            ATTR_ENTITY: entity,
+            ATTR_DATA: data,
+            ATTR_CONTEXT: context
+        })
+
+
+    def verify_notification_send(self, expected_count: int = 1):
+        got_count = len(self.notifications)
+        assert len(self.notifications) == expected_count, f"Expected notification count {expected_count}, got {got_count}"
+
 
 class TracePath():
     def __init__(self, owner: dict, path: str, parent: str = None) -> None:

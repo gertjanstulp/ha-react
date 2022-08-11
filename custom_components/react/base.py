@@ -15,7 +15,7 @@ from homeassistant.loader import Integration
 
 from .enums import ReactStage, ReactDisabledReason
 from .exceptions import ReactException
-from .lib.config import ImplConfiguration, WorkflowConfiguration
+from .lib.config import PluginConfiguration, WorkflowConfiguration
 from .reactions.base import ReactReaction
 from .reactions.dispatch import ReactDispatch
 from .utils.logger import get_react_logger
@@ -29,7 +29,7 @@ from .const import (
 if TYPE_CHECKING:
     from .tasks.manager import ReactTaskManager
     from .utils.data import ReactData
-    from .impl.impl_factory import ImplFactory
+    from .plugin.plugin_factory import PluginFactory
 
 
 @dataclass
@@ -162,7 +162,7 @@ class ReactConfiguration:
     theme_path: str = "themes/"
     theme: bool = False
     workflow_config = WorkflowConfiguration()
-    impl_config = ImplConfiguration()
+    plugin_config = PluginConfiguration()
     
 
     def to_json(self) -> str:
@@ -179,7 +179,7 @@ class ReactConfiguration:
             self.__setattr__(key, data[key])
 
         self.workflow_config.load(self.config)
-        self.impl_config.load(self.config)
+        self.plugin_config.load(self.config)
 
 
 @dataclass
@@ -225,7 +225,7 @@ class ReactBase():
         self.system = ReactSystem()
         self.tasks: Union[ReactTaskManager, None] = None
         self.version: Union[str, None] = None
-        self.impl_factory: Union[ImplFactory, None] = None
+        self.plugin_factory: Union[PluginFactory, None] = None
 
     
     @property

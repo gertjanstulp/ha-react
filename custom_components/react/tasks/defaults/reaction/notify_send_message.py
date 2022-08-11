@@ -1,44 +1,45 @@
 from __future__ import annotations
-from typing import Dict, TypedDict
 
-from homeassistant.const import ATTR_COMMAND, Platform
-from homeassistant.core import Event, callback
+from homeassistant.const import Platform
 
 from ..default_task import DefaultTask
 from ....base import ReactBase
-from ....utils.events import NotifySendMessageReactionEventDataReader, ReactionEventDataReader
+from ....plugin.notify_plugin import NotifyPlugin, NotifySendMessageReactionEventDataReader
 
 from ....const import (
-     ATTR_DATA,
-     ATTR_EVENT_MESSAGE,
-     ATTR_SERVICE_DATA_INLINE_KEYBOARD,
      EVENT_REACT_REACTION
 )
 
 async def async_setup_task(react: ReactBase) -> Task:
+    
+    notify_plugin = react.plugin_factory.get_notify_plugin()
+    if not notify_plugin:
+        react.log.warn("No notify plugin configured, notify sendmessage default handler will be disabled")
+        return None
+
     """Set up this task."""
-    return Task(react=react)
+    return Task(react=react, notify_plugin=notify_plugin)
 
 
-class Task(DefaultTask[NotifySendMessageReactionEventDataReader]):
+class Task(DefaultTask):
 
-    def __init__(self, react: ReactBase) -> None:
-        super().__init__(react, NotifySendMessageReactionEventDataReader)
+    def __init__(self, react: ReactBase, notify_plugin: NotifyPlugin) -> None:
+
+        super().__init__(react, react.plugin_factory.get_notify_plugin().get_notify_send_message_reader_type())
         
+        self.notify_plugin = notify_plugin
         self.events_with_filters = [(EVENT_REACT_REACTION, self.async_filter)]
 
 
     async def async_execute_default(self, event_reader: NotifySendMessageReactionEventDataReader):
-        notify_data = {
-            ATTR_EVENT_MESSAGE: event_reader.message,
-        }
-        if event_reader.inline_keyboard:
-            notify_data[ATTR_DATA] = {
-                ATTR_SERVICE_DATA_INLINE_KEYBOARD : event_reader.inline_keyboard
-            }
-        await self.react.hass.services.async_call(
-            Platform.NOTIFY, 
-            event_reader.entity,
+        notify_data = event_reader.create_plugin_data()
+        await self.notify_plugin.async_send_notification(
+            event_reader.entity, 
             notify_data, 
-            context=event_reader.hass_context)
-        test = 1
+            event_reader.hass_context
+        )
+        # await self.react.hass.services.async_call(
+        #     Platform.NOTIFY, 
+        #     event_reader.entity,
+        #     notify_data, 
+        #     context=event_reader.hass_context)

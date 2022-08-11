@@ -1,5 +1,4 @@
-person:
-  - name: test_person
-    id: test_person
-    device_trackers:
-      - device_tracker.test_device_tracker
+- name: test_person
+  id: test_person
+  device_trackers:
+    - device_tracker.test_device_tracker
