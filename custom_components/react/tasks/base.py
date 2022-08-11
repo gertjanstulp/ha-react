@@ -11,16 +11,20 @@ from ..enums import ReactStage
 class ReactTask:
     """React task base."""
 
-    events: Union[list[str], None] = None
-    events_with_filters: Union[list[tuple[str, Callable[[Event], bool]]], None] = None
-    signals: Union[list[str], None] = None
-    schedule: Union[timedelta, None] = None
-    stages: Union[list[ReactStage], None] = None
-    _can_run_disabled = False  ## Set to True if task can run while disabled
-
-
     def __init__(self, react: ReactBase) -> None:
         self.react = react
+    
+        self.events: Union[list[str], None] = None
+        self.events_with_filters: Union[list[tuple[str, Callable[[Event], bool]]], None] = None
+        self.signals: Union[list[str], None] = None
+        self.schedule: Union[timedelta, None] = None
+        self.stages: Union[list[ReactStage], None] = None
+        self.can_run_disabled = False  ## Set to True if task can run while disabled
+
+
+    @property
+    def enabled(self) -> bool:
+        return True
 
 
     @property
@@ -36,7 +40,7 @@ class ReactTask:
 
     async def execute_task(self, *args, **kwargs) -> None:
         """Execute the task defined in subclass."""
-        if not self._can_run_disabled and self.react.system.disabled:
+        if not self.can_run_disabled and self.react.system.disabled:
             self.task_logger(
                 self.react.log.debug,
                 f"Skipping task, React is disabled {self.react.system.disabled_reason}",

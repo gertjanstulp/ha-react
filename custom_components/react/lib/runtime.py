@@ -1,59 +1,46 @@
 from __future__ import annotations
+
 import asyncio
 from copy import copy
 from dataclasses import dataclass
 
 from datetime import datetime
-from typing import Any, Tuple, Union
+from itertools import product
+from typing import Union
+from homeassistant.const import ATTR_ID
 from homeassistant.core import Context, Event, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, async_dispatcher_send
-from homeassistant.helpers.template import Template, is_template_string
 from homeassistant.helpers.trace import trace_get, trace_path, trace_set_result, trace_path_stack_cv
 from homeassistant.util import ulid as ulid_util
 from homeassistant.util.dt import utcnow
 
-from .config import Actor, DynamicData, Reactor, Workflow, calculate_reaction_datetime, get_property
+from .config import Actor, Reactor, Workflow, calculate_reaction_datetime
 from ..base import ReactBase
 from ..reactions.base import ReactReaction
-from ..utils.context import ActorTemplateContextDataProvider, TemplateContext, TemplateContextDataProvider, VariableContextDataProvider
-from ..utils.updatable import Updatable
+from ..utils.context import ActorTemplateContextDataProvider, TemplateContext, VariableContextDataProvider
+from ..utils.events import ActionEventDataReader
 from ..utils.logger import format_data
-from ..utils.template import BaseJitter, TemplateJitter, TemplateTracker, ValueJitter
+from ..utils.struct import ActorRuntime, ReactorConfig, ReactorRuntime
+from ..utils.jit import JitHandler
 from ..utils.trace import ReactTrace, trace_node, trace_workflow
+from ..utils.track import TrackHandler
+from ..utils.updatable import Updatable
 
 from ..const import (
-    ACTION_AVAILABLE,
-    ACTION_TOGGLE,
-    ACTION_UNAVAILABLE,
+    _EMPTY_,
     ATTR_ACTION,
     ATTR_ACTOR,
-    ATTR_ACTOR_ACTION,
-    ATTR_ACTOR_ENTITY,
-    ATTR_ACTOR_ID,
-    ATTR_ACTOR_TYPE,
     ATTR_CONDITION,
     ATTR_CONTEXT,
     ATTR_DATA,
-    ATTR_DELAY,
     ATTR_ENTITY,
-    ATTR_REACTOR,
-    ATTR_RESET_WORKFLOW,
     ATTR_THIS,
     ATTR_TYPE,
     ATTR_VARIABLES,
-    ATTR_WORKFLOW_ID,
-    PROP_TYPE_DEFAULT,
-    PROP_TYPE_SOURCE,
-    PROP_TYPE_TEMPLATE,
-    PROP_TYPE_VALUE,
     EVENT_REACT_ACTION,
-    PROP_ATTR_TYPE_POSTFIX,
-    PROP_TYPE_BOOL,
-    PROP_TYPE_INT,
-    PROP_TYPE_STR,
     SIGNAL_DISPATCH,
     SIGNAL_PROPERTY_COMPLETE,
-    SIGNAL_REACT,
+    SIGNAL_TRACK_UPDATE,
     TRACE_PATH_ACTOR,
     TRACE_PATH_CONDITION,
     TRACE_PATH_EVENT,
@@ -62,205 +49,59 @@ from ..const import (
     TRACE_PATH_TRIGGER
 )
 
-_JITTER_PROPERTY = "{}_jitter"
-
-
-class RuntimeHandler(Updatable):
-    def __init__(self, runtime: WorkflowRuntime, config_source: Any, template_context: TemplateContext) -> None:
-        super().__init__(runtime.react)
-        self.runtime = runtime
-        self.config_source = config_source
-        self.template_context = template_context
-
-        self.template_trackers: list[TemplateTracker] = []
-        self.value_container = type('object', (), {})()
-        self.jit_attrs = []
-
-
-    def start(self):
-        pass
-    
-
-    def stop(self):
-        pass
-
-    def destroy(self):
-        super().destroy()
-        if self.template_context:
-            self.template_context.destroy()
-    
-
-    def start_trackers(self):
-        if self.template_context:
-            @callback
-            def async_update_template_trackers():
-                for tracker in self.template_trackers:
-                    tracker.async_refresh()
-            self.template_context.on_update(async_update_template_trackers)
-        
-        for tracker in self.template_trackers:
-            tracker.start()
-
-
-    def init_attr(self, is_jit: bool, attr: str, type_converter: Any, default: Any = None):
-        attr_value = getattr(self.config_source, attr, None)
-
-        if is_jit:
-            self.add_jitter(attr, attr_value, type_converter, default)
-        else:
-            self.add_tracker(attr, attr_value, type_converter, default)
-    
-
-    def add_tracker(self, attr: str, attr_value: Any, type_converter: Any, default: Any = None):
-        
-        def set_attr(attr: str, value: Any, prop_type: str):
-            self.set_property(attr, value)
-            self.set_property_type(attr, prop_type)
-
-        if attr_value:
-            if isinstance(attr_value, str) and is_template_string(attr_value):
-                set_attr(attr, None, PROP_TYPE_TEMPLATE)
-                self.template_trackers.append(TemplateTracker(
-                    react=self.runtime.react,
-                    owner=self, 
-                    property=attr, 
-                    template=Template(attr_value),
-                    type_converter=type_converter,
-                    template_context=self.template_context,
-                    update_callback=self.async_update))
-            else:
-                set_attr(attr, attr_value, PROP_TYPE_VALUE)
-        else:
-            set_attr(attr, default, PROP_TYPE_DEFAULT)
-
-
-    def add_jitter(self, attr: str, attr_value: Any, type_converter: Any, default: Any = None):
-        if attr_value:
-            if isinstance(attr_value, str) and is_template_string(attr_value):
-                self.set_jitter(attr, TemplateJitter(self.runtime.react, attr, Template(attr_value), type_converter, self.template_context), PROP_TYPE_TEMPLATE)
-            else:
-                self.set_jitter(attr, ValueJitter(attr_value, type_converter), PROP_TYPE_VALUE)
-        else:
-            self.set_jitter(attr, ValueJitter(default, type_converter), PROP_TYPE_DEFAULT)
-            
-        self.jit_attrs.append(attr)
-
-
-    def set_jitter(self, attr: str, value: BaseJitter, prop_type: str):
-        self.set_jitter_prop(attr, value)
-        self.set_property_type(attr, prop_type)
-
-
-    def jit_render(self, attr: str, template_context_data_provider: TemplateContextDataProvider = None, default: Any = None):
-        attr_jitter = self.get_jitter_prop(attr)
-        if attr_jitter:
-            return attr_jitter.render(template_context_data_provider)
-        else:
-            return default
-
-
-    def jit_render_all(self, template_context_data_provider: TemplateContextDataProvider = None):
-        result = {}
-        for attr in self.jit_attrs:
-            result[attr] = self.jit_render(attr, template_context_data_provider)
-        return result
-
-
-    def set_property(self, name: str, value: Any):
-        if hasattr(self.value_container, name) and getattr(self.value_container, name) == value: 
-            return
-        setattr(self.value_container, name, value)
-
-
-    def get_property(self, name: str, default: Any = None) -> Any:
-        return getattr(self.value_container, name, default)
-
-
-    def set_property_type(self, attr: str, prop_type: str):
-        type_prop = f"_{attr}{PROP_ATTR_TYPE_POSTFIX}"
-        setattr(self, type_prop, prop_type)
-
-
-    def get_property_type(self, attr: str) -> str:
-        type_prop = f"_{attr}{PROP_ATTR_TYPE_POSTFIX}"
-        return getattr(self, type_prop, PROP_TYPE_DEFAULT)
-
-    
-    def set_jitter_prop(self, attr: str, value: BaseJitter):
-        jitter_prop = _JITTER_PROPERTY.format(attr)
-        setattr(self, jitter_prop, value)
-        
-
-    def get_jitter_prop(self, attr: str) -> BaseJitter:
-        jitter_prop = _JITTER_PROPERTY.format(attr)
-        return getattr(self, jitter_prop, None)
-
-
-class DynamicDataHandler(RuntimeHandler):
-    def __init__(self, is_jit: bool, runtime: WorkflowRuntime, dynamicData: DynamicData, template_context: TemplateContext) -> None:
-        super().__init__(runtime, dynamicData, template_context)
-
-        self.names = dynamicData.names
-
-        for name in self.names:
-            self.init_attr(is_jit, name, PROP_TYPE_SOURCE)
-
-        self.start_trackers()
-
-
-    def to_dict(self) -> dict:
-        return vars(self.value_container)
-        
-
-    def as_trace_dict(self) -> dict:
-        return { name : self.get_property(name) for name in self.names }
-
-    
-    def destroy(self):
-        super().destroy()
-        for tracker in self.template_trackers:
-            tracker.destroy()
-
 
 
 @dataclass
 class ActionContext():
+    
     condition: Union[bool, None] = True
-    condition_type: Union[str, None] = None
+    condition_is_template: Union[bool, None] = None
     index: Union[int, None] = None
     actor_id: Union[str, None] = None
+
+
+class BaseHandler():
+
+    def __init__(self, runtime: WorkflowRuntime, index: int, tctx: TemplateContext) -> None:
+        self.enabled: bool = False
+        self.runtime = runtime
+        self.index = index
+        self.tctx = tctx
+
+
+    def start(self) -> None:
+        pass
+    
+
+    def stop(self) -> None:
+        pass
+
+
+    def destroy(self) -> None:
+        if self.tctx:
+            self.tctx.destroy()
      
 
-class ActionHandler(RuntimeHandler):
-    
-    def __init__(self, runtime: WorkflowRuntime, actor: Actor, index: int, template_context: TemplateContext):
-        super().__init__(runtime, actor, template_context)
+class ActionHandler(BaseHandler):
 
-        self.actor = actor
-        self.index = index
-        self.complete = False
-        self.enabled = False
-        self.data_handler = DynamicDataHandler(False, runtime, actor.data, template_context)
+    def __init__(self, runtime: WorkflowRuntime, actor_config: Actor, index: int, tctx: TemplateContext):
+        super().__init__(runtime, index, tctx)
         
-        self.init_attr(False, ATTR_ENTITY, PROP_TYPE_STR)
-        self.init_attr(False, ATTR_TYPE, PROP_TYPE_STR)
-        self.init_attr(False, ATTR_ACTION, PROP_TYPE_STR)
-        self.init_attr(False, ATTR_CONDITION, PROP_TYPE_BOOL, True)
+        self.complete: bool = False
+        self.enabled: bool = False
+        self.actor_config = actor_config
 
-        self.start_trackers()
+        def async_track_update(owner: ActorRuntime, attr: str):
+            if (attr == ATTR_ENTITY or attr == ATTR_TYPE):
+                if owner.entity and owner.type and not self.complete:
+                    self.complete = True
+                    async_dispatcher_send(self.runtime.react.hass, SIGNAL_PROPERTY_COMPLETE, owner.entity, owner.type)
 
-        self.disconnect_event_listener = self.runtime.react.hass.bus.async_listen(EVENT_REACT_ACTION, self.async_handle, self.async_filter)
+        self.disconnect_track_update = async_dispatcher_connect(runtime.react.hass, SIGNAL_TRACK_UPDATE, async_track_update)
+        self.track_handler = TrackHandler[ActorRuntime](runtime.react, actor_config, tctx, ActorRuntime)
+        self.actor_runtime = self.track_handler.value_container
 
-
-    def set_property(self, name: str, value: Any):
-        super().set_property(name, value)
-
-        if (name == ATTR_ENTITY or name == ATTR_TYPE):
-            entity = self.get_property(ATTR_ENTITY)
-            type = self.get_property(ATTR_TYPE)
-            if entity and type and not self.complete:
-                self.complete = True
-                async_dispatcher_send(self.runtime.react.hass, SIGNAL_PROPERTY_COMPLETE, entity, type)
+        self.disconnect_event_listener = runtime.react.hass.bus.async_listen(EVENT_REACT_ACTION, self.async_handle, self.async_filter)
 
 
     def start(self):
@@ -272,37 +113,39 @@ class ActionHandler(RuntimeHandler):
 
 
     def destroy(self):
+        super().destroy()
         self.enabled = False
         if self.disconnect_event_listener:
             self.disconnect_event_listener()
-        for tracker in self.template_trackers:
-            tracker.destroy()
+        if self.disconnect_track_update:
+            self.disconnect_track_update()
+        if self.track_handler:
+            self.track_handler.destroy()
 
 
     @callback
     def async_filter(self, event: Event) -> bool:
-        event_entity,even_type,event_action,event_data = extract_action_event_data(event)
-        config_data = self.data_handler.to_dict()
+        event_reader = ActionEventDataReader(self.runtime.react, event)
 
         result = False
-        if (event_entity == self.get_property(ATTR_ENTITY) and even_type == self.get_property(ATTR_TYPE)):
-            config_action = self.get_property(ATTR_ACTION)
+        if (event_reader.entity in self.actor_runtime.entity and event_reader.type in self.actor_runtime.type):
+            config_action = self.actor_runtime.action
             if config_action is None:
                 result = True   
             else:
-                result = event_action == config_action
+                result = event_reader.action in config_action
             
-            if result and config_data and not event_data:
+            if result and self.actor_runtime.data and not event_reader.data:
                 result = False
 
-            if result and event_data and config_data:
-                for name in config_data:
-                    if not name in event_data or event_data[name] != config_data[name]:
+            if result and event_reader.data and self.actor_runtime.data:
+                for name in self.actor_runtime.data.names:
+                    if not name in event_reader.data or event_reader.data[name] != self.actor_runtime.data.get(name):
                         result = False
                         break
 
         if result and not self.enabled:
-            self.runtime.react.log.info(f"ActionHandler: '{self.runtime.workflow_config.id}'.'{self.actor.id}' skipping (workflow is disabled)")
+            self.runtime.react.log.info(f"ActionHandler: '{self.runtime.workflow_config.id}'.'{self.actor_config.id}' skipping (workflow is disabled)")
             return False
 
         return result
@@ -314,59 +157,31 @@ class ActionHandler(RuntimeHandler):
         await run.async_run()
 
 
-    def get_run_context(self) -> ActionContext:
-        return ActionContext(
-            condition=self.get_property(ATTR_CONDITION, True),
-            index=self.index,
-            actor_id=self.actor.id,
-            condition_type=self.get_property_type(ATTR_CONDITION)
-        )
+    def get_action_context(self) -> ActionContext:
+        return ActionContext(self.actor_runtime.condition, self.track_handler.is_template(ATTR_CONDITION), self.index, self.actor_config.id,
+    )
+
+    
+    def create_event(self, context: Context) -> Event:
+        data = {
+            ATTR_ENTITY: self.actor_runtime.entity.first,
+            ATTR_TYPE: self.actor_runtime.type.first,
+            ATTR_ACTION: self.actor_runtime.action.first,
+            ATTR_DATA: self.actor_runtime.data.as_dict(),
+        }
+        return Event(EVENT_REACT_ACTION, data, context=context)
 
 
-class ActionEventDataReader():
-    def __init__(self, event_variables: dict) -> None:
-        self.variables = event_variables
-        self.actor_data: dict = event_variables[ATTR_ACTOR][ATTR_DATA]
+class ReactionHandler(BaseHandler):
 
-        self.actor_entity = self.actor_data.get(ATTR_ACTOR_ENTITY, None)
-        self.actor_type = self.actor_data.get(ATTR_ACTOR_TYPE, None)
-        self.actor_action = self.actor_data.get(ATTR_ACTOR_ACTION, None)
-        self.actor_id = self.actor_data.get(ATTR_ACTOR_ID, None)
-
-
-class ConditionHandler():
-    def __init__(self, owner: ReactionHandler):
-        self.owner = owner
-        self.condition_type = owner.get_property_type(ATTR_CONDITION)
-
+    def __init__(self, runtime: WorkflowRuntime, reactor_config: Reactor, index: int, tctx: TemplateContext):
+        super().__init__(runtime, index, tctx)
         
-    def eval(self, action_event_data_reader: ActionEventDataReader, template_context_data_provider: TemplateContextDataProvider):
-        result = self.owner.jit_render(ATTR_CONDITION, template_context_data_provider, True)
-        if self.condition_type == PROP_TYPE_TEMPLATE:
-            with trace_node(action_event_data_reader.variables):
-                trace_set_result(result=result)
-
-        return result
-
-
-class ReactionHandler(RuntimeHandler):
-    def __init__(self, runtime: WorkflowRuntime, reactor: Reactor, index: int, template_context: TemplateContext):
-        super().__init__(runtime, reactor, template_context)
-        
-        self.reactor = reactor
+        self.runtime = runtime
+        self.reactor_config = reactor_config
         self.index = index
-        self.enabled = False
-        self.data_handler = DynamicDataHandler(True, runtime, reactor.data, template_context)
-        self.condition_handler = ConditionHandler(self)
         
-        self.init_attr(True, ATTR_ENTITY, PROP_TYPE_STR)
-        self.init_attr(True, ATTR_TYPE, PROP_TYPE_STR)
-        self.init_attr(True, ATTR_ACTION, PROP_TYPE_STR)
-        self.init_attr(True, ATTR_RESET_WORKFLOW, PROP_TYPE_STR)
-        self.init_attr(True, ATTR_DELAY, PROP_TYPE_INT)
-        self.init_attr(True, ATTR_CONDITION, PROP_TYPE_BOOL, True)
-
-        self.disconnect_signal_listener = async_dispatcher_connect(runtime.react.hass, SIGNAL_REACT.format(self.runtime.workflow_config.id), self.async_handle)
+        self.jit_handler = JitHandler[ReactorRuntime](runtime.react, reactor_config, tctx, ReactorRuntime)
 
 
     def start(self):
@@ -380,147 +195,166 @@ class ReactionHandler(RuntimeHandler):
     def destroy(self):
         super().destroy()
         self.enabled = False
-        if self.disconnect_signal_listener:
-            self.disconnect_signal_listener()
 
 
     @callback
-    async def async_handle(self, variables: dict):
-        action_event_data_reader = ActionEventDataReader(variables)
-        template_context_data_provider = ActorTemplateContextDataProvider(self._react, action_event_data_reader)
-        
-        reactor_data = self.data_handler.jit_render_all(template_context_data_provider)
-
-        variables[ATTR_REACTOR] = {
-            ATTR_DATA: reactor_data
-        }
+    async def async_handle(self, wctx: WorkflowRunContext):
+        template_context_data_provider = ActorTemplateContextDataProvider(self.runtime.react, wctx.event_reader)
+        reactor_runtime = self.jit_handler.render(template_context_data_provider)
         
         with trace_path(TRACE_PATH_CONDITION):
-            if not self.condition_handler.eval(action_event_data_reader, template_context_data_provider):
-                self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{self.reactor.id}' skipping (condition false)")
+            condition_result = reactor_runtime.condition
+            if self.jit_handler.is_template(ATTR_CONDITION):
+                with trace_node(wctx.trace_variables):
+                    trace_set_result(result=condition_result)
+            if not condition_result:
+                self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{self.reactor_config.id}' skipping (condition false)")
                 return
 
         with trace_path(TRACE_PATH_EVENT):
-            with trace_node(action_event_data_reader.variables):
-                if self.reactor.forward_action:
-                    # Don't forward toggle actions as they are always accompanied by other actions which will be forwarded
-                    if action_event_data_reader.actor_action == ACTION_TOGGLE:
-                        self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{action_event_data_reader.actor_id}' skipping reactor (action 'toggle' with forward_action): '{self.reactor.id}'")
+            for reaction in create_reactions(self.runtime.react, wctx, self.reactor_config, reactor_runtime):
+                with trace_node(wctx.trace_variables):
+                    if reaction.is_forward_toggle:
+                        # Don't forward toggle actions as they are always accompanied by other actions which will be forwarded
+                        self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{wctx.actx.actor_id}' skipping reactor (action 'toggle' with forward_action): '{self.reactor_config.id}'")
                         trace_set_result(message="Skipped, toggle with forward-action")
                         return
-                    # Don't forward availabililty actions as reactors don't support them
-                    if action_event_data_reader.actor_action == ACTION_AVAILABLE or action_event_data_reader.actor_action == ACTION_UNAVAILABLE:
-                        self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{action_event_data_reader.actor_id}' skipping reactor (availability action with forward_action): '{self.reactor.id}'")
+
+                    if reaction.is_forward_availability:
+                        # Don't forward availabililty actions as reactors don't support them
+                        self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{wctx.actx.actor_id}' skipping reactor (availability action with forward_action): '{self.reactor_config.id}'")
                         trace_set_result(message="Skipped, availability action with forward_action")
                         return
-                    
 
-                reaction = ReactReaction(self.runtime.react)
-                reaction.data.workflow_id = self.runtime.workflow_config.id
-                reaction.data.actor_id = action_event_data_reader.actor_id
-                reaction.data.actor_entity = action_event_data_reader.actor_entity
-                reaction.data.actor_type = action_event_data_reader.actor_type
-                reaction.data.actor_action = action_event_data_reader.actor_action
-                reaction.data.reactor_id = self.reactor.id
-                reaction.data.reactor_entity = self.jit_render(ATTR_ENTITY, template_context_data_provider)
-                reaction.data.reactor_type = self.jit_render(ATTR_TYPE, template_context_data_provider)
-                reaction.data.reactor_action = action_event_data_reader.actor_action if self.reactor.forward_action else self.jit_render(ATTR_ACTION, template_context_data_provider)
-                reaction.data.reset_workflow = self.jit_render(ATTR_RESET_WORKFLOW, template_context_data_provider)
-                reaction.data.overwrite = self.reactor.overwrite
-                reaction.data.datetime = calculate_reaction_datetime(self.reactor.timing, self.reactor.schedule, self.jit_render(ATTR_DELAY, template_context_data_provider))
-                reaction.data.data = reactor_data
+                    self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{self.reactor_config.id}' sending reaction: {format_data(entity=reaction.data.reactor_entity, type=reaction.data.reactor_type, action=reaction.data.reactor_action, overwrite=reaction.data.overwrite, reset_workflow=reaction.data.reset_workflow)}")
+                    self.runtime.react.reactions.add(reaction)
+                    async_dispatcher_send(self.runtime.react.hass, SIGNAL_DISPATCH, reaction.data.id)
 
-                self.runtime.react.log.info(f"ReactionHandler: '{self.runtime.workflow_config.id}'.'{self.reactor.id}' sending reaction: {format_data(entity=reaction.data.reactor_entity, type=reaction.data.reactor_type, action=reaction.data.reactor_action, overwrite=reaction.data.overwrite, reset_workflow=reaction.data.reset_workflow)}")
-                self.runtime.react.reactions.add(reaction)
-                async_dispatcher_send(self.runtime.react.hass, SIGNAL_DISPATCH, reaction.data.id)
+                    trace_set_result(reaction=reaction.data.to_json())
 
-                trace_set_result(reaction=reaction.data.to_json())
+
+def create_reactions(react: ReactBase, wctx: WorkflowRunContext, reactor_config: ReactorConfig, reactor_runtime: ReactorRuntime):
+    result: list[ReactReaction] = []
+    reactor_action = [wctx.event_reader.action] if reactor_runtime.forward_action else reactor_runtime.action
+
+    for entity, type, action in product(reactor_runtime.entity or [_EMPTY_], reactor_runtime.type or [_EMPTY_], reactor_action or [_EMPTY_]):
+        reaction = ReactReaction(react)
+
+        reaction.data.workflow_id = wctx.workflow_id
+        reaction.data.actor_id = wctx.actx.actor_id
+        reaction.data.reactor_id = reactor_config.id
+
+        reaction.data.actor_entity = wctx.event_reader.entity
+        reaction.data.actor_type = wctx.event_reader.type
+        reaction.data.actor_action = wctx.event_reader.action
+        
+        reaction.data.reactor_entity = entity
+        reaction.data.reactor_type = type
+        reaction.data.reactor_action = action
+        reaction.data.reset_workflow = reactor_runtime.reset_workflow
+        reaction.data.overwrite = reactor_runtime.overwrite
+        reaction.data.forward_action = reactor_runtime.forward_action
+        reaction.data.datetime = calculate_reaction_datetime(reactor_runtime.timing, reactor_runtime.schedule, reactor_runtime.delay)
+        reaction.data.data = reactor_runtime.data.as_dict() if reactor_runtime.data else None
+
+        result.append(reaction)
+
+    return result
+
+
+class WorkflowRunContext:
+
+    def __init__(self, react: ReactBase, workflow_config: Workflow, variable_handler: TrackHandler, actx: ActionContext, event_reader: ActionEventDataReader) -> None:
+        self.react = react
+        self.workflow_config = workflow_config
+        self.variable_handler = variable_handler
+        self.actx = actx
+        self.event_reader = event_reader
+        
+        self.trace_variables = {}
+        self.workflow_id = workflow_config.id
+
+
+    def trace_variables_init(self):
+        # Init run variables
+        this = None
+        if state := self.react.hass.states.get(self.workflow_config.entity_id):
+            this = state.as_dict()
+        self.trace_variables = {
+            ATTR_THIS: this,
+            ATTR_VARIABLES: self.variable_handler.as_trace_dict() | { ATTR_ACTOR: self.event_reader.to_dict() },
+            ATTR_ACTOR: {
+                ATTR_ID: self.actx.actor_id, 
+                ATTR_CONTEXT: self.event_reader.hass_context
+            }
+        }
+
+    def trace_variables_set_hass_context(self):
+        self.trace_variables[ATTR_CONTEXT] = self.event_reader.hass_context
+        
+
+    def create_hass_run_context(self):
+        parent_id = None if self.event_reader.hass_context is None else self.event_reader.hass_context.id
+        self.hass_run_context = Context(parent_id=parent_id)
+
+
+    def create_trace_actor_path(self):
+        return f"{TRACE_PATH_ACTOR}/{str(self.actx.index)}"
 
 
 class WorkflowRun:
-    trace: Union[ReactTrace, None] = None
 
-    def __init__(self, 
-        runtime: WorkflowRuntime, 
-        actor_id: str,
-        action_context: ActionContext, 
-        entity: str,
-        type: str,
-        action: str,
-        context: Context
-    ) -> None:
+    def __init__(self, wctx: WorkflowRunContext, reactor_handlers: list[ReactionHandler]) -> None:
         self.id = ulid_util.ulid_hex()
-        self.runtime = runtime
-        self.actor_id = actor_id
-        self.action_context = action_context
-        self.entity = entity
-        self.type = type
-        self.action = action
-        self.trigger_context = context
+        self.wctx = wctx
+        self.reactor_handlers = reactor_handlers
+        self.trace: Union[ReactTrace, None] = None
 
 
     def set_trace(self, trace: ReactTrace):
         self.trace = trace
         trace.set_trace(trace_get())
-        trace.set_actor_description(f"{self.type} {self.action} {self.entity}")
+        trace.set_actor_description(f"{self.wctx.event_reader.type} {self.wctx.event_reader.action} {self.wctx.event_reader.entity}")
 
-        # Init run variables
-        this = None
-        if state := self.runtime.react.hass.states.get(self.runtime.workflow_config.entity_id):
-            this = state.as_dict()
-        self.run_variables = {
-            ATTR_THIS: this,
-            ATTR_VARIABLES: self.runtime.variable_handler.as_trace_dict(),
-            ATTR_ACTOR: {
-                ATTR_DATA: {
-                    ATTR_WORKFLOW_ID: self.runtime.workflow_config.id, 
-                    ATTR_ACTOR_ID: self.action_context.actor_id, 
-                    ATTR_ACTOR_ENTITY: self.entity, 
-                    ATTR_ACTOR_TYPE: self.type, 
-                    ATTR_ACTOR_ACTION: self.action,
-                },
-                ATTR_CONTEXT: self.trigger_context
-            }
-        }
+        self.wctx.trace_variables_init()
 
 
     async def async_run(self):
         # Create a new context referring to the old context.
-        parent_id = None if self.trigger_context is None else self.trigger_context.id
-        self.run_context = Context(parent_id=parent_id)
+        wctx = self.wctx
+        wctx.create_hass_run_context()
 
         with trace_workflow(self):
             # Process actor
-            with trace_path(f"{TRACE_PATH_ACTOR}/{str(self.action_context.index)}"):
-                actor_variables = dict(self.run_variables)
-                # Trace the trigger part 
+            with trace_path(wctx.create_trace_actor_path()):
+                # Trace the data part 
                 with trace_path(TRACE_PATH_TRIGGER):
-                    with trace_node(actor_variables):
+                    with trace_node(wctx.trace_variables):
                         pass
                 with trace_path(TRACE_PATH_CONDITION):
-                    result = self.action_context.condition
-                    if self.action_context.condition_type == PROP_TYPE_TEMPLATE:
-                        with trace_node(self.run_variables):
+                    result = wctx.actx.condition
+                    if wctx.actx.condition_is_template:
+                        with trace_node(wctx.trace_variables):
                             trace_set_result(result=result)
                     if not result:
-                        self.runtime.react.log.info(f"ActionHandler: '{self.runtime.workflow_config.id}'.'{self.action_context.actor_id}' skipping (condition false)")
+                        self.wctx.react.log.info(f"ActionHandler: '{self.wctx.workflow_config.id}'.'{wctx.actx.actor_id}' skipping (condition false)")
                         return
 
-            self.run_variables[ATTR_CONTEXT] = self.trigger_context
-            
+            wctx.trace_variables_set_hass_context()
+
             # Add a parallel section if more than one reactor is triggered
-            if len(self.runtime.reactor_handlers) > 1:
+            if len(self.reactor_handlers) > 1:
                 with trace_path(TRACE_PATH_PARALLEL):
-                    with trace_node(self.run_variables):
+                    with trace_node(wctx.trace_variables):
                         trace_set_result(parallel=True)
 
             with trace_path(TRACE_PATH_REACTOR):
                 async def async_run_with_trace(idx: int, handler: ReactionHandler) -> None:
                     trace_path_stack_cv.set(copy(trace_path_stack_cv.get()))
                     with trace_path(str(idx)):
-                        await asyncio.wait({self.runtime.react.hass.async_create_task(handler.async_handle(self.run_variables))})
+                        await asyncio.wait({self.wctx.react.hass.async_create_task(handler.async_handle(wctx))})
                 results = await asyncio.gather(
-                    *(async_run_with_trace(index, handler) for index, handler in enumerate(self.runtime.reactor_handlers)),
+                    *(async_run_with_trace(index, handler) for index, handler in enumerate(self.reactor_handlers)),
                     return_exceptions=True,
                 )
                 for result in results:
@@ -537,7 +371,7 @@ class WorkflowRuntime(Updatable):
         self.workflow_config = workflow_config
         self.actor_handlers: list[ActionHandler] = []
         self.reactor_handlers: list[ReactionHandler] = []
-        self.variable_handler = DynamicDataHandler(False, self,  workflow_config.variables, TemplateContext(react))
+        self.variable_handler = TrackHandler(self.react,  workflow_config.variables, TemplateContext(react))
         self.last_triggered: Union[datetime, None] = None
 
         for ai,actor in enumerate(workflow_config.actors):
@@ -545,7 +379,7 @@ class WorkflowRuntime(Updatable):
         for ri,reactor in enumerate(workflow_config.reactors):
             self.reactor_handlers.append(ReactionHandler(self, reactor, ri, TemplateContext(react, VariableContextDataProvider(react, self.variable_handler))))
 
-        self.all_handlers: list[RuntimeHandler] = self.actor_handlers + self.reactor_handlers
+        self.all_handlers: list[BaseHandler] = self.actor_handlers + self.reactor_handlers
 
 
     def start(self) -> None:
@@ -569,50 +403,23 @@ class WorkflowRuntime(Updatable):
 
     
     def create_run_from_action(self, trigger_action_handler: ActionHandler, event: Event) -> WorkflowRun:
-        entity,type,action,data = extract_action_event_data(event)
-        return self.create_run_core(
-            trigger_action_handler, 
-            entity,
-            type, 
-            action, 
-            event.context)
+        event_reader = ActionEventDataReader(self.react, event)
+        return self.create_run_core(trigger_action_handler, event_reader)
 
 
     def create_run_from_service_call(self, context: Context) -> WorkflowRun:
-        entity,type,action = extract_action_handler_data(self.actor_handlers[0])
-        return self.create_run_core(
-            self.actor_handlers[0],
-            entity,
-            type,
-            action,
-            context)
+        actor_handler = self.actor_handlers[0]
+        event_reader = ActionEventDataReader(self.react, actor_handler.create_event(context))
+        return self.create_run_core(actor_handler, event_reader)
 
 
     def create_run_core(self, 
         actor_handler: ActionHandler, 
-        entity: str,
-        type: str,
-        action: str,
-        context: Context,
+        event_reader: ActionEventDataReader,
     ):
-        action_context = actor_handler.get_run_context()
-        run = WorkflowRun(self, actor_handler.actor.id, action_context, entity, type, action, context)
-        self.react.log.info(f"ActionHandler: '{self.workflow_config.id}'.'{action_context.actor_id}' receiving action: {format_data(entity=run.entity, type=run.type, action=run.action)}")
+        wctx = WorkflowRunContext(self.react, self.workflow_config, self.variable_handler, actor_handler.get_action_context(), event_reader)
+        run = WorkflowRun(wctx, self.reactor_handlers)
+        self.react.log.info(f"ActionHandler: '{self.workflow_config.id}'.'{actor_handler.actor_config.id}' receiving action: {format_data(entity=wctx.event_reader.entity, type=wctx.event_reader.type, action=wctx.event_reader.action)}")
         self.last_triggered = utcnow()
         self.async_update()
         return run
-
-
-def extract_action_event_data(event: Event) -> Tuple[str, str, str, dict]:
-    entity = event.data.get(ATTR_ENTITY, None)
-    type = event.data.get(ATTR_TYPE, None)
-    action = event.data.get(ATTR_ACTION, None)
-    data = event.data.get(ATTR_DATA, None)
-    return entity, type, action, data
-
-
-def extract_action_handler_data(action_handler: ActionHandler) -> Tuple[str, str, str]:
-    entity = action_handler.value_container.entity
-    type = action_handler.value_container.type
-    action = action_handler.value_container.action
-    return entity, type, action

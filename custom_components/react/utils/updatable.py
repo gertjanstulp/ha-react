@@ -8,6 +8,7 @@ callable_type = Union[Callable[..., Any], Coroutine[Any, Any, Any]]
 
 
 class Updatable:
+    
     def __init__(self, react: ReactBase) -> None:
         self._on_update: Union[list[callable_type], None] = []
         self._react = react
@@ -20,11 +21,11 @@ class Updatable:
 
 
     @callback
-    def async_update(self):
+    def async_update(self) -> None:
         if self._on_update:
             for callable in self._on_update:
                 self._react.hass.add_job(callable,)
 
     
-    def destroy(self):
+    def destroy(self) -> None:
         del self._on_update

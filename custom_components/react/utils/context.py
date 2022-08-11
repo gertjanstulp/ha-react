@@ -2,20 +2,19 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ..base import ReactBase
 from .updatable import Updatable
+from ..base import ReactBase
+from ..utils.events import ActionEventDataReader
 
 if TYPE_CHECKING:
-    from ..lib.runtime import ActionEventDataReader, DynamicDataHandler
+    from ..lib.runtime import TrackHandler
 
 from ..const import (
-    ATTR_ACTION,
     ATTR_ACTOR,
-    ATTR_ENTITY,
-    ATTR_TYPE
 )
 
 class TemplateContextDataProvider(Updatable):
+    
     def __init__(self, react: ReactBase) -> None:
         super().__init__(react)        
 
@@ -25,8 +24,10 @@ class TemplateContextDataProvider(Updatable):
 
 
 class VariableContextDataProvider(TemplateContextDataProvider):
-    def __init__(self, react: ReactBase, variable_handler: DynamicDataHandler) -> None:
+    
+    def __init__(self, react: ReactBase, variable_handler: TrackHandler) -> None:
         super().__init__(react)
+
         self.variable_handler = variable_handler
         variable_handler.on_update(self.async_update)
 
@@ -37,34 +38,32 @@ class VariableContextDataProvider(TemplateContextDataProvider):
 
 
 class ActorTemplateContextDataProvider(TemplateContextDataProvider):
-    def __init__(self, react: ReactBase, action_event_data_reader: ActionEventDataReader) -> None:
+    
+    def __init__(self, react: ReactBase, event_reader: ActionEventDataReader) -> None:
         super().__init__(react)
-        self.action_event_data_reader = action_event_data_reader
+        
+        self.event_reader = event_reader
 
 
     def provide(self, context_data: dict):
-        actor_container = {
-            ATTR_ENTITY: self.action_event_data_reader.actor_entity,
-            ATTR_TYPE: self.action_event_data_reader.actor_type,
-            ATTR_ACTION: self.action_event_data_reader.actor_action,
-        }
-        context_data[ATTR_ACTOR] = actor_container
+        context_data[ATTR_ACTOR] = self.event_reader.to_dict()
 
 
 class TemplateContext(Updatable):
+    
     def __init__(self, react: ReactBase, template_context_data_provider: TemplateContextDataProvider = None) -> None:
         super().__init__(react)
-        self.runtime_variables = {}
+        
         self.template_context_data_provider = template_context_data_provider
         if template_context_data_provider:
             template_context_data_provider.on_update(self.async_update)
 
 
-    def build(self, template_context_data_provider: TemplateContextDataProvider = None):
+    def build(self, target: dict, template_context_data_provider: TemplateContextDataProvider = None) -> None:
         if self.template_context_data_provider:
-            self.template_context_data_provider.provide(self.runtime_variables)
+            self.template_context_data_provider.provide(target)
         if template_context_data_provider:
-            template_context_data_provider.provide(self.runtime_variables)
+            template_context_data_provider.provide(target)
             
 
     def destroy(self):

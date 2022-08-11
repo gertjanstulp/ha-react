@@ -1,0 +1,14 @@
+# Configure a default setup of Home Assistant (frontend, api, etc)
+default_config:
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+logger:
+  default: warn
+  logs:
+    custom_components.react: debug
+
+
+react: !include react.yaml

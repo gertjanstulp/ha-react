@@ -19,3 +19,7 @@ coverage.xml
 htmlcov
 venv
 config
+
+homeassistant
+tests/testing_config/custom_components
+tests/testing_config/known_devices.yaml

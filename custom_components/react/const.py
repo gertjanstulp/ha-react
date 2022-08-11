@@ -29,8 +29,13 @@ PACKAGE_NAME = "custom_components.react"
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 CONF_FRONTEND_REPO_URL = "frontend_repo_url"
+CONF_ENTITY_MAPS = "entity_maps"
+CONF_IMPL = "impl"
 CONF_WORKFLOW = "workflow"
 CONF_STENCIL = "stencil"
+
+# reaction attributes
+ATTR_ID = "id"
 
 # actor attributes
 ATTR_ACTOR = "actor"
@@ -38,6 +43,7 @@ ATTR_ACTOR_ID = "actor_id"
 ATTR_ACTOR_ENTITY = "actor_entity"
 ATTR_ACTOR_TYPE = "actor_type"
 ATTR_ACTOR_ACTION = "actor_action"
+ATTR_ACTOR_DATA = "actor_data"
 
 # reactor attributes
 ATTR_REACTOR = "reactor"
@@ -89,13 +95,42 @@ ATTR_CONTEXT = "context"
 ATTR_PARALLEL = "parallel"
 ATTR_ENABLED = "enabled"
 ATTR_TEMPLATE = "template"
+ATTR_INDEX = "index"
 ATTR_TRIGGER = "trigger"
 ATTR_EVENT = "event"
-ATTR_INDEX = "index"
+
+# impl attributes
+ATTR_NOTIFY = "notify"
+
+# Event custom attributes
+ATTR_EVENT_TYPE = "event_type"
+ATTR_ARGS = "args"
+ATTR_EVENT_MESSAGE = "message"
+ATTR_EVENT_FEEDBACK_ITEMS = "feedback_items"
+ATTR_EVENT_FEEDBACK_ITEM_TITLE = "title"
+ATTR_EVENT_FEEDBACK_ITEM_COMMAND = "command"
+ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT = "acknowledgement"
+
+# Service data attributes
+ATTR_SERVICE_DATA_INLINE_KEYBOARD = "inline_keyboard"
 
 # events
 EVENT_REACT_ACTION = "ev_react_action"
 EVENT_REACT_REACTION = "ev_react_reaction"
+# This is a copy of homeassistants' const, we need this to not depend on telegram_bot module automatically
+EVENT_TELEGRAM_CALLBACK = "telegram_callback"
+
+# event data
+EVENTDATA_COMMAND_REACT = "/react"
+
+# React types
+REACT_TYPE_NOTIFY = "notify"
+
+# React actions
+REACT_ACTION_SEND_MESSAGE = "send_message"
+REACT_ACTION_FEEDBACK = "feedback"
+
+
 
 # signals
 SIGNAL_ITEM_CREATED = "react_item_created"
@@ -103,8 +138,9 @@ SIGNAL_ITEM_UPDATED = "react_item_updated"
 SIGNAL_ITEM_REMOVED = "react_item_removed"
 SIGNAL_PROPERTY_COMPLETE = "signal_property_complete"
 SIGNAL_REACTION_READY = "signal_reaction_ready"
-SIGNAL_REACT = "signal_react_{}"
+# SIGNAL_REACT = "signal_react_{}"
 SIGNAL_DISPATCH = "dispatch"
+SIGNAL_TRACK_UPDATE = "track_update"
 
 # transformer types
 BINARY_SENSOR = "binary_sensor"
@@ -143,26 +179,34 @@ ATTR_LAST_TRIGGERED = "last_triggered"
 
 # trace
 TRACE_PATH_CONDITION = "condition"
-TRACE_PATH_TRIGGER = "trigger"
 TRACE_PATH_PARALLEL = "parallel"
-TRACE_PATH_EVENT = "event"
 TRACE_PATH_ACTOR = "actor"
 TRACE_PATH_REACTOR = "reactor"
+TRACE_PATH_DATA = "data"
+TRACE_PATH_TRIGGER = "trigger"
+TRACE_PATH_EVENT = "event"
+
 
 # dynamic properties
 PROP_ATTR_TYPE_POSTFIX = "_attr_type"
 PROP_TYPE_TEMPLATE = "template"
 PROP_TYPE_VALUE = "value"
 PROP_TYPE_DEFAULT = "default"
+PROP_TYPE_OBJECT = "object"
+PROP_TYPE_LIST = "list"
+PROP_TYPE_MULTI_ITEM = "multiitem"
+
+_EMPTY_ = '_'
+
 
 def is_list_of_strings(obj):
     return bool(obj) and isinstance(obj, list) and all(isinstance(elem, str) for elem in obj)
 
 
-def entities(value: Union[str, list]) -> list[str]:
+def list(value: Union[str, list]) -> list[str]:
     if is_list_of_strings(value):
         return value
-    raise vol.Invalid("Not a valid list of entities")
+    raise vol.Invalid("Not a valid list")
 
 # template tracker type conversion
 def result_as_string(value):
@@ -202,9 +246,9 @@ SCHEDULE_SCHEMA = vol.Schema({
 
 # schema for common elements of actors/reactors
 ENTITY_DATA_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY) : vol.Any(entities, cv.string),
-    vol.Optional(ATTR_TYPE) : cv.string,
-    vol.Optional(ATTR_ACTION) : cv.string,
+    vol.Optional(ATTR_ENTITY) : vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(ATTR_TYPE) : vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(ATTR_ACTION) : vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_CONDITION) : cv.string,
     vol.Optional(ATTR_DATA): dict,
 })
@@ -213,7 +257,7 @@ ENTITY_DATA_SCHEMA = vol.Schema({
 REACTOR_DATA_SCHEMA = ENTITY_DATA_SCHEMA.extend(
     vol.Schema({
         vol.Optional(ATTR_TIMING) : vol.In([REACTOR_TIMING_IMMEDIATE, REACTOR_TIMING_DELAYED, REACTOR_TIMING_SCHEDULED]),
-        vol.Optional(ATTR_DELAY) : cv.string,
+        vol.Optional(ATTR_DELAY) : vol.Coerce(int),
         vol.Optional(ATTR_SCHEDULE) : SCHEDULE_SCHEMA,
         vol.Optional(ATTR_OVERWRITE) : cv.boolean,
         vol.Optional(ATTR_RESET_WORKFLOW) : cv.string,
@@ -249,4 +293,8 @@ WORKFLOW_SCHEMA = vol.Schema({
         vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(CONF_TRACE, default={}): TRACE_CONFIG_SCHEMA,
     }, None)
+})
+
+IMPL_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_NOTIFY): cv.string
 })

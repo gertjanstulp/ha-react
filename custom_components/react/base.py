@@ -15,7 +15,7 @@ from homeassistant.loader import Integration
 
 from .enums import ReactStage, ReactDisabledReason
 from .exceptions import ReactException
-from .lib.config import WorkflowConfiguration
+from .lib.config import ImplConfiguration, WorkflowConfiguration
 from .reactions.base import ReactReaction
 from .reactions.dispatch import ReactDispatch
 from .utils.logger import get_react_logger
@@ -29,6 +29,7 @@ from .const import (
 if TYPE_CHECKING:
     from .tasks.manager import ReactTaskManager
     from .utils.data import ReactData
+    from .impl.impl_factory import ImplFactory
 
 
 @dataclass
@@ -40,12 +41,11 @@ class ReactCore:
 
 
 class ReactReactions:
-    _reactions: list[ReactReaction] = []
-    _reactions_by_id: dict[str, ReactReaction] = {}
-
 
     def __init__(self, react: ReactBase) -> None:
         self.react = react
+        self._reactions: list[ReactReaction] = []
+        self._reactions_by_id: dict[str, ReactReaction] = {}
         
         
     @property
@@ -115,7 +115,6 @@ class ReactReactions:
         
 
     def is_added(self, reaction_id: Union[str, None] = None) -> bool:
-        """Check if a repository is registered."""
         if reaction_id is not None:
             return reaction_id in self._reactions_by_id
         return False
@@ -129,8 +128,8 @@ class ReactReactions:
         return res
 
 
-    def get_by_id(self, id: str) -> ReactReaction:
-        return self._reactions_by_id.get(id, None)
+    def get_by_id(self, reaction_id: str) -> ReactReaction:
+        return self._reactions_by_id.get(reaction_id, None)
 
 
     def get_by_workflow_id(self, workflow_id: str) -> list[ReactReaction]: 
@@ -158,15 +157,18 @@ class ReactConfiguration:
     frontend_repo_url: str = ""
     frontend_repo: str = ""
     plugin_path: str = "www/community/"
-    sidepanel_icon: str = "hacs:hacs"
+    sidepanel_icon: str = "mdi:swap-horizontal-bold"
     sidepanel_title: str = "React"
     theme_path: str = "themes/"
     theme: bool = False
     workflow_config = WorkflowConfiguration()
+    impl_config = ImplConfiguration()
     
+
     def to_json(self) -> str:
         """Return a json string."""
         return asdict(self)
+        
 
     def update_from_dict(self, data: dict) -> None:
         """Set attributes from dicts."""
@@ -177,6 +179,7 @@ class ReactConfiguration:
             self.__setattr__(key, data[key])
 
         self.workflow_config.load(self.config)
+        self.impl_config.load(self.config)
 
 
 @dataclass
@@ -205,21 +208,24 @@ class ReactStatus:
 
 
 class ReactBase():
-    configuration = ReactConfiguration()
-    core = ReactCore()
-    data: Union[ReactData, None] = None
-    dispatcher: Union[ReactDispatch, None] = None
-    frontend_version: Union[str, None] = None
-    hass: Union[HomeAssistant, None] = None
-    integration: Union[Integration, None] = None
-    log: logging.Logger = get_react_logger()
-    reactions: Union[ReactReactions, None] = None 
-    recuring_tasks = []
-    session: Union[ClientSession, None] = None
-    status = ReactStatus()
-    system = ReactSystem()
-    tasks: Union[ReactTaskManager, None] = None
-    version: Union[str, None] = None
+    
+    def __init__(self) -> None:
+        self.configuration = ReactConfiguration()
+        self.core = ReactCore()
+        self.data: Union[ReactData, None] = None
+        self.dispatcher: Union[ReactDispatch, None] = None
+        self.frontend_version: Union[str, None] = None
+        self.hass: Union[HomeAssistant, None] = None
+        self.integration: Union[Integration, None] = None
+        self.log: logging.Logger = get_react_logger()
+        self.reactions: Union[ReactReactions, None] = None 
+        self.recuring_tasks = []
+        self.session: Union[ClientSession, None] = None
+        self.status = ReactStatus()
+        self.system = ReactSystem()
+        self.tasks: Union[ReactTaskManager, None] = None
+        self.version: Union[str, None] = None
+        self.impl_factory: Union[ImplFactory, None] = None
 
     
     @property
