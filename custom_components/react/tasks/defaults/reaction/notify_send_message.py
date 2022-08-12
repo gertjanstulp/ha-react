@@ -38,8 +38,3 @@ class Task(DefaultTask):
             notify_data, 
             event_reader.hass_context
         )
-        # await self.react.hass.services.async_call(
-        #     Platform.NOTIFY, 
-        #     event_reader.entity,
-        #     notify_data, 
-        #     context=event_reader.hass_context)

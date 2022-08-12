@@ -48,7 +48,6 @@ class NotifySendMessageReactionEventDataReader(ReactionEventDataReader):
         
         self.message: Union[str, None] = None
         self.feedback_items_raw: list[dict] = None
-        # self.inline_keyboard: Union[str, None] = None
 
 
     def load(self):

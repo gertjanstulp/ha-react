@@ -326,7 +326,7 @@ workflow:
         type: actor_type_actionable_notification
         action: actor_action_actionable_notification
     reactor:
-      notify:
+      reactor_actionable_notification:
         entity: mobile_group
         type: notify
         action: send_message

@@ -4,6 +4,7 @@ from asyncio import sleep
 from contextlib import asynccontextmanager
 import enum
 from typing import Any, Union
+from custom_components.react.lib.config import Workflow
 from custom_components.react.utils.struct import MultiItem
 
 from homeassistant.components.trace.const import DATA_TRACE
@@ -26,6 +27,10 @@ from custom_components.react.const import (
     ATTR_DATA,
     ATTR_ENTITY,
     ATTR_EVENT,
+    ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT,
+    ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK,
+    ATTR_EVENT_FEEDBACK_ITEMS,
+    ATTR_EVENT_MESSAGE,
     ATTR_FORWARD_ACTION,
     ATTR_ID,
     ATTR_INDEX,
@@ -53,6 +58,7 @@ from custom_components.react.const import (
 from custom_components.react.utils.trace import ReactTrace
 
 from tests.common import DOMAIN_SENSOR
+from tests.plugins.test_notify_plugin import EVENT_TEST_CALLBACK
 
 ACTOR_ID_PREFIX = "actor_"
 ACTOR_ENTITY_PREFIX = "actor_entity_"
@@ -88,6 +94,7 @@ class TstContext():
         self.workflow_config = self.react.configuration.workflow_config.workflows.get(self.workflow_id)
 
         self.notifications = list[dict]()
+        self.acknowledgements = list[dict]()
 
     
     async def async_send_action_event(self, 
@@ -409,7 +416,23 @@ class TstContext():
                 trace_trace_reactor_variables.assert_property_not_none(TRACE_CONTEXT)
             
 
-    def notify(self, entity: str, data: dict, context: Context):
+    async def async_send_notify_feedback_event(self, send_workflow: Workflow, send_reactor_index: int = 0, send_feedback_item_index: int = 0):
+        send_workflow_config_reactor = send_workflow.reactors[send_reactor_index]
+
+        send_workflow_config_reactor_data = send_workflow_config_reactor.data.as_dict()
+        send_feedback_items: list[dict] = send_workflow_config_reactor_data.get(ATTR_EVENT_FEEDBACK_ITEMS)
+        send_feedback_item = send_feedback_items[send_feedback_item_index]
+
+        event_data = {
+            ATTR_ENTITY: send_workflow_config_reactor.entity[0],
+            ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK: send_feedback_item.get(ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK),
+            ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT: send_feedback_item.get(ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT,)
+        }
+        self.hass.bus.async_fire(EVENT_TEST_CALLBACK, event_data)
+        await self.hass.async_block_till_done()
+
+
+    def send_notification(self, entity: str, data: dict, context: Context):
         self.notifications.append({
             ATTR_ENTITY: entity,
             ATTR_DATA: data,
@@ -417,9 +440,57 @@ class TstContext():
         })
 
 
-    def verify_notification_send(self, expected_count: int = 1):
+    def acknowledge_feedback(self, entity: str, feedback: str, acknowledgement: str):
+        self.acknowledgements.append({
+            ATTR_ENTITY: entity,
+            ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK: feedback,
+            ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT: acknowledgement,
+        })
+
+
+    def verify_notification_sent(self, expected_count: int = 1):
         got_count = len(self.notifications)
-        assert len(self.notifications) == expected_count, f"Expected notification count {expected_count}, got {got_count}"
+        assert got_count == expected_count, f"Expected notification count {expected_count}, got {got_count}"
+
+
+    def verify_acknowledgement_sent(self, expected_count: int = 1):
+        got_count = len(self.acknowledgements)
+        assert got_count == expected_count, f"Expected acknowledgement count {expected_count}, got {got_count}"
+
+
+    def verify_notification_data(self, notification_index: int = 0, reactor_index: int = 0):
+        notification = self.notifications[0]
+        notification_data = notification.get(ATTR_DATA, None)
+
+        workflow_config_reactor = self.workflow_config.reactors[reactor_index]
+        workflow_config_reactor_data = workflow_config_reactor.data.as_dict()
+
+        self.assert_attribute(ATTR_ENTITY, workflow_config_reactor, notification)
+        self.assert_attribute(ATTR_EVENT_MESSAGE, workflow_config_reactor_data, notification_data)
+        self.assert_attribute(ATTR_EVENT_FEEDBACK_ITEMS, workflow_config_reactor_data, notification_data)
+
+
+    def verify_acknowledgement_data(self, send_workflow: Workflow, send_reactor_index: int = 0, send_feedback_item_index: int = 0, acknowledgement_index: int = 0):
+        acknowledgement = self.acknowledgements[acknowledgement_index]
+
+        send_workflow_config_reactor = send_workflow.reactors[send_reactor_index]
+        send_workflow_config_reactor_data = send_workflow_config_reactor.data.as_dict()
+        send_feedback_items: list[dict] = send_workflow_config_reactor_data.get(ATTR_EVENT_FEEDBACK_ITEMS)
+        send_feedback_item = send_feedback_items[send_feedback_item_index]
+
+        self.assert_attribute(ATTR_ENTITY, send_workflow_config_reactor, acknowledgement)
+        self.assert_attribute(ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK, send_feedback_item, acknowledgement)
+        self.assert_attribute(ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT, send_feedback_item, acknowledgement)
+
+
+
+    def assert_attribute(self, attr: str, expected: dict, got: dict):    
+        value_expected = expected.get(attr, None)
+        if isinstance(value_expected, MultiItem) and len(value_expected) == 1:
+            value_expected = value_expected.first
+        value_got = got.get(attr, None)
+        assert value_got == value_expected, f"Expected notification value '{value_expected}', got '{value_got}'"
+
 
 
 class TracePath():

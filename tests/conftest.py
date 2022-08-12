@@ -388,10 +388,10 @@ async def person_component(hass: HomeAssistant):
     await hass.async_start()
     await hass.async_block_till_done()
 
-# @pytest.fixture
-# def notify_plugin():
-#     with patch(
-#         "homeassistant.components.network.network.async_load_adapters",
-#         return_value=[mock_adapter],
-#     ):
-#         yield
+@pytest.fixture
+def notify_plugin():
+    with patch(
+        "homeassistant.components.network.network.async_load_adapters",
+        return_value=[mock_adapter],
+    ):
+        yield

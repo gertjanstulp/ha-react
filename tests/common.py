@@ -34,6 +34,8 @@ DOMAIN_SENSOR = "sensor"
 INSTANCES = []
 _LOGGER = logging.getLogger(__name__)
 
+FIXTURE_TEST_NAME = "test_name"
+
 
 @ha.callback
 def ensure_auth_manager_loaded(auth_mgr):

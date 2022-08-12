@@ -1,3 +1,6 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+
 from homeassistant.core import Event, Context
 
 from custom_components.react.base import ReactBase
@@ -6,14 +9,19 @@ from custom_components.react.plugin.notify_plugin import NotifyPlugin, NotifySen
 from custom_components.react.const import (
     ATTR_CONTEXT,
     ATTR_DATA,
-    ATTR_ENTITY, 
+    ATTR_ENTITY,
+    ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT,
+    ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK,
+    ATTR_EVENT_FEEDBACK_ITEMS,
+    ATTR_EVENT_MESSAGE, 
     ATTR_TYPE,
     EVENT_REACT_ACTION,
     NEW_STATE,
     OLD_STATE,
     SIGNAL_PROPERTY_COMPLETE,
 )
-from tests.tst_context import TstContext
+if TYPE_CHECKING:
+    from tests.tst_context import TstContext
 
 EVENT_TEST_CALLBACK = "test_callback"
 
@@ -31,6 +39,7 @@ class TestNotifyPlugin(NotifyPlugin):
         self.test_context = test_context
 
 
+    @property
     def feedback_event(self):
         return EVENT_TEST_CALLBACK
 
@@ -44,11 +53,11 @@ class TestNotifyPlugin(NotifyPlugin):
 
 
     async def async_acknowledge_feedback(self, event_reader: NotifyFeedbackEventDataReader) -> None:
-        await super().async_acknowledge_feedback(event_reader)
+        self.test_context.acknowledge_feedback(event_reader.entity, event_reader.feedback, event_reader.acknowledgement)
 
 
     async def async_send_notification(self, entity: str, data: dict, context: Context):
-        self.test_context.notify(
+        self.test_context.send_notification(
             entity,
             data,
             context
@@ -62,16 +71,23 @@ class TestNotifySendMessageReactionEventDataReader(NotifySendMessageReactionEven
 
 
     def create_plugin_data(self) -> dict:
-        return {}
+        return {
+            ATTR_EVENT_MESSAGE: self.message,
+            ATTR_EVENT_FEEDBACK_ITEMS: self.feedback_items_raw,
+        }
 
     
 class TestNotifyFeedbackEventDataReader(NotifyFeedbackEventDataReader):
     def __init__(self, react: ReactBase, event: Event) -> None:
         super().__init__(react, event)
 
+        self.event_type = event.event_type
+
 
     def load(self):
-        pass
+        self.feedback = self.event.data.get(ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK, None)
+        self.entity = self.event.data.get(ATTR_ENTITY, None)
+        self.acknowledgement = self.event.data.get(ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT, None)
 
 
     def applies(self) -> bool:
