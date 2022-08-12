@@ -179,6 +179,34 @@
       type: actor_type_data_delayed
       action: actor_action_data_delayed
 
+- id: trigger_multiple_actor_data_1
+  alias: Trigger multiple_actor_data_1
+  trigger:
+    platform: state
+    entity_id: input_button.button_trigger_multiple_actor_data_1
+  action:
+    event: ev_react_action
+    event_data:
+      entity: actor_entity_multiple_actor_data
+      type: actor_type_multiple_actor_data
+      action: actor_action_multiple_actor_data
+      data:
+        actor_data_multiple_actor_data: 1
+
+- id: trigger_multiple_actor_data_2
+  alias: Trigger multiple_actor_data_2
+  trigger:
+    platform: state
+    entity_id: input_button.button_trigger_multiple_actor_data_2
+  action:
+    event: ev_react_action
+    event_data:
+      entity: actor_entity_multiple_actor_data
+      type: actor_type_multiple_actor_data
+      action: actor_action_data
+      data:
+        actor_data_multiple_actor_data: 2
+
 - id: trigger_full_stencil
   alias: Trigger full_stencil
   trigger:

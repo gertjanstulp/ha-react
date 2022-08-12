@@ -17,6 +17,8 @@ views:
           - entity: input_button.button_trigger_multiple_entities_2
           - entity: input_button.button_trigger_data
           - entity: input_button.button_trigger_data_delayed
+          - entity: input_button.button_trigger_multiple_actor_data_1
+          - entity: input_button.button_trigger_multiple_actor_data_2
           - entity: input_button.button_trigger_full_stencil
           - entity: input_button.button_trigger_partial_stencil
           - entity: input_button.button_trigger_templated
