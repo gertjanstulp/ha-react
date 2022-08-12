@@ -4,6 +4,7 @@ pytest
 pytest-cov
 pytest-homeassistant-custom-component
 pyyaml
+deepdiff
 
 aiohttp_cors
 Pillow

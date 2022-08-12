@@ -426,7 +426,7 @@ async def test_react_data_event(hass: HomeAssistant, test_name, react_component)
         tc.verify_reaction_entity_not_found()
         await tc.async_verify_reaction_event_received()
         tc.verify_reaction_event_data(expected_data=data_out)
-        tc.verify_trace_record()
+        tc.verify_trace_record(expected_runtime_actor_data=data_in, expected_runtime_reactor_data=data_out)
 
 
 @pytest.mark.parametrize(FIXTURE_TEST_NAME, ["data_delayed"])
@@ -455,6 +455,52 @@ async def test_react_data_delayed_event(hass: HomeAssistant, test_name, react_co
         tc.verify_reaction_entity_data()
         tc.verify_reaction_internal_data(expected_data=data_out)
         tc.verify_trace_record()
+
+
+@pytest.mark.parametrize(FIXTURE_TEST_NAME, ["multiple_actor_data"])
+async def test_react_multiple_actor_data_event_1(hass: HomeAssistant, test_name, react_component):
+    """
+    Test for workflow with multiple actor data where action data does match first actor data:
+    - No reaction entity should be found
+    - An event should be received
+    - Event data should match configuration
+    - Trace data should match configuration
+    """
+
+    await react_component.async_setup(test_name)
+    
+    tc = TstContext(hass, test_name)
+    data_in: dict = {"actor_data_multiple_actor_data" : 1}
+    async with tc.async_listen_reaction_event():
+        tc.verify_reaction_entity_not_found()
+        await tc.async_send_action_event(data=data_in)
+        tc.verify_reaction_entity_not_found()
+        await tc.async_verify_reaction_event_received()
+        tc.verify_reaction_event_data()
+        tc.verify_trace_record()
+
+
+@pytest.mark.parametrize(FIXTURE_TEST_NAME, ["multiple_actor_data"])
+async def test_react_multiple_actor_data_event_2(hass: HomeAssistant, test_name, react_component):
+    """
+    Test for workflow with multiple actor data where action data does match second actor data:
+    - No reaction entity should be found
+    - An event should be received
+    - Event data should match configuration
+    - Trace data should match configuration
+    """
+
+    await react_component.async_setup(test_name)
+    
+    tc = TstContext(hass, test_name)
+    data_in: dict = {"actor_data_multiple_actor_data" : 2}
+    async with tc.async_listen_reaction_event():
+        tc.verify_reaction_entity_not_found()
+        await tc.async_send_action_event(data=data_in)
+        tc.verify_reaction_entity_not_found()
+        await tc.async_verify_reaction_event_received()
+        tc.verify_reaction_event_data()
+        tc.verify_trace_record(actor_data_index=1)
 
 
 @pytest.mark.parametrize(FIXTURE_TEST_NAME, ["full_stencil"])

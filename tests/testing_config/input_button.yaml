@@ -20,6 +20,10 @@ button_trigger_data:
   name: Data
 button_trigger_data_delayed:
   name: Data delayed
+button_trigger_multiple_actor_data_1:
+  name: Multiple actor data 1
+button_trigger_multiple_actor_data_2:
+  name: Multiple actor data 2
 button_trigger_multiple_reactor:
   name: Multiple reactor
 button_trigger_full_stencil:

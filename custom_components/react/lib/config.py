@@ -94,7 +94,12 @@ class Ctor(CtorConfig):
         if ATTR_CONDITION in self.names and self.condition != None:
             result[ATTR_CONDITION] = { ATTR_TEMPLATE: self.condition}
         if self.data is not None:
-            result[self.moniker][ATTR_DATA] = self.data.as_dict()   
+            result_data = [ data_item.as_dict() for data_item in self.data ]
+            if len(result_data) == 0:
+                result_data = None
+            elif len(result_data) == 1:
+                result_data = result_data[0]
+            result[self.moniker][ATTR_DATA] = result_data
         return result
         
 
@@ -177,10 +182,6 @@ class Workflow():
         result[ATTR_ACTOR] = []
         result[ATTR_REACTOR] = []
         for index, actor in enumerate(self.actors):
-            # if (actor_id is None or
-            #     not actor.is_list_item or
-            #     actor.id == actor_id):
-            #     result[ATTR_ACTOR].append(actor.as_dict(index))
             result[ATTR_ACTOR].append(actor.as_dict(index))
         for index, reactor in enumerate(self.reactors):
             result[ATTR_REACTOR].append(reactor.as_dict(index))

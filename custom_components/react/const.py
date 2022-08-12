@@ -248,7 +248,7 @@ ENTITY_DATA_SCHEMA = vol.Schema({
     vol.Optional(ATTR_TYPE) : vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_ACTION) : vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_CONDITION) : cv.string,
-    vol.Optional(ATTR_DATA): dict,
+    vol.Optional(ATTR_DATA): vol.All(cv.ensure_list, [dict]),
 })
 
 # schema for reactor elements

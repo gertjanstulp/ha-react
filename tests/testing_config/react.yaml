@@ -205,6 +205,21 @@ workflow:
           data1: 1
           data2: True
 
+  workflow_multiple_actor_data:
+    actor:
+      actor_multiple_actor_data:
+        entity: actor_entity_multiple_actor_data
+        type: actor_type_multiple_actor_data
+        action: actor_action_multiple_actor_data
+        data:
+          - actor_data_multiple_actor_data: 1
+          - actor_data_multiple_actor_data: 2
+    reactor:
+      reactor_multiple_actor_data:
+        entity: reactor_entity_multiple_actor_data
+        type: reactor_type_multiple_actor_data
+        action: reactor_action_multiple_actor_data
+
   workflow_full_stencil:
     stencil: full_stencil
 
