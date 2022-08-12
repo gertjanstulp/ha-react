@@ -135,14 +135,22 @@ class ActionHandler(BaseHandler):
             else:
                 result = event_reader.action in config_action
             
-            if result and self.actor_runtime.data and not event_reader.data:
+            if result and self.actor_runtime.data and len(self.actor_runtime.data) > 0 and not event_reader.data:
                 result = False
 
             if result and event_reader.data and self.actor_runtime.data:
-                for name in self.actor_runtime.data.names:
-                    if not name in event_reader.data or event_reader.data[name] != self.actor_runtime.data.get(name):
-                        result = False
+                match: bool
+                for data_item in self.actor_runtime.data:
+                    match = True
+                    for name in data_item.names:
+                        if not name in event_reader.data or event_reader.data[name] != data_item.get(name):
+                            match = False
+                            break
+                    if match:
                         break
+
+                if not match:
+                    result = False
 
         if result and not self.enabled:
             self.runtime.react.log.info(f"ActionHandler: '{self.runtime.workflow_config.id}'.'{self.actor_config.id}' skipping (workflow is disabled)")
@@ -167,7 +175,7 @@ class ActionHandler(BaseHandler):
             ATTR_ENTITY: self.actor_runtime.entity.first,
             ATTR_TYPE: self.actor_runtime.type.first,
             ATTR_ACTION: self.actor_runtime.action.first,
-            ATTR_DATA: self.actor_runtime.data.as_dict(),
+            ATTR_DATA: self.actor_runtime.data[0].as_dict() if self.actor_runtime.data and len(self.actor_runtime.data) > 0 else None,
         }
         return Event(EVENT_REACT_ACTION, data, context=context)
 
@@ -237,7 +245,7 @@ def create_reactions(react: ReactBase, wctx: WorkflowRunContext, reactor_config:
     result: list[ReactReaction] = []
     reactor_action = [wctx.event_reader.action] if reactor_runtime.forward_action else reactor_runtime.action
 
-    for entity, type, action in product(reactor_runtime.entity or [_EMPTY_], reactor_runtime.type or [_EMPTY_], reactor_action or [_EMPTY_]):
+    for entity, type, action, data_item in product(reactor_runtime.entity or [_EMPTY_], reactor_runtime.type or [_EMPTY_], reactor_action or [_EMPTY_], reactor_runtime.data or [_EMPTY_]):
         reaction = ReactReaction(react)
 
         reaction.data.workflow_id = wctx.workflow_id
@@ -255,7 +263,7 @@ def create_reactions(react: ReactBase, wctx: WorkflowRunContext, reactor_config:
         reaction.data.overwrite = reactor_runtime.overwrite
         reaction.data.forward_action = reactor_runtime.forward_action
         reaction.data.datetime = calculate_reaction_datetime(reactor_runtime.timing, reactor_runtime.schedule, reactor_runtime.delay)
-        reaction.data.data = reactor_runtime.data.as_dict() if reactor_runtime.data else None
+        reaction.data.data = data_item.as_dict() if data_item != _EMPTY_ else None
 
         result.append(reaction)
 

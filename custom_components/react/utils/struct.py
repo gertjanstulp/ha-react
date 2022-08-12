@@ -49,6 +49,8 @@ class DynamicData():
         result = self.get(key, default)
         if isinstance(result, MultiItem) and len(result) == 1:
             result = result.first
+        elif isinstance(result, list) and len(result) == 1:
+            result = result[0]
         return result
 
 
@@ -166,7 +168,7 @@ class CtorConfig(DynamicData):
         self.type: Union[MultiItem, str] = None
         self.action: Union[MultiItem, str] = None
         self.condition: str = None
-        self.data: DynamicData = None
+        self.data: list[DynamicData] = None
 
 
 
@@ -179,7 +181,7 @@ class CtorRuntime(DynamicData):
         self.type: MultiItem = None
         self.action: MultiItem = None
         self.condition: bool = None
-        self.data: DynamicData = None
+        self.data: list[DynamicData] = None
         
         self.ensure(ATTR_CONDITION, True)
 

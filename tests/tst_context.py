@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from asyncio import sleep
 from contextlib import asynccontextmanager
-from typing import Any
-from custom_components.react.lib.config import Workflow
-from custom_components.react.utils.struct import MultiItem
+from types import DynamicClassAttribute
+from deepdiff import DeepDiff
+from typing import Any, Union
+from custom_components.react.lib.config import Reactor, Workflow
+from custom_components.react.utils.struct import DynamicData, MultiItem
 
 from homeassistant.components.trace.const import DATA_TRACE
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_STATE, STATE_ON
@@ -160,17 +162,27 @@ class TstContext():
 
         workflow_config_reactor = self.workflow_config.reactors[reactor_index]
 
-        entity_got = reaction_entity.attributes.get(ATTR_ENTITY, None)
-        entity_expected = expected_entity if expected_entity else workflow_config_reactor.entity[entity_index]
-        assert entity_got == entity_expected, f"Expected reaction entity '{entity_expected}', got '{entity_got}'"
+        self.verify_reaction_entity_data_item(ATTR_ENTITY, reaction_entity, workflow_config_reactor.entity, expected_entity, entity_index)
+        self.verify_reaction_entity_data_item(ATTR_TYPE, reaction_entity, workflow_config_reactor.type, expected_type, type_index)
+        self.verify_reaction_entity_data_item(ATTR_ACTION, reaction_entity, workflow_config_reactor.action, expected_action, action_index)
 
-        type_got = reaction_entity.attributes.get(ATTR_TYPE, None)
-        type_expected = expected_type if expected_type else workflow_config_reactor.type[type_index]
-        assert type_got == type_expected, f"Expected reaction type '{type_expected}', got '{type_got}'"
+        # entity_got = reaction_entity.attributes.get(ATTR_ENTITY, None)
+        # entity_expected = expected_entity or workflow_config_reactor.entity[entity_index]
+        # assert entity_got == entity_expected, f"Expected reaction entity '{entity_expected}', got '{entity_got}'"
 
-        action_got = reaction_entity.attributes.get(ATTR_ACTION, None)
-        action_expected = expected_action if expected_action else workflow_config_reactor.action[action_index]
-        assert action_got == action_expected, f"Expected reaction action '{action_expected}', got '{action_got}'"
+        # type_got = reaction_entity.attributes.get(ATTR_TYPE, None)
+        # type_expected = expected_type or workflow_config_reactor.type[type_index]
+        # assert type_got == type_expected, f"Expected reaction type '{type_expected}', got '{type_got}'"
+
+        # action_got = reaction_entity.attributes.get(ATTR_ACTION, None)
+        # action_expected = expected_action or workflow_config_reactor.action[action_index]
+        # assert action_got == action_expected, f"Expected reaction action '{action_expected}', got '{action_got}'"
+
+    
+    def verify_reaction_entity_data_item(self, attr: str, reaction_entity: State, multi_item: MultiItem, expected_value: Any = None, item_index: int = 0):
+        got_value = reaction_entity.attributes.get(attr, None)
+        expected_value = expected_value or multi_item[item_index]
+        assert got_value == expected_value, f"Expected reaction {attr} '{expected_value}', got '{got_value}'"
 
 
     def verify_reaction_internal_data(self, expected_data: dict = None):
@@ -218,21 +230,32 @@ class TstContext():
 
         workflow_config_reactor = self.workflow_config.reactors[reactor_index]
 
-        entity_got = event.data.get(ATTR_ENTITY, None)
-        entity_expected = expected_entity if expected_entity else workflow_config_reactor.entity[entity_index]
-        assert entity_got == entity_expected, f"Expected event entity '{entity_expected}', got '{entity_got}'"
-        
-        type_got = event.data.get(ATTR_TYPE, None)
-        type_expected = expected_type if expected_type else workflow_config_reactor.type[type_index]
-        assert type_got == type_expected, f"Expected event type '{type_expected}', got '{type_got}'"
-        
-        action_got = event.data.get(ATTR_ACTION, None)
-        action_expected = expected_action if expected_action else workflow_config_reactor.action[action_index]
-        assert action_got == action_expected, f"Expected event action '{action_expected}', got '{action_got}'"
+        self.verify_reaction_event_data_item(ATTR_ENTITY, event, workflow_config_reactor.entity, expected_entity, entity_index)
+        self.verify_reaction_event_data_item(ATTR_TYPE, event, workflow_config_reactor.type, expected_type, type_index)
+        self.verify_reaction_event_data_item(ATTR_ACTION, event, workflow_config_reactor.action, expected_action, action_index)
+        self.verify_reaction_event_data_item(ATTR_DATA, event, workflow_config_reactor.data, expected_data, -1)
 
-        data_got = event.data.get(ATTR_DATA, None)
-        data_expected = expected_data
-        assert data_got == data_expected, f"Expected event data '{data_expected}', got '{data_got}'"
+        # entity_got = event.data.get(ATTR_ENTITY, None)
+        # entity_expected = expected_entity if expected_entity else workflow_config_reactor.entity[entity_index]
+        # assert entity_got == entity_expected, f"Expected event entity '{entity_expected}', got '{entity_got}'"
+        
+        # type_got = event.data.get(ATTR_TYPE, None)
+        # type_expected = expected_type if expected_type else workflow_config_reactor.type[type_index]
+        # assert type_got == type_expected, f"Expected event type '{type_expected}', got '{type_got}'"
+        
+        # action_got = event.data.get(ATTR_ACTION, None)
+        # action_expected = expected_action if expected_action else workflow_config_reactor.action[action_index]
+        # assert action_got == action_expected, f"Expected event action '{action_expected}', got '{action_got}'"
+
+        # data_got = event.data.get(ATTR_DATA, None)
+        # data_expected = expected_data
+        # assert data_got == data_expected, f"Expected event data '{data_expected}', got '{data_got}'"
+
+
+    def verify_reaction_event_data_item(self, attr: str, event: Event, multi_item_or_list: Union[MultiItem, list], expected_value: Any = None, item_index: int = 0):
+        got_value = event.data.get(attr, None)
+        expected_value = expected_value or (multi_item_or_list[item_index] if multi_item_or_list else None)
+        assert DeepDiff(got_value, expected_value) == {}, f"Expected event entity '{expected_value}', got '{got_value}'"
 
 
     def verify_trace_record(self, 
@@ -240,12 +263,15 @@ class TstContext():
         actor_entity_index = 0,
         actor_type_index = 0,
         actor_action_index = 0,
+        actor_data_index = 0,
         expected_runtime_actor_entity: str = None, 
         expected_runtime_actor_type: str = None, 
         expected_runtime_actor_action: str = None, 
+        expected_runtime_actor_data: dict = None,
         expected_runtime_reactor_entity: list[str] = None, 
         expected_runtime_reactor_type: list[str] = None, 
         expected_runtime_reactor_action: list[str] = None, 
+        expected_runtime_reactor_data: dict = None,
         expected_result_message: str = None,
         expected_actor_condition_result: bool = True,
         expected_reactor_condition_results: list[bool] = None
@@ -271,6 +297,8 @@ class TstContext():
         trace.assert_property_match(TRACE_DOMAIN, DOMAIN)
         trace.assert_property_match(TRACE_ITEM_ID, self.workflow_id)
         
+        ########## Trace config ##########
+
         trace_config = trace.assert_property_not_none(TRACE_CONFIG)
         trace_config.assert_property_match(ATTR_ID, self.workflow_id)
         
@@ -288,7 +316,7 @@ class TstContext():
             if workflow_config_actor.action:
                 trace_config_trigger.assert_property_match(ATTR_ACTION, workflow_config_actor.action)
             if workflow_config_actor.data:
-                trace_config_trigger.assert_property_match(ATTR_DATA, workflow_config_actor.data.as_dict())
+                trace_config_trigger.assert_property_match(ATTR_DATA, workflow_config_actor.data)
             if workflow_config_actor.condition:
                 trace_config_actor_condition = trace_config_actor.assert_property_not_none(ATTR_CONDITION)
                 trace_config_actor_condition.assert_property_match(ATTR_TEMPLATE, workflow_config_actor.condition)
@@ -301,6 +329,7 @@ class TstContext():
             trace_config_event = trace_config_reactor.assert_property_not_none(ATTR_EVENT)
             trace_config_event.assert_property_match(ATTR_ID, workflow_config_reactor.id)
             trace_config_event.assert_property_match(ATTR_TIMING, workflow_config_reactor.timing)
+            trace_config_event.assert_property_match(ATTR_DATA, workflow_config_reactor.data)
             if workflow_config_reactor.reset_workflow:
                 trace_config_event.assert_property_match(ATTR_RESET_WORKFLOW, workflow_config_reactor.reset_workflow)
             else:
@@ -308,6 +337,8 @@ class TstContext():
                 trace_config_event.assert_property_match(ATTR_TYPE, workflow_config_reactor.type[0])
                 if not workflow_config_reactor.forward_action:
                     trace_config_event.assert_property_match(ATTR_ACTION, workflow_config_reactor.action[0])
+
+        ########## Trace data ##########
 
         # Test for actor data and vars in trace data
         trace_trace = trace.assert_property_not_none(TRACE_TRACE)
@@ -332,6 +363,8 @@ class TstContext():
             trace_trace_actor_vars_variables_actor.assert_property_match(ATTR_TYPE, expected_runtime_actor_type or workflow_config_actor.type[actor_type_index])
         if workflow_config_actor.action:
             trace_trace_actor_vars_variables_actor.assert_property_match(ATTR_ACTION, expected_runtime_actor_action or workflow_config_actor.action[actor_action_index])
+        if workflow_config_actor.data:
+            trace_trace_actor_vars_variables_actor.assert_property_match(ATTR_DATA, expected_runtime_actor_data or workflow_config_actor.data[actor_data_index])
         
         trace_trace_actor_vars_actor = trace_trace_actor_vars.assert_property_not_none(ATTR_ACTOR)
         trace_trace_actor_vars_actor.assert_property_match(ATTR_ID, workflow_config_actor.id)
@@ -401,6 +434,7 @@ class TstContext():
                 trace_trace_reactor_result_reaction.assert_property_match(ATTR_REACTOR_ENTITY, expected_runtime_reactor_entity[i] or (_EMPTY_ if workflow_config_reactor.reset_workflow else workflow_config_reactor.entity[0]))
                 trace_trace_reactor_result_reaction.assert_property_match(ATTR_REACTOR_TYPE, expected_runtime_reactor_type[i] or (_EMPTY_ if workflow_config_reactor.reset_workflow else workflow_config_reactor.type[0]))
                 trace_trace_reactor_result_reaction.assert_property_match(ATTR_REACTOR_ACTION, expected_runtime_reactor_action[i] or (_EMPTY_ if workflow_config_reactor.reset_workflow else expected_runtime_actor_action if workflow_config_reactor.forward_action else workflow_config_reactor.action[0]))
+                trace_trace_reactor_result_reaction.assert_property_match(ATTR_DATA, expected_runtime_reactor_data or (None if workflow_config_reactor.reset_workflow else workflow_config_reactor.data[0] if workflow_config_reactor.data else None))
                 trace_trace_reactor_result_reaction.assert_property_match(ATTR_RESET_WORKFLOW, workflow_config_reactor.reset_workflow)
                 trace_trace_reactor_result_reaction.assert_property_match(ATTR_OVERWRITE, workflow_config_reactor.overwrite)
                 trace_trace_reactor_result_reaction.assert_property_match(ATTR_FORWARD_ACTION, workflow_config_reactor.forward_action)
@@ -411,10 +445,10 @@ class TstContext():
                 trace_trace_reactor_variables.assert_property_not_none(TRACE_CONTEXT)
             
 
-    async def async_send_notify_feedback_event(self, send_workflow: Workflow, send_reactor_index: int = 0, send_feedback_item_index: int = 0):
+    async def async_send_notify_feedback_event(self, send_workflow: Workflow, send_reactor_index: int = 0, send_reactor_data_index: int = 0, send_feedback_item_index: int = 0):
         send_workflow_config_reactor = send_workflow.reactors[send_reactor_index]
 
-        send_workflow_config_reactor_data = send_workflow_config_reactor.data.as_dict()
+        send_workflow_config_reactor_data = send_workflow_config_reactor.data[send_reactor_data_index].as_dict()
         send_feedback_items: list[dict] = send_workflow_config_reactor_data.get(ATTR_EVENT_FEEDBACK_ITEMS)
         send_feedback_item = send_feedback_items[send_feedback_item_index]
 
@@ -453,23 +487,23 @@ class TstContext():
         assert got_count == expected_count, f"Expected acknowledgement count {expected_count}, got {got_count}"
 
 
-    def verify_notification_data(self, notification_index: int = 0, reactor_index: int = 0):
+    def verify_notification_data(self, notification_index: int = 0, reactor_index: int = 0, reactor_data_index: int = 0):
         notification = self.notifications[0]
         notification_data = notification.get(ATTR_DATA, None)
 
         workflow_config_reactor = self.workflow_config.reactors[reactor_index]
-        workflow_config_reactor_data = workflow_config_reactor.data.as_dict()
+        workflow_config_reactor_data = workflow_config_reactor.data[reactor_data_index].as_dict()
 
         self.assert_attribute(ATTR_ENTITY, workflow_config_reactor, notification)
         self.assert_attribute(ATTR_EVENT_MESSAGE, workflow_config_reactor_data, notification_data)
         self.assert_attribute(ATTR_EVENT_FEEDBACK_ITEMS, workflow_config_reactor_data, notification_data)
 
 
-    def verify_acknowledgement_data(self, send_workflow: Workflow, send_reactor_index: int = 0, send_feedback_item_index: int = 0, acknowledgement_index: int = 0):
+    def verify_acknowledgement_data(self, send_workflow: Workflow, send_reactor_index: int = 0, send_reactor_data_index: int = 0, send_feedback_item_index: int = 0, acknowledgement_index: int = 0):
         acknowledgement = self.acknowledgements[acknowledgement_index]
 
         send_workflow_config_reactor = send_workflow.reactors[send_reactor_index]
-        send_workflow_config_reactor_data = send_workflow_config_reactor.data.as_dict()
+        send_workflow_config_reactor_data = send_workflow_config_reactor.data[send_reactor_data_index].as_dict()
         send_feedback_items: list[dict] = send_workflow_config_reactor_data.get(ATTR_EVENT_FEEDBACK_ITEMS)
         send_feedback_item = send_feedback_items[send_feedback_item_index]
 
@@ -497,14 +531,28 @@ class TracePath():
     
     def assert_property_match(self, key: str, value_expected: Any, name: str = None):
         value_got = self.owner.get(key, None)
+        if isinstance(value_got, DynamicData):
+            value_got = value_got.as_dict()
         match = False
+        used_value_expected = value_expected
         if isinstance(value_expected, str) and isinstance(value_got, MultiItem):
-            match = value_expected == value_got.first and len(value_got) == 1
+            match = used_value_expected == value_got.first and len(value_got) == 1
         elif isinstance(value_expected, MultiItem) and isinstance(value_got, str):
-            match = value_expected.first == value_got and len(value_expected) == 1
+            used_value_expected = value_expected.first
+            match = used_value_expected == value_got and len(value_expected) == 1
+        elif isinstance(value_expected, list) and isinstance(value_got, dict):
+            used_value_expected = value_expected[0]
+            if isinstance(used_value_expected, DynamicData):
+                used_value_expected = used_value_expected.as_dict()
+            match = DeepDiff(used_value_expected, value_got) == {} and len(value_expected) == 1
+        elif isinstance(value_expected, list) and isinstance(value_got, list):
+            used_value_expected = [ x.as_dict() if isinstance(x, DynamicData) else x for x in value_expected ]
+            match = DeepDiff(used_value_expected, value_got) == {}
         else:
-            match = value_expected == value_got
-        assert match, self.assert_message_match(key, name, value_expected, value_got)
+            if isinstance(used_value_expected, DynamicData):
+                used_value_expected = used_value_expected.as_dict()
+            match = DeepDiff(used_value_expected, value_got) == {}
+        assert match, self.assert_message_match(key, name, used_value_expected, value_got)
 
     
     def assert_property_not_none(self, key: str, name: str = None) -> TracePath:
