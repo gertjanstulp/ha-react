@@ -200,7 +200,7 @@ workflow:
         type: reactor_type_data_delayed
         action: reactor_action_data_delayed
         timing: delayed
-        delay: 60
+        delay: "{{ 60 }}"
         data:
           data1: 1
           data2: True

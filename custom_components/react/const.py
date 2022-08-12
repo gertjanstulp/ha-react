@@ -255,7 +255,7 @@ ENTITY_DATA_SCHEMA = vol.Schema({
 REACTOR_DATA_SCHEMA = ENTITY_DATA_SCHEMA.extend(
     vol.Schema({
         vol.Optional(ATTR_TIMING) : vol.In([REACTOR_TIMING_IMMEDIATE, REACTOR_TIMING_DELAYED, REACTOR_TIMING_SCHEDULED]),
-        vol.Optional(ATTR_DELAY) : vol.Coerce(int),
+        vol.Optional(ATTR_DELAY) : vol.Any(vol.Coerce(int), cv.string),
         vol.Optional(ATTR_SCHEDULE) : SCHEDULE_SCHEMA,
         vol.Optional(ATTR_OVERWRITE) : cv.boolean,
         vol.Optional(ATTR_RESET_WORKFLOW) : cv.string,
