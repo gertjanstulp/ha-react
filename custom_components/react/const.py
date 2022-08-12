@@ -27,6 +27,7 @@ TITLE = 'React'
 DOMAIN = 'react'
 PACKAGE_NAME = "custom_components.react"
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
+ICON = "mdi:swap-horizontal-bold"
 
 CONF_FRONTEND_REPO_URL = "frontend_repo_url"
 CONF_ENTITY_MAPS = "entity_maps"

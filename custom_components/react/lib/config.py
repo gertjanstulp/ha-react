@@ -39,6 +39,7 @@ from ..const import (
     CONF_TRACE,
     CONF_WORKFLOW,
     ENTITY_ID_FORMAT,
+    ICON,
     REACTOR_TIMING_DELAYED,
     REACTOR_TIMING_IMMEDIATE,
     REACTOR_TIMING_SCHEDULED
@@ -140,7 +141,7 @@ class Workflow():
         self.entity_id = ENTITY_ID_FORMAT.format(workflow_id)
         self.stencil = config.get(ATTR_STENCIL, {})
         self.friendly_name = config.get(ATTR_FRIENDLY_NAME, None)
-        self.icon = config.get(CONF_ICON, None)
+        self.icon = config.get(CONF_ICON, ICON)
         self.trace_config = config.get(CONF_TRACE, None)
         self.variables = DynamicData(config.get(ATTR_VARIABLES, {}))
         self.actors: Union[list[Actor], None] = None
