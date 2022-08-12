@@ -1,0 +1,4 @@
+test_group:
+  name: test_group
+  entities:
+    - binary_sensor.test_group

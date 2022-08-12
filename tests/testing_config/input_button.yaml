@@ -1,0 +1,47 @@
+button_trigger_immediate:
+  name: Immediate
+button_trigger_delayed:
+  name: Delayed
+button_trigger_scheduled:
+  name: Scheduled
+button_trigger_reset:
+  name: Reset
+button_trigger_forward_action:
+  name: Forward action
+button_trigger_trace_1:
+  name: Trace 1
+button_trigger_trace_2:
+  name: Trace 2
+button_trigger_multiple_actor_1:
+  name: Multiple actor 1
+button_trigger_multiple_actor_2:
+  name: Multiple actor 2
+button_trigger_data:
+  name: Data
+button_trigger_data_delayed:
+  name: Data delayed
+button_trigger_multiple_reactor:
+  name: Multiple reactor
+button_trigger_full_stencil:
+  name: Full stencil
+button_trigger_partial_stencil:
+  name: Partial stencil
+button_trigger_templated:
+  name: Templated
+button_trigger_templated_state:
+  name: Templated state
+button_trigger_multiple_entities_1:
+  name: Multiple entities 1
+button_trigger_multiple_entities_2:
+  name: Multiple entities 2
+button_trigger_actor_condition:
+  name: Actor condition
+button_trigger_reactor_condition:
+  name: Reactor condition
+button_trigger_device_tracker_home:
+  name: Device tracker home
+button_trigger_device_tracker_not_home:
+  name: Device tracker not_home
+button_trigger_actionable_notification:
+  name: Actionable notification
+

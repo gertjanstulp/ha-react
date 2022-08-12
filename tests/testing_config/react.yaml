@@ -1,0 +1,383 @@
+# frontend_repo_url: http://localhost:5000
+
+entity_maps:
+  2095689255: mobile_user
+  -719737734: mobile_group
+
+plugin:
+  notify: custom_components.react.plugin.telegram.telegram_notify_plugin
+
+stencil:
+  full_stencil:
+    actor:
+      actor_full_stencil:
+        entity: actor_entity_full_stencil
+        type: actor_type_full_stencil
+        action: actor_action_full_stencil
+    reactor: 
+      reactor_full_stencil:
+        entity: reactor_entity_full_stencil
+        type: reactor_type_full_stencil
+        action: reactor_action_full_stencil
+        data:
+          test: 37
+
+  partial_stencil:
+    reactor: 
+      reactor_partial_stencil:
+        type: reactor_type_partial_stencil
+        action: reactor_action_partial_stencil
+
+workflow:
+  workflow_immediate:
+    actor:
+      actor_immediate:
+        entity: actor_entity_immediate
+        type: actor_type_immediate
+        action: actor_action_immediate
+    reactor: 
+      reactor_immediate:
+        entity: reactor_entity_immediate
+        type: reactor_type_immediate
+        action: reactor_action_immediate
+
+  workflow_delayed:
+    actor:
+      actor_delayed:
+        entity: actor_entity_delayed
+        type: actor_type_delayed
+        action: actor_action_delayed
+    reactor:
+      reactor_delayed: 
+        entity: reactor_entity_delayed
+        type: reactor_type_delayed
+        action: reactor_action_delayed
+        timing: delayed
+        delay: 3
+        overwrite: True
+
+  workflow_scheduled:
+    actor: 
+      actor_scheduled:
+        entity: actor_entity_scheduled
+        type: actor_type_scheduled
+        action: actor_action_scheduled
+    reactor: 
+      reactor_scheduled: 
+        entity: reactor_entity_scheduled
+        type: reactor_type_scheduled
+        action: reactor_action_scheduled
+        timing: scheduled
+        overwrite: True
+        schedule:
+          at: "12:34:56"
+          weekdays:
+            - fri
+
+  workflow_reset:
+    actor: 
+      actor_reset:
+        entity: actor_entity_reset
+        type: actor_type_reset
+        action: actor_action_reset
+    reactor:
+      reactor_reset_1:
+        reset_workflow: workflow_delayed
+      reactor_reset_2:
+        reset_workflow: workflow_scheduled
+
+  workflow_forward_action:
+    actor:
+      actor_forward_action:
+        entity: actor_entity_forward_action
+        type: actor_type_forward_action
+    reactor: 
+      reactor_forward_action:
+        entity: reactor_entity_forward_action
+        type: reactor_type_forward_action
+        forward_action: True
+
+  workflow_trace:
+    actor:
+      actor_trace_1:
+        entity: actor_entity_trace_1
+        type: actor_type_trace_1
+        action: actor_action_trace_1
+        condition: "{{ is_state('input_boolean.test_trace', 'off') }}"
+      actor_trace_2:
+        entity: actor_entity_trace_2
+        type: actor_type_trace_2
+        action: actor_action_trace_2
+    reactor: 
+      reactor_trace_1:
+        entity: reactor_entity_trace_1
+        type: reactor_type_trace_1
+        action: reactor_action_trace_1
+        condition: "{{ is_state('input_boolean.test_trace', 'on') }}"
+      reactor_trace_2:
+        entity: reactor_entity_trace_2
+        type: reactor_type_trace_2
+        action: reactor_action_trace_2
+
+  workflow_multiple_actor:
+    actor:
+      actor_multiple_actor_1:
+        entity: actor_entity_multiple_actor_1
+        type: actor_type_multiple_actor_1
+        action: actor_action_multiple_actor_1
+      actor_multiple_actor_2:
+        entity: actor_entity_multiple_actor_2
+        type: actor_type_multiple_actor_2
+        action: actor_action_multiple_actor_2
+    reactor: 
+      reactor_multiple_actor:
+        entity: reactor_entity_multiple_actor
+        type: reactor_type_multiple_actor
+        action: reactor_action_multiple_actor
+
+  workflow_multiple_reactor:
+    actor:
+      actor_multiple_reactor:
+        entity: actor_entity_multiple_reactor
+        type: actor_type_multiple_reactor
+        action: actor_action_multiple_reactor
+    reactor: 
+      actor_multiple_reactor_1:
+        entity: reactor_entity_multiple_reactor_1
+        type: reactor_type_multiple_reactor_1
+        action: reactor_action_multiple_reactor_1
+      actor_multiple_reactor_2:
+        entity: reactor_entity_multiple_reactor_2
+        type: reactor_type_multiple_reactor_2
+        action: reactor_action_multiple_reactor_2
+
+  workflow_multiple_entities:
+    actor:
+      actor_multiple_entities:
+        entity: 
+          - actor_entity_multiple_entities_1
+          - actor_entity_multiple_entities_2
+        type: actor_type_multiple_entities
+        action: actor_action_multiple_entities
+    reactor:
+      reactor_multiple_entities:
+        entity: reactor_entity_multiple_entities
+        type: reactor_type_multiple_entities
+        action: reactor_action_multiple_entities
+
+  workflow_data:
+    variables:
+      type_templated: "{{ 1 + 2 }}"
+    actor:
+      actor_data:
+        entity: actor_entity_data
+        type: actor_type_data
+        action: actor_action_data
+        data:
+          actor_data_data: "{{ type_templated }}"
+    reactor: 
+      reactor_data:
+        entity: reactor_entity_data
+        type: reactor_type_data
+        action: reactor_action_data
+        data:
+          data1: 1
+          data2: "{{ actor.action }}"
+          data3: "{{ type_templated }}"
+          data4: 
+            - asdf
+            - qwer
+
+  workflow_data_delayed:
+    actor:
+      actor_data_delayed:
+        entity: actor_entity_data_delayed
+        type: actor_type_data_delayed
+        action: actor_action_data_delayed
+    reactor: 
+      reactor_data_delayed:
+        entity: reactor_entity_data_delayed
+        type: reactor_type_data_delayed
+        action: reactor_action_data_delayed
+        timing: delayed
+        delay: 60
+        data:
+          data1: 1
+          data2: True
+
+  workflow_full_stencil:
+    stencil: full_stencil
+
+  workflow_partial_stencil:
+    stencil: partial_stencil
+    actor:
+      actor_partial_stencil:
+        entity: actor_entity_partial_stencil
+        type: actor_type_partial_stencil
+        action: actor_action_partial_stencil
+    reactor:
+      reactor_partial_stencil:
+        entity: reactor_entity_partial_stencil
+
+  workflow_templated:
+    variables:
+      templated: templated
+    actor:
+      actor_templated:
+        entity: "{{ 'actor_entity_templated' }}"
+        type: "{{ 'actor' ~ '_type' ~ '_templated' }}"
+        action: "{{ 'actor_action_' ~ templated }}"
+    reactor:
+      reactor_templated:
+        entity: "{{ 're' ~ actor.entity }}"
+        type: "{{ 'reactor' ~ '_type' ~ '_templated' }}"
+        action: "{{ 'reactor_action_' ~ templated }}"
+
+  workflow_templated_state:
+    actor:
+      actor_templated_state:
+        entity: "{{ 'actor_entity_templated_state' }}"
+        type: "{{ 'actor' ~ '_type' ~ '_templated_state' }}"
+        action: "{{ 'actor_action_' ~ states('input_text.test_text') }}"
+    reactor:
+      reactor_templated_state:
+        entity: "{{ 're' ~ actor.entity }}"
+        type: "{{ 'reactor' ~ '_type' ~ '_templated_state' }}"
+        action: "{{ 'reactor_action_' ~ states('input_text.test_text') }}"
+
+  workflow_actor_condition:
+    actor:
+      actor_actor_condition:
+        entity: actor_entity_actor_condition
+        type: actor_type_actor_condition
+        action: actor_action_actor_condition
+        condition: "{{ is_state('input_boolean.test_actor_condition', 'on') }}"
+    reactor:
+      reactor_actor_condition:
+        entity: reactor_entity_actor_condition
+        type: reactor_type_actor_condition
+        action: reactor_action_actor_condition
+        
+  workflow_reactor_condition:
+    actor:
+      actor_reactor_condition:
+        entity: actor_entity_reactor_condition
+        type: actor_type_reactor_condition
+        action: actor_action_reactor_condition
+    reactor:
+      reactor_reactor_condition:
+        entity: reactor_entity_reactor_condition
+        type: reactor_type_reactor_condition
+        action: reactor_action_reactor_condition
+        condition: "{{ is_state('input_boolean.test_reactor_condition', 'on') }}"
+
+  workflow_binary_sensor:
+    actor:
+      actor_binary_sensor:
+        entity: test_binary_sensor
+        type: binary_sensor
+        action: 'on'
+    reactor:
+      rewactor_binary_sensor:
+        entity: reactor_entity_binary_sensor
+        type: reactor_type_binary_sensor
+        action: reactor_action_binary_sensor
+
+  workflow_group:
+    actor:
+      actor_group:
+        entity: test_group
+        type: group
+        action: 'on'
+    reactor:
+      reactor_group: 
+        entity: reactor_entity_group
+        type: reactor_type_group
+        action: reactor_action_group
+
+  workflow_device_tracker:
+    actor:
+      actor_device_tracker:
+        entity: test_device_tracker
+        type: device_tracker
+        action: home
+    reactor:
+      reactor_device_tracker: 
+        entity: reactor_entity_device_tracker
+        type: reactor_type_device_tracker
+        action: reactor_action_device_tracker
+
+  workflow_person:
+    actor:
+      actor_person:
+        entity: test_person
+        type: person
+        action: not_home
+    reactor:
+      reactor_person: 
+        entity: reactor_entity_person
+        type: reactor_type_person
+        action: reactor_action_person
+
+  workflow_binary_sensor_available:
+    actor:
+      actor_binary_sensor_available:
+        entity: test_binary_sensor_available
+        type: binary_sensor
+        action: available
+    reactor:
+      actor_binary_sensor_available:
+        entity: actor_entity_binary_sensor_available
+        type: actor_type_binary_sensor_available
+        action: actor_action_binary_sensor_available
+        
+  workflow_binary_sensor_unavailable:
+    actor:
+      actor_binary_sensor_unavailable:
+        entity: test_binary_sensor_available
+        type: binary_sensor
+        action: unavailable
+    reactor:
+      actor_binary_sensor_unavailable:
+        entity: actor_entity_binary_sensor_unavailable
+        type: actor_type_binary_sensor_unavailable
+        action: actor_action_binary_sensor_unavailable
+        
+  workflow_actionable_notification:
+    actor:
+      actor_actionable_notification:
+        entity: actor_entity_actionable_notification
+        type: actor_type_actionable_notification
+        action: actor_action_actionable_notification
+    reactor:
+      reactor_actionable_notification:
+        entity: mobile_group
+        type: notify
+        action: send_message
+        data:
+          message: "Approve something"
+          feedback_items:
+            - title: Approve
+              feedback: approve
+              acknowledgement: approved
+            - title: Deny
+              feedback: deny
+              acknowledgement: denied
+
+  workflow_actionable_notification_feedback:
+    actor:
+      actor_actionable_notification_feedback:
+        entity: mobile_user
+        type: notify
+        action: feedback
+        data:
+          feedback: approve
+    reactor:
+      reactor_actionable_notification_feedback:
+        entity: reactor_entity_actionable_notification_feedback
+        type: reactor_type_actionable_notification_feedback
+        action: reactor_action_actionable_notification_feedback
+        data:
+          feedback: "{{ actor.data.feedback }}"
+      
+          

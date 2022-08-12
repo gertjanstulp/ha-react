@@ -1,0 +1,41 @@
+views:
+  - title: Home
+    cards:
+      - type: entities
+        entities:
+          - entity: input_button.button_trigger_immediate
+          - entity: input_button.button_trigger_delayed
+          - entity: input_button.button_trigger_scheduled
+          - entity: input_button.button_trigger_reset
+          - entity: input_button.button_trigger_forward_action
+          - entity: input_button.button_trigger_trace_1
+          - entity: input_button.button_trigger_trace_2
+          - entity: input_button.button_trigger_multiple_actor_1
+          - entity: input_button.button_trigger_multiple_actor_2
+          - entity: input_button.button_trigger_multiple_reactor
+          - entity: input_button.button_trigger_multiple_entities_1
+          - entity: input_button.button_trigger_multiple_entities_2
+          - entity: input_button.button_trigger_data
+          - entity: input_button.button_trigger_data_delayed
+          - entity: input_button.button_trigger_full_stencil
+          - entity: input_button.button_trigger_partial_stencil
+          - entity: input_button.button_trigger_templated
+          - entity: input_button.button_trigger_templated_state
+          - entity: input_button.button_trigger_actor_condition
+          - entity: input_button.button_trigger_reactor_condition
+      - type: entities
+        entities:
+          - entity: input_boolean.test_actor_condition
+          - entity: input_boolean.test_reactor_condition
+          - entity: input_boolean.test_trace
+          - entity: input_boolean.test_binary_sensor
+          - entity: input_boolean.test_group
+          - entity: input_boolean.test_binary_sensor_available
+          - entity: input_text.test_text
+      - type: entities
+        entities:
+          - entity: input_button.button_trigger_device_tracker_home
+          - entity: input_button.button_trigger_device_tracker_not_home
+      - type: entities
+        entities:
+          - entity: input_button.button_trigger_actionable_notification

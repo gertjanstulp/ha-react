@@ -1,0 +1,13 @@
+codecov
+coverage
+pytest
+pytest-cov
+pytest-homeassistant-custom-component
+pyyaml
+
+aiohttp_cors
+Pillow
+homeassistant
+home-assistant-frontend
+hass-nabucasa
+python-telegram-bot

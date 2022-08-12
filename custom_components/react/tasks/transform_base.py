@@ -11,6 +11,7 @@ from homeassistant.const import (
 
 from .base import ReactTask
 from ..base import ReactBase
+from ..lib.config import MultiItem
 
 from ..const import (
     ACTION_AVAILABLE,
@@ -27,13 +28,13 @@ from ..const import (
 
 
 class StateData:
-    old_state_value: Any
-    new_state_value: Any
-
 
     def __init__(self, entity_prefix: str, event_data: dict[str, Any]):
         self.entity = event_data.get(ATTR_ENTITY_ID, '').replace(entity_prefix, '')
         self.actions = []
+        
+        self.old_state_value: Any = None
+        self.new_state_value: Any = None
 
 
     def to_react_events(self, type: str):
@@ -48,6 +49,7 @@ class StateData:
 
 
 class BinaryStateData(StateData):
+
     def __init__(self, entity_prefix: str, event_data: dict[str, Any]):
         super().__init__(entity_prefix, event_data)
         old_state = event_data.get(OLD_STATE, None)
@@ -68,6 +70,7 @@ class BinaryStateData(StateData):
 
 
 class NonBinaryStateData(StateData):
+
     def __init__(self, entity_prefix: str, event_data: dict[str, Any]):
         super().__init__(entity_prefix, event_data)
         
@@ -83,8 +86,10 @@ class NonBinaryStateData(StateData):
 
    
 class StateTransformTask(ReactTask):
+    
     def __init__(self, react: ReactBase, prefix: str, type: str) -> None:
         super().__init__(react)
+        
         self.prefix = prefix
         self.type = type
         self.entities = []
@@ -113,6 +118,7 @@ class StateTransformTask(ReactTask):
 
 
     @callback
-    def async_register_entity(self, entity: str, type: str):
-        if type == self.type:
-            self.entities.append(entity)
+    def async_register_entity(self, entity: MultiItem, type: MultiItem):
+        if self.type in type:
+            self.entities.extend(entity)
+            test = 1

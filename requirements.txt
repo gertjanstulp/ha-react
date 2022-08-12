@@ -1,0 +1,6 @@
+aiohttp_cors
+Pillow
+homeassistant
+home-assistant-frontend
+hass-nabucasa
+python-telegram-bot

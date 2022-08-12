@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from importlib import import_module
+from itertools import chain
 from pathlib import Path
 from typing import TYPE_CHECKING, Union
 
@@ -18,7 +19,6 @@ if TYPE_CHECKING:
 class ReactTaskManager:
     """React task manager."""
 
-
     def __init__(self, react: ReactBase) -> None:
         """Initialize the setup manager class."""
         self.react = react
@@ -33,15 +33,18 @@ class ReactTaskManager:
 
     async def async_load(self) -> None:
         """Load all tasks."""
-        task_files = Path(__file__).parent
+        task_files_root = Path(__file__).parent
         task_modules = (
-            module.stem
-            for module in task_files.glob("*.py")
-            if module.name not in ("base.py", "__init__.py", "manager.py", "transform_base.py")
+            {
+                "parent": str(module.relative_to(task_files_root).parent).replace("/", "."),
+                "name": module.stem,
+            }
+            for module in task_files_root.rglob("*.py")
+            if module.name not in ("base.py", "__init__.py", "manager.py", "transform_base.py", "default_task.py")
         )
 
-        async def _load_module(module: str):
-            task_module = import_module(f"{__package__}.{module}")
+        async def _load_module(module: dict):
+            task_module = import_module(f"{__package__}.{module['parent']}.{module['name']}")
             if task := await task_module.async_setup_task(react=self.react):
                 self.__tasks[task.slug] = task
 
@@ -80,7 +83,7 @@ class ReactTaskManager:
 
 
     async def async_execute_runtime_tasks(self) -> None:
-        """Execute the the execute methods of each runtime task if the stage matches."""
+        """Execute the execute methods of each runtime task if the stage matches."""
         await asyncio.gather(
             *(
                 task.execute_task()

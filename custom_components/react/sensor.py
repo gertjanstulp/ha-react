@@ -14,6 +14,7 @@ from .utils.logger import get_react_logger
 from .const import (
     ATTR_ACTION,
     ATTR_ENTITY,
+    ATTR_ID,
     ATTR_TYPE,
     ATTR_WORKFLOW_ID,
     DOMAIN,
@@ -122,6 +123,7 @@ class ReactionEntity(Entity):
     @property
     def state_attributes(self):
         output = {
+            ATTR_ID: self.reaction.data.id,
             ATTR_ENTITY: self.reaction.data.reactor_entity,
             ATTR_TYPE: self.reaction.data.reactor_type,
             ATTR_ACTION: self.reaction.data.reactor_action,
