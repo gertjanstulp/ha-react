@@ -103,7 +103,7 @@ workflow:
         entity: actor_entity_trace_1
         type: actor_type_trace_1
         action: actor_action_trace_1
-        condition: "{{ is_state('input_boolean.test_boolean', 'off') }}"
+        condition: "{{ is_state('input_boolean.test_trace', 'off') }}"
       actor_trace_2:
         entity: actor_entity_trace_2
         type: actor_type_trace_2
@@ -113,7 +113,7 @@ workflow:
         entity: reactor_entity_trace_1
         type: reactor_type_trace_1
         action: reactor_action_trace_1
-        condition: "{{ is_state('input_boolean.test_boolean', 'on') }}"
+        condition: "{{ is_state('input_boolean.test_trace', 'on') }}"
       reactor_trace_2:
         entity: reactor_entity_trace_2
         type: reactor_type_trace_2
@@ -134,6 +134,36 @@ workflow:
         entity: reactor_entity_multiple_actor
         type: reactor_type_multiple_actor
         action: reactor_action_multiple_actor
+
+  workflow_multiple_reactor:
+    actor:
+      actor_multiple_reactor:
+        entity: actor_entity_multiple_reactor
+        type: actor_type_multiple_reactor
+        action: actor_action_multiple_reactor
+    reactor: 
+      actor_multiple_reactor_1:
+        entity: reactor_entity_multiple_reactor_1
+        type: reactor_type_multiple_reactor_1
+        action: reactor_action_multiple_reactor_1
+      actor_multiple_reactor_2:
+        entity: reactor_entity_multiple_reactor_2
+        type: reactor_type_multiple_reactor_2
+        action: reactor_action_multiple_reactor_2
+
+  workflow_multiple_entities:
+    actor:
+      actor_multiple_entities:
+        entity: 
+          - actor_entity_multiple_entities_1
+          - actor_entity_multiple_entities_2
+        type: actor_type_multiple_entities
+        action: actor_action_multiple_entities
+    reactor:
+      reactor_multiple_entities:
+        entity: reactor_entity_multiple_entities
+        type: reactor_type_multiple_entities
+        action: reactor_action_multiple_entities
 
   workflow_data:
     variables:
@@ -175,22 +205,6 @@ workflow:
           data1: 1
           data2: True
 
-  workflow_multiple_reactor:
-    actor:
-      actor_multiple_reactor:
-        entity: actor_entity_multiple_reactor
-        type: actor_type_multiple_reactor
-        action: actor_action_multiple_reactor
-    reactor: 
-      actor_multiple_reactor_1:
-        entity: reactor_entity_multiple_reactor_1
-        type: reactor_type_multiple_reactor_1
-        action: reactor_action_multiple_reactor_1
-      actor_multiple_reactor_2:
-        entity: reactor_entity_multiple_reactor_2
-        type: reactor_type_multiple_reactor_2
-        action: reactor_action_multiple_reactor_2
-
   workflow_full_stencil:
     stencil: full_stencil
 
@@ -231,27 +245,13 @@ workflow:
         type: "{{ 'reactor' ~ '_type' ~ '_templated_state' }}"
         action: "{{ 'reactor_action_' ~ states('input_text.test_text') }}"
 
-  workflow_multiple_entities:
-    actor:
-      actor_multiple_entities:
-        entity: 
-          - actor_entity_multiple_entities_1
-          - actor_entity_multiple_entities_2
-        type: actor_type_multiple_entities
-        action: actor_action_multiple_entities
-    reactor:
-      reactor_multiple_entities:
-        entity: reactor_entity_multiple_entities
-        type: reactor_type_multiple_entities
-        action: reactor_action_multiple_entities
-
   workflow_actor_condition:
     actor:
       actor_actor_condition:
         entity: actor_entity_actor_condition
         type: actor_type_actor_condition
         action: actor_action_actor_condition
-        condition: "{{ is_state('input_boolean.test_boolean', 'on') }}"
+        condition: "{{ is_state('input_boolean.test_actor_condition', 'on') }}"
     reactor:
       reactor_actor_condition:
         entity: reactor_entity_actor_condition
@@ -269,7 +269,7 @@ workflow:
         entity: reactor_entity_reactor_condition
         type: reactor_type_reactor_condition
         action: reactor_action_reactor_condition
-        condition: "{{ is_state('input_boolean.test_boolean', 'on') }}"
+        condition: "{{ is_state('input_boolean.test_reactor_condition', 'on') }}"
 
   workflow_binary_sensor:
     actor:
@@ -319,6 +319,30 @@ workflow:
         type: reactor_type_person
         action: reactor_action_person
 
+  workflow_binary_sensor_available:
+    actor:
+      actor_binary_sensor_available:
+        entity: test_binary_sensor_available
+        type: binary_sensor
+        action: available
+    reactor:
+      actor_binary_sensor_available:
+        entity: actor_entity_binary_sensor_available
+        type: actor_type_binary_sensor_available
+        action: actor_action_binary_sensor_available
+        
+  workflow_binary_sensor_unavailable:
+    actor:
+      actor_binary_sensor_unavailable:
+        entity: test_binary_sensor_available
+        type: binary_sensor
+        action: unavailable
+    reactor:
+      actor_binary_sensor_unavailable:
+        entity: actor_entity_binary_sensor_unavailable
+        type: actor_type_binary_sensor_unavailable
+        action: actor_action_binary_sensor_unavailable
+        
   workflow_actionable_notification:
     actor:
       actor_actionable_notification:
@@ -355,4 +379,5 @@ workflow:
         action: reactor_action_actionable_notification_feedback
         data:
           feedback: "{{ actor.data.feedback }}"
+      
           

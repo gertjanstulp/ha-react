@@ -1,3 +1,23 @@
-test_boolean:
-  name: test_boolean
+test_actor_condition:
+  name: test_actor_condition
+  initial: False
+
+test_reactor_condition:
+  name: test_reactor_condition
+  initial: False
+
+test_trace:
+  name: test_trace
+  initial: False
+
+test_binary_sensor:
+  name: test_binary_sensor
+  initial: False
+
+test_group:
+  name: test_group
+  initial: False
+
+test_binary_sensor_available:
+  name: test_binary_sensor_available
   initial: False

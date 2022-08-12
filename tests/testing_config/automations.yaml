@@ -117,6 +117,42 @@
       type: actor_type_multiple_actor_2
       action: actor_action_multiple_actor_2
 
+- id: trigger_multiple_reactor
+  alias: Trigger multiple_reactor
+  trigger:
+    platform: state
+    entity_id: input_button.button_trigger_multiple_reactor
+  action:
+    event: ev_react_action
+    event_data:
+      entity: actor_entity_multiple_reactor
+      type: actor_type_multiple_reactor
+      action: actor_action_multiple_reactor
+
+- id: trigger_multiple_entities_1
+  alias: Trigger multiple_entities 1
+  trigger:
+    platform: state
+    entity_id: input_button.button_trigger_multiple_entities_1
+  action:
+    event: ev_react_action
+    event_data:
+      entity: actor_entity_multiple_entities_1
+      type: actor_type_multiple_entities
+      action: actor_action_multiple_entities
+
+- id: trigger_multiple_entities_2
+  alias: Trigger multiple_entities 2
+  trigger:
+    platform: state
+    entity_id: input_button.button_trigger_multiple_entities_2
+  action:
+    event: ev_react_action
+    event_data:
+      entity: actor_entity_multiple_entities_2
+      type: actor_type_multiple_entities
+      action: actor_action_multiple_entities
+
 - id: trigger_data
   alias: Trigger data
   trigger:
@@ -142,18 +178,6 @@
       entity: actor_entity_data_delayed
       type: actor_type_data_delayed
       action: actor_action_data_delayed
-
-- id: trigger_multiple_reactor
-  alias: Trigger multiple_reactor
-  trigger:
-    platform: state
-    entity_id: input_button.button_trigger_multiple_reactor
-  action:
-    event: ev_react_action
-    event_data:
-      entity: actor_entity_multiple_reactor
-      type: actor_type_multiple_reactor
-      action: actor_action_multiple_reactor
 
 - id: trigger_full_stencil
   alias: Trigger full_stencil
@@ -202,30 +226,6 @@
       entity: actor_entity_templated_state
       type: actor_type_templated_state
       action: actor_action_templated_state
-
-- id: trigger_multiple_entities_1
-  alias: Trigger multiple_entities 1
-  trigger:
-    platform: state
-    entity_id: input_button.button_trigger_multiple_entities_1
-  action:
-    event: ev_react_action
-    event_data:
-      entity: actor_entity_multiple_entities_1
-      type: actor_type_multiple_entities
-      action: actor_action_multiple_entities
-
-- id: trigger_multiple_entities_2
-  alias: Trigger multiple_entities 2
-  trigger:
-    platform: state
-    entity_id: input_button.button_trigger_multiple_entities_2
-  action:
-    event: ev_react_action
-    event_data:
-      entity: actor_entity_multiple_entities_2
-      type: actor_type_multiple_entities
-      action: actor_action_multiple_entities
 
 - id: trigger_actor_condition
   alias: Trigger actor_condition

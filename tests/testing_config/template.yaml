@@ -1,4 +1,9 @@
 - binary_sensor:
     - name: test_binary_sensor
-      state: "{{ states('input_boolean.test_boolean') }}"
+      state: "{{ states('input_boolean.test_binary_sensor') }}"
+    - name: test_group
+      state: "{{ states('input_boolean.test_group') }}"
+    - name: test_binary_sensor_available
+      state: "{{ 'available' }}"
+      availability: "{{ states('input_boolean.test_binary_sensor_available') }}"
     

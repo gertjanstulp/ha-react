@@ -7,23 +7,18 @@ from custom_components.react.base import ReactBase
 from custom_components.react.plugin.notify_plugin import NotifyPlugin, NotifySendMessageReactionEventDataReader, NotifyFeedbackEventDataReader
 
 from custom_components.react.const import (
-    ATTR_CONTEXT,
-    ATTR_DATA,
     ATTR_ENTITY,
     ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT,
     ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK,
     ATTR_EVENT_FEEDBACK_ITEMS,
     ATTR_EVENT_MESSAGE, 
-    ATTR_TYPE,
-    EVENT_REACT_ACTION,
-    NEW_STATE,
-    OLD_STATE,
-    SIGNAL_PROPERTY_COMPLETE,
 )
+
+from tests.common import EVENT_TEST_CALLBACK
+
 if TYPE_CHECKING:
     from tests.tst_context import TstContext
 
-EVENT_TEST_CALLBACK = "test_callback"
 
 def setup_plugin(react: ReactBase):
     return TestNotifyPlugin(react)

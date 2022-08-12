@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from asyncio import sleep
 from contextlib import asynccontextmanager
-import enum
-from typing import Any, Union
+from typing import Any
 from custom_components.react.lib.config import Workflow
 from custom_components.react.utils.struct import MultiItem
 
@@ -42,7 +41,6 @@ from custom_components.react.const import (
     ATTR_REACTOR_ID,
     ATTR_REACTOR_TYPE,
     ATTR_RESET_WORKFLOW,
-    ATTR_SCHEDULE,
     ATTR_TEMPLATE,
     ATTR_THIS,
     ATTR_TIMING,
@@ -57,8 +55,10 @@ from custom_components.react.const import (
 )
 from custom_components.react.utils.trace import ReactTrace
 
-from tests.common import DOMAIN_SENSOR
-from tests.plugins.test_notify_plugin import EVENT_TEST_CALLBACK
+from tests.common import (
+    DOMAIN_SENSOR, 
+    EVENT_TEST_CALLBACK,
+)
 
 ACTOR_ID_PREFIX = "actor_"
 ACTOR_ENTITY_PREFIX = "actor_entity_"
@@ -158,7 +158,6 @@ class TstContext():
     ):
         reaction_entity: State = self.retrieve_reaction_entities()[0]
 
-        reaction = self.react.reactions.get_by_id(reaction_entity.attributes.get(ATTR_ID))
         workflow_config_reactor = self.workflow_config.reactors[reactor_index]
 
         entity_got = reaction_entity.attributes.get(ATTR_ENTITY, None)
@@ -199,10 +198,6 @@ class TstContext():
         self.verify_reaction_event_count(expected_count)
         for i,call in enumerate(self.event_mock.mock_calls):
             assert len(call.args) > 0, f"Expected args for call {i}, got none"
-
-        # assert len(self.event_mock.call_args) > 0, f"Expected args, got none"
-        # for i in range(0, expected_count):
-        #     assert len(self.event_mock.call_args[i]) > 0, f"Expected args for call {i}, got none"
 
 
     def verify_reaction_event_data(self,

@@ -146,6 +146,112 @@ async def test_react_forward_action_toggle(hass: HomeAssistant, test_name, react
         tc.verify_trace_record(expected_result_message="Skipped, toggle with forward-action")
 
 
+@pytest.mark.parametrize(FIXTURE_TEST_NAME, ["trace"])
+async def test_react_trace_switched_off_actor_1(hass: HomeAssistant, test_name, react_component, input_boolean_component):
+    """
+    Test for workflow with complex trace structure where actor 1 is triggered and the test_trace is turned off:
+    - No reaction entity should be created
+    - One event should be sent
+    - Event data should match configuration
+    - Trace data should match configuration
+    """
+
+    await react_component.async_setup(test_name)
+    await input_boolean_component.async_turn_off("test_trace")
+    await hass.async_block_till_done()
+    
+    tc = TstContext(hass, test_name)
+    async with tc.async_listen_reaction_event():
+        tc.verify_reaction_entity_not_found()
+        await tc.async_send_action_event()
+        tc.verify_reaction_entity_not_found()
+        await tc.async_verify_reaction_event_received()
+        tc.verify_reaction_event_data(reactor_index=1)
+        tc.verify_trace_record(
+            expected_reactor_condition_results=[False, True]
+        )
+
+
+@pytest.mark.parametrize(FIXTURE_TEST_NAME, ["trace"])
+async def test_react_trace_switched_on_actor_1(hass: HomeAssistant, test_name, react_component, input_boolean_component):
+    """
+    Test for workflow with complex trace structure where actor 1 is triggered and the test_trace is turned on:
+    - No reaction entity should be created
+    - No events should be sent
+    - Event data should match configuration
+    - Trace data should match configuration
+    """
+
+    await react_component.async_setup(test_name)
+    await input_boolean_component.async_turn_on("test_trace")
+    await hass.async_block_till_done()
+
+    tc = TstContext(hass, test_name)
+    async with tc.async_listen_reaction_event():
+        tc.verify_reaction_entity_not_found()
+        await tc.async_send_action_event()
+        tc.verify_reaction_entity_not_found()
+        tc.verify_reaction_event_not_received()
+        tc.verify_trace_record(
+            expected_actor_condition_result=False
+        )
+
+
+@pytest.mark.parametrize(FIXTURE_TEST_NAME, ["trace"])
+async def test_react_trace_switched_off_actor_2(hass: HomeAssistant, test_name, react_component, input_boolean_component):
+    """
+    Test for workflow with complex trace structure where actor 1 is triggered and the test_trace is turned off:
+    - No reaction entity should be created
+    - One event should be sent
+    - Event data should match configuration
+    - Trace data should match configuration
+    """
+
+    await react_component.async_setup(test_name)
+    await input_boolean_component.async_turn_off("test_trace")
+    await hass.async_block_till_done()
+    
+    tc = TstContext(hass, test_name)
+    async with tc.async_listen_reaction_event():
+        tc.verify_reaction_entity_not_found()
+        await tc.async_send_action_event(actor_index=1)
+        tc.verify_reaction_entity_not_found()
+        await tc.async_verify_reaction_event_received()
+        tc.verify_reaction_event_data(reactor_index=1)
+        tc.verify_trace_record(
+            actor_index=1,
+            expected_reactor_condition_results=[False, True]
+        )
+
+
+@pytest.mark.parametrize(FIXTURE_TEST_NAME, ["trace"])
+async def test_react_trace_switched_on_actor_2(hass: HomeAssistant, test_name, react_component, input_boolean_component):
+    """
+    Test for workflow with complex trace structure where actor 1 is triggered and the test_trace is turned on:
+    - No reaction entity should be created
+    - 2 events should be sent
+    - Event data should match configuration
+    - Trace data should match configuration
+    """
+
+    await react_component.async_setup(test_name)
+    await input_boolean_component.async_turn_on("test_trace")
+    await hass.async_block_till_done()
+
+    tc = TstContext(hass, test_name)
+    async with tc.async_listen_reaction_event():
+        tc.verify_reaction_entity_not_found()
+        await tc.async_send_action_event(actor_index=1)
+        tc.verify_reaction_entity_not_found()
+        await tc.async_verify_reaction_event_received(expected_count=2)
+        tc.verify_reaction_event_data(event_index=0, reactor_index=0)
+        tc.verify_reaction_event_data(event_index=1, reactor_index=1)
+        tc.verify_trace_record(
+            actor_index=1,
+            expected_reactor_condition_results=[True, True]
+        )
+
+
 @pytest.mark.parametrize(FIXTURE_TEST_NAME, ["multiple_actor"])
 async def test_react_multiple_actor_1(hass: HomeAssistant, test_name, react_component):
     """
@@ -188,6 +294,73 @@ async def test_react_multiple_actor_2(hass: HomeAssistant, test_name, react_comp
         await tc.async_verify_reaction_event_received()
         tc.verify_reaction_event_data()
         tc.verify_trace_record(actor_index=1)
+
+
+@pytest.mark.parametrize(FIXTURE_TEST_NAME, ["multiple_reactor"])
+async def test_react_multiple_reactor(hass: HomeAssistant, test_name, react_component):
+    """
+    Test for workflow with multiple reactors:
+    - No reaction entities should be created
+    - An event should be sent for each reactor (2)
+    - Event data should match configuration for each reactor (2)
+    - Trace data should match configuration
+    """
+
+    await react_component.async_setup(test_name)
+
+    tc = TstContext(hass, test_name)
+    async with tc.async_listen_reaction_event():
+        tc.verify_reaction_entity_not_found()
+        await tc.async_send_action_event()
+        tc.verify_reaction_entity_not_found()
+        await tc.async_verify_reaction_event_received(expected_count=2)
+        tc.verify_reaction_event_data(event_index=0, reactor_index=0)
+        tc.verify_reaction_event_data(event_index=1, reactor_index=1)
+        tc.verify_trace_record()
+
+
+@pytest.mark.parametrize(FIXTURE_TEST_NAME, ["multiple_entities"])
+async def test_react_multiple_entities_1(hass: HomeAssistant, test_name, react_component):
+    """
+    Test for workflow with an actor containing multiple entities
+    - No reaction entity should be created
+    - An event should be sent
+    - Event data should match configuration
+    - Trace data should match configuration
+    """
+    
+    await react_component.async_setup(test_name)
+
+    tc = TstContext(hass, test_name)
+    async with tc.async_listen_reaction_event():
+        tc.verify_reaction_entity_not_found()
+        await tc.async_send_action_event()
+        tc.verify_reaction_entity_not_found()
+        await tc.async_verify_reaction_event_received()
+        tc.verify_reaction_event_data()
+        tc.verify_trace_record()
+
+
+@pytest.mark.parametrize(FIXTURE_TEST_NAME, ["multiple_entities"])
+async def test_react_multiple_entities_2(hass: HomeAssistant, test_name, react_component):
+    """
+    Test for workflow with an actor containing multiple entities
+    - No reaction entity should be created
+    - An event should be sent
+    - Event data should match configuration
+    - Trace data should match configuration
+    """
+    
+    await react_component.async_setup(test_name)
+
+    tc = TstContext(hass, test_name)
+    async with tc.async_listen_reaction_event():
+        tc.verify_reaction_entity_not_found()
+        await tc.async_send_action_event(entity_index=1)
+        tc.verify_reaction_entity_not_found()
+        await tc.async_verify_reaction_event_received()
+        tc.verify_reaction_event_data()
+        tc.verify_trace_record(actor_entity_index=1)
 
 
 @pytest.mark.parametrize(FIXTURE_TEST_NAME, ["data"])
@@ -281,29 +454,6 @@ async def test_react_data_delayed_event(hass: HomeAssistant, test_name, react_co
         tc.verify_reaction_entity_found()
         tc.verify_reaction_entity_data()
         tc.verify_reaction_internal_data(expected_data=data_out)
-        tc.verify_trace_record()
-
-
-@pytest.mark.parametrize(FIXTURE_TEST_NAME, ["multiple_reactor"])
-async def test_react_multiple_reactor(hass: HomeAssistant, test_name, react_component):
-    """
-    Test for workflow with multiple reactors:
-    - No reaction entities should be created
-    - An event should be sent for each reactor (2)
-    - Event data should match configuration for each reactor (2)
-    - Trace data should match configuration
-    """
-
-    await react_component.async_setup(test_name)
-
-    tc = TstContext(hass, test_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_entity_not_found()
-        await tc.async_send_action_event()
-        tc.verify_reaction_entity_not_found()
-        await tc.async_verify_reaction_event_received(expected_count=2)
-        tc.verify_reaction_event_data(event_index=0, reactor_index=0)
-        tc.verify_reaction_event_data(event_index=1, reactor_index=1)
         tc.verify_trace_record()
 
 
@@ -415,50 +565,6 @@ async def test_react_templated_state(hass: HomeAssistant, test_name, template_co
         )
 
 
-@pytest.mark.parametrize(FIXTURE_TEST_NAME, ["multiple_entities"])
-async def test_react_multiple_entities_1(hass: HomeAssistant, test_name, react_component):
-    """
-    Test for workflow with an actor containing multiple entities
-    - No reaction entity should be created
-    - An event should be sent
-    - Event data should match configuration
-    - Trace data should match configuration
-    """
-    
-    await react_component.async_setup(test_name)
-
-    tc = TstContext(hass, test_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_entity_not_found()
-        await tc.async_send_action_event()
-        tc.verify_reaction_entity_not_found()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data()
-        tc.verify_trace_record()
-
-
-@pytest.mark.parametrize(FIXTURE_TEST_NAME, ["multiple_entities"])
-async def test_react_multiple_entities_2(hass: HomeAssistant, test_name, react_component):
-    """
-    Test for workflow with an actor containing multiple entities
-    - No reaction entity should be created
-    - An event should be sent
-    - Event data should match configuration
-    - Trace data should match configuration
-    """
-    
-    await react_component.async_setup(test_name)
-
-    tc = TstContext(hass, test_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_entity_not_found()
-        await tc.async_send_action_event(entity_index=1)
-        tc.verify_reaction_entity_not_found()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data()
-        tc.verify_trace_record(actor_entity_index=1)
-
-
 @pytest.mark.parametrize(FIXTURE_TEST_NAME, ["actor_condition"])
 async def test_react_actor_condition_true(hass: HomeAssistant, test_name, react_component, template_component, input_boolean_component):
     """
@@ -470,7 +576,7 @@ async def test_react_actor_condition_true(hass: HomeAssistant, test_name, react_
     """
     
     await react_component.async_setup(test_name)
-    await input_boolean_component.async_turn_on("test_boolean")
+    await input_boolean_component.async_turn_on("test_actor_condition")
     await hass.async_block_till_done()
 
     tc = TstContext(hass, test_name)
@@ -491,11 +597,10 @@ async def test_react_actor_condition_false(hass: HomeAssistant, test_name, react
     - An event should be sent
     - Event data should match configuration
     - Trace data should match configuration
-    - Trace data should match configuration
     """
     
     await react_component.async_setup(test_name)
-    await input_boolean_component.async_turn_off("test_boolean")
+    await input_boolean_component.async_turn_off("test_actor_condition")
     await hass.async_block_till_done()
 
     tc = TstContext(hass, test_name)
@@ -505,113 +610,6 @@ async def test_react_actor_condition_false(hass: HomeAssistant, test_name, react
         tc.verify_reaction_entity_not_found()
         tc.verify_reaction_event_not_received()
         tc.verify_trace_record(expected_actor_condition_result=False)
-
-
-@pytest.mark.parametrize(FIXTURE_TEST_NAME, ["trace"])
-async def test_react_trace_switched_off_actor_1(hass: HomeAssistant, test_name, react_component, input_boolean_component):
-    """
-    Test for workflow with complex trace structure where actor 1 is triggered and the test_boolean is turned off:
-    - No reaction entity should be created
-    - One event should be sent
-    - Event data should match configuration
-    - Trace data should match configuration
-    """
-
-    await react_component.async_setup(test_name)
-    await input_boolean_component.async_turn_off("test_boolean")
-    await hass.async_block_till_done()
-    
-    tc = TstContext(hass, test_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_entity_not_found()
-        await tc.async_send_action_event()
-        tc.verify_reaction_entity_not_found()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data(reactor_index=1)
-        tc.verify_trace_record(
-            expected_reactor_condition_results=[False, True]
-        )
-
-
-@pytest.mark.parametrize(FIXTURE_TEST_NAME, ["trace"])
-async def test_react_trace_switched_on_actor_1(hass: HomeAssistant, test_name, react_component, input_boolean_component):
-    """
-    Test for workflow with complex trace structure where actor 1 is triggered and the test_boolean is turned off:
-    - No reaction entity should be created
-    - No events should be sent
-    - Event data should match configuration
-    - Trace data should match configuration
-    """
-
-    await react_component.async_setup(test_name)
-    await input_boolean_component.async_turn_on("test_boolean")
-    await hass.async_block_till_done()
-
-    tc = TstContext(hass, test_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_entity_not_found()
-        await tc.async_send_action_event()
-        tc.verify_reaction_entity_not_found()
-        tc.verify_reaction_event_not_received()
-        tc.verify_trace_record(
-            expected_actor_condition_result=False
-        )
-
-
-
-@pytest.mark.parametrize(FIXTURE_TEST_NAME, ["trace"])
-async def test_react_trace_switched_off_actor_2(hass: HomeAssistant, test_name, react_component, input_boolean_component):
-    """
-    Test for workflow with complex trace structure where actor 1 is triggered and the test_boolean is turned off:
-    - No reaction entity should be created
-    - One event should be sent
-    - Event data should match configuration
-    - Trace data should match configuration
-    """
-
-    await react_component.async_setup(test_name)
-    await input_boolean_component.async_turn_off("test_boolean")
-    await hass.async_block_till_done()
-    
-    tc = TstContext(hass, test_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_entity_not_found()
-        await tc.async_send_action_event(actor_index=1)
-        tc.verify_reaction_entity_not_found()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data(reactor_index=1)
-        tc.verify_trace_record(
-            actor_index=1,
-            expected_reactor_condition_results=[False, True]
-        )
-
-
-@pytest.mark.parametrize(FIXTURE_TEST_NAME, ["trace"])
-async def test_react_trace_switched_on_actor_2(hass: HomeAssistant, test_name, react_component, input_boolean_component):
-    """
-    Test for workflow with complex trace structure where actor 1 is triggered and the test_boolean is turned off:
-    - No reaction entity should be created
-    - No events should be sent
-    - Event data should match configuration
-    - Trace data should match configuration
-    """
-
-    await react_component.async_setup(test_name)
-    await input_boolean_component.async_turn_on("test_boolean")
-    await hass.async_block_till_done()
-
-    tc = TstContext(hass, test_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_entity_not_found()
-        await tc.async_send_action_event(actor_index=1)
-        tc.verify_reaction_entity_not_found()
-        await tc.async_verify_reaction_event_received(expected_count=2)
-        tc.verify_reaction_event_data(event_index=0, reactor_index=0)
-        tc.verify_reaction_event_data(event_index=1, reactor_index=1)
-        tc.verify_trace_record(
-            actor_index=1,
-            expected_reactor_condition_results=[True, True]
-        )
 
 
 @pytest.mark.parametrize(FIXTURE_TEST_NAME, ["reactor_condition"])
@@ -624,7 +622,7 @@ async def test_react_reactor_condition_false(hass: HomeAssistant, test_name, rea
     """
 
     await react_component.async_setup(test_name)
-    await input_boolean_component.async_turn_off("test_boolean")
+    await input_boolean_component.async_turn_off("test_reactor_condition")
     await hass.async_block_till_done()
 
     tc = TstContext(hass, test_name)
@@ -649,7 +647,7 @@ async def test_react_reactor_condition_true(hass: HomeAssistant, test_name, reac
     """
 
     await react_component.async_setup(test_name)
-    await input_boolean_component.async_turn_on("test_boolean")
+    await input_boolean_component.async_turn_on("test_reactor_condition")
     await hass.async_block_till_done()
 
     tc = TstContext(hass, test_name)
@@ -660,82 +658,3 @@ async def test_react_reactor_condition_true(hass: HomeAssistant, test_name, reac
         await tc.async_verify_reaction_event_received()
         tc.verify_reaction_event_data()
         tc.verify_trace_record()
-
-
-@pytest.mark.parametrize(FIXTURE_TEST_NAME, ["binary_sensor"])
-async def test_react_binary_sensor(hass: HomeAssistant, test_name, react_component, input_boolean_component, template_component):
-    """
-    Test for workflow for a binary_sensor:
-    """
-
-    await react_component.async_setup(test_name)
-
-    tc = TstContext(hass, test_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_entity_not_found()
-        await input_boolean_component.async_turn_on("test_boolean")
-        await hass.async_block_till_done()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data()
-        tc.verify_trace_record()
-
-
-@pytest.mark.parametrize(FIXTURE_TEST_NAME, ["group"])
-async def test_react_group(hass: HomeAssistant, test_name, react_component, template_component, group_component, input_boolean_component):
-    """
-    Test for workflow for a group:
-    """
-
-    await react_component.async_setup(test_name)
-
-    tc = TstContext(hass, test_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_entity_not_found()
-        await input_boolean_component.async_turn_on("test_boolean")
-        await hass.async_block_till_done()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data()
-        tc.verify_trace_record()
-    await hass.async_block_till_done()
-
-
-@pytest.mark.parametrize(FIXTURE_TEST_NAME, ["device_tracker"])
-async def test_react_device_tracker(hass: HomeAssistant, test_name, react_component, device_tracker_component):
-    """
-    Test for workflow for a device_tracker:
-    """
-
-    await react_component.async_setup(test_name)
-
-    tc = TstContext(hass, test_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_entity_not_found()
-        await device_tracker_component.async_see("test_device_tracker", "not_home")
-        await device_tracker_component.async_see("test_device_tracker", "home")
-        await hass.async_block_till_done()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data()
-        tc.verify_trace_record()
-
-    await hass.async_block_till_done()
-
-
-@pytest.mark.parametrize(FIXTURE_TEST_NAME, ["person"])
-async def test_react_person(hass: HomeAssistant, test_name, react_component, device_tracker_component, person_component):
-    """
-    Test for workflow for a person:
-    """
-
-    await react_component.async_setup(test_name)
-
-    tc = TstContext(hass, test_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_entity_not_found()
-        await device_tracker_component.async_see("test_device_tracker", "home")
-        await device_tracker_component.async_see("test_device_tracker", "not_home")
-        await hass.async_block_till_done()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data()
-        tc.verify_trace_record()
-
-    await hass.async_block_till_done()

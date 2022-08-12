@@ -25,7 +25,12 @@ views:
           - entity: input_button.button_trigger_reactor_condition
       - type: entities
         entities:
-          - entity: input_boolean.test_boolean
+          - entity: input_boolean.test_actor_condition
+          - entity: input_boolean.test_reactor_condition
+          - entity: input_boolean.test_trace
+          - entity: input_boolean.test_binary_sensor
+          - entity: input_boolean.test_group
+          - entity: input_boolean.test_binary_sensor_available
           - entity: input_text.test_text
       - type: entities
         entities:

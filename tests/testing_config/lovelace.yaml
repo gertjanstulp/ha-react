@@ -1,0 +1,7 @@
+mode: storage
+dashboards:
+  react-test:
+    mode: yaml
+    filename: testing_config/dashboard.yaml
+    title: React test
+    icon: mdi:view-dashboard
