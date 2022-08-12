@@ -21,6 +21,7 @@ from .reactions.dispatch import ReactDispatch
 from .utils.logger import get_react_logger
 
 from .const import (
+    ICON,
     SIGNAL_ITEM_CREATED, 
     SIGNAL_ITEM_REMOVED, 
     SIGNAL_ITEM_UPDATED
@@ -157,7 +158,7 @@ class ReactConfiguration:
     frontend_repo_url: str = ""
     frontend_repo: str = ""
     plugin_path: str = "www/community/"
-    sidepanel_icon: str = "mdi:swap-horizontal-bold"
+    sidepanel_icon: str = ICON
     sidepanel_title: str = "React"
     theme_path: str = "themes/"
     theme: bool = False
