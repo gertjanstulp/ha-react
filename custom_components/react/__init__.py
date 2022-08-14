@@ -33,7 +33,6 @@ from .const import (
     CONF_WORKFLOW,
     DEFAULT_INITIAL_STATE, 
     DOMAIN,
-    ENTITY_ID_FORMAT,
     PLUGIN_SCHEMA,
     STARTUP,
     STENCIL_SCHEMA, 
@@ -146,9 +145,11 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
     def __init__(self, react: ReactBase, workflow: Workflow):
         """Initialize a workflow."""
         self.react = react
-        self.entity_id = ENTITY_ID_FORMAT.format(workflow.id)
         self.workflow = workflow
         self.is_enabled = False
+        self._attr_unique_id = workflow.id
+        self._attr_name = workflow.name or workflow.id.capitalize().replace("_", " ")
+        self._attr_icon = workflow.icon
 
 
     @callback
@@ -162,7 +163,7 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
 
         await super().async_added_to_hass()
 
-        self.workflow_runtime = WorkflowRuntime(self.react, self.workflow)
+        self.workflow_runtime = WorkflowRuntime(self.react, self.workflow, self.entity_id)
         self.workflow_runtime.on_update(self.async_write_ha_state)
 
         if state := await self.async_get_last_state():
@@ -193,18 +194,6 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
 
 
     @property
-    def name(self):
-        """Return the name of the variable."""
-        return self.workflow.friendly_name
-    
-
-    @property
-    def icon(self):
-        """Return the icon to be used for this entity."""
-        return self.workflow.icon
-
-
-    @property
     def extra_state_attributes(self):
         return {
             ATTR_LAST_TRIGGERED: self.workflow_runtime.last_triggered,
@@ -228,22 +217,20 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
 
     
     async def async_enable(self):
-        if self.is_enabled:
-            return
+        if not self.is_enabled:
+            self.is_enabled = True
+            await self.async_update_ha_state()
+            self.react.log.debug(f"Registry: '{self.entity_id}' enabled")
 
-        self.react.log.debug(f"Registry: '{self.entity_id}' enabled")
-        self.is_enabled = True
-        self.workflow_runtime.start()
-        
-        await self.async_update_ha_state()
+        if not self.workflow_runtime.running:
+            self.workflow_runtime.start()
     
     
     async def async_disable(self):
         if not self.is_enabled:
-            return
+            self.is_enabled = False
+            await self.async_update_ha_state()
+            self.react.log.debug(f"Registry: '{self.entity_id}' disabled")
 
-        self.react.log.debug(f"Registry: '{self.entity_id}' disabled")
-        self.is_enabled = False
-        self.workflow_runtime.stop()
-
-        await self.async_update_ha_state()
+        if self.workflow_runtime.running:
+            self.workflow_runtime.stop()

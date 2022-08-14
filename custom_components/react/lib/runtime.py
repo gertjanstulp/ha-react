@@ -21,9 +21,9 @@ from ..utils.context import ActorTemplateContextDataProvider, TemplateContext, V
 from ..utils.events import ActionEventDataReader
 from ..utils.logger import format_data
 from ..utils.struct import ActorRuntime, ReactorConfig, ReactorRuntime
-from ..utils.jit import JitHandler
+from ..utils.jit import ObjectJitter
 from ..utils.trace import ReactTrace, trace_node, trace_workflow
-from ..utils.track import TrackHandler
+from ..utils.track import ObjectTracker
 from ..utils.updatable import Updatable
 
 from ..const import (
@@ -38,6 +38,7 @@ from ..const import (
     ATTR_TYPE,
     ATTR_VARIABLES,
     EVENT_REACT_ACTION,
+    SIGNAL_ACTION_HANDLER_DESTROYED,
     SIGNAL_DISPATCH,
     SIGNAL_PROPERTY_COMPLETE,
     SIGNAL_TRACK_UPDATE,
@@ -98,8 +99,8 @@ class ActionHandler(BaseHandler):
                     async_dispatcher_send(self.runtime.react.hass, SIGNAL_PROPERTY_COMPLETE, owner.entity, owner.type)
 
         self.disconnect_track_update = async_dispatcher_connect(runtime.react.hass, SIGNAL_TRACK_UPDATE, async_track_update)
-        self.track_handler = TrackHandler[ActorRuntime](runtime.react, actor_config, tctx, ActorRuntime)
-        self.actor_runtime = self.track_handler.value_container
+        self.tracker = ObjectTracker[ActorRuntime](runtime.react, actor_config, tctx, ActorRuntime)
+        self.actor_runtime = self.tracker.value_container
 
         self.disconnect_event_listener = runtime.react.hass.bus.async_listen(EVENT_REACT_ACTION, self.async_handle, self.async_filter)
 
@@ -112,15 +113,16 @@ class ActionHandler(BaseHandler):
         self.enabled = False
 
 
-    def destroy(self):
+    def destroy(self) -> None:
         super().destroy()
-        self.enabled = False
+        self.stop()
+        async_dispatcher_send(self.runtime.react.hass, SIGNAL_ACTION_HANDLER_DESTROYED, self.actor_runtime.entity)
         if self.disconnect_event_listener:
             self.disconnect_event_listener()
         if self.disconnect_track_update:
             self.disconnect_track_update()
-        if self.track_handler:
-            self.track_handler.destroy()
+        if self.tracker:
+            self.tracker.destroy()
 
 
     @callback
@@ -166,7 +168,7 @@ class ActionHandler(BaseHandler):
 
 
     def get_action_context(self) -> ActionContext:
-        return ActionContext(self.actor_runtime.condition, self.track_handler.is_template(ATTR_CONDITION), self.index, self.actor_config.id,
+        return ActionContext(self.actor_runtime.condition, self.tracker.is_template(ATTR_CONDITION), self.index, self.actor_config.id,
     )
 
     
@@ -189,8 +191,8 @@ class ReactionHandler(BaseHandler):
         self.reactor_config = reactor_config
         self.index = index
         
-        self.jit_handler = JitHandler[ReactorRuntime](runtime.react, reactor_config, tctx, ReactorRuntime)
-
+        self.jitter = ObjectJitter[ReactorRuntime](runtime.react, reactor_config, tctx, ReactorRuntime)
+        
 
     def start(self):
         self.enabled = True
@@ -200,7 +202,7 @@ class ReactionHandler(BaseHandler):
         self.enabled = False
 
 
-    def destroy(self):
+    def destroy(self) -> None:
         super().destroy()
         self.enabled = False
 
@@ -208,11 +210,11 @@ class ReactionHandler(BaseHandler):
     @callback
     async def async_handle(self, wctx: WorkflowRunContext):
         template_context_data_provider = ActorTemplateContextDataProvider(self.runtime.react, wctx.event_reader)
-        reactor_runtime = self.jit_handler.render(template_context_data_provider)
+        reactor_runtime = self.jitter.render(template_context_data_provider)
         
         with trace_path(TRACE_PATH_CONDITION):
             condition_result = reactor_runtime.condition
-            if self.jit_handler.is_template(ATTR_CONDITION):
+            if self.jitter.is_template(ATTR_CONDITION):
                 with trace_node(wctx.trace_variables):
                     trace_set_result(result=condition_result)
             if not condition_result:
@@ -272,10 +274,11 @@ def create_reactions(react: ReactBase, wctx: WorkflowRunContext, reactor_config:
 
 class WorkflowRunContext:
 
-    def __init__(self, react: ReactBase, workflow_config: Workflow, variable_handler: TrackHandler, actx: ActionContext, event_reader: ActionEventDataReader) -> None:
+    def __init__(self, react: ReactBase, workflow_config: Workflow, workflow_entity_id: str, variable_tracker: ObjectTracker, actx: ActionContext, event_reader: ActionEventDataReader) -> None:
         self.react = react
         self.workflow_config = workflow_config
-        self.variable_handler = variable_handler
+        self.workflow_entity_id = workflow_entity_id
+        self.variable_tracker = variable_tracker
         self.actx = actx
         self.event_reader = event_reader
         
@@ -286,11 +289,11 @@ class WorkflowRunContext:
     def trace_variables_init(self):
         # Init run variables
         this = None
-        if state := self.react.hass.states.get(self.workflow_config.entity_id):
+        if state := self.react.hass.states.get(self.workflow_entity_id):
             this = state.as_dict()
         self.trace_variables = {
             ATTR_THIS: this,
-            ATTR_VARIABLES: self.variable_handler.as_trace_dict() | { ATTR_ACTOR: self.event_reader.to_dict() },
+            ATTR_VARIABLES: self.variable_tracker.as_trace_dict() | { ATTR_ACTOR: self.event_reader.to_dict() },
             ATTR_ACTOR: {
                 ATTR_ID: self.actx.actor_id, 
                 ATTR_CONTEXT: self.event_reader.hass_context
@@ -372,34 +375,39 @@ class WorkflowRun:
 
 class WorkflowRuntime(Updatable):
     
-    def __init__(self, react: ReactBase, workflow_config: Workflow) -> None:
+    def __init__(self, react: ReactBase, workflow_config: Workflow, workflow_entity_id: str) -> None:
         super().__init__(react)
         
         self.react = react
         self.workflow_config = workflow_config
+        self.workflow_entity_id = workflow_entity_id
+        self.running = False
         self.actor_handlers: list[ActionHandler] = []
         self.reactor_handlers: list[ReactionHandler] = []
-        self.variable_handler = TrackHandler(self.react,  workflow_config.variables, TemplateContext(react))
+        self.variable_tracker = ObjectTracker(self.react,  workflow_config.variables, TemplateContext(react))
         self.last_triggered: Union[datetime, None] = None
 
         for ai,actor in enumerate(workflow_config.actors):
-            self.actor_handlers.append(ActionHandler(self, actor, ai, TemplateContext(react, VariableContextDataProvider(react, self.variable_handler))))
+            self.actor_handlers.append(ActionHandler(self, actor, ai, TemplateContext(react, VariableContextDataProvider(react, self.variable_tracker))))
         for ri,reactor in enumerate(workflow_config.reactors):
-            self.reactor_handlers.append(ReactionHandler(self, reactor, ri, TemplateContext(react, VariableContextDataProvider(react, self.variable_handler))))
+            self.reactor_handlers.append(ReactionHandler(self, reactor, ri, TemplateContext(react, VariableContextDataProvider(react, self.variable_tracker))))
 
         self.all_handlers: list[BaseHandler] = self.actor_handlers + self.reactor_handlers
 
 
     def start(self) -> None:
+        self.running = True
         for handler in self.all_handlers: handler.start()
 
 
     def stop(self) -> None:
+        self.running = False
         for handler in self.all_handlers: handler.stop()
 
 
     def destroy(self) -> None:
-        self.variable_handler.destroy()
+        super().destroy()
+        self.variable_tracker.destroy()
         for handler in self.all_handlers: handler.destroy()
         del self.all_handlers
 
@@ -425,7 +433,7 @@ class WorkflowRuntime(Updatable):
         actor_handler: ActionHandler, 
         event_reader: ActionEventDataReader,
     ):
-        wctx = WorkflowRunContext(self.react, self.workflow_config, self.variable_handler, actor_handler.get_action_context(), event_reader)
+        wctx = WorkflowRunContext(self.react, self.workflow_config, self.workflow_entity_id, self.variable_tracker, actor_handler.get_action_context(), event_reader)
         run = WorkflowRun(wctx, self.reactor_handlers)
         self.react.log.info(f"ActionHandler: '{self.workflow_config.id}'.'{actor_handler.actor_config.id}' receiving action: {format_data(entity=wctx.event_reader.entity, type=wctx.event_reader.type, action=wctx.event_reader.action)}")
         self.last_triggered = utcnow()

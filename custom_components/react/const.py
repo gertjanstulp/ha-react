@@ -3,7 +3,7 @@ import voluptuous as vol
 
 from typing import Any, Union
 from homeassistant.helpers import config_validation as cv
-from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_ICON
+from homeassistant.const import ATTR_NAME, CONF_ICON
 from homeassistant.helpers.template import result_as_boolean
 from homeassistant.components.trace import TRACE_CONFIG_SCHEMA
 
@@ -26,7 +26,6 @@ MINIMUM_HA_VERSION = "2021.9.0"
 TITLE = 'React'
 DOMAIN = 'react'
 PACKAGE_NAME = "custom_components.react"
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
 ICON = "mdi:swap-horizontal-bold"
 
 CONF_FRONTEND_REPO_URL = "frontend_repo_url"
@@ -135,8 +134,8 @@ SIGNAL_ITEM_CREATED = "react_item_created"
 SIGNAL_ITEM_UPDATED = "react_item_updated"
 SIGNAL_ITEM_REMOVED = "react_item_removed"
 SIGNAL_PROPERTY_COMPLETE = "signal_property_complete"
+SIGNAL_ACTION_HANDLER_DESTROYED = "signal_action_handler_destroyed"
 SIGNAL_REACTION_READY = "signal_reaction_ready"
-# SIGNAL_REACT = "signal_react_{}"
 SIGNAL_DISPATCH = "dispatch"
 SIGNAL_TRACK_UPDATE = "track_update"
 
@@ -287,7 +286,7 @@ WORKFLOW_SCHEMA = vol.Schema({
         vol.Optional(ATTR_REACTOR): vol.Schema({
             cv.slug: REACTOR_DATA_SCHEMA
         }),
-        vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
+        vol.Optional(ATTR_NAME): cv.string,
         vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(CONF_TRACE, default={}): TRACE_CONFIG_SCHEMA,
     }, None)

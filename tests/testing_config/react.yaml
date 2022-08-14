@@ -293,7 +293,7 @@ workflow:
         type: binary_sensor
         action: 'on'
     reactor:
-      rewactor_binary_sensor:
+      reactor_binary_sensor:
         entity: reactor_entity_binary_sensor
         type: reactor_type_binary_sensor
         action: reactor_action_binary_sensor
