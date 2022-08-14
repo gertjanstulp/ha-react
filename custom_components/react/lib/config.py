@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Any, Callable, Union
 
-from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ID, CONF_ICON
+from homeassistant.const import ATTR_ID, ATTR_NAME, CONF_ICON
 from homeassistant.helpers.typing import ConfigType
 
 from ..exceptions import ReactException
@@ -38,7 +38,6 @@ from ..const import (
     CONF_STENCIL,
     CONF_TRACE,
     CONF_WORKFLOW,
-    ENTITY_ID_FORMAT,
     ICON,
     REACTOR_TIMING_DELAYED,
     REACTOR_TIMING_IMMEDIATE,
@@ -142,11 +141,10 @@ ctor_type = Callable[[dict, str, str], Union[Actor, Reactor] ]
 class Workflow():
 
     def __init__(self, workflow_id: str, config: dict):
-        self.id = workflow_id
-        self.entity_id = ENTITY_ID_FORMAT.format(workflow_id)
-        self.stencil = config.get(ATTR_STENCIL, {})
-        self.friendly_name = config.get(ATTR_FRIENDLY_NAME, None)
-        self.icon = config.get(CONF_ICON, ICON)
+        self.id: str = workflow_id
+        self.stencil: str = config.get(ATTR_STENCIL, {})
+        self.name: str = config.get(ATTR_NAME, None)
+        self.icon: str = config.get(CONF_ICON, ICON)
         self.trace_config = config.get(CONF_TRACE, None)
         self.variables = DynamicData(config.get(ATTR_VARIABLES, {}))
         self.actors: Union[list[Actor], None] = None
@@ -174,7 +172,7 @@ class Workflow():
     def as_dict(self, actor_id: str = None) -> dict:
         result = {
             a: getattr(self, a)
-            for a in [ATTR_ID, ATTR_STENCIL, ATTR_FRIENDLY_NAME]
+            for a in [ATTR_ID, ATTR_STENCIL, ATTR_NAME]
             if getattr(self, a) is not None
         }
         if self.variables.any:

@@ -203,7 +203,7 @@
     event_data:
       entity: actor_entity_multiple_actor_data
       type: actor_type_multiple_actor_data
-      action: actor_action_data
+      action: actor_action_multiple_actor_data
       data:
         actor_data_multiple_actor_data: 2
 

@@ -7,6 +7,7 @@ from homeassistant.const import (
     STATE_OFF, 
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 
 from .base import ReactTask
@@ -23,6 +24,7 @@ from ..const import (
     EVENT_REACT_ACTION,
     NEW_STATE,
     OLD_STATE,
+    SIGNAL_ACTION_HANDLER_DESTROYED,
     SIGNAL_PROPERTY_COMPLETE,
 )
 
@@ -59,7 +61,7 @@ class BinaryStateData(StateData):
 
         if (self.old_state_value == STATE_UNAVAILABLE and self.new_state_value != STATE_UNAVAILABLE):
             self.actions.append(ACTION_AVAILABLE)
-        if (self.old_state_value != STATE_UNAVAILABLE and self.new_state_value == STATE_UNAVAILABLE):
+        if (self.old_state_value != STATE_UNAVAILABLE and self.old_state_value != STATE_UNKNOWN and self.new_state_value == STATE_UNAVAILABLE):
             self.actions.append(ACTION_UNAVAILABLE)
         if (self.old_state_value == STATE_OFF and self.new_state_value == STATE_ON):
             self.actions.append(STATE_ON)
@@ -81,7 +83,7 @@ class NonBinaryStateData(StateData):
 
         if (self.old_state_value == STATE_UNAVAILABLE and self.new_state_value != STATE_UNAVAILABLE):
             self.actions.append(ACTION_AVAILABLE)
-        if (self.old_state_value != STATE_UNAVAILABLE and self.new_state_value == STATE_UNAVAILABLE):
+        if (self.old_state_value != STATE_UNAVAILABLE and self.old_state_value != STATE_UNKNOWN and self.new_state_value == STATE_UNAVAILABLE):
             self.actions.append(ACTION_UNAVAILABLE)
 
    
@@ -95,6 +97,8 @@ class StateTransformTask(ReactTask):
         self.entities = []
         self.events_with_filters = [(EVENT_STATE_CHANGED, self.async_filter)]
         async_dispatcher_connect(self.react.hass, SIGNAL_PROPERTY_COMPLETE, self.async_register_entity)
+        async_dispatcher_connect(self.react.hass, SIGNAL_ACTION_HANDLER_DESTROYED, self.async_unregister_entity)
+        
 
     
     @callback
@@ -121,4 +125,9 @@ class StateTransformTask(ReactTask):
     def async_register_entity(self, entity: MultiItem, type: MultiItem):
         if self.type in type:
             self.entities.extend(entity)
-            test = 1
+
+    
+    @callback
+    def async_unregister_entity(self, entity: MultiItem):
+        if entity in self.entities:
+            self.entities.remove(entity)

@@ -19,9 +19,6 @@ from ..utils.updatable import Updatable
 from ..const import (
     PROP_ATTR_TYPE_POSTFIX,
     PROP_TYPE_DEFAULT,
-    PROP_TYPE_LIST,
-    PROP_TYPE_MULTI_ITEM,
-    PROP_TYPE_OBJECT,
     PROP_TYPE_SOURCE,
     PROP_TYPE_TEMPLATE,
     PROP_TYPE_VALUE,
@@ -31,17 +28,31 @@ from ..const import (
 T = TypeVar('T', bound=DynamicData)
 
 
-class TrackHandler(Updatable, Generic[T]):
+class BaseTracker(Updatable):
 
+    def __init__(self, react: ReactBase) -> None:
+        super().__init__(react)
+        self.react = react
+
+
+    def start(self):
+        pass
+
+
+    @callback
+    def async_refresh(self):
+        pass
+
+
+class CompositeTracker(BaseTracker, Generic[T]):
     def __init__(self, react: ReactBase, config_source: DynamicData, tctx: TemplateContext, t_type: Type[T] = DynamicData) -> None:
         super().__init__(react)
 
-        self.react = react
         self.config_source = config_source
         self.names = config_source.names
         self.tctx = tctx
 
-        self.template_trackers: list[TemplatePropertyTracker] = []
+        self.trackers: list[BaseTracker] = []
         self.value_container = t_type()
         if id := self.config_source.get(ATTR_ID):
             self.value_container.set(ATTR_ID, id)
@@ -49,11 +60,16 @@ class TrackHandler(Updatable, Generic[T]):
         for attr in config_source.names:
             self.add_tracker(attr, PROP_TYPE_SOURCE)
 
-        self.start_trackers()
+        self.start()
 
 
     def as_trace_dict(self) -> dict:
         return { name : self.value_container.get(name) for name in self.config_source.names }
+    
+
+    def is_template(self, attr: str) -> bool:
+        type_prop = f"_{attr}{PROP_ATTR_TYPE_POSTFIX}"
+        return getattr(self, type_prop, PROP_TYPE_DEFAULT) == PROP_TYPE_TEMPLATE
 
 
     def add_tracker(self, attr: str, type_converter: Any, default: Any = None) -> None:
@@ -64,39 +80,27 @@ class TrackHandler(Updatable, Generic[T]):
             self.set_property_type(attr, prop_type)
 
         if isinstance(attr_value, MultiItem):
-            handler = TrackHandler[MultiItem](self.react, attr_value, self.tctx, MultiItem)
-            self.set_property(attr, handler.value_container)
-            self.template_trackers.append(MultiItemTracker(self.react, attr, handler))
+            tracker = MultiItemTracker(self.react, attr_value, self.tctx)
+            self.set_property(attr, tracker.value_container)
+            self.trackers.append(tracker)
         elif isinstance(attr_value, DynamicData):
-            handler = TrackHandler[DynamicData](self.react, attr_value, self.tctx)
-            self.set_property(attr, handler.value_container)
-            self.template_trackers.append(ObjectTracker(self.react, attr, handler))
+            tracker = ObjectTracker(self.react, attr_value, self.tctx)
+            self.set_property(attr, tracker.value_container)
+            self.trackers.append(tracker)
         elif isinstance(attr_value, list):
             if len(attr_value) > 0 and isinstance(attr_value[0], DynamicData):
-                handlers = [ TrackHandler[DynamicData](self.react, item, self.tctx) for item in attr_value ]
-                self.set_property(attr, [handler.value_container for handler in handlers])
+                trackers = [ ObjectTracker(self.react, item, self.tctx) for item in attr_value]
+                self.set_property(attr, [ tracker.value_container for tracker in trackers ])
             else:
                 pass
         elif attr_value:
             if isinstance(attr_value, str) and is_template_string(attr_value):
                 set_attr(attr, None, PROP_TYPE_TEMPLATE)
-                self.template_trackers.append(TemplatePropertyTracker(self.react, self, attr, Template(attr_value), type_converter, self.tctx, self.async_update))
+                self.trackers.append(TemplatePropertyTracker(self.react, self, attr, Template(attr_value), type_converter, self.tctx, self.async_update))
             else:
                 set_attr(attr, attr_value, PROP_TYPE_VALUE)
         else:
             set_attr(attr, default, PROP_TYPE_DEFAULT)
-    
-
-    def start_trackers(self) -> None:
-        if self.tctx:
-            @callback
-            def async_update_template_trackers():
-                for tracker in self.template_trackers:
-                    tracker.async_refresh()
-            self.tctx.on_update(async_update_template_trackers)
-        
-        for tracker in self.template_trackers:
-            tracker.start()
 
 
     def set_property(self, attr: str, value: Any):
@@ -111,57 +115,39 @@ class TrackHandler(Updatable, Generic[T]):
         setattr(self, type_prop, prop_type)
 
 
-    def is_template(self, attr: str) -> bool:
-        type_prop = f"_{attr}{PROP_ATTR_TYPE_POSTFIX}"
-        return getattr(self, type_prop, PROP_TYPE_DEFAULT) == PROP_TYPE_TEMPLATE
+    def start(self):
+        if self.tctx:
+            @callback
+            def async_update_template_trackers():
+                for tracker in self.trackers:
+                    tracker.async_refresh()
+            self.tctx.on_update(async_update_template_trackers)
+        
+        for tracker in self.trackers:
+            tracker.start()
 
 
     def destroy(self) -> None:
         super().destroy()
-        for tracker in self.template_trackers:
+        for tracker in self.trackers:
             tracker.destroy()
 
 
-class BaseTracker(Updatable):
+class MultiItemTracker(CompositeTracker[MultiItem]):
 
-    def __init__(self, react: ReactBase) -> None:
-        super().__init__(react)
-
-    def start(self):
-        pass
+    def __init__(self, react: ReactBase, config_source: MultiItem, tctx: TemplateContext) -> None:
+        super().__init__(react, config_source, tctx, MultiItem)
 
 
-    @callback
-    def async_refresh(self):
-        pass
+class ObjectTracker(CompositeTracker[T], Generic[T]):
 
-
-class MultiItemTracker(BaseTracker):
-
-    def __init__(self, react: ReactBase, property: str, handler: TrackHandler) -> None:
-        super().__init__(react)
-        self.property = property
-        self.handler = handler
-
-    def start(self):
-        self.handler.start_trackers()
-
-
-class ObjectTracker(BaseTracker):
-
-    def __init__(self, react: ReactBase, property: str, handler: TrackHandler) -> None:
-        super().__init__(react)
-        self.property = property
-        self.handler = handler
-
-
-    def start(self):
-        self.handler.start_trackers()
+    def __init__(self, react: ReactBase, config_source: DynamicData, tctx: TemplateContext, t_type: Type[T] = DynamicData) -> None:
+        super().__init__(react, config_source, tctx, t_type)
 
 
 class TemplatePropertyTracker(BaseTracker):
     
-    def __init__(self, react: ReactBase, owner: TrackHandler, property: str, template: Template, type_converter: Any, tctx: TemplateContext, update_callback: callable_type = None):
+    def __init__(self, react: ReactBase, owner: CompositeTracker, property: str, template: Template, type_converter: Any, tctx: TemplateContext, update_callback: callable_type = None):
         super().__init__(react)
         self.react = react
         self.owner = owner
@@ -186,7 +172,8 @@ class TemplatePropertyTracker(BaseTracker):
         self.async_refresh()
 
     
-    def destroy(self):
+    def destroy(self) -> None:
+        super().destroy()
         if self.result_info:
             self.result_info.async_remove()
 
