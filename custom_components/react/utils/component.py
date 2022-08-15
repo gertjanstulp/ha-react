@@ -3,11 +3,14 @@ from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.service import async_register_admin_service
 
-from ..const import DOMAIN
 from .. import WorkflowEntity
 from ..base import ReactBase
 
-SERVICE_TRIGGER = "trigger"
+from ..const import (
+    DOMAIN, 
+    SERVICE_TRIGGER
+)
+
 
 async def async_setup_component(react: ReactBase):
     # Enable workflow toggling

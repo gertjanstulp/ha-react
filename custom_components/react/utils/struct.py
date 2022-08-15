@@ -149,6 +149,13 @@ class MultiItem(DynamicData):
         return self[0]
 
 
+    @property
+    def first_or_none(self) -> Any:
+        if self.len() > 0:
+            return self.first
+        return None
+
+
     def __getitem__(self, k):
         if self.any and len(self.names) > k:
             return self.get(self.names[k])

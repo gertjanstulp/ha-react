@@ -193,6 +193,8 @@ PROP_TYPE_OBJECT = "object"
 PROP_TYPE_LIST = "list"
 PROP_TYPE_MULTI_ITEM = "multiitem"
 
+SERVICE_TRIGGER = "trigger"
+
 _EMPTY_ = '_'
 
 

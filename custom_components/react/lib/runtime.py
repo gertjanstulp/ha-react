@@ -174,9 +174,9 @@ class ActionHandler(BaseHandler):
     
     def create_event(self, context: Context) -> Event:
         data = {
-            ATTR_ENTITY: self.actor_runtime.entity.first,
-            ATTR_TYPE: self.actor_runtime.type.first,
-            ATTR_ACTION: self.actor_runtime.action.first,
+            ATTR_ENTITY: self.actor_runtime.entity.first_or_none,
+            ATTR_TYPE: self.actor_runtime.type.first_or_none,
+            ATTR_ACTION: self.actor_runtime.action.first_or_none,
             ATTR_DATA: self.actor_runtime.data[0].as_dict() if self.actor_runtime.data and len(self.actor_runtime.data) > 0 else None,
         }
         return Event(EVENT_REACT_ACTION, data, context=context)
