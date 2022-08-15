@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 
 DOMAIN_SENSOR = "sensor"
-FIXTURE_TEST_NAME = "test_name"
+FIXTURE_WORKFLOW_NAME = "workflow_name"
 EVENT_TEST_CALLBACK = "test_callback"
 
 REACT_CONFIG = "react.yaml"

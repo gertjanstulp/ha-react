@@ -12,13 +12,13 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_O
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-
 from custom_components.react.const import (
     ATTR_NOTIFY,
     CONF_PLUGIN,
     CONF_STENCIL,
     CONF_WORKFLOW,
-    DOMAIN as REACT_DOMAIN
+    DOMAIN as REACT_DOMAIN,
+    SERVICE_TRIGGER
 )
 
 from tests.common import (
@@ -31,6 +31,7 @@ from tests.common import (
     get_test_config_dir
 )
 
+WORKFLOW_ID_PREFIX = "workflow_"
 
 @pytest.fixture()
 def patch_config_dir():
@@ -44,17 +45,18 @@ def auto_enable_custom_integrations(patch_config_dir, enable_custom_integrations
 
 
 @pytest.fixture
-async def react_component(hass):
+async def react_component(hass: HomeAssistant):
     hass.data[DATA_TRACE] = {}
-    async def async_setup(test_name: str, additional_workflows: list[str] = [], init_notify_plugin: bool = False):
+
+    async def async_setup(workflow_name: str, additional_workflows: list[str] = [], init_notify_plugin: bool = False):
         data = None
-        workflow_name = f"workflow_{test_name}"
+        workflow_id = f"{WORKFLOW_ID_PREFIX}{workflow_name}"
         with open(get_test_config_dir(REACT_CONFIG)) as f:
             raw_data: dict = yaml.load(f, Loader=SafeLoader)
             data = {
                 CONF_STENCIL: raw_data.get(CONF_STENCIL, {}),
                 CONF_WORKFLOW: {
-                    workflow_name : raw_data.get(CONF_WORKFLOW, {}).get(workflow_name, {}),
+                    workflow_id : raw_data.get(CONF_WORKFLOW, {}).get(workflow_id, {}),
                 }
             }
 
@@ -63,9 +65,9 @@ async def react_component(hass):
                     ATTR_NOTIFY: "tests.plugins.test_notify_plugin"
                 }
                     
-        for workflow in additional_workflows:
-            additional_workflow_name = workflow_name = f"workflow_{workflow}"
-            data[CONF_WORKFLOW][additional_workflow_name] = raw_data.get(CONF_WORKFLOW, {}).get(workflow_name, {})
+        for additional_workflow in additional_workflows:
+            additional_workflow_ID = f"{WORKFLOW_ID_PREFIX}{additional_workflow}"
+            data[CONF_WORKFLOW][additional_workflow_ID] = raw_data.get(CONF_WORKFLOW, {}).get(additional_workflow_ID, {})
         
         assert await async_setup_component(
             hass,
@@ -75,8 +77,14 @@ async def react_component(hass):
 
         await hass.async_block_till_done()
 
+    async def async_call_trigger_service(entity_id: str):
+        data = { ATTR_ENTITY_ID: entity_id }
+        await hass.services.async_call(REACT_DOMAIN, SERVICE_TRIGGER, data)
+        
+
     result = Mock()
     result.async_setup = async_setup
+    result.async_call_trigger_service = async_call_trigger_service
     return result
 
 

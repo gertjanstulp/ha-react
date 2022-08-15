@@ -86,13 +86,12 @@ TRACE_MESSAGE = "message"
 
 class TstContext():
     
-    def __init__(self, hass: HomeAssistant, test: str) -> None:
+    def __init__(self, hass: HomeAssistant, workflow_name: str) -> None:
         self.hass = hass
         self.react: ReactBase = self.hass.data[DOMAIN]
-        self.test = test
         self.event_mock = Mock()
 
-        self.workflow_id = f"workflow_{self.test}"
+        self.workflow_id = f"workflow_{workflow_name}"
         self.workflow_config = self.react.configuration.workflow_config.workflows.get(self.workflow_id)
 
         self.notifications = list[dict]()
