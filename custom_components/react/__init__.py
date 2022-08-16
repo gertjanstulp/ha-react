@@ -227,7 +227,7 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
     
     
     async def async_disable(self):
-        if not self.is_enabled:
+        if self.is_enabled:
             self.is_enabled = False
             await self.async_update_ha_state()
             self.react.log.debug(f"Registry: '{self.entity_id}' disabled")
