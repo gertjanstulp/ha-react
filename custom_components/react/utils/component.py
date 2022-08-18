@@ -8,7 +8,7 @@ from ..base import ReactBase
 
 from ..const import (
     DOMAIN, 
-    SERVICE_TRIGGER
+    SERVICE_TRIGGER_WORKFLOW
 )
 
 
@@ -20,9 +20,9 @@ async def async_setup_component(react: ReactBase):
     component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
 
     @callback
-    async def trigger_service_handler(entity: WorkflowEntity, service_call: ServiceCall):
+    async def trigger_workflow_service_handler(entity: WorkflowEntity, service_call: ServiceCall):
         await entity.async_trigger(service_call.context)
-    component.async_register_entity_service(SERVICE_TRIGGER, {}, trigger_service_handler)
+    component.async_register_entity_service(SERVICE_TRIGGER_WORKFLOW, {}, trigger_workflow_service_handler)
 
 
     # Load workflow entities

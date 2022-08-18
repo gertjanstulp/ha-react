@@ -165,23 +165,16 @@ class TstContext():
         self.verify_reaction_entity_data_item(ATTR_TYPE, reaction_entity, workflow_config_reactor.type, expected_type, type_index)
         self.verify_reaction_entity_data_item(ATTR_ACTION, reaction_entity, workflow_config_reactor.action, expected_action, action_index)
 
-        # entity_got = reaction_entity.attributes.get(ATTR_ENTITY, None)
-        # entity_expected = expected_entity or workflow_config_reactor.entity[entity_index]
-        # assert entity_got == entity_expected, f"Expected reaction entity '{entity_expected}', got '{entity_got}'"
-
-        # type_got = reaction_entity.attributes.get(ATTR_TYPE, None)
-        # type_expected = expected_type or workflow_config_reactor.type[type_index]
-        # assert type_got == type_expected, f"Expected reaction type '{type_expected}', got '{type_got}'"
-
-        # action_got = reaction_entity.attributes.get(ATTR_ACTION, None)
-        # action_expected = expected_action or workflow_config_reactor.action[action_index]
-        # assert action_got == action_expected, f"Expected reaction action '{action_expected}', got '{action_got}'"
-
     
     def verify_reaction_entity_data_item(self, attr: str, reaction_entity: State, multi_item: MultiItem, expected_value: Any = None, item_index: int = 0):
         got_value = reaction_entity.attributes.get(attr, None)
         expected_value = expected_value or multi_item[item_index]
         assert got_value == expected_value, f"Expected reaction {attr} '{expected_value}', got '{got_value}'"
+
+
+    def retrieve_reaction_entity_id(self):
+        reaction_entity: State = self.retrieve_reaction_entities()[0]
+        return reaction_entity.entity_id
 
 
     def verify_reaction_internal_data(self, expected_data: dict = None):
@@ -233,22 +226,6 @@ class TstContext():
         self.verify_reaction_event_data_item(ATTR_TYPE, event, workflow_config_reactor.type, expected_type, type_index)
         self.verify_reaction_event_data_item(ATTR_ACTION, event, workflow_config_reactor.action, expected_action, action_index)
         self.verify_reaction_event_data_item(ATTR_DATA, event, workflow_config_reactor.data, expected_data, -1)
-
-        # entity_got = event.data.get(ATTR_ENTITY, None)
-        # entity_expected = expected_entity if expected_entity else workflow_config_reactor.entity[entity_index]
-        # assert entity_got == entity_expected, f"Expected event entity '{entity_expected}', got '{entity_got}'"
-        
-        # type_got = event.data.get(ATTR_TYPE, None)
-        # type_expected = expected_type if expected_type else workflow_config_reactor.type[type_index]
-        # assert type_got == type_expected, f"Expected event type '{type_expected}', got '{type_got}'"
-        
-        # action_got = event.data.get(ATTR_ACTION, None)
-        # action_expected = expected_action if expected_action else workflow_config_reactor.action[action_index]
-        # assert action_got == action_expected, f"Expected event action '{action_expected}', got '{action_got}'"
-
-        # data_got = event.data.get(ATTR_DATA, None)
-        # data_expected = expected_data
-        # assert data_got == data_expected, f"Expected event data '{data_expected}', got '{data_got}'"
 
 
     def verify_reaction_event_data_item(self, attr: str, event: Event, multi_item_or_list: Union[MultiItem, list], expected_value: Any = None, item_index: int = 0):
@@ -511,14 +488,12 @@ class TstContext():
         self.assert_attribute(ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT, send_feedback_item, acknowledgement)
 
 
-
     def assert_attribute(self, attr: str, expected: dict, got: dict):    
         value_expected = expected.get(attr, None)
         if isinstance(value_expected, MultiItem) and len(value_expected) == 1:
             value_expected = value_expected.first
         value_got = got.get(attr, None)
         assert value_got == value_expected, f"Expected notification value '{value_expected}', got '{value_got}'"
-
 
 
 class TracePath():

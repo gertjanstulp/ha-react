@@ -18,7 +18,10 @@ from custom_components.react.const import (
     CONF_STENCIL,
     CONF_WORKFLOW,
     DOMAIN as REACT_DOMAIN,
-    SERVICE_TRIGGER
+    SERVICE_DELETE_REACTION,
+    SERVICE_REACT_NOW,
+    SERVICE_TRIGGER_REACTION,
+    SERVICE_TRIGGER_WORKFLOW
 )
 
 from tests.common import (
@@ -77,14 +80,29 @@ async def react_component(hass: HomeAssistant):
 
         await hass.async_block_till_done()
 
-    async def async_call_trigger_service(entity_id: str):
+    async def async_call_service_trigger_workflow(entity_id: str):
         data = { ATTR_ENTITY_ID: entity_id }
-        await hass.services.async_call(REACT_DOMAIN, SERVICE_TRIGGER, data)
-        
+        await hass.services.async_call(REACT_DOMAIN, SERVICE_TRIGGER_WORKFLOW, data)
+
+    async def async_call_service_trigger_reaction(entity_id: str):
+        data = { ATTR_ENTITY_ID: entity_id }
+        await hass.services.async_call(REACT_DOMAIN, SERVICE_TRIGGER_REACTION, data)
+
+    async def async_call_service_delete_reaction(entity_id: str):
+        data = { ATTR_ENTITY_ID: entity_id }
+        await hass.services.async_call(REACT_DOMAIN, SERVICE_DELETE_REACTION, data)
+
+    async def async_call_service_react_now(entity_id: str):
+        data = { ATTR_ENTITY_ID: entity_id }
+        await hass.services.async_call(REACT_DOMAIN, SERVICE_REACT_NOW, data)
+
 
     result = Mock()
     result.async_setup = async_setup
-    result.async_call_trigger_service = async_call_trigger_service
+    result.async_call_service_trigger_workflow = async_call_service_trigger_workflow
+    result.async_call_service_trigger_reaction = async_call_service_trigger_reaction
+    result.async_call_service_delete_reaction = async_call_service_delete_reaction
+    result.async_call_service_react_now = async_call_service_react_now
     return result
 
 

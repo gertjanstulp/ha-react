@@ -193,7 +193,11 @@ PROP_TYPE_OBJECT = "object"
 PROP_TYPE_LIST = "list"
 PROP_TYPE_MULTI_ITEM = "multiitem"
 
-SERVICE_TRIGGER = "trigger"
+# services
+SERVICE_TRIGGER_WORKFLOW = "trigger_workflow"
+SERVICE_TRIGGER_REACTION = "trigger_reaction"
+SERVICE_DELETE_REACTION = "delete_reaction"
+SERVICE_REACT_NOW = "react_now"
 
 _EMPTY_ = '_'
 
