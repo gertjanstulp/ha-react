@@ -36,6 +36,15 @@ class ReactDispatch:
             self._dispatch_now(reaction)
 
 
+    def force_dispatch(self, reaction_id: str, delete_reaction: bool):
+        reaction = self.react.reactions.get_by_id(reaction_id)
+        if not reaction:
+            self.react.log.warn(f"Dispatch: Could not dispatch reaction with id '{reaction_id}', id not found")
+            return
+        
+        self._dispatch_now(reaction, delete_reaction)
+
+
     def _dispatch_later(self, reaction: ReactReaction):
         if reaction.data.datetime < datetime.now():
             self._dispatch_now(reaction)
@@ -46,12 +55,13 @@ class ReactDispatch:
         reaction.schedule(self._dispatch_now, dt)
 
 
-    def _dispatch_now(self, reaction: ReactReaction, *args):
+    def _dispatch_now(self, reaction: ReactReaction, delete_reaction: bool = True, *args):
         if reaction.data.reset_workflow:
             self._dispatch_reset(reaction)
         else:
             self._dispatch_event(reaction)
-        self.react.reactions.delete(reaction)
+        if delete_reaction:
+            self.react.reactions.delete(reaction)
 
 
     def _dispatch_reset(self, reaction: ReactReaction):

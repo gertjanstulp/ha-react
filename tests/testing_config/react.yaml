@@ -1,4 +1,4 @@
-# frontend_repo_url: http://localhost:5000
+frontend_repo_url: http://localhost:5000
 
 entity_maps:
   2095689255: mobile_user
