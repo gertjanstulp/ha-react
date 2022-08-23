@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Union
+from telegram.utils.helpers import escape_markdown
 from homeassistant.const import ATTR_COMMAND, Platform
 from homeassistant.core import Event, Context
 from homeassistant.components.telegram_bot import (
@@ -20,12 +21,17 @@ from ..notify_plugin import NotifyPlugin, NotifyFeedbackEventDataReader, NotifyS
 from ...base import ReactBase
 
 from ...const import (
+    ATTR_ACTION,
     ATTR_DATA,
+    ATTR_ENTITY,
     ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT,
     ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK,
     ATTR_EVENT_FEEDBACK_ITEM_TITLE,
     ATTR_EVENT_MESSAGE,
-    EVENTDATA_COMMAND_REACT
+    ATTR_TYPE,
+    EVENTDATA_COMMAND_REACT,
+    REACT_ACTION_FEEDBACK,
+    REACT_TYPE_NOTIFY
 )
 
 # Service data attributes
@@ -55,21 +61,6 @@ class TelegramNotifyPlugin(NotifyPlugin):
         return TelegramNotifyFeedbackEventDataReader
 
 
-    async def async_acknowledge_feedback(self, event_reader: TelegramNotifyFeedbackEventDataReader) -> None:
-        feedback_data = {
-            ATTR_MESSAGEID: event_reader.message_id,
-            ATTR_CHAT_ID: event_reader.chat_id,
-            ATTR_MESSAGE: f"{event_reader.message_text} - {event_reader.acknowledgement}",
-            ATTR_KEYBOARD_INLINE: None
-        }
-
-        await self.react.hass.services.async_call(
-            DOMAIN,
-            SERVICE_EDIT_MESSAGE,
-            feedback_data, 
-            context=event_reader.hass_context)
-
-
     async def async_send_notification(self, entity: str, data: dict, context: Context):
         await self.react.hass.services.async_call(
             Platform.NOTIFY, 
@@ -78,15 +69,23 @@ class TelegramNotifyPlugin(NotifyPlugin):
             context)
 
 
+    async def async_acknowledge_feedback(self, feedback_data: dict, context: Context) -> None:
+        await self.react.hass.services.async_call(
+            DOMAIN,
+            SERVICE_EDIT_MESSAGE,
+            feedback_data, 
+            context=context)
+
+
 class TelegramNotifySendMessageReactionEventDataReader(NotifySendMessageReactionEventDataReader):
 
     def __init__(self, react: ReactBase, event: Event) -> None:
         super().__init__(react, event)
 
 
-    def create_plugin_data(self) -> dict:
+    def create_service_data(self) -> dict:
         result: dict = {
-            ATTR_EVENT_MESSAGE: self.message,
+            ATTR_EVENT_MESSAGE: escape_markdown(self.message),
         }
         
         if self.feedback_items_raw:
@@ -146,3 +145,23 @@ class TelegramNotifyFeedbackEventDataReader(NotifyFeedbackEventDataReader):
             self.event_type == EVENT_TELEGRAM_CALLBACK and
             self.telegram_command == EVENTDATA_COMMAND_REACT
         )
+
+    
+    def create_action_event_data(self) -> dict:
+        return {
+            ATTR_ENTITY: self.entity,
+            ATTR_TYPE: REACT_TYPE_NOTIFY,
+            ATTR_ACTION: REACT_ACTION_FEEDBACK,
+            ATTR_DATA: {
+                ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK: self.feedback
+            }
+        }
+
+
+    def create_feedback_data(self) -> dict:
+        return {
+            ATTR_MESSAGEID: self.message_id,
+            ATTR_CHAT_ID: self.chat_id,
+            ATTR_MESSAGE: escape_markdown(f"{self.message_text} - {self.acknowledgement}"),
+            ATTR_KEYBOARD_INLINE: None
+        }

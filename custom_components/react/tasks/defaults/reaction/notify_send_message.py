@@ -32,9 +32,8 @@ class Task(DefaultTask):
 
 
     async def async_execute_default(self, event_reader: NotifySendMessageReactionEventDataReader):
-        notify_data = event_reader.create_plugin_data()
         await self.notify_plugin.async_send_notification(
             event_reader.entity, 
-            notify_data, 
+            event_reader.create_service_data(), 
             event_reader.hass_context
         )
