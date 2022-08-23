@@ -1,6 +1,7 @@
 """"Store React data."""
 from __future__ import annotations
 from typing import Any
+from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_ON
 
 from homeassistant.core import Event
 
@@ -23,9 +24,11 @@ class DeviceTrackerStateData(NonBinaryStateData):
     
     def __init__(self, event_data: dict[str, Any]):
         super().__init__(DEVICE_TRACKER_PREFIX, event_data)
-
-        if self.old_state_value != self.new_state_value:
-            self.actions.append(self.new_state_value)
+        
+        if self.old_state_value == STATE_NOT_HOME and self.new_state_value == STATE_HOME:
+            self.actions.append(STATE_HOME)
+        elif self.old_state_value == STATE_HOME and self.new_state_value == STATE_NOT_HOME:
+            self.actions.append(STATE_NOT_HOME)
 
 
 class Task(StateTransformTask):
