@@ -61,11 +61,11 @@ class TelegramNotifyPlugin(NotifyPlugin):
         return TelegramNotifyFeedbackEventDataReader
 
 
-    async def async_send_notification(self, entity: str, data: dict, context: Context):
+    async def async_send_notification(self, entity: str, notification_data: dict, context: Context):
         await self.react.hass.services.async_call(
             Platform.NOTIFY, 
             entity,
-            data, 
+            notification_data, 
             context)
 
 

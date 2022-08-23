@@ -33,7 +33,7 @@ class NotifyPlugin:
         raise NotImplementedError()
 
 
-    async def async_send_notification(self, entity: str, data: dict, context: Context):
+    async def async_send_notification(self, entity: str, notification_data: dict, context: Context):
         raise NotImplementedError()
 
 

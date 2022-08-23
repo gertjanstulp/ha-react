@@ -437,19 +437,19 @@ class TstContext():
         await self.hass.async_block_till_done()
 
 
-    def send_notification(self, entity: str, data: dict, context: Context):
+    def send_notification(self, entity: str, notification_data: dict, context: Context):
         self.notifications.append({
             ATTR_ENTITY: entity,
-            ATTR_DATA: data,
+            ATTR_DATA: notification_data,
             ATTR_CONTEXT: context
         })
 
 
-    def acknowledge_feedback(self, entity: str, feedback: str, acknowledgement: str):
+    def acknowledge_feedback(self, feedback_data: dict):
         self.acknowledgements.append({
-            ATTR_ENTITY: entity,
-            ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK: feedback,
-            ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT: acknowledgement,
+            ATTR_ENTITY: feedback_data.get(ATTR_ENTITY, None),
+            ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK: feedback_data.get(ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK, None),
+            ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT: feedback_data.get(ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT, None),
         })
 
 
