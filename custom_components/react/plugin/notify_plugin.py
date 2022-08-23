@@ -33,11 +33,11 @@ class NotifyPlugin:
         raise NotImplementedError()
 
 
-    async def async_acknowledge_feedback(self, event_reader: NotifyFeedbackEventDataReader):
+    async def async_send_notification(self, entity: str, notification_data: dict, context: Context):
         raise NotImplementedError()
 
 
-    async def async_send_notification(self, entity: str, data: dict, context: Context):
+    async def async_acknowledge_feedback(self, feedback_data: dict, context: Context):
         raise NotImplementedError()
 
 
@@ -64,7 +64,7 @@ class NotifySendMessageReactionEventDataReader(ReactionEventDataReader):
         )
 
     
-    def create_plugin_data(self) -> dict:
+    def create_service_data(self) -> dict:
         raise NotImplementedError()
 
 
@@ -77,3 +77,11 @@ class NotifyFeedbackEventDataReader(EventDataReader):
         self.feedback: Union[str, None] = None
         self.acknowledgement: Union[str, None] = None
         self.entity: Union[str, None] = None
+
+    
+    def create_action_event_data(self) -> dict:
+        raise NotImplementedError()
+
+
+    def create_feedback_data(self) -> dict:
+        raise NotImplementedError()

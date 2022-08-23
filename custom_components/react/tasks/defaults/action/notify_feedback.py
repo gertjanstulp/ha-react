@@ -39,17 +39,9 @@ class Task(DefaultTask):
 
 
     async def async_execute_default(self, event_reader: NotifyFeedbackEventDataReader) -> None:
-        await self.send_react_event(event_reader)
-        await self.notify_plugin.async_acknowledge_feedback(event_reader)
+        await self.send_action_event(event_reader.create_action_event_data())
+        await self.notify_plugin.async_acknowledge_feedback(event_reader.create_feedback_data(), event_reader.hass_context)
 
 
-    async def send_react_event(self, event_reader: NotifyFeedbackEventDataReader):
-        react_event = {
-            ATTR_ENTITY: event_reader.entity,
-            ATTR_TYPE: REACT_TYPE_NOTIFY,
-            ATTR_ACTION: REACT_ACTION_FEEDBACK,
-            ATTR_DATA: {
-                ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK: event_reader.feedback
-            }
-        }
-        self.react.hass.bus.async_fire(EVENT_REACT_ACTION, react_event)
+    async def send_action_event(self, action_event_data: dict):
+        self.react.hass.bus.async_fire(EVENT_REACT_ACTION, action_event_data)

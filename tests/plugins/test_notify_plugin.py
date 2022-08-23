@@ -7,11 +7,17 @@ from custom_components.react.base import ReactBase
 from custom_components.react.plugin.notify_plugin import NotifyPlugin, NotifySendMessageReactionEventDataReader, NotifyFeedbackEventDataReader
 
 from custom_components.react.const import (
+    ATTR_ACTION,
+    ATTR_DATA,
     ATTR_ENTITY,
     ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT,
     ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK,
+    ATTR_EVENT_FEEDBACK_ITEM_TITLE,
     ATTR_EVENT_FEEDBACK_ITEMS,
-    ATTR_EVENT_MESSAGE, 
+    ATTR_EVENT_MESSAGE,
+    ATTR_TYPE,
+    REACT_ACTION_FEEDBACK,
+    REACT_TYPE_NOTIFY, 
 )
 
 from tests.common import EVENT_TEST_CALLBACK
@@ -47,16 +53,16 @@ class TestNotifyPlugin(NotifyPlugin):
         return TestNotifyFeedbackEventDataReader
 
 
-    async def async_acknowledge_feedback(self, event_reader: NotifyFeedbackEventDataReader) -> None:
-        self.test_context.acknowledge_feedback(event_reader.entity, event_reader.feedback, event_reader.acknowledgement)
-
-
-    async def async_send_notification(self, entity: str, data: dict, context: Context):
+    async def async_send_notification(self, entity: str, notification_data: dict, context: Context):
         self.test_context.send_notification(
             entity,
-            data,
+            notification_data,
             context
         )
+
+
+    async def async_acknowledge_feedback(self, feedback_data: dict, context: Context):
+        self.test_context.acknowledge_feedback(feedback_data)
         
 
 class TestNotifySendMessageReactionEventDataReader(NotifySendMessageReactionEventDataReader):
@@ -65,12 +71,12 @@ class TestNotifySendMessageReactionEventDataReader(NotifySendMessageReactionEven
         super().__init__(react, event)
 
 
-    def create_plugin_data(self) -> dict:
+    def create_service_data(self) -> dict:
         return {
             ATTR_EVENT_MESSAGE: self.message,
             ATTR_EVENT_FEEDBACK_ITEMS: self.feedback_items_raw,
         }
-
+    
     
 class TestNotifyFeedbackEventDataReader(NotifyFeedbackEventDataReader):
     def __init__(self, react: ReactBase, event: Event) -> None:
@@ -87,3 +93,26 @@ class TestNotifyFeedbackEventDataReader(NotifyFeedbackEventDataReader):
 
     def applies(self) -> bool:
         return self.event_type == EVENT_TEST_CALLBACK
+
+
+    def create_action_event_data(self) -> dict:
+        return {
+            ATTR_ENTITY: self.entity,
+            ATTR_TYPE: REACT_TYPE_NOTIFY,
+            ATTR_ACTION: REACT_ACTION_FEEDBACK,
+            ATTR_DATA: {
+                ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK: self.feedback
+            }
+        }
+
+
+    def create_feedback_data(self) -> dict:
+        return {
+            ATTR_ENTITY: self.entity,
+            ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT: self.acknowledgement,
+            ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK: self.feedback
+            # ATTR_MESSAGEID: self.message_id,
+            # ATTR_CHAT_ID: self.chat_id,
+            # ATTR_MESSAGE: escape_markdown(f"{self.message_text} - {self.acknowledgement}"),
+            # ATTR_KEYBOARD_INLINE: None
+        }
