@@ -2,16 +2,17 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-
 from .updatable import Updatable
 from ..base import ReactBase
 from ..utils.events import ActionEventDataReader
 
 if TYPE_CHECKING:
     from .track import ObjectTracker
+    from ..lib.runtime import ActionContext
 
 from ..const import (
     ATTR_ACTOR,
+    ATTR_EVENT,
 )
 
 class TemplateContextDataProvider(Updatable):
@@ -40,14 +41,16 @@ class VariableContextDataProvider(TemplateContextDataProvider):
 
 class ActorTemplateContextDataProvider(TemplateContextDataProvider):
     
-    def __init__(self, react: ReactBase, event_reader: ActionEventDataReader) -> None:
+    def __init__(self, react: ReactBase, event_reader: ActionEventDataReader, actx: ActionContext) -> None:
         super().__init__(react)
         
         self.event_reader = event_reader
+        self.actx = actx
 
 
     def provide(self, context_data: dict):
-        context_data[ATTR_ACTOR] = self.event_reader.to_dict()
+        context_data[ATTR_EVENT] = self.event_reader.to_dict() 
+        context_data[ATTR_ACTOR] = self.actx.to_dict()
 
 
 class TemplateContext(Updatable):

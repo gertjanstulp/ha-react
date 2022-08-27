@@ -12,7 +12,6 @@ from custom_components.react.const import (
     ATTR_ENTITY,
     ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT,
     ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK,
-    ATTR_EVENT_FEEDBACK_ITEM_TITLE,
     ATTR_EVENT_FEEDBACK_ITEMS,
     ATTR_EVENT_MESSAGE,
     ATTR_TYPE,
@@ -111,8 +110,4 @@ class TestNotifyFeedbackEventDataReader(NotifyFeedbackEventDataReader):
             ATTR_ENTITY: self.entity,
             ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT: self.acknowledgement,
             ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK: self.feedback
-            # ATTR_MESSAGEID: self.message_id,
-            # ATTR_CHAT_ID: self.chat_id,
-            # ATTR_MESSAGE: escape_markdown(f"{self.message_text} - {self.acknowledgement}"),
-            # ATTR_KEYBOARD_INLINE: None
         }
