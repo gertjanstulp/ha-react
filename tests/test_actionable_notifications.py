@@ -60,9 +60,14 @@ async def test_react_actionable_notification_feedback(hass: HomeAssistant, workf
     tc_actionable_notification = TstContext(hass, "actionable_notification")
     send_workflow = tc_actionable_notification.workflow_config
     notify_plugin.hook_test(tc)
+    data_out = {
+        "feedback": "approve"
+    }
     async with tc.async_listen_reaction_event():
         tc.verify_reaction_entity_not_found()
         await tc.async_send_notify_feedback_event(send_workflow)
         tc.verify_acknowledgement_sent()
         tc.verify_acknowledgement_data(send_workflow)
-
+        await tc.async_verify_reaction_event_received()
+        tc.verify_reaction_event_data(expected_data=data_out)
+        tc.verify_trace_record(expected_runtime_reactor_data=data_out)

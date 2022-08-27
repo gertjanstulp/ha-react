@@ -418,7 +418,8 @@ async def test_react_data_event(hass: HomeAssistant, workflow_name, react_compon
         "data1": 1,
         "data2": tc.workflow_config.actors[0].action.first,
         "data3": 3,
-        "data4": ["asdf", "qwer"]
+        "data4": ["asdf", "qwer"],
+        "data5": tc.workflow_config.actors[0].id
     }
     async with tc.async_listen_reaction_event():
         tc.verify_reaction_entity_not_found()

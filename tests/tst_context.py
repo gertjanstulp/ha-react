@@ -333,15 +333,18 @@ class TstContext():
         # Test for actor variables in trace data
         trace_trace_actor_vars_variables = trace_trace_actor_vars.assert_property_not_none(ATTR_VARIABLES)
         trace_trace_actor_vars_variables_actor = trace_trace_actor_vars_variables.assert_property_not_none(ATTR_ACTOR)
+        trace_trace_actor_vars_variables_actor.assert_property_match(ATTR_ID, workflow_config_actor.id)
+        trace_trace_actor_vars_variables_event = trace_trace_actor_vars_variables.assert_property_not_none(ATTR_EVENT)
         if workflow_config_actor.entity:
-            trace_trace_actor_vars_variables_actor.assert_property_match(ATTR_ENTITY, expected_runtime_actor_entity or workflow_config_actor.entity[actor_entity_index])
+            trace_trace_actor_vars_variables_event.assert_property_match(ATTR_ENTITY, expected_runtime_actor_entity or workflow_config_actor.entity[actor_entity_index])
         if workflow_config_actor.type:
-            trace_trace_actor_vars_variables_actor.assert_property_match(ATTR_TYPE, expected_runtime_actor_type or workflow_config_actor.type[actor_type_index])
+            trace_trace_actor_vars_variables_event.assert_property_match(ATTR_TYPE, expected_runtime_actor_type or workflow_config_actor.type[actor_type_index])
         if workflow_config_actor.action:
-            trace_trace_actor_vars_variables_actor.assert_property_match(ATTR_ACTION, expected_runtime_actor_action or workflow_config_actor.action[actor_action_index])
+            trace_trace_actor_vars_variables_event.assert_property_match(ATTR_ACTION, expected_runtime_actor_action or workflow_config_actor.action[actor_action_index])
         if workflow_config_actor.data:
-            trace_trace_actor_vars_variables_actor.assert_property_match(ATTR_DATA, expected_runtime_actor_data or workflow_config_actor.data[actor_data_index])
+            trace_trace_actor_vars_variables_event.assert_property_match(ATTR_DATA, expected_runtime_actor_data or workflow_config_actor.data[actor_data_index])
         
+
         trace_trace_actor_vars_actor = trace_trace_actor_vars.assert_property_not_none(ATTR_ACTOR)
         trace_trace_actor_vars_actor.assert_property_match(ATTR_ID, workflow_config_actor.id)
 

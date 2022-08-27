@@ -182,11 +182,12 @@ workflow:
         action: reactor_action_data
         data:
           data1: 1
-          data2: "{{ actor.action }}"
+          data2: "{{ event.action }}"
           data3: "{{ type_templated }}"
           data4: 
             - asdf
             - qwer
+          data5: "{{ actor.id }}"
 
   workflow_data_delayed:
     actor:
@@ -244,7 +245,7 @@ workflow:
         action: "{{ 'actor_action_' ~ templated }}"
     reactor:
       reactor_templated:
-        entity: "{{ 're' ~ actor.entity }}"
+        entity: "{{ 're' ~ event.entity }}"
         type: "{{ 'reactor' ~ '_type' ~ '_templated' }}"
         action: "{{ 'reactor_action_' ~ templated }}"
 
@@ -256,7 +257,7 @@ workflow:
         action: "{{ 'actor_action_' ~ states('input_text.test_text') }}"
     reactor:
       reactor_templated_state:
-        entity: "{{ 're' ~ actor.entity }}"
+        entity: "{{ 're' ~ event.entity }}"
         type: "{{ 'reactor' ~ '_type' ~ '_templated_state' }}"
         action: "{{ 'reactor_action_' ~ states('input_text.test_text') }}"
 
@@ -382,7 +383,7 @@ workflow:
   workflow_actionable_notification_feedback:
     actor:
       actor_actionable_notification_feedback:
-        entity: mobile_user
+        entity: mobile_group
         type: notify
         action: feedback
         data:
@@ -393,6 +394,6 @@ workflow:
         type: reactor_type_actionable_notification_feedback
         action: reactor_action_actionable_notification_feedback
         data:
-          feedback: "{{ actor.data.feedback }}"
+          feedback: "{{ event.data.feedback }}"
       
           

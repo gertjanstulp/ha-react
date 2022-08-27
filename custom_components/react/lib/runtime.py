@@ -34,6 +34,7 @@ from ..const import (
     ATTR_CONTEXT,
     ATTR_DATA,
     ATTR_ENTITY,
+    ATTR_EVENT,
     ATTR_THIS,
     ATTR_TYPE,
     ATTR_VARIABLES,
@@ -59,6 +60,11 @@ class ActionContext():
     condition_is_template: Union[bool, None] = None
     index: Union[int, None] = None
     actor_id: Union[str, None] = None
+
+    def to_dict(self) -> dict:
+        return {
+            ATTR_ID: self.actor_id
+        }
 
 
 class BaseHandler():
@@ -209,7 +215,7 @@ class ReactionHandler(BaseHandler):
 
     @callback
     async def async_handle(self, wctx: WorkflowRunContext):
-        template_context_data_provider = ActorTemplateContextDataProvider(self.runtime.react, wctx.event_reader)
+        template_context_data_provider = ActorTemplateContextDataProvider(self.runtime.react, wctx.event_reader, wctx.actx)
         reactor_runtime = self.jitter.render(template_context_data_provider)
         
         with trace_path(TRACE_PATH_CONDITION):
@@ -293,7 +299,10 @@ class WorkflowRunContext:
             this = state.as_dict()
         self.trace_variables = {
             ATTR_THIS: this,
-            ATTR_VARIABLES: self.variable_tracker.as_trace_dict() | { ATTR_ACTOR: self.event_reader.to_dict() },
+            ATTR_VARIABLES: 
+                self.variable_tracker.as_trace_dict() | 
+                { ATTR_EVENT: self.event_reader.to_dict() } |
+                { ATTR_ACTOR: self.actx.to_dict() },
             ATTR_ACTOR: {
                 ATTR_ID: self.actx.actor_id, 
                 ATTR_CONTEXT: self.event_reader.hass_context
