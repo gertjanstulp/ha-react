@@ -1,14 +1,10 @@
 from __future__ import annotations
 
-from homeassistant.const import Platform
+from custom_components.react.base import ReactBase
+from custom_components.react.const import EVENT_REACT_REACTION
+from custom_components.react.plugin.notify_plugin import NotifyPlugin, NotifySendMessageReactionEvent, NotifySendMessageReactionEventData, NotifySendMessageReactionEventNotificationData
+from custom_components.react.tasks.defaults.default_task import DefaultTask
 
-from ..default_task import DefaultTask
-from ....base import ReactBase
-from ....plugin.notify_plugin import NotifyPlugin, NotifySendMessageReactionEventDataReader
-
-from ....const import (
-     EVENT_REACT_REACTION
-)
 
 async def async_setup_task(react: ReactBase) -> Task:
     
@@ -25,15 +21,15 @@ class Task(DefaultTask):
 
     def __init__(self, react: ReactBase, notify_plugin: NotifyPlugin) -> None:
 
-        super().__init__(react, react.plugin_factory.get_notify_plugin().get_notify_send_message_reader_type())
+        super().__init__(react, react.plugin_factory.get_notify_plugin().get_notify_send_message_event_type())
         
         self.notify_plugin = notify_plugin
         self.events_with_filters = [(EVENT_REACT_REACTION, self.async_filter)]
 
 
-    async def async_execute_default(self, event_reader: NotifySendMessageReactionEventDataReader):
+    async def async_execute_default(self, reaction_event: NotifySendMessageReactionEvent[NotifySendMessageReactionEventData[NotifySendMessageReactionEventNotificationData]]):
         await self.notify_plugin.async_send_notification(
-            event_reader.entity, 
-            event_reader.create_service_data(), 
-            event_reader.hass_context
+            reaction_event.data.entity, 
+            reaction_event.data.data.create_service_data(),
+            reaction_event.context
         )

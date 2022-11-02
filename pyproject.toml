@@ -4,7 +4,7 @@ testpaths = [
 ]
 norecursedirs = [
     ".git",
-    "testing_config",
+    "config",
     "plugins",
 ]
 log_format = "%(asctime)s.%(msecs)03d %(levelname)-8s %(threadName)s %(name)s:%(filename)s:%(lineno)s %(message)s"
@@ -13,3 +13,4 @@ log_date_format = "%Y-%m-%d %H:%M:%S"
 filterwarnings = [
     "ignore::DeprecationWarning"
 ]
+[tool.pyright]

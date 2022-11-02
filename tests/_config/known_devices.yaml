@@ -1,0 +1,7 @@
+
+test_device_tracker:
+  name: test_device_tracker
+  mac:
+  icon:
+  picture:
+  track: true

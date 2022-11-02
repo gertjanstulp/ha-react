@@ -52,9 +52,25 @@ workflow:
         entity: reactor_entity_delayed
         type: reactor_type_delayed
         action: reactor_action_delayed
-        timing: delayed
-        delay: 3
+        wait:
+          delay: 
+            seconds: 3
+
+  workflow_overwrite:
+    actor:
+      actor_overwrite:
+        entity: actor_entity_overwrite
+        type: actor_type_overwrite
+        action: actor_action_overwrite
+    reactor:
+      reactor_overwrite: 
+        entity: reactor_entity_overwrite
+        type: reactor_type_overwrite
+        action: reactor_action_overwrite
         overwrite: True
+        wait:
+          delay: 
+            seconds: 10
 
   workflow_scheduled:
     actor: 
@@ -67,12 +83,11 @@ workflow:
         entity: reactor_entity_scheduled
         type: reactor_type_scheduled
         action: reactor_action_scheduled
-        timing: scheduled
-        overwrite: True
-        schedule:
-          at: "12:34:56"
-          weekdays:
-            - fri
+        wait:
+          schedule:
+            at: "12:34:56"
+            weekdays:
+              - fri
 
   workflow_reset:
     actor: 
@@ -118,6 +133,41 @@ workflow:
         entity: reactor_entity_trace_2
         type: reactor_type_trace_2
         action: reactor_action_trace_2
+
+  workflow_trace2:
+    actor:
+      actor_trace2_1:
+        entity: actor_entity_trace2_1
+        type: actor_type_trace2_1
+        action: actor_action_trace2_1
+        condition: "{{ is_state('input_boolean.test_trace2', 'off') }}"
+      actor_trace2_2:
+        entity: actor_entity_trace2_2
+        type: actor_type_trace2_2
+        action: actor_action_trace2_2
+        condition: "{{ is_state('input_boolean.test_trace2', 'on') }}"
+    reactor: 
+      reactor_trace2_1:
+        entity: reactor_entity_trace2_1
+        type: reactor_type_trace2_1
+        action: reactor_action_trace2_1
+        condition: "{{ is_state('input_boolean.test_trace2', 'on') }}"
+        wait:
+          delay:
+            seconds: 3
+          state:
+            condition: "{{ is_state('input_boolean.test_trace2', 'off') }}"
+      reactor_trace2_2:
+        reset_workflow: workflow_scheduled
+      reactor_trace2_3:
+        entity: reactor_entity_trace2_3
+        type: reactor_type_trace2_3
+        action: reactor_action_trace2_3
+        wait:
+          schedule:
+            at: '21:00:00'
+          state:
+            condition: "{{ is_state('input_boolean.test_trace2', 'on') }}"
 
   workflow_multiple_actor:
     actor:
@@ -200,8 +250,9 @@ workflow:
         entity: reactor_entity_data_delayed
         type: reactor_type_data_delayed
         action: reactor_action_data_delayed
-        timing: delayed
-        delay: "{{ 60 }}"
+        wait:
+          delay:
+            seconds: "{{ 60 }}"
         data:
           data1: 1
           data2: True
@@ -395,5 +446,131 @@ workflow:
         action: reactor_action_actionable_notification_feedback
         data:
           feedback: "{{ event.data.feedback }}"
-      
+
+  workflow_wait:
+    actor:
+      actor_wait:
+        entity: actor_entity_wait
+        type: actor_type_wait
+        action: actor_action_wait
+    reactor: 
+      reactor_wait:
+        entity: reactor_entity_wait
+        type: reactor_type_wait
+        action: reactor_action_wait
+        wait:
+          state:
+            condition: "{{ is_state('input_boolean.test_wait', 'on') }}"
+
+  workflow_wait_delayed:
+    actor:
+      actor_wait_delayed:
+        entity: actor_entity_wait_delayed
+        type: actor_type_wait_delayed
+        action: actor_action_wait_delayed
+    reactor: 
+      reactor_wait_delayed:
+        entity: reactor_entity_wait_delayed
+        type: reactor_type_wait_delayed
+        action: reactor_action_wait_delayed
+        wait:
+          delay: 
+            seconds: 3
+          state:
+            condition: "{{ is_state('input_boolean.test_wait', 'on') }}"
           
+  workflow_delayed_long_single:
+    mode: single
+    actor:
+      actor_delayed_long_single:
+        entity: actor_entity_delayed_long_single
+        type: actor_type_delayed_long_single
+        action: actor_action_delayed_long_single
+    reactor:
+      reactor_delayed_long_single: 
+        entity: reactor_entity_delayed_long_single
+        type: reactor_type_delayed_long_single
+        action: reactor_action_delayed_long_single
+        wait:
+          delay: 
+            seconds: 300
+          
+  workflow_delayed_long_restart:
+    mode: restart
+    actor:
+      actor_delayed_long_restart:
+        entity: actor_entity_delayed_long_restart
+        type: actor_type_delayed_long_restart
+        action: actor_action_delayed_long_restart
+    reactor:
+      reactor_delayed_long_restart: 
+        entity: reactor_entity_delayed_long_restart
+        type: reactor_type_delayed_long_restart
+        action: reactor_action_delayed_long_restart
+        wait:
+          delay: 
+            seconds: 300
+          
+  workflow_delayed_long_queued:
+    mode: queued
+    actor:
+      actor_delayed_long_queued:
+        entity: actor_entity_delayed_long_queued
+        type: actor_type_delayed_long_queued
+        action: actor_action_delayed_long_queued
+    reactor:
+      reactor_delayed_long_queued: 
+        entity: reactor_entity_delayed_long_queued
+        type: reactor_type_delayed_long_queued
+        action: reactor_action_delayed_long_queued
+        wait:
+          delay: 
+            seconds: 3
+          
+  workflow_delayed_long_parallel:
+    mode: parallel
+    actor:
+      actor_delayed_long_parallel:
+        entity: actor_entity_delayed_long_parallel
+        type: actor_type_delayed_long_parallel
+        action: actor_action_delayed_long_parallel
+    reactor:
+      reactor_delayed_long_parallel: 
+        entity: reactor_entity_delayed_long_parallel
+        type: reactor_type_delayed_long_parallel
+        action: reactor_action_delayed_long_parallel
+        wait:
+          delay: 
+            seconds: 3
+
+  workflow_scheduled_restart_abort:
+    actor:
+      actor_scheduled_restart_abort:
+        entity: actor_entity_scheduled_restart_abort
+        type: actor_type_scheduled_restart_abort
+        action: actor_action_scheduled_restart_abort
+    reactor:
+      reactor_scheduled_restart_abort: 
+        entity: reactor_entity_scheduled_restart_abort
+        type: reactor_type_scheduled_restart_abort
+        action: reactor_action_scheduled_restart_abort
+        wait:
+          schedule:
+            at: "00:00:00"
+            restart_mode: abort
+
+  workflow_scheduled_restart_force:
+    actor:
+      actor_scheduled_restart_force:
+        entity: actor_entity_scheduled_restart_force
+        type: actor_type_scheduled_restart_force
+        action: actor_action_scheduled_restart_force
+    reactor:
+      reactor_scheduled_restart_force: 
+        entity: reactor_entity_scheduled_restart_force
+        type: reactor_type_scheduled_restart_force
+        action: reactor_action_scheduled_restart_force
+        wait:
+          schedule:
+            at: "00:00:00"
+            restart_mode: force

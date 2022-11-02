@@ -43,6 +43,8 @@ class Task(ReactTask):
         async_register_command(self.react.hass, react_subscribe)
         async_register_command(self.react.hass, react_get_traces)
         async_register_command(self.react.hass, react_get_trace)
+        async_register_command(self.react.hass, websocket_list_runs)
+        async_register_command(self.react.hass, websocket_list_reactions)
 
 
 @websocket_api.websocket_command(
@@ -53,7 +55,7 @@ class Task(ReactTask):
 )
 @websocket_api.require_admin
 @websocket_api.async_response
-async def react_get_traces(hass, connection, msg):
+async def react_get_traces(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict):
     react: ReactBase = hass.data.get(DOMAIN)
     workflow_id = msg.get("workflow_id")
     if workflow_id is None:
@@ -74,7 +76,7 @@ async def react_get_traces(hass, connection, msg):
     }
 )
 @websocket_api.async_response
-async def react_get_trace(hass, connection, msg):
+async def react_get_trace(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict):
     key = f"{DOMAIN}.{msg['workflow_id']}"
     run_id = msg["run_id"]
 
@@ -96,7 +98,7 @@ async def react_get_trace(hass, connection, msg):
 @websocket_api.websocket_command({vol.Required("type"): "react/status"})
 @websocket_api.require_admin
 @websocket_api.async_response
-async def react_status(hass, connection, msg):
+async def react_status(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict):
     react: ReactBase = hass.data.get(DOMAIN)
     connection.send_message(
         websocket_api.result_message(
@@ -124,11 +126,7 @@ async def react_status(hass, connection, msg):
 )
 @websocket_api.require_admin
 @websocket_api.async_response
-async def react_subscribe(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict,
-) -> None:
+async def react_subscribe(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict) -> None:
     """Handle websocket subscriptions."""
 
     @callback
@@ -142,3 +140,25 @@ async def react_subscribe(
         forward_messages,
     )
     connection.send_message(websocket_api.result_message(msg["id"]))
+
+
+@websocket_api.websocket_command({vol.Required("type"): "react/run/list"})
+@callback
+def websocket_list_runs(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict):
+    """Handle list runs command."""
+    react: ReactBase = hass.data.get(DOMAIN)
+    connection.send_result(
+        msg["id"],
+        react.runtime.run_registry.get_all_runs()
+    )
+
+
+@websocket_api.websocket_command({vol.Required("type"): "react/reaction/list"})
+@callback
+def websocket_list_reactions(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict):
+    """Handle list reactions command."""
+    react: ReactBase = hass.data.get(DOMAIN)
+    connection.send_result(
+        msg["id"],
+        react.runtime.reaction_registry.get_all_reactions()
+    )

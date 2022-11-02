@@ -1,18 +1,23 @@
 from __future__ import annotations
 
-from typing import Any, Generic, Type, TypeVar
-from homeassistant.const import ATTR_ID
+from typing import Any, Generic, Type, TypeVar, Union
 
+from homeassistant.const import ATTR_ID
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.template import Template, is_template_string
 
+from custom_components.react.utils.logger import get_react_logger
+
 from .struct import DynamicData, MultiItem
 from .context import TemplateContext, TemplateContextDataProvider
-from ..base import ReactBase
 
 from ..const import (
     PROP_ATTR_TYPE_POSTFIX,
     PROP_TYPE_DEFAULT,
+    PROP_TYPE_LIST,
+    PROP_TYPE_MULTI_ITEM,
+    PROP_TYPE_OBJECT,
     PROP_TYPE_SOURCE,
     PROP_TYPE_TEMPLATE,
     PROP_TYPE_VALUE,
@@ -22,6 +27,7 @@ _JITTER_PROPERTY = "{}_jitter"
 
 T = TypeVar('T', bound=DynamicData)
 
+_LOGGER = get_react_logger()
 
 class BaseJitter:
 
@@ -29,15 +35,20 @@ class BaseJitter:
         self.type_converter = type_converter
 
 
+    @property
+    def prop_type(self):
+        raise NotImplementedError
+
+
     def render(self, template_context_data_provider: TemplateContextDataProvider) -> Any:
         raise NotImplementedError()
 
 
 class CompositeJitter(BaseJitter, Generic[T]):
-    def __init__(self, react: ReactBase, config_source: DynamicData, tctx: TemplateContext, t_type: Type[T] = DynamicData) -> None:
+    def __init__(self, hass: HomeAssistant, config_source: DynamicData, tctx: TemplateContext, t_type: Type[T] = DynamicData) -> None:
         super().__init__()
 
-        self.react = react
+        self.react = hass
         self.config_source = config_source
         self.tctx = tctx
         self.t_type = t_type
@@ -52,81 +63,87 @@ class CompositeJitter(BaseJitter, Generic[T]):
         attr_value = getattr(self.config_source, attr, None)
 
         if isinstance(attr_value, MultiItem):
-            self.set_jitter_prop(attr, MultiItemJitter(self.react, attr_value, self.tctx))
+            self.set_jitter(attr, MultiItemJitter(self.react, attr_value, self.tctx))
         elif isinstance(attr_value, DynamicData):
-            self.set_jitter_prop(attr, ObjectJitter(self.react, attr_value, self.tctx))
+            self.set_jitter(attr, ObjectJitter(self.react, attr_value, self.tctx, self.t_type.type_hints.get(attr, DynamicData) if self.t_type.type_hints else DynamicData))
         elif isinstance(attr_value, list):
             if len(attr_value) > 0 and isinstance(attr_value[0], DynamicData):
-                self.set_jitter_prop(attr, ListJitter(self.react, attr_value, self.tctx))
+                self.set_jitter(attr, ListJitter(self.react, attr_value, self.tctx))
             else:
                 pass
-        elif attr_value:
+        elif attr_value is not None:
             if isinstance(attr_value, str) and is_template_string(attr_value):
-                self.set_jitter_prop(attr, TemplatePropertyJitter(attr, Template(attr_value), type_converter, self.tctx, self.react))
-                self.set_property_type(attr, PROP_TYPE_TEMPLATE)
+                self.set_jitter(attr, TemplatePropertyJitter(attr, Template(attr_value), type_converter, self.tctx, self.react))
             else:
-                self.set_jitter_prop(attr, ValuePropertyJitter(attr_value, type_converter))
-                self.set_property_type(attr, PROP_TYPE_VALUE)
+                self.set_jitter(attr, ValuePropertyJitter(attr_value, PROP_TYPE_VALUE, type_converter))
         else:
-            self.set_jitter_prop(attr, ValuePropertyJitter(default, type_converter))
-            self.set_property_type(attr, PROP_TYPE_DEFAULT)
+            self.set_jitter(attr, ValuePropertyJitter(default, PROP_TYPE_DEFAULT, type_converter))
             
         self.jit_attrs.append(attr)
     
     
-    def set_jitter_prop(self, attr: str, value: BaseJitter):
+    def set_jitter(self, attr: str, value: BaseJitter):
         jitter_prop = _JITTER_PROPERTY.format(attr)
         setattr(self, jitter_prop, value)
 
     
-    def get_jitter_prop(self, attr: str) -> BaseJitter:
+    def get_jitter(self, attr: str) -> Union[MultiItemJitter, ObjectJitter, ListJitter, ValuePropertyJitter, TemplatePropertyJitter]:
         jitter_prop = _JITTER_PROPERTY.format(attr)
         return getattr(self, jitter_prop, None)
-
-
-    def set_property_type(self, attr: str, prop_type: str):
-        type_prop = f"_{attr}{PROP_ATTR_TYPE_POSTFIX}"
-        setattr(self, type_prop, prop_type)
-
- 
-    def is_template(self, attr: str) -> bool:
-        type_prop = f"_{attr}{PROP_ATTR_TYPE_POSTFIX}"
-        return getattr(self, type_prop, PROP_TYPE_DEFAULT) == PROP_TYPE_TEMPLATE
  
 
     def render(self, template_context_data_provider: TemplateContextDataProvider):
         result = self.t_type()
 
         for attr in self.jit_attrs:
-            value = self.get_jitter_prop(attr).render(template_context_data_provider)
+            jitter = self.get_jitter(attr)
+            value = jitter.render(template_context_data_provider)
             if value != None: 
                 result.set(attr, value)
+                result.set_type(attr, jitter.prop_type)
+                if hasattr(jitter, "template"):
+                    result.set_template(attr, jitter.template.template)
         return result
 
 
 class MultiItemJitter(CompositeJitter):
 
-    def __init__(self, react: ReactBase, config_source: DynamicData, tctx: TemplateContext) -> None:
-        super().__init__(react, config_source, tctx, MultiItem)
+    def __init__(self, hass: HomeAssistant, config_source: DynamicData, tctx: TemplateContext) -> None:
+        super().__init__(hass, config_source, tctx, MultiItem)
+
+
+    @property
+    def prop_type(self):
+        return PROP_TYPE_MULTI_ITEM
 
 
 class ObjectJitter(CompositeJitter[T], Generic[T]):
 
-    def __init__(self, react: ReactBase, config_source: DynamicData, tctx: TemplateContext, t_type: Type[T] = DynamicData) -> None:
-        super().__init__(react, config_source, tctx, t_type)
+    def __init__(self, hass: HomeAssistant, config_source: DynamicData, tctx: TemplateContext, t_type: Type[T] = DynamicData) -> None:
+        super().__init__(hass, config_source, tctx, t_type)
+
+
+    @property
+    def prop_type(self):
+        return PROP_TYPE_OBJECT
 
 
 class ListJitter(BaseJitter):
-    def __init__(self, react: ReactBase, config_source: list[DynamicData], tctx: TemplateContext) -> None:
+    def __init__(self, hass: HomeAssistant, config_source: list[DynamicData], tctx: TemplateContext) -> None:
         super().__init__()
 
-        self.react = react
+        self.react = hass
         self.config_source = config_source
         self.tctx = tctx
         self.jitters: list[ObjectJitter] = []
 
         for item in config_source:
-            self.jitters.append(ObjectJitter(react, item, tctx))
+            self.jitters.append(ObjectJitter(hass, item, tctx))
+
+
+    @property
+    def prop_type(self):
+        return PROP_TYPE_LIST
 
 
     def render(self, template_context_data_provider: TemplateContextDataProvider) -> Any:
@@ -138,10 +155,16 @@ class ListJitter(BaseJitter):
 
 class ValuePropertyJitter(BaseJitter):
     
-    def __init__(self, value: Any, type_converter: Any = None) -> None:
+    def __init__(self, value: Any, prop_type: str, type_converter: Any = None) -> None:
         super().__init__(type_converter)
         
         self.value = value
+        self._prop_type = prop_type
+
+
+    @property
+    def prop_type(self):
+        return self._prop_type
 
     
     def render(self, template_context_data_provider: TemplateContextDataProvider) -> Any:
@@ -152,15 +175,20 @@ class ValuePropertyJitter(BaseJitter):
 
 class TemplatePropertyJitter(BaseJitter):
 
-    def __init__(self, attr: str, template: Template, type_converter: Any, tctx: TemplateContext, react: ReactBase):
+    def __init__(self, attr: str, template: Template, type_converter: Any, tctx: TemplateContext, hass: HomeAssistant):
         super().__init__(type_converter)
 
-        self.react = react
+        self.hass = hass
         self.attr = attr
         self.template = template
         self.tctx = tctx
 
-        template.hass = self.react.hass
+        template.hass = self.hass
+
+
+    @property
+    def prop_type(self):
+        return PROP_TYPE_TEMPLATE
 
 
     def render(self, template_context_data_provider: TemplateContextDataProvider) -> Any:
@@ -170,5 +198,5 @@ class TemplatePropertyJitter(BaseJitter):
             self.tctx.build(runtime_variables, template_context_data_provider)
             value = self.template.async_render(runtime_variables)
         except TemplateError as te:
-            self.react.log.error(f"Config: Error rendering {self.attr}: {te}")
+            _LOGGER.error(f"Config: Error rendering {self.attr}: {te}")
         return self.type_converter(value) if self.type_converter else value

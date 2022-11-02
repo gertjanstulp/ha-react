@@ -26,7 +26,7 @@ MINIMUM_HA_VERSION = "2021.9.0"
 TITLE = 'React'
 DOMAIN = 'react'
 PACKAGE_NAME = "custom_components.react"
-ICON = "mdi:swap-horizontal-bold"
+ICON = "mdi:sitemap-outline"
 
 CONF_FRONTEND_REPO_URL = "frontend_repo_url"
 CONF_ENTITY_MAPS = "entity_maps"
@@ -36,6 +36,9 @@ CONF_STENCIL = "stencil"
 
 # reaction attributes
 ATTR_ID = "id"
+
+# workflow attributes
+ATTR_MODE = "mode"
 
 # actor attributes
 ATTR_ACTOR = "actor"
@@ -51,19 +54,24 @@ ATTR_REACTOR_ID = "reactor_id"
 ATTR_REACTOR_ENTITY = "reactor_entity"
 ATTR_REACTOR_TYPE = "reactor_type"
 ATTR_REACTOR_ACTION = "reactor_action"
+ATTR_REACTOR_DELAY = "reactor_delay"
 ATTR_FORWARD_ACTION = "forward_action"
 ATTR_RESET_WORKFLOW = "reset_workflow"
 ATTR_OVERWRITE = "overwrite"
-ATTR_TIMING = "timing"
+ATTR_STATE = "state"
 ATTR_DELAY = "delay"
+ATTR_WAIT = "wait"
 ATTR_SCHEDULE = "schedule"
+ATTR_RESTART_MODE = "restart_mode"
+# reactor delay attributes
+ATTR_DELAY_SECONDS = "seconds"
+ATTR_DELAY_MINUTES = "minutes"
+ATTR_DELAY_HOURS = "hours"
 # reactor schedule attributes
 ATTR_SCHEDULE_AT = "at"
 ATTR_SCHEDULE_WEEKDAYS = "weekdays"
-# reactor timings
-REACTOR_TIMING_IMMEDIATE = "immediate"
-REACTOR_TIMING_DELAYED = "delayed"
-REACTOR_TIMING_SCHEDULED = "scheduled"
+# reactor wait attributes
+ATTR_WAIT_CONDITION = "condition"
 # reactor schedule weekdays
 REACTOR_WEEKDAY_MONDAY = "mon"
 REACTOR_WEEKDAY_TUESDAY = "tue"
@@ -72,6 +80,10 @@ REACTOR_WEEKDAY_THURSDAY = "thu"
 REACTOR_WEEKDAY_FRIDAY = "fri"
 REACTOR_WEEKDAY_SATURDAY = "sat"
 REACTOR_WEEKDAY_SUNDAY = "sun"
+# reactor wait restart modes
+RESTART_MODE_ABORT = "abort"
+RESTART_MODE_FORCE = "force"
+RESTART_MODE_RERUN = "rerun"
 
 # shared actor/reactor attributes
 ATTR_ENTITY = "entity"
@@ -85,8 +97,8 @@ ATTR_WORKFLOW_ID = "workflow_id"
 ATTR_STENCIL = "stencil"
 CONF_TRACE = "trace"
 
-# reaction attributes
-ATTR_REACTION_DATETIME = "datetime"
+# # reaction attributes
+# ATTR_REACTION_DATETIME = "datetime"
 
 # Internal attributes
 ATTR_DATA = "data"
@@ -98,6 +110,11 @@ ATTR_TEMPLATE = "template"
 ATTR_INDEX = "index"
 ATTR_TRIGGER = "trigger"
 ATTR_EVENT = "event"
+
+# Monikers
+MONIKER_TRIGGER = "trigger"
+MONIKER_DISPATCH = "dispatch"
+MONIKER_RESET = "reset"
 
 # plugin attributes
 ATTR_NOTIFY = "notify"
@@ -111,11 +128,25 @@ ATTR_EVENT_FEEDBACK_ITEM_TITLE = "title"
 ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK = "feedback"
 ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT = "acknowledgement"
 
+# service attributes
+ATTR_RUN_ID = "run_id"
+ATTR_REACTION_ID = "reaction_id"
+
+# trace attributes
+ATTR_DONE = "done"
+ATTR_REMAINING = "remaining"
+ATTR_TIMESTAMP = "timestamp"
+ATTR_START_TIME = "start_time"
+ATTR_CREATED = "created"
+ATTR_WHEN = "when"
+ATTR_WAIT_TYPE = "wait_type"
 
 # events
 EVENT_REACT_ACTION = "ev_react_action"
 EVENT_REACT_REACTION = "ev_react_reaction"
 
+EVENT_RUN_REGISTRY_UPDATED = "run_registry_updated"
+EVENT_REACTION_REGISTRY_UPDATED = "reaction_registry_updated"
 
 # event data
 EVENTDATA_COMMAND_REACT = "/react"
@@ -127,17 +158,18 @@ REACT_TYPE_NOTIFY = "notify"
 REACT_ACTION_SEND_MESSAGE = "send_message"
 REACT_ACTION_FEEDBACK = "feedback"
 
-
-
 # signals
 SIGNAL_ITEM_CREATED = "react_item_created"
 SIGNAL_ITEM_UPDATED = "react_item_updated"
 SIGNAL_ITEM_REMOVED = "react_item_removed"
-SIGNAL_PROPERTY_COMPLETE = "signal_property_complete"
+SIGNAL_ACTION_HANDLER_CREATED = "signal_action_handler_created"
 SIGNAL_ACTION_HANDLER_DESTROYED = "signal_action_handler_destroyed"
 SIGNAL_REACTION_READY = "signal_reaction_ready"
 SIGNAL_DISPATCH = "dispatch"
 SIGNAL_TRACK_UPDATE = "track_update"
+SIGNAL_WAIT_FINISHED = "wait_finished"
+SIGNAL_JOB_RESUMED = "job_resumed"
+SIGNAL_WORKFLOW_RESET = "workflow_reset"
 
 # transformer types
 BINARY_SENSOR = "binary_sensor"
@@ -181,8 +213,12 @@ TRACE_PATH_ACTOR = "actor"
 TRACE_PATH_REACTOR = "reactor"
 TRACE_PATH_DATA = "data"
 TRACE_PATH_TRIGGER = "trigger"
-TRACE_PATH_EVENT = "event"
-
+TRACE_PATH_DISPATCH = "dispatch"
+TRACE_PATH_DELAY = "delay"
+TRACE_PATH_SCHEDULE = "schedule"
+TRACE_PATH_WAIT = "wait"
+TRACE_PATH_RESET = "reset"
+TRACE_PATH_STATE = "state"
 
 # dynamic properties
 PROP_ATTR_TYPE_POSTFIX = "_attr_type"
@@ -197,7 +233,17 @@ PROP_TYPE_MULTI_ITEM = "multiitem"
 SERVICE_TRIGGER_WORKFLOW = "trigger_workflow"
 SERVICE_TRIGGER_REACTION = "trigger_reaction"
 SERVICE_DELETE_REACTION = "delete_reaction"
+SERVICE_RUN_NOW = "run_now"
 SERVICE_REACT_NOW = "react_now"
+SERVICE_DELETE_RUN = "delete_run"
+
+# workflow modes
+WORKFLOW_MODE_SINGLE = "single"
+WORKFLOW_MODE_RESTART = "restart"
+WORKFLOW_MODE_QUEUED = "queued"
+WORKFLOW_MODE_PARALLEL = "parallel"
+
+# WAITING = "waiting"
 
 _EMPTY_ = '_'
 
@@ -240,11 +286,30 @@ PROP_TYPE_INT = result_as_int
 PROP_TYPE_BOOL = result_as_boolean
 PROP_TYPE_SOURCE = result_as_source
 
+# schema for schedule
+DELAY_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_DELAY_SECONDS) : vol.Any(vol.Coerce(int), cv.string),
+    vol.Optional(ATTR_DELAY_MINUTES) : vol.Any(vol.Coerce(int), cv.string),
+    vol.Optional(ATTR_DELAY_HOURS) : vol.Any(vol.Coerce(int), cv.string),
+    vol.Optional(ATTR_RESTART_MODE) : vol.In([RESTART_MODE_ABORT, RESTART_MODE_FORCE, RESTART_MODE_RERUN]),
+})
 
 # schema for schedule
 SCHEDULE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_SCHEDULE_AT) : cv.time,
-    vol.Optional(ATTR_SCHEDULE_WEEKDAYS) : cv.weekdays
+    vol.Required(ATTR_SCHEDULE_AT) : cv.string,
+    vol.Optional(ATTR_SCHEDULE_WEEKDAYS) : cv.weekdays,
+    vol.Optional(ATTR_RESTART_MODE) : vol.In([RESTART_MODE_ABORT, RESTART_MODE_FORCE, RESTART_MODE_RERUN]),
+})
+
+STATE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_CONDITION) : cv.string,
+    vol.Optional(ATTR_RESTART_MODE) : vol.In([RESTART_MODE_ABORT, RESTART_MODE_FORCE, RESTART_MODE_RERUN]),
+})
+
+WAIT_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_STATE) : STATE_SCHEMA,
+    vol.Optional(ATTR_DELAY) : DELAY_SCHEMA,
+    vol.Optional(ATTR_SCHEDULE) : SCHEDULE_SCHEMA,
 })
 
 # schema for common elements of actors/reactors
@@ -259,12 +324,10 @@ ENTITY_DATA_SCHEMA = vol.Schema({
 # schema for reactor elements
 REACTOR_DATA_SCHEMA = ENTITY_DATA_SCHEMA.extend(
     vol.Schema({
-        vol.Optional(ATTR_TIMING) : vol.In([REACTOR_TIMING_IMMEDIATE, REACTOR_TIMING_DELAYED, REACTOR_TIMING_SCHEDULED]),
-        vol.Optional(ATTR_DELAY) : vol.Any(vol.Coerce(int), cv.string),
-        vol.Optional(ATTR_SCHEDULE) : SCHEDULE_SCHEMA,
         vol.Optional(ATTR_OVERWRITE) : cv.boolean,
         vol.Optional(ATTR_RESET_WORKFLOW) : cv.string,
         vol.Optional(ATTR_FORWARD_ACTION): cv.boolean,
+        vol.Optional(ATTR_WAIT) : WAIT_SCHEMA,
     }).schema
 )
 
@@ -285,6 +348,7 @@ STENCIL_SCHEMA = vol.Schema({
 WORKFLOW_SCHEMA = vol.Schema({
     cv.slug: vol.Any({
         vol.Optional(ATTR_STENCIL) : cv.string,
+        vol.Optional(ATTR_MODE) : vol.In([WORKFLOW_MODE_SINGLE, WORKFLOW_MODE_RESTART, WORKFLOW_MODE_QUEUED, WORKFLOW_MODE_PARALLEL]),
         vol.Optional(ATTR_VARIABLES) : vol.All(dict),
         vol.Optional(ATTR_ACTOR): vol.Schema({
             cv.slug: ENTITY_DATA_SCHEMA,

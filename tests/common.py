@@ -16,4 +16,4 @@ PERSON_CONFIG = "person.yaml"
 
 def get_test_config_dir(*add_path):
     """Return a path to a test config dir."""
-    return os.path.join(os.path.dirname(__file__), "testing_config", *add_path)
+    return os.path.join(os.path.dirname(__file__), "_config", *add_path)

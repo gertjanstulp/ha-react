@@ -13,12 +13,11 @@ async def async_setup_task(react: ReactBase) -> Task:
 
 
 class Task(ReactTask):
-    """Setup the React sensor platform."""
 
     def __init__(self, react: ReactBase) -> None:
         super().__init__(react)
         
-        self.stages = [ReactStage.SETUP]
+        self.stages = [ReactStage.STARTUP]
 
 
     async def async_execute(self) -> None:

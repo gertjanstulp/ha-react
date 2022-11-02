@@ -10,6 +10,10 @@ test_trace:
   name: test_trace
   initial: False
 
+test_trace2:
+  name: test_trace2
+  initial: False
+
 test_binary_sensor:
   name: test_binary_sensor
   initial: False
@@ -20,4 +24,8 @@ test_group:
 
 test_binary_sensor_available:
   name: test_binary_sensor_available
+  initial: False
+
+test_wait:
+  name: test_wait
   initial: False

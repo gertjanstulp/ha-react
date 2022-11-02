@@ -2,23 +2,25 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .updatable import Updatable
-from ..base import ReactBase
-from ..utils.events import ActionEventDataReader
+from homeassistant.core import HomeAssistant
+
+from custom_components.react.utils.events import ActionEventData
+from custom_components.react.utils.updatable import Updatable
+
+from custom_components.react.const import (
+    ATTR_ACTOR,
+    ATTR_EVENT,
+    ATTR_ID,
+)
 
 if TYPE_CHECKING:
     from .track import ObjectTracker
-    from ..lib.runtime import ActionContext
 
-from ..const import (
-    ATTR_ACTOR,
-    ATTR_EVENT,
-)
 
 class TemplateContextDataProvider(Updatable):
     
-    def __init__(self, react: ReactBase) -> None:
-        super().__init__(react)        
+    def __init__(self, hass: HomeAssistant) -> None:
+        super().__init__(hass)
 
 
     def provide(self, context_data: dict):
@@ -27,8 +29,8 @@ class TemplateContextDataProvider(Updatable):
 
 class VariableContextDataProvider(TemplateContextDataProvider):
     
-    def __init__(self, react: ReactBase, variable_tracker: ObjectTracker) -> None:
-        super().__init__(react)
+    def __init__(self, hass: HomeAssistant, variable_tracker: ObjectTracker) -> None:
+        super().__init__(hass)
 
         self.variable_tracker = variable_tracker
         variable_tracker.on_update(self.async_update)
@@ -41,22 +43,24 @@ class VariableContextDataProvider(TemplateContextDataProvider):
 
 class ActorTemplateContextDataProvider(TemplateContextDataProvider):
     
-    def __init__(self, react: ReactBase, event_reader: ActionEventDataReader, actx: ActionContext) -> None:
-        super().__init__(react)
+    def __init__(self, hass: HomeAssistant, event_data: ActionEventData, actor_id: str) -> None:
+        super().__init__(hass)
         
-        self.event_reader = event_reader
-        self.actx = actx
+        self.event_data = event_data
+        self.actor_id = actor_id
 
 
     def provide(self, context_data: dict):
-        context_data[ATTR_EVENT] = self.event_reader.to_dict() 
-        context_data[ATTR_ACTOR] = self.actx.to_dict()
+        context_data[ATTR_EVENT] = self.event_data.as_dict() 
+        context_data[ATTR_ACTOR] = {
+            ATTR_ID: self.actor_id
+        }
 
 
 class TemplateContext(Updatable):
     
-    def __init__(self, react: ReactBase, template_context_data_provider: TemplateContextDataProvider = None) -> None:
-        super().__init__(react)
+    def __init__(self, hass: HomeAssistant, template_context_data_provider: TemplateContextDataProvider = None) -> None:
+        super().__init__(hass)
         
         self.template_context_data_provider = template_context_data_provider
         if template_context_data_provider:

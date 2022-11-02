@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from importlib import import_module
 
-from .notify_plugin import NotifyPlugin
-
-from ..base import ReactBase
+from custom_components.react.base import ReactBase
+from custom_components.react.plugin.notify_plugin import NotifyPlugin
 
 
 class PluginFactory:
@@ -24,4 +23,3 @@ class PluginFactory:
                 plugin = plugin_module.setup_plugin(react=self.react)
                 self.plugins["notify"] = plugin
         return plugin
-

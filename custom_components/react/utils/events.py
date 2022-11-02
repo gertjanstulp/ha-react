@@ -1,64 +1,69 @@
 
-from typing import Union
+from typing import Generic, Type, TypeVar
 from homeassistant.core import Event
+from custom_components.react.const import ATTR_DATA
 
-from ..base import ReactBase
+from custom_components.react.utils.struct import DynamicData
 
-from ..const import (
-    ATTR_ACTION,
-    ATTR_DATA,
-    ATTR_ENTITY,
-    ATTR_REACTOR_ID,
-    ATTR_TYPE,
-)
+T_d = TypeVar('T_d', bound=DynamicData)
+T_dd = TypeVar('T_dd', bound=DynamicData)
 
 
-class EventDataReader():
+class ReactEvent(Generic[T_d]):
     
-    def __init__(self, react: ReactBase, event: Event) -> None:
-        self.event = event
-        self.react = react
-        self.hass_context = event.context
+    def __init__(self, event: Event, t_d_type: Type[T_d] = DynamicData) -> None:
+        self.context = event.context
+        self.event_type = event.event_type
 
-
-    def load(self):
-        pass
+        self.data: T_d = t_d_type()
+        self.data.load(event.data)
 
 
     @property
     def applies(self) -> bool:
         raise NotImplementedError()
+
+
+class CtionEventData(DynamicData, Generic[T_dd]):
+
+    def __init__(self, t_dd_type: Type[T_dd] = DynamicData) -> None:
+        super().__init__()
+        
+        self.type_hints: dict = {ATTR_DATA: t_dd_type}
+
+        self.entity: str = None
+        self.type: str = None
+        self.action: str = None
+        self.data: T_dd = None
+
+
+    def load(self, source: dict) -> None:
+        super().load(source)
+
+
+class ActionEventData(CtionEventData[T_dd], Generic[T_dd]):
+    def __init__(self, t_dd_type: Type[T_dd] = DynamicData) -> None:
+        super().__init__(t_dd_type)
+
+
+    def load(self, source: dict) -> None:
+        super().load(source)
+        self.ensure(ATTR_DATA, None)
         
 
-class ReactEventDataReader(EventDataReader):
-
-    def __init__(self, react: ReactBase, event: Event) -> None:
-        super().__init__(react, event)
-
-        self.entity = event.data.get(ATTR_ENTITY, None)
-        self.type = event.data.get(ATTR_TYPE, None)
-        self.action = event.data.get(ATTR_ACTION, None)
-        self.data = event.data.get(ATTR_DATA, None)
+class ReactionEventData(CtionEventData[T_dd], Generic[T_dd]):
+    def __init__(self, t_dd_type: Type[T_dd] = DynamicData) -> None:
+        super().__init__(t_dd_type)
+        self.reactor_id: str = None
 
 
-    def to_dict(self):
-        return {
-            ATTR_ENTITY: self.entity,
-            ATTR_TYPE: self.type,
-            ATTR_ACTION: self.action,
-            ATTR_DATA: self.data,
-        }
+class ActionEvent(ReactEvent[ActionEventData[DynamicData]]):
+
+    def __init__(self, event: Event) -> None:
+        super().__init__(event, ActionEventData)
 
 
-class ActionEventDataReader(ReactEventDataReader):
+class ReactionEvent(ReactEvent[T_d], Generic[T_d]):
 
-    def __init__(self, react: ReactBase, event: Event) -> None:
-        super().__init__(react, event)
-
-
-class ReactionEventDataReader(ReactEventDataReader):
-
-    def __init__(self, react: ReactBase, event: Event) -> None:
-        super().__init__(react, event)
-       
-        self.reactor_id =  event.data.get(ATTR_REACTOR_ID, None)
+    def __init__(self, event: Event, t_d_type: Type[T_d] = ReactionEventData) -> None:
+        super().__init__(event, t_d_type)

@@ -1,3 +1,4 @@
+from asyncio import sleep
 import pytest
 
 from homeassistant.core import HomeAssistant
@@ -18,12 +19,11 @@ async def test_react_binary_sensor_available(hass: HomeAssistant, workflow_name,
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_entity_not_found()
+    async with tc.async_listen_react_event():
+        tc.verify_reaction_not_found()
         await input_boolean_component.async_turn_off("test_binary_sensor_available")
         await input_boolean_component.async_turn_on("test_binary_sensor_available")
-        await hass.async_block_till_done()
-        tc.verify_reaction_entity_not_found()
+        tc.verify_reaction_not_found()
         await tc.async_verify_reaction_event_received()
         tc.verify_reaction_event_data()
         tc.verify_trace_record()
@@ -41,12 +41,12 @@ async def test_react_binary_sensor_unavailable(hass: HomeAssistant, workflow_nam
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_entity_not_found()
+    async with tc.async_listen_react_event():
+        tc.verify_reaction_not_found()
         await input_boolean_component.async_turn_on("test_binary_sensor_available")
+        await sleep(1)
         await input_boolean_component.async_turn_off("test_binary_sensor_available")
-        await hass.async_block_till_done()
-        tc.verify_reaction_entity_not_found()
+        tc.verify_reaction_not_found()
         await tc.async_verify_reaction_event_received()
         tc.verify_reaction_event_data()
         tc.verify_trace_record()

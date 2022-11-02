@@ -2,60 +2,66 @@ from __future__ import annotations
 
 from asyncio import sleep
 from contextlib import asynccontextmanager
-from types import DynamicClassAttribute
 from deepdiff import DeepDiff
 from typing import Any, Union
-from custom_components.react.lib.config import Reactor, Workflow
-from custom_components.react.utils.struct import DynamicData, MultiItem
+from dateutil.parser import parse as datetime_parse
 
 from homeassistant.components.trace.const import DATA_TRACE
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_STATE, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_STATE, STATE_ON, ATTR_NAME
 from homeassistant.core import Event, HomeAssistant, State, Context
 
 from unittest.mock import Mock
 
 from custom_components.react.base import ReactBase
+from custom_components.react.lib.config import Workflow
+from custom_components.react.runtime.runtime import Reaction, WorkflowRun
+from custom_components.react.utils.struct import DynamicData, MultiItem
+from custom_components.react.utils.trace import ReactTrace
 from custom_components.react.const import (
-    _EMPTY_,
     ATTR_ACTION,
     ATTR_ACTOR,
-    ATTR_ACTOR_ACTION,
-    ATTR_ACTOR_ENTITY,
-    ATTR_ACTOR_ID,
-    ATTR_ACTOR_TYPE,
     ATTR_CONDITION,
     ATTR_CONTEXT,
     ATTR_DATA,
+    ATTR_DELAY,
+    ATTR_DELAY_HOURS,
+    ATTR_DELAY_MINUTES,
+    ATTR_DELAY_SECONDS,
+    ATTR_ENABLED,
     ATTR_ENTITY,
     ATTR_EVENT,
     ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT,
     ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK,
     ATTR_EVENT_FEEDBACK_ITEMS,
     ATTR_EVENT_MESSAGE,
-    ATTR_FORWARD_ACTION,
     ATTR_ID,
     ATTR_INDEX,
-    ATTR_OVERWRITE,
-    ATTR_REACTION_DATETIME,
     ATTR_REACTOR,
-    ATTR_REACTOR_ACTION,
-    ATTR_REACTOR_ENTITY,
     ATTR_REACTOR_ID,
-    ATTR_REACTOR_TYPE,
     ATTR_RESET_WORKFLOW,
+    ATTR_SCHEDULE,
+    ATTR_SCHEDULE_AT,
+    ATTR_SCHEDULE_WEEKDAYS,
     ATTR_TEMPLATE,
     ATTR_THIS,
-    ATTR_TIMING,
     ATTR_TRIGGER,
     ATTR_TYPE,
     ATTR_VARIABLES,
-    ATTR_WORKFLOW_ID, 
+    ATTR_WAIT,
+    ATTR_WAIT_CONDITION,
     DOMAIN, 
     EVENT_REACT_ACTION,
     EVENT_REACT_REACTION,
-    REACTOR_TIMING_IMMEDIATE,
+    MONIKER_DISPATCH,
+    MONIKER_RESET,
+    TRACE_PATH_CONDITION,
+    TRACE_PATH_DELAY,
+    TRACE_PATH_DISPATCH,
+    TRACE_PATH_REACTOR,
+    TRACE_PATH_RESET,
+    TRACE_PATH_SCHEDULE,
+    TRACE_PATH_STATE,
 )
-from custom_components.react.utils.trace import ReactTrace
 
 from tests.common import (
     DOMAIN_SENSOR, 
@@ -120,7 +126,7 @@ class TstContext():
 
 
     @asynccontextmanager
-    async def async_listen_reaction_event(self):
+    async def async_listen_react_event(self):
         try:
             self.cancel_listen = self.hass.bus.async_listen(EVENT_REACT_REACTION, self.event_mock)
             yield
@@ -129,23 +135,56 @@ class TstContext():
                 self.cancel_listen()
 
 
-    def retrieve_reaction_entities(self):
-        states = [ state for state in self.hass.states.async_all(DOMAIN_SENSOR) if state.entity_id.startswith(f"{DOMAIN_SENSOR}.reaction_") ]
-        return states
+    async def async_stop_all_runs(self, workflow_id: str = None):
+        if not workflow_id:
+            workflow_id = self.workflow_id
+        await self.react.runtime.async_stop_workflow_runtime(workflow_id)
 
 
-    def verify_reaction_entity_count(self, expected_count: int = 1):
-        reactions = self.retrieve_reaction_entities()
+    def retrieve_workflow_entity(self):
+        states = [ state for state in self.hass.states.async_all(DOMAIN) if state.entity_id == f"react.{self.workflow_id}" ]
+        return states[0]
+
+
+    def retrieve_runs(self) -> list[WorkflowRun]:
+        return list(self.react.runtime.run_registry.find())
+
+
+    def verify_run_count(self, expected_count: int = 1):
+        runs = self.retrieve_runs()
+        got_count = len(runs)
+        assert got_count == expected_count, f"Expected run count {expected_count}, got {got_count}"
+
+
+    def verify_run_not_found(self) -> None:
+        self.verify_run_count(0)
+
+
+    def verify_run_found(self, expected_count: int = 1) -> None:
+        self.verify_run_count(expected_count)
+
+
+    def retrieve_run_id(self):
+        run = self.retrieve_runs()[0]
+        return run.id
+
+
+    def retrieve_reactions(self) -> list[Reaction]:
+        return list(self.react.runtime.reaction_registry.find())
+
+
+    def verify_reaction_count(self, expected_count: int = 1):
+        reactions = self.retrieve_reactions()
         got_count = len(reactions)
-        assert got_count == expected_count, f"Expected reaction entity count {expected_count}, got {got_count}, {reactions[0]}"
+        assert got_count == expected_count, f"Expected reaction count {expected_count}, got {got_count}"
 
 
-    def verify_reaction_entity_not_found(self) -> None:
-        self.verify_reaction_entity_count(0)
+    def verify_reaction_not_found(self) -> None:
+        self.verify_reaction_count(0)
 
 
-    def verify_reaction_entity_found(self, expected_count: int = 1) -> None:
-        self.verify_reaction_entity_count(expected_count)
+    def verify_reaction_found(self, expected_count: int = 1) -> None:
+        self.verify_reaction_count(expected_count)
 
 
     def verify_reaction_entity_data(self, 
@@ -157,34 +196,50 @@ class TstContext():
         type_index: int = 0,
         action_index: int = 0,
     ):
-        reaction_entity: State = self.retrieve_reaction_entities()[0]
+        reaction_entity: State = self.retrieve_reactions()[0]
 
         workflow_config_reactor = self.workflow_config.reactors[reactor_index]
 
         self.verify_reaction_entity_data_item(ATTR_ENTITY, reaction_entity, workflow_config_reactor.entity, expected_entity, entity_index)
         self.verify_reaction_entity_data_item(ATTR_TYPE, reaction_entity, workflow_config_reactor.type, expected_type, type_index)
         self.verify_reaction_entity_data_item(ATTR_ACTION, reaction_entity, workflow_config_reactor.action, expected_action, action_index)
+        # self.verify_reaction_entity_state(reaction_entity, workflow_config_reactor)
 
     
     def verify_reaction_entity_data_item(self, attr: str, reaction_entity: State, multi_item: MultiItem, expected_value: Any = None, item_index: int = 0):
         got_value = reaction_entity.attributes.get(attr, None)
         expected_value = expected_value or multi_item[item_index]
-        assert got_value == expected_value, f"Expected reaction {attr} '{expected_value}', got '{got_value}'"
+        assert got_value == expected_value, f"Expected reaction entity {attr} '{expected_value}', got '{got_value}'"
 
 
-    def retrieve_reaction_entity_id(self):
-        reaction_entity: State = self.retrieve_reaction_entities()[0]
-        return reaction_entity.entity_id
+    # def verify_reaction_entity_state(self, reaction_entity: State, workflow_config_reactor: Reactor):
+    #     react: ReactBase = self.hass.data[DOMAIN]
+    #     reaction_internal = react.reactions.get_by_id(reaction_entity.attributes.get(ATTR_ID))
+        
+    #     got_value = reaction_entity.state
+
+    #     if workflow_config_reactor.wait and reaction_internal.data.waiting:
+    #         assert got_value == WAITING, f"Expected reaction entity state '{WAITING}', got '{got_value}'"
+    #     elif workflow_config_reactor.delay or workflow_config_reactor.schedule:
+    #         try:
+    #             datetime_parse(got_value)
+    #         except:
+    #             assert False, f"Expected datetime as reaction entity state, got '{got_value}'"
 
 
-    def verify_reaction_internal_data(self, expected_data: dict = None):
-        react: ReactBase = self.hass.data[DOMAIN]
-        reaction_entity = self.retrieve_reaction_entities()[0]
-        reaction_internal = react.reactions.get_by_id(reaction_entity.attributes.get(ATTR_ID))
+    def retrieve_reaction_id(self):
+        reaction = self.retrieve_reactions()[0]
+        return reaction.id
 
-        data_got = reaction_internal.data.data
-        data_expected = expected_data 
-        assert data_got == data_expected, f"Expected reaction data '{data_expected}', got '{data_got}'"
+
+    # def verify_reaction_internal_data(self, expected_data: dict = None):
+    #     react: ReactBase = self.hass.data[DOMAIN]
+    #     reaction_entity = self.retrieve_reactions()[0]
+    #     reaction_internal = react.reactions.get_by_id(reaction_entity.attributes.get(ATTR_ID))
+
+    #     data_got = reaction_internal.data.data
+    #     data_expected = expected_data 
+    #     assert data_got == data_expected, f"Expected reaction data '{data_expected}', got '{data_got}'"
 
 
     def verify_reaction_event_count(self, expected_count: int = 1):
@@ -192,7 +247,9 @@ class TstContext():
         assert got_count == expected_count, f"Expected event count {expected_count}, got {got_count}"
 
 
-    def verify_reaction_event_not_received(self) -> None:
+    async def async_verify_reaction_event_not_received(self, delay: int = 0) -> None:
+        if delay > 0:
+            await sleep(delay)
         self.verify_reaction_event_count(0)
 
 
@@ -248,9 +305,13 @@ class TstContext():
         expected_runtime_reactor_type: list[str] = None, 
         expected_runtime_reactor_action: list[str] = None, 
         expected_runtime_reactor_data: dict = None,
+        expected_runtime_reactor_delay_seconds: int = None,
+        expected_runtime_reactor_delay_minutes: int = None,
+        expected_runtime_reactor_delay_hours: int = None,
         expected_result_message: str = None,
         expected_actor_condition_result: bool = True,
-        expected_reactor_condition_results: list[bool] = None
+        expected_reactor_condition_results: list[bool] = None,
+        expected_event_trace: bool = True,
     ):
 
         # Initialize expectation lists
@@ -302,17 +363,36 @@ class TstContext():
             workflow_config_reactor = self.workflow_config.reactors[i]
             trace_config_reactor = trace_config.assert_property_list_item(ATTR_REACTOR, i)
             trace_config_reactor.assert_property_match(ATTR_INDEX, i)
-            trace_config_event = trace_config_reactor.assert_property_not_none(ATTR_EVENT)
-            trace_config_event.assert_property_match(ATTR_ID, workflow_config_reactor.id)
-            trace_config_event.assert_property_match(ATTR_TIMING, workflow_config_reactor.timing)
-            trace_config_event.assert_property_match(ATTR_DATA, workflow_config_reactor.data)
+            if workflow_config_reactor.wait:
+                if workflow_config_reactor.wait.delay:
+                    trace_config_reactor_delay = trace_config_reactor.assert_property_not_none(ATTR_DELAY)
+                    if workflow_config_reactor.wait.delay.seconds:
+                        trace_config_reactor_delay.assert_property_match(ATTR_DELAY_SECONDS,  workflow_config_reactor.wait.delay.seconds)
+                    if workflow_config_reactor.wait.delay.minutes:
+                        trace_config_reactor_delay.assert_property_match(ATTR_DELAY_MINUTES, workflow_config_reactor.wait.delay.minutes)
+                    if workflow_config_reactor.wait.delay.hours:
+                        trace_config_reactor_delay.assert_property_match(ATTR_DELAY_HOURS, workflow_config_reactor.wait.delay.hours)
+                if workflow_config_reactor.wait.schedule:
+                    trace_config_reactor_schedule = trace_config_reactor.assert_property_not_none(ATTR_SCHEDULE)
+                    trace_config_reactor_schedule.assert_property_match(ATTR_SCHEDULE_AT, workflow_config_reactor.wait.schedule.at)
+                    trace_config_reactor_schedule.assert_property_match(ATTR_SCHEDULE_WEEKDAYS, workflow_config_reactor.wait.schedule.weekdays)
+                if workflow_config_reactor.wait.state:
+                    trace_config_reactor_state = trace_config_reactor.assert_property_not_none(ATTR_STATE)
+                    trace_config_reactor_state.assert_property_match(ATTR_WAIT_CONDITION, workflow_config_reactor.wait.state.condition)
             if workflow_config_reactor.reset_workflow:
-                trace_config_event.assert_property_match(ATTR_RESET_WORKFLOW, workflow_config_reactor.reset_workflow)
+                trace_config_reactor_reset = trace_config_reactor.assert_property_not_none(MONIKER_RESET)
+                trace_config_reactor_reset.assert_property_match(ATTR_ID, workflow_config_reactor.id)
+                trace_config_reactor_reset.assert_property_match(ATTR_ENABLED, True)
+                trace_config_reactor_reset.assert_property_match(ATTR_RESET_WORKFLOW, workflow_config_reactor.reset_workflow)
             else:
-                trace_config_event.assert_property_match(ATTR_ENTITY, workflow_config_reactor.entity[0])
-                trace_config_event.assert_property_match(ATTR_TYPE, workflow_config_reactor.type[0])
+                trace_config_reactor_event = trace_config_reactor.assert_property_not_none(MONIKER_DISPATCH)
+                trace_config_reactor_event.assert_property_match(ATTR_ID, workflow_config_reactor.id)
+                trace_config_reactor_event.assert_property_match(ATTR_ENABLED, True)
+                trace_config_reactor_event.assert_property_match(ATTR_DATA, workflow_config_reactor.data)
+                trace_config_reactor_event.assert_property_match(ATTR_ENTITY, workflow_config_reactor.entity[0])
+                trace_config_reactor_event.assert_property_match(ATTR_TYPE, workflow_config_reactor.type[0])
                 if not workflow_config_reactor.forward_action:
-                    trace_config_event.assert_property_match(ATTR_ACTION, workflow_config_reactor.action[0])
+                    trace_config_reactor_event.assert_property_match(ATTR_ACTION, workflow_config_reactor.action[0])
 
         ########## Trace data ##########
 
@@ -343,7 +423,6 @@ class TstContext():
             trace_trace_actor_vars_variables_event.assert_property_match(ATTR_ACTION, expected_runtime_actor_action or workflow_config_actor.action[actor_action_index])
         if workflow_config_actor.data:
             trace_trace_actor_vars_variables_event.assert_property_match(ATTR_DATA, expected_runtime_actor_data or workflow_config_actor.data[actor_data_index])
-        
 
         trace_trace_actor_vars_actor = trace_trace_actor_vars.assert_property_not_none(ATTR_ACTOR)
         trace_trace_actor_vars_actor.assert_property_match(ATTR_ID, workflow_config_actor.id)
@@ -375,7 +454,7 @@ class TstContext():
 
             if workflow_config_reactor.condition:
                 # Test for reactor condition in trace data
-                trace_trace_reactor_condition_path = f"{ATTR_REACTOR}/{i}/{ATTR_CONDITION}"
+                trace_trace_reactor_condition_path = f"{TRACE_PATH_REACTOR}/{i}/{TRACE_PATH_CONDITION}"
                 trace_trace_reactor_condition = trace_trace.assert_property_list_item(trace_trace_reactor_condition_path)
                 trace_trace_reactor_condition.assert_property_match(TRACE_PATH, trace_trace_reactor_condition_path)
                 trace_trace_reactor_condition_result = trace_trace_reactor_condition.assert_property_not_none(TRACE_RESULT)
@@ -389,39 +468,77 @@ class TstContext():
             # If the reactor condition is false skip remaining reactor trace tests for this reactor as there is no trace data for it
             if not expected_reactor_condition_results[i]: continue
 
-            trace_trace_reactor_path = f"{ATTR_REACTOR}/{i}/{ATTR_EVENT}"
-            trace_trace_reactor = trace_trace.assert_property_list_item(trace_trace_reactor_path)
-            trace_trace_reactor.assert_property_match(TRACE_PATH, trace_trace_reactor_path)
+            if workflow_config_reactor.wait:
+                if workflow_config_reactor.wait.state:
+                    trace_trace_reactor_state_path = f"{ATTR_REACTOR}/{i}/{TRACE_PATH_STATE}"
+                    trace_trace_reactor_state = trace_trace.assert_property_list_item(trace_trace_reactor_state_path)
+                    trace_trace_reactor_state.assert_property_match(TRACE_PATH, trace_trace_reactor_state_path)
+                    trace_trace_reactor_state_variables = trace_trace_reactor_state.assert_property_not_none(TRACE_CHANGED_VARIABLES)
+                    trace_trace_reactor_state_variables.assert_property_not_none(TRACE_CONTEXT)
 
-            trace_trace_reactor_result = trace_trace_reactor.assert_property_not_none(TRACE_RESULT)
-            
-            if expected_result_message:
-                # Test for message result in trace data
-                trace_trace_reactor_result.assert_property_match(TRACE_MESSAGE, expected_result_message)
+                # If the reactor is delayed check for delay trace data
+                if workflow_config_reactor.wait.delay:
+                    trace_trace_reactor_delay_path = f"{ATTR_REACTOR}/{i}/{TRACE_PATH_DELAY}"
+                    trace_trace_reactor_delay = trace_trace.assert_property_list_item(trace_trace_reactor_delay_path)
+                    trace_trace_reactor_delay.assert_property_match(TRACE_PATH, trace_trace_reactor_delay_path)
+                    trace_trace_reactor_delay_result = trace_trace_reactor_delay.assert_property_not_none(TRACE_RESULT)
+                    trace_trace_reactor_delay_result_wait = trace_trace_reactor_delay_result.assert_property_not_none(ATTR_WAIT)
+                    trace_trace_reactor_delay_result_wait_delay = trace_trace_reactor_delay_result_wait.assert_property_not_none(ATTR_DELAY)
+                    if expected_runtime_reactor_delay_seconds or workflow_config_reactor.wait.delay.seconds:
+                        trace_trace_reactor_delay_result_wait_delay.assert_property_match(ATTR_DELAY_SECONDS, expected_runtime_reactor_delay_seconds or workflow_config_reactor.wait.delay.seconds)
+                    if expected_runtime_reactor_delay_minutes or workflow_config_reactor.wait.delay.minutes:
+                        trace_trace_reactor_delay_result_wait_delay.assert_property_match(ATTR_DELAY_MINUTES, expected_runtime_reactor_delay_minutes or workflow_config_reactor.wait.delay.minutes)
+                    if expected_runtime_reactor_delay_hours or workflow_config_reactor.wait.delay.hours:
+                        trace_trace_reactor_delay_result_wait_delay.assert_property_match(ATTR_DELAY_HOURS, expected_runtime_reactor_delay_hours or workflow_config_reactor.wait.delay.hours)
+                    if not workflow_config_reactor.wait.state:
+                        trace_trace_reactor_delay_variables = trace_trace_reactor_delay.assert_property_not_none(TRACE_CHANGED_VARIABLES)
+                        trace_trace_reactor_delay_variables.assert_property_not_none(TRACE_CONTEXT)
+
+                # If the reactor is scheduled check for schedule trace data
+                if workflow_config_reactor.wait.schedule:
+                    trace_trace_reactor_schedule_path = f"{ATTR_REACTOR}/{i}/{TRACE_PATH_SCHEDULE}"
+                    trace_trace_reactor_schedule = trace_trace.assert_property_list_item(trace_trace_reactor_schedule_path)
+                    trace_trace_reactor_schedule.assert_property_match(TRACE_PATH, trace_trace_reactor_schedule_path)
+                    trace_trace_reactor_schedule_result = trace_trace_reactor_schedule.assert_property_not_none(TRACE_RESULT)
+                    trace_trace_reactor_schedule_result.assert_property_not_none(ATTR_WAIT)
+                    if not workflow_config_reactor.wait.state:
+                        trace_trace_reactor_schedule_variables = trace_trace_reactor_schedule.assert_property_not_none(TRACE_CHANGED_VARIABLES)
+                        trace_trace_reactor_schedule_variables.assert_property_not_none(TRACE_CONTEXT)
+
+            if workflow_config_reactor.reset_workflow:
+                trace_trace_reactor_reset_path = f"{TRACE_PATH_REACTOR}/{i}/{TRACE_PATH_RESET}"
+                trace_trace_reactor_reset = trace_trace.assert_property_list_item(trace_trace_reactor_reset_path)
+                trace_trace_reactor_reset.assert_property_match(TRACE_PATH, trace_trace_reactor_reset_path)
+                trace_trace_reactor_reset_result = trace_trace_reactor_reset.assert_property_not_none(TRACE_RESULT)
+                # trace_trace_reactor_reset.assert_property_match(ATTR_REACTOR_ID, workflow_config_reactor.id)
+                trace_trace_reactor_reset_result.assert_property_not_none(ATTR_RESET_WORKFLOW, workflow_config_reactor.reset_workflow)
             else:
-                # test for reaction result in trace data
-                trace_trace_reactor_result_reaction = trace_trace_reactor_result.assert_property_not_none(TRACE_REACTION)
-                trace_trace_reactor_result_reaction.assert_property_not_none(ATTR_ID)
-                if workflow_config_reactor.timing != REACTOR_TIMING_IMMEDIATE:
-                    trace_trace_reactor_result_reaction.assert_property_not_none(ATTR_REACTION_DATETIME)
-                trace_trace_reactor_result_reaction.assert_property_match(ATTR_WORKFLOW_ID, self.workflow_id)
-                trace_trace_reactor_result_reaction.assert_property_match(ATTR_ACTOR_ID, workflow_config_actor.id)
-                trace_trace_reactor_result_reaction.assert_property_match(ATTR_ACTOR_ENTITY, expected_runtime_actor_entity or workflow_config_actor.entity[actor_entity_index])
-                trace_trace_reactor_result_reaction.assert_property_match(ATTR_ACTOR_TYPE, expected_runtime_actor_type or workflow_config_actor.type[actor_type_index])
-                trace_trace_reactor_result_reaction.assert_property_match(ATTR_ACTOR_ACTION, expected_runtime_actor_action or workflow_config_actor.action[actor_action_index])
-                trace_trace_reactor_result_reaction.assert_property_match(ATTR_REACTOR_ID, workflow_config_reactor.id)
-                trace_trace_reactor_result_reaction.assert_property_match(ATTR_REACTOR_ENTITY, expected_runtime_reactor_entity[i] or (_EMPTY_ if workflow_config_reactor.reset_workflow else workflow_config_reactor.entity[0]))
-                trace_trace_reactor_result_reaction.assert_property_match(ATTR_REACTOR_TYPE, expected_runtime_reactor_type[i] or (_EMPTY_ if workflow_config_reactor.reset_workflow else workflow_config_reactor.type[0]))
-                trace_trace_reactor_result_reaction.assert_property_match(ATTR_REACTOR_ACTION, expected_runtime_reactor_action[i] or (_EMPTY_ if workflow_config_reactor.reset_workflow else expected_runtime_actor_action if workflow_config_reactor.forward_action else workflow_config_reactor.action[0]))
-                trace_trace_reactor_result_reaction.assert_property_match(ATTR_DATA, expected_runtime_reactor_data or (None if workflow_config_reactor.reset_workflow else workflow_config_reactor.data[0] if workflow_config_reactor.data else None))
-                trace_trace_reactor_result_reaction.assert_property_match(ATTR_RESET_WORKFLOW, workflow_config_reactor.reset_workflow)
-                trace_trace_reactor_result_reaction.assert_property_match(ATTR_OVERWRITE, workflow_config_reactor.overwrite)
-                trace_trace_reactor_result_reaction.assert_property_match(ATTR_FORWARD_ACTION, workflow_config_reactor.forward_action)
+                if not expected_event_trace: continue
 
-            # Test for variables in event section of trace data if only 1 reactor configured without condition
-            if len(self.workflow_config.reactors) == 1 and not workflow_config_reactor.condition:
-                trace_trace_reactor_variables = trace_trace_reactor.assert_property_not_none(TRACE_CHANGED_VARIABLES)
-                trace_trace_reactor_variables.assert_property_not_none(TRACE_CONTEXT)
+                trace_trace_reactor_event_path = f"{TRACE_PATH_REACTOR}/{i}/{TRACE_PATH_DISPATCH}"
+                trace_trace_reactor_event = trace_trace.assert_property_list_item(trace_trace_reactor_event_path)
+                trace_trace_reactor_event.assert_property_match(TRACE_PATH, trace_trace_reactor_event_path)
+
+                trace_trace_reactor_event_result = trace_trace_reactor_event.assert_property_not_none(TRACE_RESULT)
+                
+                if expected_result_message:
+                    # Test for message result in trace data
+                    trace_trace_reactor_event_result.assert_property_match(TRACE_MESSAGE, expected_result_message)
+                else:
+                    # test for reaction result in trace data
+                    trace_trace_reactor_event_result_reaction = trace_trace_reactor_event_result.assert_property_not_none(TRACE_REACTION)
+                    trace_trace_reactor_event_result_reaction.assert_property_match(ATTR_REACTOR_ID, workflow_config_reactor.id)
+                    trace_trace_reactor_event_result_reaction.assert_property_match(ATTR_ENTITY, expected_runtime_reactor_entity[i] or workflow_config_reactor.entity[0])
+                    trace_trace_reactor_event_result_reaction.assert_property_match(ATTR_TYPE, expected_runtime_reactor_type[i] or workflow_config_reactor.type[0])
+                    trace_trace_reactor_event_result_reaction.assert_property_match(ATTR_ACTION, expected_runtime_reactor_action[i] or (expected_runtime_actor_action if workflow_config_reactor.forward_action else workflow_config_reactor.action[0]))
+                    trace_trace_reactor_event_result_reaction.assert_property_match(ATTR_DATA, expected_runtime_reactor_data or (workflow_config_reactor.data[0] if workflow_config_reactor.data else None))
+
+                # Test for variables in event section of trace data if only 1 reactor configured without condition and delay
+                if (len(self.workflow_config.reactors) == 1 and 
+                    not workflow_config_reactor.condition and 
+                    not workflow_config_reactor.wait):
+                    trace_trace_reactor_event_variables = trace_trace_reactor_event.assert_property_not_none(TRACE_CHANGED_VARIABLES)
+                    trace_trace_reactor_event_variables.assert_property_not_none(TRACE_CONTEXT)
             
 
     async def async_send_notify_feedback_event(self, send_workflow: Workflow, send_reactor_index: int = 0, send_reactor_data_index: int = 0, send_feedback_item_index: int = 0):

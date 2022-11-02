@@ -1,6 +1,7 @@
 from datetime import timedelta
 from logging import Handler
 from time import monotonic
+from types import TracebackType
 from typing import Callable, Union
 
 from homeassistant.core import Event
@@ -56,7 +57,7 @@ class ReactTask:
                 await self.react.hass.async_add_executor_job(task)
 
         except BaseException as exception:  # lgtm [py/catch-base-exception] pylint: disable=broad-except
-            self.task_logger(self.react.log.error, f"failed: {exception}")
+            self.task_logger(self.react.log.exception, f"failed:")
 
         else:
             self.react.log.debug(
