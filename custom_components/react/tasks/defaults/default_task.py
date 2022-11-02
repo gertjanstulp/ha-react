@@ -1,46 +1,43 @@
 
-from typing import Dict, Generic, Type, TypeVar
-import homeassistant
+from typing import Dict
 
 from homeassistant.core import Event, callback
 
 from ..base import ReactTask
-from ...utils.events import EventDataReader
+from ...utils.events import ReactEvent
 from ...base import ReactBase
 
-# T = TypeVar("T", bound=EventDataReader)
 
 class DefaultTask(ReactTask):
 
-    def __init__(self, react: ReactBase, reader_type: type[EventDataReader] ) -> None:
+    def __init__(self, react: ReactBase, e_type: type[ReactEvent] ) -> None:
         super().__init__(react)
         
-        self.reader_type = reader_type
-        self.readers: Dict[str, EventDataReader] = {}
+        self.e_type = e_type
+        self.readers: Dict[str, ReactEvent] = {}
 
 
     @callback
     def async_filter(self, event: Event) -> bool:
-        event_reader = self.reader_type(self.react, event)
-        if event_reader.applies:
-            event_reader.load()
-            self.set_reader(event, event_reader)
+        action_event = self.e_type(event)
+        if action_event.applies:
+            self.set_action_event(event, action_event)
             return True
         return False
 
 
     async def async_execute(self, event: Event) -> None:
-        event_reader = self.get_reader(event)
-        await self.async_execute_default(event_reader)
+        action_event = self.get_reader(event)
+        await self.async_execute_default(action_event)
 
 
-    async def async_execute_default(self, event_reader: EventDataReader):
+    async def async_execute_default(self, action_event: ReactEvent):
         raise NotImplementedError()
 
 
-    def set_reader(self, event: Event, reader: EventDataReader):
+    def set_action_event(self, event: Event, reader: ReactEvent):
         self.readers[id(event)] = reader
 
 
-    def get_reader(self, event: Event) -> EventDataReader:
+    def get_reader(self, event: Event) -> ReactEvent:
         return self.readers.get(id(event))

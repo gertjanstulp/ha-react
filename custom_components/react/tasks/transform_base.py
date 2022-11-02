@@ -24,8 +24,8 @@ from ..const import (
     EVENT_REACT_ACTION,
     NEW_STATE,
     OLD_STATE,
+    SIGNAL_ACTION_HANDLER_CREATED,
     SIGNAL_ACTION_HANDLER_DESTROYED,
-    SIGNAL_PROPERTY_COMPLETE,
 )
 
 
@@ -96,7 +96,7 @@ class StateTransformTask(ReactTask):
         self.type = type
         self.entities = []
         self.events_with_filters = [(EVENT_STATE_CHANGED, self.async_filter)]
-        async_dispatcher_connect(self.react.hass, SIGNAL_PROPERTY_COMPLETE, self.async_register_entity)
+        async_dispatcher_connect(self.react.hass, SIGNAL_ACTION_HANDLER_CREATED, self.async_register_entity)
         async_dispatcher_connect(self.react.hass, SIGNAL_ACTION_HANDLER_DESTROYED, self.async_unregister_entity)
         
 

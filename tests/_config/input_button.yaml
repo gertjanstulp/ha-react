@@ -12,6 +12,10 @@ button_trigger_trace_1:
   name: Trace 1
 button_trigger_trace_2:
   name: Trace 2
+button_trigger_trace2_1:
+  name: Trace2 1
+button_trigger_trace2_2:
+  name: Trace2 2
 button_trigger_multiple_actor_1:
   name: Multiple actor 1
 button_trigger_multiple_actor_2:
@@ -48,4 +52,7 @@ button_trigger_device_tracker_not_home:
   name: Device tracker not_home
 button_trigger_actionable_notification:
   name: Actionable notification
-
+button_trigger_wait:
+  name: Wait
+button_trigger_wait_delayed:
+  name: Wait delayed

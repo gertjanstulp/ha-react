@@ -19,11 +19,10 @@ async def test_react_binary_sensor(hass: HomeAssistant, workflow_name, react_com
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_entity_not_found()
+    async with tc.async_listen_react_event():
+        tc.verify_reaction_not_found()
         await input_boolean_component.async_turn_on("test_binary_sensor")
-        await hass.async_block_till_done()
-        tc.verify_reaction_entity_not_found()
+        tc.verify_reaction_not_found()
         await tc.async_verify_reaction_event_received()
         tc.verify_reaction_event_data()
         tc.verify_trace_record()
@@ -42,11 +41,10 @@ async def test_react_group(hass: HomeAssistant, workflow_name, react_component, 
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_entity_not_found()
+    async with tc.async_listen_react_event():
+        tc.verify_reaction_not_found()
         await input_boolean_component.async_turn_on("test_group")
-        await hass.async_block_till_done()
-        tc.verify_reaction_entity_not_found()
+        tc.verify_reaction_not_found()
         await tc.async_verify_reaction_event_received()
         tc.verify_reaction_event_data()
         tc.verify_trace_record()
@@ -66,12 +64,11 @@ async def test_react_device_tracker(hass: HomeAssistant, workflow_name, react_co
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_entity_not_found()
+    async with tc.async_listen_react_event():
+        tc.verify_reaction_not_found()
         await device_tracker_component.async_see("test_device_tracker", "not_home")
         await device_tracker_component.async_see("test_device_tracker", "home")
-        await hass.async_block_till_done()
-        tc.verify_reaction_entity_not_found()
+        tc.verify_reaction_not_found()
         await tc.async_verify_reaction_event_received()
         tc.verify_reaction_event_data()
         tc.verify_trace_record()
@@ -92,12 +89,12 @@ async def test_react_person(hass: HomeAssistant, workflow_name, react_component,
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_entity_not_found()
+    async with tc.async_listen_react_event():
+        tc.verify_reaction_not_found()
         await device_tracker_component.async_see("test_device_tracker", "home")
         await device_tracker_component.async_see("test_device_tracker", "not_home")
         await hass.async_block_till_done()
-        tc.verify_reaction_entity_not_found()
+        tc.verify_reaction_not_found()
         await tc.async_verify_reaction_event_received()
         tc.verify_reaction_event_data()
         tc.verify_trace_record()

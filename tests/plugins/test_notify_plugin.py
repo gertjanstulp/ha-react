@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from homeassistant.core import Event, Context
 
 from custom_components.react.base import ReactBase
-from custom_components.react.plugin.notify_plugin import NotifyPlugin, NotifySendMessageReactionEventDataReader, NotifyFeedbackEventDataReader
+from custom_components.react.plugin.notify_plugin import NotifyFeedbackEventData, NotifyPlugin, NotifySendMessageReactionEvent, NotifyFeedbackEvent, NotifySendMessageReactionEventData, NotifySendMessageReactionEventNotificationData
 
 from custom_components.react.const import (
     ATTR_ACTION,
@@ -18,6 +18,7 @@ from custom_components.react.const import (
     REACT_ACTION_FEEDBACK,
     REACT_TYPE_NOTIFY, 
 )
+from custom_components.react.utils.struct import DynamicData
 
 from tests.common import EVENT_TEST_CALLBACK
 
@@ -44,12 +45,12 @@ class TestNotifyPlugin(NotifyPlugin):
         return EVENT_TEST_CALLBACK
 
 
-    def get_notify_send_message_reader_type(self) -> type[NotifySendMessageReactionEventDataReader]:
-        return TestNotifySendMessageReactionEventDataReader
+    def get_notify_send_message_event_type(self) -> type[NotifySendMessageReactionEvent]:
+        return TestNotifySendMessageReactionEvent
 
 
-    def get_notify_feedback_reader_type(self) -> type[NotifyFeedbackEventDataReader]:
-        return TestNotifyFeedbackEventDataReader
+    def get_notify_feedback_event_type(self) -> type[NotifyFeedbackEvent]:
+        return TestNotifyFeedbackEvent
 
 
     async def async_send_notification(self, entity: str, notification_data: dict, context: Context):
@@ -62,52 +63,58 @@ class TestNotifyPlugin(NotifyPlugin):
 
     async def async_acknowledge_feedback(self, feedback_data: dict, context: Context):
         self.test_context.acknowledge_feedback(feedback_data)
-        
 
-class TestNotifySendMessageReactionEventDataReader(NotifySendMessageReactionEventDataReader):
 
-    def __init__(self, react: ReactBase, event: Event) -> None:
-        super().__init__(react, event)
+class TestNotifySendMessageReactionEventNotificationData(NotifySendMessageReactionEventNotificationData):
+    def __init__(self, source: dict) -> None:
+        super().__init__(source)
 
 
     def create_service_data(self) -> dict:
-        return {
-            ATTR_EVENT_MESSAGE: self.message,
-            ATTR_EVENT_FEEDBACK_ITEMS: self.feedback_items_raw,
-        }
+        return self.as_dict()
     
+
+class TestNotifySendMessageReactionEventData(NotifySendMessageReactionEventData[TestNotifySendMessageReactionEventNotificationData]):
+    def __init__(self) -> None:
+        super().__init__(TestNotifySendMessageReactionEventNotificationData)
+
+
+class TestNotifySendMessageReactionEvent(NotifySendMessageReactionEvent[TestNotifySendMessageReactionEventData]):
+
+    def __init__(self, event: Event) -> None:
+        super().__init__(event, TestNotifySendMessageReactionEventData)
+
+
+class TestNotifyFeedbackEvent(NotifyFeedbackEventData):
+    def __init__(self) -> None:
+        super().__init__()
+
     
-class TestNotifyFeedbackEventDataReader(NotifyFeedbackEventDataReader):
-    def __init__(self, react: ReactBase, event: Event) -> None:
-        super().__init__(react, event)
+class TestNotifyFeedbackEvent(NotifyFeedbackEvent[NotifyFeedbackEventData]):
+    def __init__(self, event: Event) -> None:
+        super().__init__(event)
 
         self.event_type = event.event_type
-
-
-    def load(self):
-        self.feedback = self.event.data.get(ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK, None)
-        self.entity = self.event.data.get(ATTR_ENTITY, None)
-        self.acknowledgement = self.event.data.get(ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT, None)
 
 
     def applies(self) -> bool:
         return self.event_type == EVENT_TEST_CALLBACK
 
 
-    def create_action_event_data(self) -> dict:
+    def create_action_event_data(self, react: ReactBase) -> dict:
         return {
-            ATTR_ENTITY: self.entity,
+            ATTR_ENTITY: self.data.entity,
             ATTR_TYPE: REACT_TYPE_NOTIFY,
             ATTR_ACTION: REACT_ACTION_FEEDBACK,
             ATTR_DATA: {
-                ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK: self.feedback
+                ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK: self.data.feedback
             }
         }
 
 
-    def create_feedback_data(self) -> dict:
+    def create_feedback_data(self, react: ReactBase) -> dict:
         return {
-            ATTR_ENTITY: self.entity,
-            ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT: self.acknowledgement,
-            ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK: self.feedback
+            ATTR_ENTITY: self.data.entity,
+            ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT: self.data.acknowledgement,
+            ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK: self.data.feedback
         }

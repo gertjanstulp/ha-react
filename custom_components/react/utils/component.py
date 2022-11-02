@@ -29,7 +29,7 @@ async def async_setup_component(react: ReactBase):
     async def async_load():
         entities = []
         for workflow in react.configuration.workflow_config.workflows.values():
-            entities.append(WorkflowEntity(react, workflow))
+            entities.append(WorkflowEntity(workflow, react.runtime))
         if entities:
             await component.async_add_entities(entities)
     await async_load()

@@ -14,12 +14,16 @@ from homeassistant.setup import async_setup_component
 
 from custom_components.react.const import (
     ATTR_NOTIFY,
+    ATTR_REACTION_ID,
+    ATTR_RUN_ID,
     CONF_PLUGIN,
     CONF_STENCIL,
     CONF_WORKFLOW,
     DOMAIN as REACT_DOMAIN,
     SERVICE_DELETE_REACTION,
+    SERVICE_DELETE_RUN,
     SERVICE_REACT_NOW,
+    SERVICE_RUN_NOW,
     SERVICE_TRIGGER_REACTION,
     SERVICE_TRIGGER_WORKFLOW
 )
@@ -79,29 +83,34 @@ async def react_component(hass: HomeAssistant):
         )
 
         await hass.async_block_till_done()
+        test = 1
 
     async def async_call_service_trigger_workflow(entity_id: str):
         data = { ATTR_ENTITY_ID: entity_id }
         await hass.services.async_call(REACT_DOMAIN, SERVICE_TRIGGER_WORKFLOW, data)
 
-    async def async_call_service_trigger_reaction(entity_id: str):
-        data = { ATTR_ENTITY_ID: entity_id }
-        await hass.services.async_call(REACT_DOMAIN, SERVICE_TRIGGER_REACTION, data)
+    async def async_call_service_delete_run(run_id: str):
+        data = { ATTR_RUN_ID: run_id }
+        await hass.services.async_call(REACT_DOMAIN, SERVICE_DELETE_RUN, data)
 
-    async def async_call_service_delete_reaction(entity_id: str):
-        data = { ATTR_ENTITY_ID: entity_id }
+    async def async_call_service_delete_reaction(reaction_id: str):
+        data = { ATTR_REACTION_ID: reaction_id }
         await hass.services.async_call(REACT_DOMAIN, SERVICE_DELETE_REACTION, data)
 
-    async def async_call_service_react_now(entity_id: str):
-        data = { ATTR_ENTITY_ID: entity_id }
-        await hass.services.async_call(REACT_DOMAIN, SERVICE_REACT_NOW, data)
+    async def async_call_service_run_now(run_id: str):
+        data = { ATTR_RUN_ID: run_id }
+        await hass.services.async_call(REACT_DOMAIN, SERVICE_RUN_NOW, data)
 
+    async def async_call_service_react_now(reaction_id: str):
+        data = { ATTR_REACTION_ID: reaction_id }
+        await hass.services.async_call(REACT_DOMAIN, SERVICE_REACT_NOW, data)
 
     result = Mock()
     result.async_setup = async_setup
     result.async_call_service_trigger_workflow = async_call_service_trigger_workflow
-    result.async_call_service_trigger_reaction = async_call_service_trigger_reaction
+    result.async_call_service_delete_run = async_call_service_delete_run
     result.async_call_service_delete_reaction = async_call_service_delete_reaction
+    result.async_call_service_run_now = async_call_service_run_now
     result.async_call_service_react_now = async_call_service_react_now
     return result
 
@@ -121,7 +130,7 @@ async def input_boolean_component(hass: HomeAssistant):
     assert await async_setup_component(hass, input_boolean.DOMAIN, { input_boolean.DOMAIN: data })
     await hass.async_block_till_done()
 
-    async def async_turn_on(name: str):
+    async def async_turn_on(name: str, ):
         await hass.services.async_call(
             input_boolean.DOMAIN,
             SERVICE_TURN_ON,
