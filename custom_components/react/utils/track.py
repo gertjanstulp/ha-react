@@ -63,8 +63,6 @@ class CompositeTracker(BaseTracker, Generic[T], Destroyable):
         for attr in config_source.names:
             self.add_tracker(attr, PROP_TYPE_SOURCE)
 
-        self.start()
-
 
     def as_trace_dict(self) -> dict:
         return { name : self.value_container.get(name) for name in self.config_source.names }
@@ -85,6 +83,7 @@ class CompositeTracker(BaseTracker, Generic[T], Destroyable):
             if len(attr_value) > 0 and isinstance(attr_value[0], DynamicData):
                 trackers = [ ObjectTracker(self.hass, item, self.tctx) for item in attr_value]
                 self.set_property(attr, [ tracker.value_container for tracker in trackers ], PROP_TYPE_LIST)
+                self.trackers.extend(trackers)
             else:
                 pass
         elif attr_value is not None:
