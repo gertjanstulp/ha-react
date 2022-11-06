@@ -16,7 +16,7 @@ from custom_components.react.const import (
     ATTR_NOTIFY,
     ATTR_REACTION_ID,
     ATTR_RUN_ID,
-    CONF_PLUGIN,
+    CONF_PLUGINS,
     CONF_STENCIL,
     CONF_WORKFLOW,
     DOMAIN as REACT_DOMAIN,
@@ -68,9 +68,9 @@ async def react_component(hass: HomeAssistant):
             }
 
             if init_notify_plugin:
-                data[CONF_PLUGIN] = {
-                    ATTR_NOTIFY: "tests.plugins.test_notify_plugin"
-                }
+                data[CONF_PLUGINS] = [
+                    "tests.plugins.test_notify_plugin"
+                ]
                     
         for additional_workflow in additional_workflows:
             additional_workflow_ID = f"{WORKFLOW_ID_PREFIX}{additional_workflow}"

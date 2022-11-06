@@ -42,14 +42,13 @@ from .const import (
     ATTR_TYPE,
     ATTR_WORKFLOW_ID,
     CONF_ENTITY_MAPS,
-    CONF_PLUGIN,
+    CONF_PLUGINS,
     CONF_FRONTEND_REPO_URL,
     CONF_STENCIL,
     CONF_WORKFLOW,
     DEFAULT_INITIAL_STATE, 
     DOMAIN,
     EVENT_REACT_ACTION,
-    PLUGIN_SCHEMA,
     SIGNAL_ACTION_HANDLER_CREATED,
     SIGNAL_ACTION_HANDLER_DESTROYED,
     SIGNAL_WAIT_FINISHED,
@@ -61,7 +60,7 @@ from .const import (
 CONFIG_SCHEMA = vol.Schema({
     vol.Optional(DOMAIN, default={}): vol.Schema({
         vol.Optional(CONF_FRONTEND_REPO_URL): cv.string,
-        vol.Optional(CONF_PLUGIN): PLUGIN_SCHEMA,
+        vol.Optional(CONF_PLUGINS): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_ENTITY_MAPS): dict,
         vol.Optional(CONF_WORKFLOW): WORKFLOW_SCHEMA,
         vol.Optional(CONF_STENCIL): STENCIL_SCHEMA,
@@ -106,7 +105,7 @@ async def async_initialize_integration(
     react.integration = integration
     react.session = clientsession
     react.system.running = True
-    react.tasks = ReactTaskManager(react=react)
+    react.task_manager = ReactTaskManager(react=react)
     react.version = integration.version
     react.plugin_factory = PluginFactory(react=react)
     react.runtime = ReactRuntime(hass)
@@ -114,7 +113,8 @@ async def async_initialize_integration(
     if react.core.ha_version is None:
         react.core.ha_version = AwesomeVersion(HAVERSION)
 
-    await react.tasks.async_load()
+    await react.task_manager.async_load()
+    react.plugin_factory.load_plugins()
 
     # Run startup sequence
     async def async_startup():

@@ -40,7 +40,7 @@ from ..const import (
     ATTR_VARIABLES,
     ATTR_WAIT,
     CONF_ENTITY_MAPS,
-    CONF_PLUGIN,
+    CONF_PLUGINS,
     CONF_STENCIL,
     CONF_TRACE,
     CONF_WORKFLOW,
@@ -270,11 +270,10 @@ class Workflow():
 class PluginConfiguration:
 
     def __init__(self) -> None:
-        self.notify: Union[str, None] = None
+        self.plugins: Union[list[str], None] = None
 
     def load(self, react_config: ConfigType) -> None:
-        plugin_config = react_config.get(CONF_PLUGIN, {})
-        self.notify = plugin_config.get(ATTR_NOTIFY, None)
+        self.plugins = react_config.get(CONF_PLUGINS, {})
 
 
 class WorkflowConfiguration:

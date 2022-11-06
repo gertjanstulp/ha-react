@@ -54,27 +54,31 @@ class ReactTaskManager:
         schedule_tasks = len(self.react.recuring_tasks) == 0
 
         for task in self.tasks:
-            if task.events is not None:
-                for event in task.events:
-                    self.react.hass.bus.async_listen_once(event, task.execute_task)
-            
-            if task.events_with_filters is not None:
-                for event,filter in task.events_with_filters:
-                    self.react.hass.bus.async_listen(event, task.execute_task, filter)
+            self.start_task(task, schedule_tasks)
 
-            if task.signals is not None:
-                for signal in task.signals:
-                    async_dispatcher_connect(self.react.hass, signal, task.execute_task)
 
-            if task.schedule is not None and schedule_tasks:
-                self.react.log.debug(
-                    "Scheduling ReactTask<%s> to run every %s", task.slug, task.schedule
+    def start_task(self, task: ReactTask, schedule_tasks: bool = True):
+        if task.events is not None:
+            for event in task.events:
+                self.react.hass.bus.async_listen_once(event, task.execute_task)
+        
+        if task.events_with_filters is not None:
+            for event,filter in task.events_with_filters:
+                self.react.hass.bus.async_listen(event, task.execute_task, filter)
+
+        if task.signals is not None:
+            for signal in task.signals:
+                async_dispatcher_connect(self.react.hass, signal, task.execute_task)
+
+        if task.schedule is not None and schedule_tasks:
+            self.react.log.debug(
+                "Scheduling ReactTask<%s> to run every %s", task.slug, task.schedule
+            )
+            self.react.recuring_tasks.append(
+                self.react.hass.helpers.event.async_track_time_interval(
+                    task.execute_task, task.schedule
                 )
-                self.react.recuring_tasks.append(
-                    self.react.hass.helpers.event.async_track_time_interval(
-                        task.execute_task, task.schedule
-                    )
-                )
+            )
 
 
     def get(self, slug: str) -> Union[ReactTask, None]:

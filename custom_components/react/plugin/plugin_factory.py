@@ -3,23 +3,18 @@ from __future__ import annotations
 from importlib import import_module
 
 from custom_components.react.base import ReactBase
-from custom_components.react.plugin.notify_plugin import NotifyPlugin
+from custom_components.react.plugin.plugin_api import PluginApi
 
 
 class PluginFactory:
     def __init__(self, react: ReactBase) -> None:
         self.react = react
-        self.plugins = {}
-        
+        self.api = PluginApi(react)
 
-    def get_notify_plugin(self) -> NotifyPlugin:
-        plugin = self.plugins.get("notify", None)
-        if not plugin:
-            plugin_name = self.react.configuration.plugin_config.notify
-            if plugin_name:
-                plugin_module = import_module(plugin_name)
-                if not hasattr(plugin_module, "setup_plugin"):
-                    raise Exception("Invalid plugin configuration: setup_plugin method missing in notify_plugin")
-                plugin = plugin_module.setup_plugin(react=self.react)
-                self.plugins["notify"] = plugin
-        return plugin
+
+    def load_plugins(self):
+        for plugin_name in self.react.configuration.plugin_config.plugins:
+            plugin_module = import_module(plugin_name)
+            if not hasattr(plugin_module, "setup_plugin"):
+                raise Exception(f"Invalid plugin configuration: setup_plugin method missing in {plugin_name}")
+            plugin_module.setup_plugin(api=self.api)

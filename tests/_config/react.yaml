@@ -4,8 +4,9 @@ entity_maps:
   2095689255: mobile_user
   -719737734: mobile_group
 
-plugin:
-  notify: custom_components.react.plugin.telegram.telegram_notify_plugin
+plugins:
+  - custom_components.react.plugin.telegram.telegram_plugin
+  # notify: custom_components.react.plugin.telegram.telegram_notify_plugin
 
 stencil:
   full_stencil:
@@ -422,7 +423,8 @@ workflow:
         type: notify
         action: send_message
         data:
-          message: "Approve something"
+          plugin: telegram
+          message: Approve something
           feedback_items:
             - title: Approve
               feedback: approve
@@ -436,9 +438,9 @@ workflow:
       actor_actionable_notification_feedback:
         entity: mobile_group
         type: notify
-        action: feedback
+        action: feedback_retrieved
         data:
-          feedback: approve
+          plugin: telegram
     reactor:
       reactor_actionable_notification_feedback:
         entity: reactor_entity_actionable_notification_feedback
@@ -446,6 +448,10 @@ workflow:
         action: reactor_action_actionable_notification_feedback
         data:
           feedback: "{{ event.data.feedback }}"
+      # reactor_telegram_feedback:
+      #   entity: mobile_group
+      #   type: notify
+
 
   workflow_wait:
     actor:

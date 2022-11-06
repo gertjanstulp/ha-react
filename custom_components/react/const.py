@@ -30,7 +30,7 @@ ICON = "mdi:sitemap-outline"
 
 CONF_FRONTEND_REPO_URL = "frontend_repo_url"
 CONF_ENTITY_MAPS = "entity_maps"
-CONF_PLUGIN = "plugin"
+CONF_PLUGINS = "plugins"
 CONF_WORKFLOW = "workflow"
 CONF_STENCIL = "stencil"
 
@@ -127,6 +127,8 @@ ATTR_EVENT_FEEDBACK_ITEMS = "feedback_items"
 ATTR_EVENT_FEEDBACK_ITEM_TITLE = "title"
 ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK = "feedback"
 ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT = "acknowledgement"
+ATTR_EVENT_PLUGIN = "plugin"
+ATTR_EVENT_PLUGIN_PAYLOAD = "plugin_payload"
 
 # service attributes
 ATTR_RUN_ID = "run_id"
@@ -157,6 +159,7 @@ REACT_TYPE_NOTIFY = "notify"
 # React actions
 REACT_ACTION_SEND_MESSAGE = "send_message"
 REACT_ACTION_FEEDBACK = "feedback"
+REACT_ACTION_FEEDBACK_RETRIEVED = "feedback_retrieved"
 
 # signals
 SIGNAL_ITEM_CREATED = "react_item_created"
@@ -362,6 +365,6 @@ WORKFLOW_SCHEMA = vol.Schema({
     }, None)
 })
 
-PLUGIN_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_NOTIFY): cv.string
-})
+# PLUGIN_SCHEMA = vol.Schema({
+#     vol.Optional(ATTR_NOTIFY): cv.string
+# })

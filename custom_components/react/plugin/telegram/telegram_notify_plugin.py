@@ -20,9 +20,9 @@ from custom_components.react.plugin.notify_plugin import (
     NotifyFeedbackEvent,
     NotifyFeedbackEventData, 
     NotifyPlugin, 
-    NotifySendMessageReactionEvent, 
-    NotifySendMessageReactionEventData, 
-    NotifySendMessageReactionEventNotificationData
+    # NotifySendMessageReactionEvent, 
+    # NotifySendMessageReactionEventData, 
+    # NotifySendMessageReactionEventNotificationData
 )
 from custom_components.react.const import (
     ATTR_ACTION, 
@@ -55,21 +55,21 @@ class TelegramNotifyPlugin(NotifyPlugin):
         return EVENT_TELEGRAM_CALLBACK
 
     
-    def get_notify_send_message_event_type(self) -> type[NotifySendMessageReactionEvent]:
-        return TelegramNotifySendMessageReactionEvent
+    # def get_notify_send_message_event_type(self) -> type[NotifySendMessageReactionEvent]:
+    #     return TelegramNotifySendMessageReactionEvent
 
 
     def get_notify_feedback_event_type(self) -> type[NotifyFeedbackEvent]:
         return TelegramNotifyFeedbackEvent
 
 
-    async def async_send_notification(self, entity: str, notification_data: dict, context: Context):
-        self.react.log.debug("TelegramNotifyPlugin: sending notification to telegram")
-        await self.react.hass.services.async_call(
-            Platform.NOTIFY, 
-            entity,
-            notification_data, 
-            context)
+    # async def async_send_notification(self, entity: str, notification_data: dict, context: Context):
+    #     self.react.log.debug("TelegramNotifyPlugin: sending notification to telegram")
+    #     await self.react.hass.services.async_call(
+    #         Platform.NOTIFY, 
+    #         entity,
+    #         notification_data, 
+    #         context)
 
 
     async def async_acknowledge_feedback(self, feedback_data: dict, context: Context) -> None:
@@ -81,36 +81,36 @@ class TelegramNotifyPlugin(NotifyPlugin):
             context=context)
 
 
-class TelegramNotifySendMessageReactionEventNotificationData(NotifySendMessageReactionEventNotificationData):
-    def __init__(self, source: dict) -> None:
-        super().__init__(source)
+# class TelegramNotifySendMessageReactionEventNotificationData(NotifySendMessageReactionEventNotificationData):
+#     def __init__(self, source: dict) -> None:
+#         super().__init__(source)
 
 
-    def create_service_data(self) -> dict:
-        result: dict = {
-            ATTR_EVENT_MESSAGE: escape_markdown(self.message),
-        }
+#     def create_service_data(self) -> dict:
+#         result: dict = {
+#             ATTR_EVENT_MESSAGE: escape_markdown(self.message),
+#         }
         
-        if self.feedback_items:
-            result[ATTR_DATA] = {
-                ATTR_SERVICE_DATA_INLINE_KEYBOARD : ", ".join(
-                    map(lambda x: " ".join([ f"{x.title}:/react", x.feedback, x.acknowledgement ]), 
-                    self.feedback_items)
-                )
-            }
+#         if self.feedback_items:
+#             result[ATTR_DATA] = {
+#                 ATTR_SERVICE_DATA_INLINE_KEYBOARD : ", ".join(
+#                     map(lambda x: " ".join([ f"{x.title}:/react", x.feedback, x.acknowledgement ]), 
+#                     self.feedback_items)
+#                 )
+#             }
 
-        return result
-
-
-class TelegramNotifySendMessageReactionEventData(NotifySendMessageReactionEventData[TelegramNotifySendMessageReactionEventNotificationData]):
-    def __init__(self) -> None:
-        super().__init__(TelegramNotifySendMessageReactionEventNotificationData)
+#         return result
 
 
-class TelegramNotifySendMessageReactionEvent(NotifySendMessageReactionEvent[TelegramNotifySendMessageReactionEventData]):
+# class TelegramNotifySendMessageReactionEventData(NotifySendMessageReactionEventData[TelegramNotifySendMessageReactionEventNotificationData]):
+#     def __init__(self) -> None:
+#         super().__init__(TelegramNotifySendMessageReactionEventNotificationData)
 
-    def __init__(self, event: Event) -> None:
-        super().__init__(event, TelegramNotifySendMessageReactionEventData)
+
+# class TelegramNotifySendMessageReactionEvent(NotifySendMessageReactionEvent[TelegramNotifySendMessageReactionEventData]):
+
+#     def __init__(self, event: Event) -> None:
+#         super().__init__(event, TelegramNotifySendMessageReactionEventData)
 
 
 class TelegramNotifyFeedbackEventDataMessage(DynamicData):

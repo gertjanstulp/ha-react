@@ -109,7 +109,7 @@ class ReactBase():
         self.session: Union[ClientSession, None] = None
         self.status = ReactStatus()
         self.system = ReactSystem()
-        self.tasks: Union[ReactTaskManager, None] = None
+        self.task_manager: Union[ReactTaskManager, None] = None
         self.version: Union[str, None] = None
         self.plugin_factory: Union[PluginFactory, None] = None
         self.runtime: Union[ReactRuntime, None] = None
@@ -130,7 +130,7 @@ class ReactBase():
         if stage is not None:
             self.log.info("Stage changed: %s", self.stage)
             self.hass.bus.async_fire("react/stage", {"stage": self.stage})
-            await self.tasks.async_execute_runtime_tasks()
+            await self.task_manager.async_execute_runtime_tasks()
 
 
     def disable_react(self, reason: ReactDisabledReason) -> None:
