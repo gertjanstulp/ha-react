@@ -1,22 +1,23 @@
+from __future__ import annotations
 
 from typing import Generic, Type, TypeVar
-from homeassistant.core import Event
+from homeassistant.core import Event as HassEvent
 from custom_components.react.const import ATTR_DATA
 
 from custom_components.react.utils.struct import DynamicData
 
-T_d = TypeVar('T_d', bound=DynamicData)
-T_dd = TypeVar('T_dd', bound=DynamicData)
+T_payload = TypeVar('T_payload', bound=DynamicData)
+T_data = TypeVar('T_data', bound=DynamicData)
 
 
-class ReactEvent(Generic[T_d]):
+class Event(Generic[T_payload]):
     
-    def __init__(self, event: Event, t_d_type: Type[T_d] = DynamicData) -> None:
-        self.context = event.context
-        self.event_type = event.event_type
+    def __init__(self, hass_event: HassEvent, t_payload_type: Type[T_payload] = DynamicData) -> None:
+        self.context = hass_event.context
+        self.event_type = hass_event.event_type
 
-        self.data: T_d = t_d_type()
-        self.data.load(event.data)
+        self.payload: T_payload = t_payload_type()
+        self.payload.load(hass_event.data)
 
 
     @property
@@ -24,9 +25,9 @@ class ReactEvent(Generic[T_d]):
         raise NotImplementedError()
 
 
-class CtionEventData(DynamicData, Generic[T_dd]):
+class ReactEventPayload(DynamicData, Generic[T_data]):
 
-    def __init__(self, t_dd_type: Type[T_dd] = DynamicData) -> None:
+    def __init__(self, t_dd_type: Type[T_data] = DynamicData) -> None:
         super().__init__()
         
         self.type_hints: dict = {ATTR_DATA: t_dd_type}
@@ -34,36 +35,41 @@ class CtionEventData(DynamicData, Generic[T_dd]):
         self.entity: str = None
         self.type: str = None
         self.action: str = None
-        self.data: T_dd = None
+        self.data: T_data = None
 
 
     def load(self, source: dict) -> None:
         super().load(source)
 
 
-class ActionEventData(CtionEventData[T_dd], Generic[T_dd]):
-    def __init__(self, t_dd_type: Type[T_dd] = DynamicData) -> None:
+########## Action event ##########
+
+
+class ActionEventPayload(ReactEventPayload[T_data], Generic[T_data]):
+    def __init__(self, t_dd_type: Type[T_data] = DynamicData) -> None:
         super().__init__(t_dd_type)
 
 
     def load(self, source: dict) -> None:
         super().load(source)
         self.ensure(ATTR_DATA, None)
-        
 
-class ReactionEventData(CtionEventData[T_dd], Generic[T_dd]):
-    def __init__(self, t_dd_type: Type[T_dd] = DynamicData) -> None:
+
+class ActionEvent(Event[T_payload], Generic[T_payload]):
+
+    def __init__(self, hass_event: HassEvent, t_payload_type: Type[T_payload] = ActionEventPayload) -> None:
+        super().__init__(hass_event, t_payload_type)
+
+
+########## Reaction event ##########
+
+
+class ReactionEventPayload(ReactEventPayload[T_data], Generic[T_data]):
+    def __init__(self, t_dd_type: Type[T_data] = DynamicData) -> None:
         super().__init__(t_dd_type)
         self.reactor_id: str = None
 
 
-class ActionEvent(ReactEvent[ActionEventData[DynamicData]]):
-
-    def __init__(self, event: Event) -> None:
-        super().__init__(event, ActionEventData)
-
-
-class ReactionEvent(ReactEvent[T_d], Generic[T_d]):
-
-    def __init__(self, event: Event, t_d_type: Type[T_d] = ReactionEventData) -> None:
-        super().__init__(event, t_d_type)
+class ReactionEvent(Event[ReactionEventPayload[T_data]], Generic[T_data]):
+    def __init__(self, hass_event: HassEvent, t_data_type: Type[T_data] = DynamicData) -> None:
+        super().__init__(hass_event, ReactionEventPayload[t_data_type])

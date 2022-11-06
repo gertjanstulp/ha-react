@@ -6,7 +6,6 @@ entity_maps:
 
 plugins:
   - custom_components.react.plugin.telegram.telegram_plugin
-  # notify: custom_components.react.plugin.telegram.telegram_notify_plugin
 
 stencil:
   full_stencil:
@@ -449,7 +448,7 @@ workflow:
   workflow_actionable_notification_feedback:
     actor:
       actor_actionable_notification_feedback:
-        entity: mobile_group
+        entity: mobile_user
         type: notify
         action: feedback_retrieved
         data:
@@ -461,10 +460,11 @@ workflow:
         action: reactor_action_actionable_notification_feedback
         data:
           feedback: "{{ event.data.feedback }}"
-      # reactor_telegram_feedback:
-      #   entity: mobile_group
-      #   type: notify
-
+      reactor_telegram_feedback_confirm:
+        entity: mobile_user
+        type: notify
+        action: feedback_confirm
+        forward_data: True
 
   workflow_wait:
     actor:

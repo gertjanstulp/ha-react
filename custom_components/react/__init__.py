@@ -5,7 +5,7 @@ from awesomeversion import AwesomeVersion
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, STATE_ON, __version__ as HAVERSION
-from homeassistant.core import Context, CoreState, HomeAssistant, callback, Event
+from homeassistant.core import Context, CoreState, HomeAssistant, callback, Event as HassEvent
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -291,28 +291,28 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
 
 
     @callback
-    async def async_handle(self, event: Event):
-        action_event = ActionEvent(event)
+    async def async_handle(self, hass_event: HassEvent):
+        action_event = ActionEvent(hass_event)
         
         for actor_tracker in self.actor_trackers:
             run = False
             actor_runtime = actor_tracker.value_container
-            if (action_event.data.entity in actor_runtime.entity and action_event.data.type in actor_runtime.type):
+            if (action_event.payload.entity in actor_runtime.entity and action_event.payload.type in actor_runtime.type):
                 config_action = actor_runtime.action
                 if config_action is None:
                     run = True   
                 else:
-                    run = action_event.data.action in config_action
+                    run = action_event.payload.action in config_action
                 
-                if run and actor_runtime.data and len(actor_runtime.data) > 0 and not action_event.data.data:
+                if run and actor_runtime.data and len(actor_runtime.data) > 0 and not action_event.payload.data:
                     run = False
 
-                if run and action_event.data.data and actor_runtime.data:
+                if run and action_event.payload.data and actor_runtime.data:
                     match: bool
                     for data_item in actor_runtime.data:
                         match = True
                         for name in data_item.names:
-                            if not name in action_event.data.data.names or action_event.data.data.get(name) != data_item.get(name):
+                            if not name in action_event.payload.data.names or action_event.payload.data.get(name) != data_item.get(name):
                                 match = False
                                 break
                         if match:
@@ -326,7 +326,7 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
                     self._last_triggered = utcnow()
                     self.async_write_ha_state()
 
-                    parent_id = None if event.context is None else event.context.id
+                    parent_id = None if hass_event.context is None else hass_event.context.id
                     hass_run_context = Context(parent_id=parent_id)
                     
                     entity_vars = None
@@ -349,4 +349,4 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
             ATTR_ACTION: actor_runtime.action.first_or_none,
             ATTR_DATA: actor_runtime.data[0].as_dict() if actor_runtime.data and len(actor_runtime.data) > 0 else None,
         }
-        await self.async_handle(Event(EVENT_REACT_ACTION, data, context=context))
+        await self.async_handle(HassEvent(EVENT_REACT_ACTION, data, context=context))

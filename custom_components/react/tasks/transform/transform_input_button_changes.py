@@ -2,7 +2,7 @@
 from __future__ import annotations
 from typing import Any
 
-from homeassistant.core import Event
+from homeassistant.core import Event as HassEvent
 
 from ..transform_base import NonBinaryStateData, StateData, StateTransformTask
 
@@ -22,8 +22,8 @@ async def async_setup_task(react: ReactBase) -> Task:
 
 class InputButtonStateData(NonBinaryStateData):
 
-    def __init__(self, event_data: dict[str, Any]):
-        super().__init__(INPUT_BUTTON_PREFIX, event_data)
+    def __init__(self, event_payload: dict[str, Any]):
+        super().__init__(INPUT_BUTTON_PREFIX, event_payload)
 
         if self.old_state_value != None and self.new_state_value != None and self.old_state_value != self.new_state_value:
             self.actions.append(ACTION_PRESS)
@@ -37,5 +37,5 @@ class Task(StateTransformTask):
         self.can_run_disabled = True
 
 
-    def read_state_data(self, event: Event) -> StateData:
-        return InputButtonStateData(event.data)
+    def read_state_data(self, hass_event: HassEvent) -> StateData:
+        return InputButtonStateData(hass_event.data)

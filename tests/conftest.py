@@ -55,7 +55,7 @@ def auto_enable_custom_integrations(patch_config_dir, enable_custom_integrations
 async def react_component(hass: HomeAssistant):
     hass.data[DATA_TRACE] = {}
 
-    async def async_setup(workflow_name: str, additional_workflows: list[str] = [], init_notify_plugin: bool = False):
+    async def async_setup(workflow_name: str, additional_workflows: list[str] = [], plugins: list[str] = []):
         data = None
         workflow_id = f"{WORKFLOW_ID_PREFIX}{workflow_name}"
         with open(get_test_config_dir(REACT_CONFIG)) as f:
@@ -67,10 +67,7 @@ async def react_component(hass: HomeAssistant):
                 }
             }
 
-            if init_notify_plugin:
-                data[CONF_PLUGINS] = [
-                    "tests.plugins.test_notify_plugin"
-                ]
+            data[CONF_PLUGINS] = plugins
                     
         for additional_workflow in additional_workflows:
             additional_workflow_ID = f"{WORKFLOW_ID_PREFIX}{additional_workflow}"

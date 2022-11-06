@@ -1,5 +1,5 @@
 from typing import Any
-from homeassistant.core import Event, callback
+from homeassistant.core import Event as HassEvent, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -31,8 +31,8 @@ from ..const import (
 
 class StateData:
 
-    def __init__(self, entity_prefix: str, event_data: dict[str, Any]):
-        self.entity = event_data.get(ATTR_ENTITY_ID, '').replace(entity_prefix, '')
+    def __init__(self, entity_prefix: str, event_payload: dict[str, Any]):
+        self.entity = event_payload.get(ATTR_ENTITY_ID, '').replace(entity_prefix, '')
         self.actions = []
         
         self.old_state_value: Any = None
@@ -52,10 +52,10 @@ class StateData:
 
 class BinaryStateData(StateData):
 
-    def __init__(self, entity_prefix: str, event_data: dict[str, Any]):
-        super().__init__(entity_prefix, event_data)
-        old_state = event_data.get(OLD_STATE, None)
-        new_state = event_data.get(NEW_STATE, None)
+    def __init__(self, entity_prefix: str, event_payload: dict[str, Any]):
+        super().__init__(entity_prefix, event_payload)
+        old_state = event_payload.get(OLD_STATE, None)
+        new_state = event_payload.get(NEW_STATE, None)
         self.old_state_value = old_state.state if old_state else None
         self.new_state_value = new_state.state if new_state else None
 
@@ -73,11 +73,11 @@ class BinaryStateData(StateData):
 
 class NonBinaryStateData(StateData):
 
-    def __init__(self, entity_prefix: str, event_data: dict[str, Any]):
-        super().__init__(entity_prefix, event_data)
+    def __init__(self, entity_prefix: str, event_payload: dict[str, Any]):
+        super().__init__(entity_prefix, event_payload)
         
-        old_state = event_data.get(OLD_STATE, None)
-        new_state = event_data.get(NEW_STATE, None)
+        old_state = event_payload.get(OLD_STATE, None)
+        new_state = event_payload.get(NEW_STATE, None)
         self.old_state_value = old_state.state if old_state else None
         self.new_state_value = new_state.state if new_state else None
 
@@ -102,22 +102,22 @@ class StateTransformTask(ReactTask):
 
     
     @callback
-    def async_filter(self, event: Event) -> bool:
-        if ATTR_ENTITY_ID in event.data and event.data[ATTR_ENTITY_ID].startswith(self.prefix):
-            entity: str = event.data.get(ATTR_ENTITY_ID).split('.')[1]
+    def async_filter(self, hass_event: HassEvent) -> bool:
+        if ATTR_ENTITY_ID in hass_event.data and hass_event.data[ATTR_ENTITY_ID].startswith(self.prefix):
+            entity: str = hass_event.data.get(ATTR_ENTITY_ID).split('.')[1]
             return entity in self.entities
         return False
       
 
-    async def async_execute(self, event: Event) -> None:
+    async def async_execute(self, hass_event: HassEvent) -> None:
         """Execute the task."""
-        state_data = self.read_state_data( event)
+        state_data = self.read_state_data( hass_event)
         react_events = state_data.to_react_events(self.type)
         for react_event in react_events:
             self.react.hass.bus.async_fire(EVENT_REACT_ACTION, react_event)
 
     
-    def read_state_data(self, event: Event) -> StateData: 
+    def read_state_data(self, hass_event: HassEvent) -> StateData: 
         raise NotImplementedError()
 
 

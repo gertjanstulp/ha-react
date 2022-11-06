@@ -4,7 +4,7 @@ from time import monotonic
 from types import TracebackType
 from typing import Callable, Union
 
-from homeassistant.core import Event
+from homeassistant.core import Event as HassEvent
 
 from ..base import ReactBase
 from ..enums import ReactStage
@@ -15,8 +15,8 @@ class ReactTask:
     def __init__(self, react: ReactBase) -> None:
         self.react = react
     
-        self.events: Union[list[str], None] = None
-        self.events_with_filters: Union[list[tuple[str, Callable[[Event], bool]]], None] = None
+        self.event_types: Union[list[str], None] = None
+        self.events_with_filters: Union[list[tuple[str, Callable[[HassEvent], bool]]], None] = None
         self.signals: Union[list[str], None] = None
         self.schedule: Union[timedelta, None] = None
         self.stages: Union[list[ReactStage], None] = None

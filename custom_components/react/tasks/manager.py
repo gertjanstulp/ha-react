@@ -58,13 +58,13 @@ class ReactTaskManager:
 
 
     def start_task(self, task: ReactTask, schedule_tasks: bool = True):
-        if task.events is not None:
-            for event in task.events:
-                self.react.hass.bus.async_listen_once(event, task.execute_task)
+        if task.event_types is not None:
+            for event_type in task.event_types:
+                self.react.hass.bus.async_listen_once(event_type, task.execute_task)
         
         if task.events_with_filters is not None:
-            for event,filter in task.events_with_filters:
-                self.react.hass.bus.async_listen(event, task.execute_task, filter)
+            for event_type,filter in task.events_with_filters:
+                self.react.hass.bus.async_listen(event_type, task.execute_task, filter)
 
         if task.signals is not None:
             for signal in task.signals:

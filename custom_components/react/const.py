@@ -120,7 +120,7 @@ MONIKER_RESET = "reset"
 # plugin attributes
 ATTR_NOTIFY = "notify"
 
-# Event custom attributes
+# event custom attributes
 ATTR_EVENT_TYPE = "event_type"
 ATTR_ARGS = "args"
 ATTR_EVENT_MESSAGE = "message"
@@ -151,8 +151,8 @@ EVENT_REACT_REACTION = "ev_react_reaction"
 EVENT_RUN_REGISTRY_UPDATED = "run_registry_updated"
 EVENT_REACTION_REGISTRY_UPDATED = "reaction_registry_updated"
 
-# event data
-EVENTDATA_COMMAND_REACT = "/react"
+# event payload
+EVENTPAYLOAD_COMMAND_REACT = "/react"
 
 # React types
 REACT_TYPE_NOTIFY = "notify"
@@ -161,6 +161,7 @@ REACT_TYPE_NOTIFY = "notify"
 REACT_ACTION_SEND_MESSAGE = "send_message"
 REACT_ACTION_FEEDBACK = "feedback"
 REACT_ACTION_FEEDBACK_RETRIEVED = "feedback_retrieved"
+REACT_ACTION_FEEDBACK_CONFIRM = "feedback_confirm"
 
 # signals
 SIGNAL_ITEM_CREATED = "react_item_created"
