@@ -10,7 +10,7 @@ from custom_components.react.tasks.defaults.default_task import DefaultReactionT
 from custom_components.react.utils.events import ReactionEvent
 from custom_components.react.utils.struct import DynamicData
 
-from custom_components.react.plugin.telegram.const import ATTR_SERVICE_DATA_INLINE_KEYBOARD, PLUGIN_NAME
+from custom_components.react.plugin.telegram.telegram_plugin import ATTR_SERVICE_DATA_INLINE_KEYBOARD, PLUGIN_NAME
 from custom_components.react.plugin.telegram.telegram_api import TelegramApi
 
 

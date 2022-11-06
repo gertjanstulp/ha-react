@@ -9,7 +9,7 @@ from custom_components.react.const import (
     ATTR_EVENT_MESSAGE,
     DOMAIN
 )
-from custom_components.react.plugin.telegram.const import ATTR_SERVICE_DATA_INLINE_KEYBOARD
+from custom_components.react.plugin.telegram.telegram_plugin import ATTR_SERVICE_DATA_INLINE_KEYBOARD
 
 from tests.tst_context import TstContext
 from tests.common import FIXTURE_WORKFLOW_NAME
