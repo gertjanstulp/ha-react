@@ -684,7 +684,8 @@ class Reaction:
 
     def step_reactor_event(self) -> Generator[StepResult, None, None]:
         reactor_action = [ self._event_data.action ] if self._reactor.forward_action else self._reactor.action
-        for entity, type, action, data in product(self._reactor.entity or [None], self._reactor.type or [None], reactor_action or [None], self._reactor.data or [None]):
+        reactor_data = [ self._event_data.data ] if self._reactor.forward_data else self._reactor.data
+        for entity, type, action, data in product(self._reactor.entity or [None], self._reactor.type or [None], reactor_action or [None], reactor_data or [None]):
             reaction = ReactionData(self._reactor.id, entity, type, action, data.as_dict() if data else None)
             yield from self.step_reaction_main(reaction)
 

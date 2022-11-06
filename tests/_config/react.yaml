@@ -112,6 +112,19 @@ workflow:
         entity: reactor_entity_forward_action
         type: reactor_type_forward_action
         forward_action: True
+  
+  workflow_forward_data:
+    actor:
+      actor_forward_data:
+        entity: actor_entity_forward_data
+        type: actor_type_forward_data
+        action: actor_action_forward_data
+    reactor: 
+      reactor_forward_data:
+        entity: reactor_entity_forward_data
+        type: reactor_type_forward_data
+        action: reactor_action_forward_data
+        forward_data: True
 
   workflow_trace:
     actor:
