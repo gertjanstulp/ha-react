@@ -153,6 +153,33 @@ async def test_react_forward_action_toggle(hass: HomeAssistant, workflow_name, r
         tc.verify_trace_record(expected_result_message="Skipped, toggle with forward-action")
 
 
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["forward_data"])
+async def test_react_forward_data(hass: HomeAssistant, workflow_name, react_component):
+    """ 
+    Test for workflow with reactor with forwarddata :
+    - No reaction entity should be created
+    - An event should be sent
+    - Event data should match configuration and forwarded data
+    - Trace data should match configuration
+    """
+
+    await react_component.async_setup(workflow_name)
+
+    data_in: dict = {
+        "data1" : 37,
+        "data2": ["asdf", "qwer"],
+    }
+
+    tc = TstContext(hass, workflow_name)
+    async with tc.async_listen_react_event():
+        tc.verify_reaction_not_found()
+        await tc.async_send_action_event(data=data_in)
+        tc.verify_reaction_not_found()
+        await tc.async_verify_reaction_event_received()
+        tc.verify_reaction_event_data(expected_data=data_in)
+        tc.verify_trace_record(expected_runtime_reactor_data=data_in)
+
+
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["full_stencil"])
 async def test_react_full_stencil(hass: HomeAssistant, workflow_name, react_component):
     """
