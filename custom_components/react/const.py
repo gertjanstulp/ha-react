@@ -56,6 +56,7 @@ ATTR_REACTOR_TYPE = "reactor_type"
 ATTR_REACTOR_ACTION = "reactor_action"
 ATTR_REACTOR_DELAY = "reactor_delay"
 ATTR_FORWARD_ACTION = "forward_action"
+ATTR_FORWARD_DATA = "forward_data"
 ATTR_RESET_WORKFLOW = "reset_workflow"
 ATTR_OVERWRITE = "overwrite"
 ATTR_STATE = "state"
@@ -327,6 +328,7 @@ REACTOR_DATA_SCHEMA = ENTITY_DATA_SCHEMA.extend(
         vol.Optional(ATTR_OVERWRITE) : cv.boolean,
         vol.Optional(ATTR_RESET_WORKFLOW) : cv.string,
         vol.Optional(ATTR_FORWARD_ACTION): cv.boolean,
+        vol.Optional(ATTR_FORWARD_DATA): cv.boolean,
         vol.Optional(ATTR_WAIT) : WAIT_SCHEMA,
     }).schema
 )

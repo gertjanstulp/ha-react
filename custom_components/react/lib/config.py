@@ -6,11 +6,11 @@ from homeassistant.const import ATTR_ID, ATTR_NAME, CONF_ICON
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from ..exceptions import ReactException
-from ..utils.logger import get_react_logger
-from ..utils.struct import ActorConfig, CtorConfig, DelayData, DynamicData, MultiItem, ReactorConfig, ScheduleConfig, ScheduleRuntime, StateConfig, WaitConfig
+from custom_components.react.exceptions import ReactException
+from custom_components.react.utils.logger import get_react_logger
+from custom_components.react.utils.struct import ActorConfig, CtorConfig, DelayData, DynamicData, MultiItem, ReactorConfig, ScheduleConfig, ScheduleRuntime, StateConfig, WaitConfig
 
-from ..const import (
+from custom_components.react.const import (
     ATTR_ACTION,
     ATTR_ACTOR,
     ATTR_CONDITION,
@@ -22,6 +22,7 @@ from ..const import (
     ATTR_ENABLED,
     ATTR_ENTITY,
     ATTR_FORWARD_ACTION,
+    ATTR_FORWARD_DATA,
     ATTR_INDEX,
     ATTR_MODE,
     ATTR_NOTIFY,
@@ -194,7 +195,7 @@ class Reactor(Ctor, ReactorConfig):
         self_dict = {
             moniker: {
                 a: self.get_flattened(a)
-                for a in [ATTR_OVERWRITE, ATTR_FORWARD_ACTION]
+                for a in [ATTR_OVERWRITE, ATTR_FORWARD_ACTION, ATTR_FORWARD_DATA]
                 if self.get(a) not in [None, False]
             }
         }

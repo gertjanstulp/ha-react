@@ -9,6 +9,7 @@ from ..const import (
     ATTR_CONDITION,
     ATTR_DELAY,
     ATTR_FORWARD_ACTION,
+    ATTR_FORWARD_DATA,
     ATTR_OVERWRITE,
     ATTR_SCHEDULE,
     ATTR_STATE,
@@ -347,10 +348,12 @@ class ReactorConfig(CtorConfig):
         self.overwrite: Union[bool, str] = None
         self.reset_workflow: str = None
         self.forward_action: Union[bool, str] = None
+        self.forward_data: Union[bool, str] = None
         self.wait: WaitConfig = None
 
         self.ensure(ATTR_OVERWRITE, False)
         self.ensure(ATTR_FORWARD_ACTION, False)
+        self.ensure(ATTR_FORWARD_DATA, False)
 
 
 class ReactorRuntime(CtorRuntime):
@@ -365,7 +368,9 @@ class ReactorRuntime(CtorRuntime):
         self.overwrite: bool = None
         self.reset_workflow: str = None
         self.forward_action: bool = None
+        self.forward_data: bool = None
         self.wait: WaitRuntime = None
 
         self.ensure(ATTR_OVERWRITE, False)
         self.ensure(ATTR_FORWARD_ACTION, False)
+        self.ensure(ATTR_FORWARD_DATA, False)
