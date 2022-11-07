@@ -177,7 +177,7 @@ async def test_react_forward_data(hass: HomeAssistant, workflow_name, react_comp
         tc.verify_reaction_not_found()
         await tc.async_verify_reaction_event_received()
         tc.verify_reaction_event_data(expected_data=data_in)
-        tc.verify_trace_record(expected_runtime_reactor_data=data_in)
+        tc.verify_trace_record(expected_runtime_reactor_data=[data_in])
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["full_stencil"])

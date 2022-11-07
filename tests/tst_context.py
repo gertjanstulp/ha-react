@@ -305,7 +305,7 @@ class TstContext():
         expected_runtime_reactor_entity: list[str] = None, 
         expected_runtime_reactor_type: list[str] = None, 
         expected_runtime_reactor_action: list[str] = None, 
-        expected_runtime_reactor_data: dict = None,
+        expected_runtime_reactor_data: list[dict] = None,
         expected_runtime_reactor_delay_seconds: int = None,
         expected_runtime_reactor_delay_minutes: int = None,
         expected_runtime_reactor_delay_hours: int = None,
@@ -324,6 +324,8 @@ class TstContext():
             expected_runtime_reactor_type = [None] * len(self.workflow_config.reactors)
         if not expected_runtime_reactor_action:
             expected_runtime_reactor_action = [None] * len(self.workflow_config.reactors)
+        if not expected_runtime_reactor_data:
+            expected_runtime_reactor_data = [None] * len(self.workflow_config.reactors)
 
         trace_data: dict = self.hass.data[DATA_TRACE]
         key = f"{DOMAIN}.{self.workflow_id}"
@@ -532,7 +534,7 @@ class TstContext():
                     trace_trace_reactor_event_result_reaction.assert_property_match(ATTR_ENTITY, expected_runtime_reactor_entity[i] or workflow_config_reactor.entity[0])
                     trace_trace_reactor_event_result_reaction.assert_property_match(ATTR_TYPE, expected_runtime_reactor_type[i] or workflow_config_reactor.type[0])
                     trace_trace_reactor_event_result_reaction.assert_property_match(ATTR_ACTION, expected_runtime_reactor_action[i] or (expected_runtime_actor_action if workflow_config_reactor.forward_action else workflow_config_reactor.action[0]))
-                    trace_trace_reactor_event_result_reaction.assert_property_match(ATTR_DATA, expected_runtime_reactor_data or (workflow_config_reactor.data[0] if workflow_config_reactor.data else None))
+                    trace_trace_reactor_event_result_reaction.assert_property_match(ATTR_DATA, expected_runtime_reactor_data[i] or (workflow_config_reactor.data[0] if workflow_config_reactor.data else None))
 
                 # Test for variables in event section of trace data if only 1 reactor configured without condition and delay
                 if (len(self.workflow_config.reactors) == 1 and 
@@ -570,18 +572,17 @@ class TstContext():
         assert got_count == expected_count, f"Expected notify_send_message count {expected_count}, got {got_count}"
 
 
-    def verify_notify_send_message_data(self, expected_message_data: dict, reactor_index: int = 0):
-        got_item = self.notify_send_message_register[0]
-        got_message_data = got_item.get(ATTR_MESSAGE_DATA)
+    def verify_notify_send_message_data(self, expected_data: dict, reactor_index: int = 0):
+        got_data = self.notify_send_message_register[0]
+        got_message_data = got_data.get(ATTR_MESSAGE_DATA)
+        expected_message_data = expected_data.get(ATTR_MESSAGE_DATA)
         
-        self.assert_attribute(ATTR_ENTITY, self.workflow_config.reactors[reactor_index], got_item)
-        assert DeepDiff(got_message_data, expected_message_data), f"Expected message data '{expected_message_data}', got '{got_message_data}'"
+        self.assert_attribute(ATTR_ENTITY, self.workflow_config.reactors[reactor_index], got_data)
+        assert DeepDiff(got_message_data, expected_message_data) == {}, f"Expected message data '{expected_message_data}', got '{got_message_data}'"
 
 
     def register_notify_confirm_feedback(self, feedback_data: dict):
-        self.notify_confirm_feedback_register.append({
-            ATTR_FEEDBACK_DATA: feedback_data
-        })
+        self.notify_confirm_feedback_register.append(feedback_data)
 
 
     def verify_notify_confirm_feedback_sent(self, expected_count: int = 1):
@@ -590,10 +591,8 @@ class TstContext():
 
     
     def verify_notify_confirm_feedback_data(self, expected_feedback_data: dict, reactor_index: int = 0):
-        got_item = self.notify_confirm_feedback_register[0]
-        got_feedback_data = got_item.get(ATTR_FEEDBACK_DATA)
-        
-        assert DeepDiff(got_feedback_data, expected_feedback_data), f"Expected feedback data '{expected_feedback_data}', got '{got_feedback_data}'"
+        got_feedback_data = self.notify_confirm_feedback_register[0]
+        assert DeepDiff(got_feedback_data, expected_feedback_data) == {}, f"Expected feedback data '{expected_feedback_data}', got '{got_feedback_data}'"
 
 
     # def send_notification(self, entity: str, notification_data: dict, context: Context):

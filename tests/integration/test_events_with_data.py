@@ -69,7 +69,7 @@ async def test_react_data_event(hass: HomeAssistant, workflow_name, react_compon
         tc.verify_reaction_not_found()
         await tc.async_verify_reaction_event_received()
         tc.verify_reaction_event_data(expected_data=data_out)
-        tc.verify_trace_record(expected_runtime_actor_data=data_in, expected_runtime_reactor_data=data_out)
+        tc.verify_trace_record(expected_runtime_actor_data=data_in, expected_runtime_reactor_data=[data_out])
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["data_delayed"])

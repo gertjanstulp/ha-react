@@ -2,12 +2,22 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 
+from homeassistant.components.telegram_bot import (
+    ATTR_CHAT_ID, 
+    ATTR_KEYBOARD_INLINE,
+    ATTR_MESSAGE, 
+    ATTR_MESSAGEID, 
+    ATTR_TEXT
+)
+
 from custom_components.react.base import ReactBase
 from custom_components.react.const import (
     ATTR_DATA,
     ATTR_ENTITY,
+    ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT,
     ATTR_EVENT_MESSAGE,
     ATTR_EVENT_PLUGIN,
+    ATTR_EVENT_PLUGIN_PAYLOAD,
     DOMAIN
 )
 from custom_components.react.plugin.telegram.const import ATTR_MESSAGE_DATA, ATTR_SERVICE_DATA_INLINE_KEYBOARD, PLUGIN_NAME
@@ -56,18 +66,31 @@ async def test_telegram_notify_confirm_feedback(hass: HomeAssistant, workflow_na
     await react_component.async_setup(workflow_name, plugins=["tests._plugins.telegram_plugin_notify_confirm_feedback_mock"])
     react: ReactBase = hass.data[DOMAIN]
 
+    data_in = {
+        ATTR_EVENT_PLUGIN: PLUGIN_NAME,
+        ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT: "",
+        ATTR_EVENT_PLUGIN_PAYLOAD: {
+            ATTR_MESSAGEID: "",
+            ATTR_CHAT_ID: "",
+            ATTR_TEXT: ""
+        }
+    }
+    expected_data = {'feedback': ''}
     feedback_data = {
-
+        ATTR_MESSAGEID: "",
+        ATTR_CHAT_ID: "",
+        ATTR_MESSAGE: " - ",
+        ATTR_KEYBOARD_INLINE: None
     }
 
     tc = TstContext(hass, workflow_name)
     react.hass.data["test_context"] = tc
     async with tc.async_listen_react_event():
         tc.verify_reaction_not_found()
-        await tc.async_send_action_event(data={ATTR_EVENT_PLUGIN: PLUGIN_NAME} )
+        await tc.async_send_action_event(data=data_in)
         tc.verify_reaction_not_found()
         await tc.async_verify_reaction_event_received(expected_count=2)
-        tc.verify_trace_record(expected_runtime_reactor_data=)
+        tc.verify_trace_record(expected_runtime_actor_data=data_in, expected_runtime_reactor_data=[expected_data, data_in])
         
         tc.verify_notify_confirm_feedback_sent()
         tc.verify_notify_confirm_feedback_data(feedback_data)
