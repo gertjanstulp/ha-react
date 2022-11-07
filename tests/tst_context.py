@@ -14,6 +14,7 @@ from unittest.mock import Mock
 
 from custom_components.react.base import ReactBase
 from custom_components.react.lib.config import Workflow
+from custom_components.react.plugin.telegram.const import ATTR_FEEDBACK_DATA, ATTR_MESSAGE_DATA
 from custom_components.react.runtime.runtime import Reaction, WorkflowRun
 from custom_components.react.utils.struct import DynamicData, MultiItem
 from custom_components.react.utils.trace import ReactTrace
@@ -101,6 +102,7 @@ class TstContext():
         self.workflow_config = self.react.configuration.workflow_config.workflows.get(self.workflow_id)
 
         self.notify_send_message_register: list[dict] = []
+        self.notify_confirm_feedback_register: list[dict] = []
 
     
     async def async_send_action_event(self, 
@@ -559,7 +561,7 @@ class TstContext():
     def register_notify_send_message(self, entity: str, message_data: dict):
         self.notify_send_message_register.append({
             ATTR_ENTITY: entity,
-            "message_data": message_data
+            ATTR_MESSAGE_DATA: message_data
         })
 
 
@@ -570,10 +572,29 @@ class TstContext():
 
     def verify_notify_send_message_data(self, expected_message_data: dict, reactor_index: int = 0):
         got_item = self.notify_send_message_register[0]
-        got_message_data = got_item.get("message_data")
+        got_message_data = got_item.get(ATTR_MESSAGE_DATA)
         
         self.assert_attribute(ATTR_ENTITY, self.workflow_config.reactors[reactor_index], got_item)
         assert DeepDiff(got_message_data, expected_message_data), f"Expected message data '{expected_message_data}', got '{got_message_data}'"
+
+
+    def register_notify_confirm_feedback(self, feedback_data: dict):
+        self.notify_confirm_feedback_register.append({
+            ATTR_FEEDBACK_DATA: feedback_data
+        })
+
+
+    def verify_notify_confirm_feedback_sent(self, expected_count: int = 1):
+        got_count = len(self.notify_confirm_feedback_register)
+        assert got_count == expected_count, f"Expected notify_confirm_feedback count {expected_count}, got {got_count}"
+
+    
+    def verify_notify_confirm_feedback_data(self, expected_feedback_data: dict, reactor_index: int = 0):
+        got_item = self.notify_confirm_feedback_register[0]
+        got_feedback_data = got_item.get(ATTR_FEEDBACK_DATA)
+        
+        assert DeepDiff(got_feedback_data, expected_feedback_data), f"Expected feedback data '{expected_feedback_data}', got '{got_feedback_data}'"
+
 
     # def send_notification(self, entity: str, notification_data: dict, context: Context):
     #     self.notifications.append({

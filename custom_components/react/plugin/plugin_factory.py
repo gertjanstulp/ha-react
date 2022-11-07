@@ -26,4 +26,4 @@ class PluginFactory:
             plugin_module = import_module(plugin_name)
             if not hasattr(plugin_module, "setup_plugin"):
                 raise Exception(f"Invalid plugin configuration: setup_plugin method missing in {plugin_name}")
-            plugin_module.setup_plugin(api=self.api)
+            plugin_module.setup_plugin(plugin_api=self.api)

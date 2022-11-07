@@ -130,6 +130,9 @@ ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK = "feedback"
 ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT = "acknowledgement"
 ATTR_EVENT_PLUGIN = "plugin"
 ATTR_EVENT_PLUGIN_PAYLOAD = "plugin_payload"
+ATTR_OPTIONS = "options"
+ATTR_LANGUAGE = "language"
+
 
 # service attributes
 ATTR_RUN_ID = "run_id"
@@ -156,12 +159,15 @@ EVENTPAYLOAD_COMMAND_REACT = "/react"
 
 # React types
 REACT_TYPE_NOTIFY = "notify"
+REACT_TYPE_TTS = "tts"
+REACT_TYPE_MEDIA_PLAYER = "media_player"
 
 # React actions
 REACT_ACTION_SEND_MESSAGE = "send_message"
 REACT_ACTION_FEEDBACK = "feedback"
 REACT_ACTION_FEEDBACK_RETRIEVED = "feedback_retrieved"
-REACT_ACTION_FEEDBACK_CONFIRM = "feedback_confirm"
+REACT_ACTION_CONFIRM_FEEDBACK = "confirm_feedback"
+REACT_ACTION_SPEEK = "speek"
 
 # signals
 SIGNAL_ITEM_CREATED = "react_item_created"

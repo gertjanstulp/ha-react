@@ -11,27 +11,31 @@ from homeassistant.components.telegram_bot import (
 )
 
 from custom_components.react.base import ReactBase
-from custom_components.react.const import ATTR_EVENT_PLUGIN_PAYLOAD, REACT_ACTION_FEEDBACK_CONFIRM, REACT_TYPE_NOTIFY
 from custom_components.react.tasks.defaults.default_task import DefaultReactionTask
-from custom_components.react.utils.events import Event, ReactionEvent, ReactionEventPayload
+from custom_components.react.utils.events import ReactionEvent
 from custom_components.react.utils.struct import DynamicData
+from custom_components.react.const import (
+    ATTR_EVENT_PLUGIN_PAYLOAD, 
+    REACT_ACTION_CONFIRM_FEEDBACK, 
+    REACT_TYPE_NOTIFY
+)
 
 from custom_components.react.plugin.telegram.const import PLUGIN_NAME
-from custom_components.react.plugin.telegram.telegram_api import TelegramApi
+from custom_components.react.plugin.telegram.api import Api
 
 
-class TelegramNotifyFeedbackConfirmTask(DefaultReactionTask):
-    def __init__(self, react: ReactBase, telegram_api: TelegramApi) -> None:
-        super().__init__(react, TelegramNotifyFeedbackConfirmReactionEvent)
-        self.telegram_api = telegram_api
+class NotifyConfirmFeedbackTask(DefaultReactionTask):
+    def __init__(self, react: ReactBase, api: Api) -> None:
+        super().__init__(react, NotifyConfirmFeedbackReactionEvent)
+        self.api = api
 
 
-    async def async_execute_default(self, action_event: TelegramNotifyFeedbackConfirmReactionEvent):
-        self.react.log.debug("TelegramNotifyFeedbackConfirmTask: confirming feedback to telegram")
-        await self.telegram_api.async_confirm_feedback(action_event.create_feedback_data(), action_event.context)
+    async def async_execute_default(self, event: NotifyConfirmFeedbackReactionEvent):
+        self.react.log.debug("NotifyConfirmFeedbackTask: confirming feedback to telegram")
+        await self.api.async_confirm_feedback(event.create_feedback_data(), event.context)
 
 
-class TelegramNotifyFeedbackConfirmReactionEventPluginPayload(DynamicData):
+class NotifyConfirmFeedbackReactionEventPluginPayload(DynamicData):
     def __init__(self, source: dict = None) -> None:
         super().__init__()
 
@@ -42,8 +46,8 @@ class TelegramNotifyFeedbackConfirmReactionEventPluginPayload(DynamicData):
         self.load(source)
 
 
-class TelegramNotifyFeedbackConfirmReactionEventData(DynamicData):
-    type_hints: dict = { ATTR_EVENT_PLUGIN_PAYLOAD: TelegramNotifyFeedbackConfirmReactionEventPluginPayload }
+class NotifyConfirmFeedbackReactionEventData(DynamicData):
+    type_hints: dict = { ATTR_EVENT_PLUGIN_PAYLOAD: NotifyConfirmFeedbackReactionEventPluginPayload }
 
     def __init__(self, source: dict = None) -> None:
         super().__init__()
@@ -51,22 +55,22 @@ class TelegramNotifyFeedbackConfirmReactionEventData(DynamicData):
         self.plugin: str = None
         self.feedback: str = None
         self.acknowledgement: str = None
-        self.plugin_payload: TelegramNotifyFeedbackConfirmReactionEventPluginPayload = None
+        self.plugin_payload: NotifyConfirmFeedbackReactionEventPluginPayload = None
 
         self.load(source)
         
 
-class TelegramNotifyFeedbackConfirmReactionEvent(ReactionEvent[TelegramNotifyFeedbackConfirmReactionEventData]):
+class NotifyConfirmFeedbackReactionEvent(ReactionEvent[NotifyConfirmFeedbackReactionEventData]):
     
     def __init__(self, hass_event: HassEvent) -> None:
-        super().__init__(hass_event, TelegramNotifyFeedbackConfirmReactionEventData)
+        super().__init__(hass_event, NotifyConfirmFeedbackReactionEventData)
 
 
     @property
     def applies(self) -> bool:
         return (
             self.payload.type == REACT_TYPE_NOTIFY and
-            self.payload.action == REACT_ACTION_FEEDBACK_CONFIRM and 
+            self.payload.action == REACT_ACTION_CONFIRM_FEEDBACK and 
             self.payload.data.plugin == PLUGIN_NAME
         )
 

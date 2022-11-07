@@ -7,9 +7,10 @@ from custom_components.react.const import (
     ATTR_DATA,
     ATTR_ENTITY,
     ATTR_EVENT_MESSAGE,
+    ATTR_EVENT_PLUGIN,
     DOMAIN
 )
-from custom_components.react.plugin.telegram.telegram_plugin import ATTR_SERVICE_DATA_INLINE_KEYBOARD
+from custom_components.react.plugin.telegram.const import ATTR_MESSAGE_DATA, ATTR_SERVICE_DATA_INLINE_KEYBOARD, PLUGIN_NAME
 
 from tests.tst_context import TstContext
 from tests.common import FIXTURE_WORKFLOW_NAME
@@ -25,7 +26,7 @@ async def test_telegram_notify_send_message(hass: HomeAssistant, workflow_name, 
     
     message_data = {
         ATTR_ENTITY: "mobile_group",
-        "message_data":{
+        ATTR_MESSAGE_DATA: {
             ATTR_EVENT_MESSAGE: "Approve something",
             ATTR_DATA: {
                 ATTR_SERVICE_DATA_INLINE_KEYBOARD: "Approve:/react approve approved, Deny:/react deny denied"
@@ -44,6 +45,32 @@ async def test_telegram_notify_send_message(hass: HomeAssistant, workflow_name, 
         
         tc.verify_notify_send_message_sent()
         tc.verify_notify_send_message_data(message_data)
+
+
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["actionable_notification_feedback"])
+async def test_telegram_notify_confirm_feedback(hass: HomeAssistant, workflow_name, react_component):
+    """
+    Test for actionable notifications
+    """
+
+    await react_component.async_setup(workflow_name, plugins=["tests._plugins.telegram_plugin_notify_confirm_feedback_mock"])
+    react: ReactBase = hass.data[DOMAIN]
+
+    feedback_data = {
+
+    }
+
+    tc = TstContext(hass, workflow_name)
+    react.hass.data["test_context"] = tc
+    async with tc.async_listen_react_event():
+        tc.verify_reaction_not_found()
+        await tc.async_send_action_event(data={ATTR_EVENT_PLUGIN: PLUGIN_NAME} )
+        tc.verify_reaction_not_found()
+        await tc.async_verify_reaction_event_received(expected_count=2)
+        tc.verify_trace_record(expected_runtime_reactor_data=)
+        
+        tc.verify_notify_confirm_feedback_sent()
+        tc.verify_notify_confirm_feedback_data(feedback_data)
 
 
 # @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["actionable_notification_feedback"])

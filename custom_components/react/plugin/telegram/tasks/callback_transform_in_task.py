@@ -1,23 +1,41 @@
 from __future__ import annotations
 
-from homeassistant.components.telegram_bot import ATTR_CHAT_ID, ATTR_MESSAGE, ATTR_MESSAGEID, EVENT_TELEGRAM_CALLBACK, ATTR_TEXT
 from homeassistant.core import Event as HassEvent
+from homeassistant.components.telegram_bot import (
+    ATTR_CHAT_ID, 
+    ATTR_MESSAGE, 
+    ATTR_MESSAGEID, 
+    EVENT_TELEGRAM_CALLBACK, 
+    ATTR_TEXT
+)
 
-from custom_components.react.const import ATTR_ACTION, ATTR_DATA, ATTR_ENTITY, ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT, ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK, ATTR_EVENT_PLUGIN, ATTR_TYPE, EVENTPAYLOAD_COMMAND_REACT, ATTR_EVENT_PLUGIN_PAYLOAD, REACT_ACTION_FEEDBACK, REACT_ACTION_FEEDBACK_RETRIEVED, REACT_TYPE_NOTIFY
 from custom_components.react.utils.events import Event
 from custom_components.react.base import ReactBase
 from custom_components.react.tasks.defaults.default_task import DefaultTransformTask
 from custom_components.react.utils.struct import DynamicData
+from custom_components.react.const import (
+    ATTR_ACTION, 
+    ATTR_DATA, 
+    ATTR_ENTITY, 
+    ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT,
+    ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK, 
+    ATTR_EVENT_PLUGIN, 
+    ATTR_TYPE, 
+    EVENTPAYLOAD_COMMAND_REACT, 
+    ATTR_EVENT_PLUGIN_PAYLOAD, 
+    REACT_ACTION_FEEDBACK_RETRIEVED, 
+    REACT_TYPE_NOTIFY
+)
 
 from custom_components.react.plugin.telegram.const import PLUGIN_NAME
 
 
-class TelegramCallbackTransformInTask(DefaultTransformTask):
+class CallbackTransformInTask(DefaultTransformTask):
     def __init__(self, react: ReactBase) -> None:
-        super().__init__(react, EVENT_TELEGRAM_CALLBACK, TelegramCallbackTransformEvent)
+        super().__init__(react, EVENT_TELEGRAM_CALLBACK, CallbackTransformEvent)
 
 
-    def create_action_event_payload(self, source_event: TelegramCallbackTransformEvent) -> dict:
+    def create_action_event_payload(self, source_event: CallbackTransformEvent) -> dict:
         entity_maps = self.react.configuration.workflow_config.entity_maps_config
         return {
             ATTR_ENTITY: entity_maps.get(source_event.payload.entity_source, None),
@@ -36,7 +54,7 @@ class TelegramCallbackTransformInTask(DefaultTransformTask):
         }
 
 
-class TelegramNotifyFeedbackEventPayloadMessage(DynamicData):
+class TCallbackTransformEventPayloadMessage(DynamicData):
     def __init__(self, source: dict = None) -> None:
         super().__init__()
 
@@ -46,15 +64,15 @@ class TelegramNotifyFeedbackEventPayloadMessage(DynamicData):
         self.load(source)
 
     
-class TelegramCallbackTransformEventPayload(DynamicData):
-    type_hints: dict = { ATTR_MESSAGE: TelegramNotifyFeedbackEventPayloadMessage }
+class CallbackTransformEventPayload(DynamicData):
+    type_hints: dict = { ATTR_MESSAGE: TCallbackTransformEventPayloadMessage }
 
     def __init__(self) -> None:
         super().__init__()
         
         self.feedback: str = None
         self.acknowledgement: str = None
-        self.message: TelegramNotifyFeedbackEventPayloadMessage = None
+        self.message: TCallbackTransformEventPayloadMessage = None
         
         self.entity_source: str = None
         self.args: list = None
@@ -76,10 +94,10 @@ class TelegramCallbackTransformEventPayload(DynamicData):
             self.acknowledgement = self.args[1] if len(self.args) > 1 else None
 
             
-class TelegramCallbackTransformEvent(Event[TelegramCallbackTransformEventPayload]):
+class CallbackTransformEvent(Event[CallbackTransformEventPayload]):
 
     def __init__(self, hass_event: HassEvent) -> None:
-        super().__init__(hass_event, TelegramCallbackTransformEventPayload)
+        super().__init__(hass_event, CallbackTransformEventPayload)
         
 
     @property

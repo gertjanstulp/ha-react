@@ -1,11 +1,14 @@
-from homeassistant.components.telegram_bot import DOMAIN, SERVICE_EDIT_MESSAGE
 from homeassistant.const import Platform
 from homeassistant.core import Context
+from homeassistant.components.telegram_bot import (
+    DOMAIN, 
+    SERVICE_EDIT_MESSAGE
+)
 
 from custom_components.react.base import ReactBase
 
 
-class TelegramApi():
+class Api():
     def __init__(self, react: ReactBase) -> None:
         self.react = react
 

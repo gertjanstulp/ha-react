@@ -5,31 +5,40 @@ from telegram.utils.helpers import escape_markdown
 from homeassistant.core import Event as HassEvent
 
 from custom_components.react.base import ReactBase
-from custom_components.react.const import ATTR_DATA, ATTR_EVENT_FEEDBACK_ITEMS, ATTR_EVENT_MESSAGE, REACT_ACTION_SEND_MESSAGE, REACT_TYPE_NOTIFY
 from custom_components.react.tasks.defaults.default_task import DefaultReactionTask
 from custom_components.react.utils.events import ReactionEvent
 from custom_components.react.utils.struct import DynamicData
+from custom_components.react.const import (
+    ATTR_DATA, 
+    ATTR_EVENT_FEEDBACK_ITEMS, 
+    ATTR_EVENT_MESSAGE, 
+    REACT_ACTION_SEND_MESSAGE, 
+    REACT_TYPE_NOTIFY
+)
 
-from custom_components.react.plugin.telegram.telegram_plugin import ATTR_SERVICE_DATA_INLINE_KEYBOARD, PLUGIN_NAME
-from custom_components.react.plugin.telegram.telegram_api import TelegramApi
+from custom_components.react.plugin.telegram.api import Api
+from custom_components.react.plugin.telegram.const import (
+    ATTR_SERVICE_DATA_INLINE_KEYBOARD, 
+    PLUGIN_NAME
+)
 
 
-class TelegramNotifySendMessageTask(DefaultReactionTask):
-    def __init__(self, react: ReactBase, telegram_api: TelegramApi) -> None:
-        super().__init__(react, TelegramNotifySendMessageReactionEvent)
-        self.telegram_api = telegram_api
+class NotifySendMessageTask(DefaultReactionTask):
+    def __init__(self, react: ReactBase, api: Api) -> None:
+        super().__init__(react, NotifySendMessageReactionEvent)
+        self.api = api
 
 
-    async def async_execute_default(self, action_event: TelegramNotifySendMessageReactionEvent):
-        self.react.log.debug("TelegramNotifyPlugin: sending notification to telegram")
-        await self.telegram_api.async_send_message(
-            action_event.payload.entity,
-            action_event.create_message_data(),
-            action_event.context
+    async def async_execute_default(self, event: NotifySendMessageReactionEvent):
+        self.react.log.debug("NotifySendMessageTask: sending notification to telegram")
+        await self.api.async_send_message(
+            event.payload.entity,
+            event.create_message_data(),
+            event.context
         )
 
 
-class TelegramNotifySendMessageReactionEventFeedbackItem(DynamicData):
+class NotifySendMessageReactionEventFeedbackItem(DynamicData):
     def __init__(self, source: dict = None) -> None:
         super().__init__()
 
@@ -40,23 +49,23 @@ class TelegramNotifySendMessageReactionEventFeedbackItem(DynamicData):
         self.load(source)
 
 
-class TelegramNotifySendMessageReactionEventData(DynamicData):
-    type_hints: dict = { ATTR_EVENT_FEEDBACK_ITEMS: TelegramNotifySendMessageReactionEventFeedbackItem }
+class NotifySendMessageReactionEventData(DynamicData):
+    type_hints: dict = { ATTR_EVENT_FEEDBACK_ITEMS: NotifySendMessageReactionEventFeedbackItem }
 
     def __init__(self, source: dict) -> None:
         super().__init__()
         
         self.plugin: str = None
         self.message: str = None
-        self.feedback_items: list[TelegramNotifySendMessageReactionEventFeedbackItem] = None
+        self.feedback_items: list[NotifySendMessageReactionEventFeedbackItem] = None
 
         self.load(source)
 
 
-class TelegramNotifySendMessageReactionEvent(ReactionEvent[TelegramNotifySendMessageReactionEventData]):
+class NotifySendMessageReactionEvent(ReactionEvent[NotifySendMessageReactionEventData]):
 
     def __init__(self, hass_event: HassEvent) -> None:
-        super().__init__(hass_event, TelegramNotifySendMessageReactionEventData)
+        super().__init__(hass_event, NotifySendMessageReactionEventData)
 
 
     @property

@@ -32,7 +32,7 @@ class DefaultTask(ReactTask):
         await self.async_execute_default(action_event)
 
 
-    async def async_execute_default(self, action_event: Event):
+    async def async_execute_default(self, event: Event):
         raise NotImplementedError()
 
 
