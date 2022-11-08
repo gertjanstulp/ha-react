@@ -19,29 +19,29 @@ from custom_components.react.plugin.tts.const import PLUGIN_NAME
 _LOGGER = get_react_logger()
 
 
-class SpeekTask(DefaultReactionTask):
+class MediaPlayerSpeekTask(DefaultReactionTask):
 
     def __init__(self, react: ReactBase, api: Api) -> None:
-        super().__init__(react, SpeekReactionEvent)
+        super().__init__(react, MediaPlayerSpeekReactionEvent)
         self.api = api
 
 
     def _debug(self, message: str):
-        _LOGGER.debug(f"Tts plugin: Speektask - {message}")
+        _LOGGER.debug(f"Tts plugin: MediaPlayerSpeekTask - {message}")
 
 
-    async def async_execute_default(self, event: SpeekReactionEvent):
-        self._debug("Delivering tts speek message")
-        await self.api.async_speek( 
+    async def async_execute_default(self, event: MediaPlayerSpeekReactionEvent):
+        self._debug("Delivering media_player speek message")
+        await self.api.async_media_player_speek( 
             event.payload.entity or None,
             event.payload.data.message,
-            event.payload.data.options,
             event.payload.data.language,
+            event.payload.data.options,
             event.context
         )
 
 
-class SpeekReactionEventData(DynamicData):
+class MediaPlayerSpeekReactionEventData(DynamicData):
 
     def __init__(self, source: dict) -> None:
         super().__init__()
@@ -54,10 +54,10 @@ class SpeekReactionEventData(DynamicData):
         self.load(source)
 
 
-class SpeekReactionEvent(ReactionEvent[SpeekReactionEventData]):
+class MediaPlayerSpeekReactionEvent(ReactionEvent[MediaPlayerSpeekReactionEventData]):
     
     def __init__(self, event: Event) -> None:
-        super().__init__(event, SpeekReactionEventData)
+        super().__init__(event, MediaPlayerSpeekReactionEventData)
         
 
     @property

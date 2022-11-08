@@ -34,7 +34,7 @@ class Api():
         _LOGGER.debug(f"Tts plugin: Api - {message}")
 
 
-    async def async_speek(self, entity_id: str, message: str, language: str, options: dict, context: Context):
+    async def async_media_player_speek(self, entity_id: str, message: str, language: str, options: dict, context: Context):
         self._debug(f"Speeking '{message}'")
         if not self.config.say_service:
             self.react.log.error("TtsPlugin - No say_service configured")

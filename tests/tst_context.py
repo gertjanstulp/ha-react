@@ -101,7 +101,7 @@ class TstContext():
         self.workflow_id = f"workflow_{workflow_name}"
         self.workflow_config = self.react.configuration.workflow_config.workflows.get(self.workflow_id)
 
-        self.notify_send_message_register: list[dict] = []
+        self.plugin_data_register: list[dict] = []
         self.notify_confirm_feedback_register: list[dict] = []
 
     
@@ -603,90 +603,18 @@ class TstContext():
         await self.hass.async_block_till_done()
 
 
-    def register_notify_send_message(self, entity: str, message_data: dict):
-        self.notify_send_message_register.append({
-            ATTR_ENTITY: entity,
-            ATTR_MESSAGE_DATA: message_data
-        })
+    def register_plugin_data(self, plugin_data: dict):
+        self.plugin_data_register.append(plugin_data)
 
 
-    def verify_notify_send_message_sent(self, expected_count: int = 1):
-        got_count = len(self.notify_send_message_register)
-        assert got_count == expected_count, f"Expected notify_send_message count {expected_count}, got {got_count}"
+    def verify_plugin_data_sent(self, expected_count: int = 1):
+        got_count = len(self.plugin_data_register)
+        assert got_count == expected_count, f"Expected plugin_data count {expected_count}, got {got_count}"
 
 
-    def verify_notify_send_message_data(self, expected_data: dict, reactor_index: int = 0):
-        got_data = self.notify_send_message_register[0]
-        got_message_data = got_data.get(ATTR_MESSAGE_DATA)
-        expected_message_data = expected_data.get(ATTR_MESSAGE_DATA)
-        
-        self.assert_attribute(ATTR_ENTITY, self.workflow_config.reactors[reactor_index], got_data)
-        assert DeepDiff(got_message_data, expected_message_data) == {}, f"Expected message data '{expected_message_data}', got '{got_message_data}'"
-
-
-    def register_notify_confirm_feedback(self, feedback_data: dict):
-        self.notify_confirm_feedback_register.append(feedback_data)
-
-
-    def verify_notify_confirm_feedback_sent(self, expected_count: int = 1):
-        got_count = len(self.notify_confirm_feedback_register)
-        assert got_count == expected_count, f"Expected notify_confirm_feedback count {expected_count}, got {got_count}"
-
-    
-    def verify_notify_confirm_feedback_data(self, expected_feedback_data: dict, reactor_index: int = 0):
-        got_feedback_data = self.notify_confirm_feedback_register[0]
-        assert DeepDiff(got_feedback_data, expected_feedback_data) == {}, f"Expected feedback data '{expected_feedback_data}', got '{got_feedback_data}'"
-
-
-    # def send_notification(self, entity: str, notification_data: dict, context: Context):
-    #     self.notifications.append({
-    #         ATTR_ENTITY: entity,
-    #         ATTR_DATA: notification_data,
-    #         ATTR_CONTEXT: context
-    #     })
-
-
-    # def acknowledge_feedback(self, feedback_data: dict):
-    #     self.acknowledgements.append({
-    #         ATTR_ENTITY: feedback_data.get(ATTR_ENTITY, None),
-    #         ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK: feedback_data.get(ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK, None),
-    #         ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT: feedback_data.get(ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT, None),
-    #     })
-
-
-    # def verify_notification_sent(self, expected_count: int = 1):
-    #     got_count = len(self.notifications)
-    #     assert got_count == expected_count, f"Expected notification count {expected_count}, got {got_count}"
-
-
-    # def verify_acknowledgement_sent(self, expected_count: int = 1):
-    #     got_count = len(self.acknowledgements)
-    #     assert got_count == expected_count, f"Expected acknowledgement count {expected_count}, got {got_count}"
-
-
-    # def verify_notification_data(self, notification_index: int = 0, reactor_index: int = 0, reactor_data_index: int = 0):
-    #     notification = self.notifications[0]
-    #     notification_data = notification.get(ATTR_DATA, None)
-
-    #     workflow_config_reactor = self.workflow_config.reactors[reactor_index]
-    #     workflow_config_reactor_data = workflow_config_reactor.data[reactor_data_index].as_dict()
-
-    #     self.assert_attribute(ATTR_ENTITY, workflow_config_reactor, notification)
-    #     self.assert_attribute(ATTR_EVENT_MESSAGE, workflow_config_reactor_data, notification_data)
-    #     self.assert_attribute(ATTR_EVENT_FEEDBACK_ITEMS, workflow_config_reactor_data, notification_data)
-
-
-    # def verify_acknowledgement_data(self, send_workflow: Workflow, send_reactor_index: int = 0, send_reactor_data_index: int = 0, send_feedback_item_index: int = 0, acknowledgement_index: int = 0):
-    #     acknowledgement = self.acknowledgements[acknowledgement_index]
-
-    #     send_workflow_config_reactor = send_workflow.reactors[send_reactor_index]
-    #     send_workflow_config_reactor_data = send_workflow_config_reactor.data[send_reactor_data_index].as_dict()
-    #     send_feedback_items: list[dict] = send_workflow_config_reactor_data.get(ATTR_EVENT_FEEDBACK_ITEMS)
-    #     send_feedback_item = send_feedback_items[send_feedback_item_index]
-
-    #     self.assert_attribute(ATTR_ENTITY, send_workflow_config_reactor, acknowledgement)
-    #     self.assert_attribute(ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK, send_feedback_item, acknowledgement)
-    #     self.assert_attribute(ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT, send_feedback_item, acknowledgement)
+    def verify_plugin_data_content(self, expected_data: dict, reactor_index: int = 0):
+        got_data = self.plugin_data_register[0]
+        assert DeepDiff(got_data, expected_data) == {}, f"Expected plugin data '{expected_data}', got '{got_data}'"
 
 
     def assert_attribute(self, attr: str, expected: dict, got: dict):    

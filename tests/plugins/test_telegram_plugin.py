@@ -33,17 +33,17 @@ from custom_components.react.plugin.telegram.const import ATTR_COMMAND, ATTR_ENT
 from tests.tst_context import TstContext
 from tests.common import FIXTURE_WORKFLOW_NAME
 
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["actionable_notification"])
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["telegram_notify_send_message"])
 async def test_telegram_notify_send_message(hass: HomeAssistant, workflow_name, react_component):
     """
-    Test for actionable notifications
+    Test for telegram plugin
     """
 
     mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.telegram_plugin_notify_send_message_mock"}
     await react_component.async_setup(workflow_name, plugins=[mock_plugin])
     react: ReactBase = hass.data[DOMAIN]
     
-    message_data = {
+    plugin_data = {
         ATTR_ENTITY: "mobile_group",
         ATTR_MESSAGE_DATA: {
             ATTR_EVENT_MESSAGE: "Approve something",
@@ -62,14 +62,14 @@ async def test_telegram_notify_send_message(hass: HomeAssistant, workflow_name, 
         await tc.async_verify_reaction_event_received()
         tc.verify_trace_record()
         
-        tc.verify_notify_send_message_sent()
-        tc.verify_notify_send_message_data(message_data)
+        tc.verify_plugin_data_sent()
+        tc.verify_plugin_data_content(plugin_data)
 
 
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["actionable_notification_feedback"])
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["telegram_notify_confirm_feedback"])
 async def test_telegram_notify_confirm_feedback(hass: HomeAssistant, workflow_name, react_component):
     """
-    Test for actionable notifications
+    Test for telegram plugin
     """
 
     mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.telegram_plugin_notify_confirm_feedback_mock"}
@@ -102,8 +102,8 @@ async def test_telegram_notify_confirm_feedback(hass: HomeAssistant, workflow_na
         await tc.async_verify_reaction_event_received(expected_count=2)
         tc.verify_trace_record(expected_runtime_actor_data=data_in, expected_runtime_reactor_data=[expected_data, data_in])
         
-        tc.verify_notify_confirm_feedback_sent()
-        tc.verify_notify_confirm_feedback_data(feedback_data)
+        tc.verify_plugin_data_sent()
+        tc.verify_plugin_data_content(feedback_data)
 
 
 async def test_telegram_callback_transform_in(hass: HomeAssistant, react_component):

@@ -426,49 +426,6 @@ workflow:
         entity: actor_entity_binary_sensor_unavailable
         type: actor_type_binary_sensor_unavailable
         action: actor_action_binary_sensor_unavailable
-        
-  workflow_actionable_notification:
-    actor:
-      actor_actionable_notification:
-        entity: actor_entity_actionable_notification
-        type: actor_type_actionable_notification
-        action: actor_action_actionable_notification
-    reactor:
-      reactor_actionable_notification:
-        entity: mobile_group
-        type: notify
-        action: send_message
-        data:
-          plugin: telegram
-          message: Approve something
-          feedback_items:
-            - title: Approve
-              feedback: approve
-              acknowledgement: approved
-            - title: Deny
-              feedback: deny
-              acknowledgement: denied
-
-  workflow_actionable_notification_feedback:
-    actor:
-      actor_actionable_notification_feedback:
-        entity: mobile_user
-        type: notify
-        action: feedback_retrieved
-        data:
-          plugin: telegram
-    reactor:
-      reactor_actionable_notification_feedback:
-        entity: reactor_entity_actionable_notification_feedback
-        type: reactor_type_actionable_notification_feedback
-        action: reactor_action_actionable_notification_feedback
-        data:
-          feedback: "{{ event.data.feedback }}"
-      reactor_telegram_confirm_feedback:
-        entity: mobile_user
-        type: notify
-        action: confirm_feedback
-        forward_data: True
 
   workflow_wait:
     actor:
@@ -598,18 +555,61 @@ workflow:
             at: "00:00:00"
             restart_mode: force
 
-
-  workflow_speek:
+  workflow_tts_media_player_speek:
     actor:
-      actor_speek:
-        entity: actor_entity_speek
-        type: actor_type_speek
-        action: actor_action_speek
+      actor_tts_media_player_speek:
+        entity: actor_entity_tts_media_player_speek
+        type: actor_type_tts_media_player_speek
+        action: actor_action_tts_media_player_speek
     reactor:
-      reactor_speek:
+      reactor_tts_media_player_speek:
         entity: browser
         type: media_player
         action: speek
         data:
           plugin: tts
-          message: Dit is een test
+          message: This is a test
+          language: nl
+        
+  workflow_telegram_notify_send_message:
+    actor:
+      actor_telegram_notify_send_message:
+        entity: actor_entity_telegram_notify_send_message
+        type: actor_type_telegram_notify_send_message
+        action: actor_action_telegram_notify_send_message
+    reactor:
+      reactor_telegram_notify_send_message:
+        entity: mobile_group
+        type: notify
+        action: send_message
+        data:
+          plugin: telegram
+          message: Approve something
+          feedback_items:
+            - title: Approve
+              feedback: approve
+              acknowledgement: approved
+            - title: Deny
+              feedback: deny
+              acknowledgement: denied
+
+  workflow_telegram_notify_confirm_feedback:
+    actor:
+      actor_telegram_notify_confirm_feedback:
+        entity: mobile_user
+        type: notify
+        action: feedback_retrieved
+        data:
+          plugin: telegram
+    reactor:
+      reactor_telegram_notify_confirm_feedback:
+        entity: reactor_entity_telegram_notify_confirm_feedback
+        type: reactor_type_telegram_notify_confirm_feedback
+        action: reactor_action_telegram_notify_confirm_feedback
+        data:
+          feedback: "{{ event.data.feedback }}"
+      reactor_telegram_confirm_feedback:
+        entity: mobile_user
+        type: notify
+        action: confirm_feedback
+        forward_data: True

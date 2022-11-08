@@ -18,7 +18,7 @@ class TelegramApiMock():
 
     async def async_confirm_feedback(self, feedback_data: dict, context: Context):
         context: TstContext = self.react.hass.data["test_context"]
-        context.register_notify_confirm_feedback(feedback_data)
+        context.register_plugin_data(feedback_data)
 
 
 class NotifyConfirmFeedbackTaskMock(NotifyConfirmFeedbackTask):

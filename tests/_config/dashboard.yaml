@@ -29,7 +29,7 @@ views:
           - entity: input_button.button_trigger_reactor_condition
           - entity: input_button.button_trigger_wait
           - entity: input_button.button_trigger_wait_delayed
-          - entity: input_button.button_trigger_speek
+          - entity: input_button.button_trigger_tts_media_player_speek
       - type: entities
         entities:
           - entity: input_boolean.test_actor_condition
@@ -47,4 +47,4 @@ views:
           - entity: input_button.button_trigger_device_tracker_not_home
       - type: entities
         entities:
-          - entity: input_button.button_trigger_actionable_notification
+          - entity: input_button.button_trigger_telegram_notify_send_message
