@@ -25,7 +25,7 @@ async def test_tts_media_player_speek(hass: HomeAssistant, workflow_name, react_
     plugin_data = {
         ATTR_ENTITY_ID: "browser",
         ATTR_EVENT_MESSAGE: "This is a test",
-        ATTR_EVENT_LANGUAGE: "nl",
+        ATTR_EVENT_LANGUAGE: "en",
         ATTR_EVENT_OPTIONS: None
     }
 
