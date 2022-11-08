@@ -19,7 +19,7 @@ async def test_react_binary_sensor(hass: HomeAssistant, workflow_name, react_com
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await input_boolean_component.async_turn_on("test_binary_sensor")
         tc.verify_reaction_not_found()
@@ -41,7 +41,7 @@ async def test_react_group(hass: HomeAssistant, workflow_name, react_component, 
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await input_boolean_component.async_turn_on("test_group")
         tc.verify_reaction_not_found()
@@ -64,7 +64,7 @@ async def test_react_device_tracker(hass: HomeAssistant, workflow_name, react_co
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await device_tracker_component.async_see("test_device_tracker", "not_home")
         await device_tracker_component.async_see("test_device_tracker", "home")
@@ -89,7 +89,7 @@ async def test_react_person(hass: HomeAssistant, workflow_name, react_component,
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await device_tracker_component.async_see("test_device_tracker", "home")
         await device_tracker_component.async_see("test_device_tracker", "not_home")

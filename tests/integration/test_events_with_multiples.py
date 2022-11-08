@@ -18,7 +18,7 @@ async def test_react_multiple_actor_1(hass: HomeAssistant, workflow_name, react_
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event()
         tc.verify_reaction_not_found()
@@ -40,7 +40,7 @@ async def test_react_multiple_actor_2(hass: HomeAssistant, workflow_name, react_
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event(actor_index=1)
         tc.verify_reaction_not_found()
@@ -62,7 +62,7 @@ async def test_react_multiple_reactor(hass: HomeAssistant, workflow_name, react_
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event()
         tc.verify_reaction_not_found()
@@ -85,7 +85,7 @@ async def test_react_multiple_entities_1(hass: HomeAssistant, workflow_name, rea
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event()
         tc.verify_reaction_not_found()
@@ -107,7 +107,7 @@ async def test_react_multiple_entities_2(hass: HomeAssistant, workflow_name, rea
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event(entity_index=1)
         tc.verify_reaction_not_found()

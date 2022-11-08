@@ -7,12 +7,15 @@ from homeassistant.components.telegram_bot import (
 
 from custom_components.react.base import ReactBase
 from custom_components.react.utils.logger import get_react_logger
+from custom_components.react.utils.struct import DynamicData
 
 _LOGGER = get_react_logger()
 
+class ApiConfig(DynamicData):
+    """ api config """
 
 class Api():
-    def __init__(self, react: ReactBase, config: dict) -> None:
+    def __init__(self, react: ReactBase, config: ApiConfig) -> None:
         self.react = react
         self.config = config
 

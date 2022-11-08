@@ -12,7 +12,7 @@ async def test_react_call_service_trigger_workflow(hass: HomeAssistant, workflow
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await react_component.async_call_service_trigger_workflow("react.workflow_immediate")
         await hass.async_block_till_done()
@@ -28,7 +28,7 @@ async def test_react_call_service_delete_reaction(hass: HomeAssistant, workflow_
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event()
         tc.verify_reaction_found()
@@ -44,7 +44,7 @@ async def test_react_call_service_react_now(hass: HomeAssistant, workflow_name, 
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event()
         tc.verify_reaction_found()
@@ -63,7 +63,7 @@ async def test_react_call_service_delete_run(hass: HomeAssistant, workflow_name,
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_run_not_found()
         await tc.async_send_action_event()
         tc.verify_run_found()
@@ -79,7 +79,7 @@ async def test_react_call_service_run_now(hass: HomeAssistant, workflow_name, re
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_run_not_found()
         await tc.async_send_action_event()
         tc.verify_run_found()

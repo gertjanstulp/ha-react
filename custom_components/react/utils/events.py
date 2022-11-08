@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Generic, Type, TypeVar
 
-from aioesphomeapi import Any
 from homeassistant.core import Event as HassEvent
 from custom_components.react.const import ATTR_DATA
 

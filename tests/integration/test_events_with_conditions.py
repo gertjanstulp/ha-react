@@ -20,7 +20,7 @@ async def test_react_actor_condition_true(hass: HomeAssistant, workflow_name, re
     await input_boolean_component.async_turn_on("test_actor_condition")
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event()
         tc.verify_reaction_not_found()
@@ -43,7 +43,7 @@ async def test_react_actor_condition_false(hass: HomeAssistant, workflow_name, r
     await input_boolean_component.async_turn_off("test_actor_condition")
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event()
         tc.verify_reaction_not_found()
@@ -64,7 +64,7 @@ async def test_react_reactor_condition_false(hass: HomeAssistant, workflow_name,
     await input_boolean_component.async_turn_off("test_reactor_condition")
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event()
         tc.verify_reaction_not_found()
@@ -88,7 +88,7 @@ async def test_react_reactor_condition_true(hass: HomeAssistant, workflow_name, 
     await input_boolean_component.async_turn_on("test_reactor_condition")
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event()
         tc.verify_reaction_not_found()

@@ -19,7 +19,7 @@ async def test_react_binary_sensor_available(hass: HomeAssistant, workflow_name,
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await input_boolean_component.async_turn_off("test_binary_sensor_available")
         await input_boolean_component.async_turn_on("test_binary_sensor_available")
@@ -41,7 +41,7 @@ async def test_react_binary_sensor_unavailable(hass: HomeAssistant, workflow_nam
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await input_boolean_component.async_turn_on("test_binary_sensor_available")
         await sleep(1)

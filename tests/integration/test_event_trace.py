@@ -18,7 +18,7 @@ async def test_react_trace_switched_off_actor_1(hass: HomeAssistant, workflow_na
     await input_boolean_component.async_turn_off("test_trace")
     
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event()
         tc.verify_reaction_not_found()
@@ -43,7 +43,7 @@ async def test_react_trace_switched_on_actor_1(hass: HomeAssistant, workflow_nam
     await input_boolean_component.async_turn_on("test_trace")
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event()
         tc.verify_reaction_not_found()
@@ -67,7 +67,7 @@ async def test_react_trace_switched_off_actor_2(hass: HomeAssistant, workflow_na
     await input_boolean_component.async_turn_off("test_trace")
     
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event(actor_index=1)
         tc.verify_reaction_not_found()
@@ -93,7 +93,7 @@ async def test_react_trace_switched_on_actor_2(hass: HomeAssistant, workflow_nam
     await input_boolean_component.async_turn_on("test_trace")
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event(actor_index=1)
         tc.verify_reaction_not_found()

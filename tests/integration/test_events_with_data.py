@@ -16,7 +16,7 @@ async def test_react_data_no_event_1(hass: HomeAssistant, workflow_name, react_c
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event()
         tc.verify_reaction_not_found()
@@ -35,7 +35,7 @@ async def test_react_data_no_event_2(hass: HomeAssistant, workflow_name, react_c
     
     tc = TstContext(hass, workflow_name)
     data_in: dict = {"actor_data_data" : 4}
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event(data=data_in)
         tc.verify_reaction_not_found()
@@ -63,7 +63,7 @@ async def test_react_data_event(hass: HomeAssistant, workflow_name, react_compon
         "data4": ["asdf", "qwer"],
         "data5": tc.workflow_config.actors[0].id
     }
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event(data=data_in)
         tc.verify_reaction_not_found()
@@ -90,7 +90,7 @@ async def test_react_data_delayed_event(hass: HomeAssistant, workflow_name, reac
         "data1": 1,
         "data2": True,
     }
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event()
         await tc.async_verify_reaction_event_not_received()
@@ -115,7 +115,7 @@ async def test_react_multiple_actor_data_event_1(hass: HomeAssistant, workflow_n
     
     tc = TstContext(hass, workflow_name)
     data_in: dict = {"actor_data_multiple_actor_data" : 1}
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event(data=data_in)
         tc.verify_reaction_not_found()
@@ -138,7 +138,7 @@ async def test_react_multiple_actor_data_event_2(hass: HomeAssistant, workflow_n
     
     tc = TstContext(hass, workflow_name)
     data_in: dict = {"actor_data_multiple_actor_data" : 2}
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event(data=data_in)
         tc.verify_reaction_not_found()

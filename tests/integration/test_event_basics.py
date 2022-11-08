@@ -22,7 +22,7 @@ async def test_react_immediate(hass: HomeAssistant, workflow_name, react_compone
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event()
         tc.verify_reaction_not_found()
@@ -46,7 +46,7 @@ async def test_react_delayed(hass: HomeAssistant, workflow_name, react_component
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event()
         await tc.async_verify_reaction_event_not_received()
@@ -71,7 +71,7 @@ async def test_react_scheduled(hass: HomeAssistant, workflow_name, react_compone
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event()
         await tc.async_verify_reaction_event_not_received()
@@ -96,12 +96,12 @@ async def test_react_reset(hass: HomeAssistant, workflow_name, react_component):
     tc_delayed = TstContext(hass, "delayed")
     tc_scheduled = TstContext(hass, "scheduled")
 
-    async with tc_delayed.async_listen_react_event():
+    async with tc_delayed.async_listen_reaction_event():
         await tc_delayed.async_send_action_event()
-    async with tc_scheduled.async_listen_react_event():
+    async with tc_scheduled.async_listen_reaction_event():
         await tc_scheduled.async_send_action_event()
 
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_found(2)
         await tc.async_send_action_event()
         tc.verify_reaction_not_found()
@@ -124,7 +124,7 @@ async def test_react_forward_action_no_toggle(hass: HomeAssistant, workflow_name
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event(action="test")
         tc.verify_reaction_not_found()
@@ -145,7 +145,7 @@ async def test_react_forward_action_toggle(hass: HomeAssistant, workflow_name, r
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event(action="toggle")
         tc.verify_reaction_not_found()
@@ -171,7 +171,7 @@ async def test_react_forward_data(hass: HomeAssistant, workflow_name, react_comp
     }
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event(data=data_in)
         tc.verify_reaction_not_found()
@@ -196,7 +196,7 @@ async def test_react_full_stencil(hass: HomeAssistant, workflow_name, react_comp
     data_out: dict = {
         "test": 37
     }
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event()
         tc.verify_reaction_not_found()
@@ -218,7 +218,7 @@ async def test_react_partial_stencil(hass: HomeAssistant, workflow_name, react_c
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event()
         tc.verify_reaction_not_found()
@@ -236,7 +236,7 @@ async def test_react_overwrite(hass: HomeAssistant, workflow_name, react_compone
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         
         await tc.async_send_action_event()

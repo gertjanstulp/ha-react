@@ -57,20 +57,20 @@ def auto_enable_custom_integrations(patch_config_dir, enable_custom_integrations
 async def react_component(hass: HomeAssistant):
     hass.data[DATA_TRACE] = {}
 
-    async def async_setup(workflow_name: str, additional_workflows: list[str] = [], plugins: list[dict] = []):
-        data = None
-        workflow_id = f"{WORKFLOW_ID_PREFIX}{workflow_name}"
+    async def async_setup(workflow_name: str = None, additional_workflows: list[str] = [], plugins: list[dict] = []):
         with open(get_test_config_dir(REACT_CONFIG)) as f:
             raw_data: dict = yaml.load(f, Loader=SafeLoader)
-            data = {
-                CONF_STENCIL: raw_data.get(CONF_STENCIL, {}),
-                CONF_WORKFLOW: {
-                    workflow_id : raw_data.get(CONF_WORKFLOW, {}).get(workflow_id, {}),
-                }
-            }
 
-            data[CONF_PLUGINS] = plugins
-                    
+        data = {
+            CONF_STENCIL: raw_data.get(CONF_STENCIL, {}),
+            CONF_WORKFLOW: {},
+            CONF_PLUGINS: plugins
+        }
+
+        if workflow_name:
+            workflow_id = f"{WORKFLOW_ID_PREFIX}{workflow_name}"
+            data[CONF_WORKFLOW][workflow_id] = raw_data.get(CONF_WORKFLOW, {}).get(workflow_id, {})
+          
         for additional_workflow in additional_workflows:
             additional_workflow_ID = f"{WORKFLOW_ID_PREFIX}{additional_workflow}"
             data[CONF_WORKFLOW][additional_workflow_ID] = raw_data.get(CONF_WORKFLOW, {}).get(additional_workflow_ID, {})
@@ -82,27 +82,32 @@ async def react_component(hass: HomeAssistant):
         )
 
         await hass.async_block_till_done()
-        test = 1
+
 
     async def async_call_service_trigger_workflow(entity_id: str):
         data = { ATTR_ENTITY_ID: entity_id }
         await hass.services.async_call(REACT_DOMAIN, SERVICE_TRIGGER_WORKFLOW, data)
 
+
     async def async_call_service_delete_run(run_id: str):
         data = { ATTR_RUN_ID: run_id }
         await hass.services.async_call(REACT_DOMAIN, SERVICE_DELETE_RUN, data)
+
 
     async def async_call_service_delete_reaction(reaction_id: str):
         data = { ATTR_REACTION_ID: reaction_id }
         await hass.services.async_call(REACT_DOMAIN, SERVICE_DELETE_REACTION, data)
 
+
     async def async_call_service_run_now(run_id: str):
         data = { ATTR_RUN_ID: run_id }
         await hass.services.async_call(REACT_DOMAIN, SERVICE_RUN_NOW, data)
 
+
     async def async_call_service_react_now(reaction_id: str):
         data = { ATTR_REACTION_ID: reaction_id }
         await hass.services.async_call(REACT_DOMAIN, SERVICE_REACT_NOW, data)
+
 
     result = Mock()
     result.async_setup = async_setup

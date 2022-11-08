@@ -3,12 +3,13 @@ from homeassistant.core import Context
 from custom_components.react.base import ReactBase
 from custom_components.react.plugin.plugin_factory import PluginApi
 from custom_components.react.plugin.telegram.tasks.notify_confirm_feedback import NotifyConfirmFeedbackTask
+from custom_components.react.utils.struct import DynamicData
 
 from tests.tst_context import TstContext
 
 
-def setup_plugin(plugin_api: PluginApi):
-    plugin_api.register_default_task(NotifyConfirmFeedTaskMock)
+def setup_plugin(plugin_api: PluginApi, config: DynamicData):
+    plugin_api.register_default_task(NotifyConfirmFeedbackTaskMock)
 
 
 class TelegramApiMock():
@@ -20,7 +21,7 @@ class TelegramApiMock():
         context.register_notify_confirm_feedback(feedback_data)
 
 
-class NotifyConfirmFeedTaskMock(NotifyConfirmFeedbackTask):
+class NotifyConfirmFeedbackTaskMock(NotifyConfirmFeedbackTask):
 
     def __init__(self, react: ReactBase) -> None:
         api = TelegramApiMock(react)

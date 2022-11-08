@@ -15,7 +15,7 @@ async def test_react_wait_immediate_initial_false(hass: HomeAssistant, workflow_
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event()
         await tc.async_verify_reaction_event_not_received()
@@ -36,7 +36,7 @@ async def test_react_wait_delayed_initial_false(hass: HomeAssistant, workflow_na
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event()
         await tc.async_verify_reaction_event_not_received()
@@ -61,7 +61,7 @@ async def test_react_wait_delayed_initial_true(hass: HomeAssistant, workflow_nam
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         await input_boolean_component.async_turn_on("test_wait")
         tc.verify_reaction_not_found()
         await tc.async_send_action_event()

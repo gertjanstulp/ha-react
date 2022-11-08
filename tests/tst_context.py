@@ -126,10 +126,25 @@ class TstContext():
         await self.hass.async_block_till_done()
 
 
+    async def async_send_event(self, event_type: str, event_data: dict):
+        self.hass.bus.async_fire(event_type, event_data)
+        await self.hass.async_block_till_done()
+
+
     @asynccontextmanager
-    async def async_listen_react_event(self):
+    async def async_listen_reaction_event(self):
         try:
             self.cancel_listen = self.hass.bus.async_listen(EVENT_REACT_REACTION, self.event_mock)
+            yield
+        finally:
+            if self.cancel_listen:
+                self.cancel_listen()
+
+
+    @asynccontextmanager
+    async def async_listen_action_event(self):
+        try:
+            self.cancel_listen = self.hass.bus.async_listen(EVENT_REACT_ACTION, self.event_mock)
             yield
         finally:
             if self.cancel_listen:
@@ -241,6 +256,34 @@ class TstContext():
     #     data_got = reaction_internal.data.data
     #     data_expected = expected_data 
     #     assert data_got == data_expected, f"Expected reaction data '{data_expected}', got '{data_got}'"
+
+
+    def verify_action_event_count(self, expected_count: int = 1):
+        got_count = self.event_mock.call_count
+        assert got_count == expected_count, f"Expected event count {expected_count}, got {got_count}"
+
+
+    async def async_verify_action_event_not_received(self, delay: int = 0) -> None:
+        if delay > 0:
+            await sleep(delay)
+        self.verify_action_event_count(0)
+
+
+    async def async_verify_action_event_received(self, expected_count: int = 1, delay: int = 0) -> None:
+        if delay > 0:
+            await sleep(delay)
+        self.verify_action_event_count(expected_count)
+        for i,call in enumerate(self.event_mock.mock_calls):
+            assert len(call.args) > 0, f"Expected args for call {i}, got none"
+
+
+    def verify_action_event_data(self, event_index: int = 0, expected_data: dict = None):
+        event: Event = self.event_mock.mock_calls[event_index].args[0]
+        event_type_got = event.event_type
+        event_type_expected = EVENT_REACT_ACTION
+        data_got = event.data
+        assert event_type_got == event_type_expected, f"Expected eventtype '{event_type_expected}', got '{event_type_got}'"
+        assert DeepDiff(data_got, expected_data) == {}, f"Expected event entity '{expected_data}', got '{data_got}'"
 
 
     def verify_reaction_event_count(self, expected_count: int = 1):

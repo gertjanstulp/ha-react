@@ -12,7 +12,7 @@ async def test_react_call_service_delete_run(hass: HomeAssistant, workflow_name,
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_run_not_found()
         await tc.async_send_action_event()
         tc.verify_run_found()
@@ -29,7 +29,7 @@ async def test_react_call_service_delete_run_multiple_reactions(hass: HomeAssist
     await hass.async_block_till_done()
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_run_not_found()
         await input_boolean_component.async_turn_on("test_trace2")
         await tc.async_send_action_event(entity="actor_entity_trace2_2", type="actor_type_trace2_2", action="actor_action_trace2_2")
@@ -48,7 +48,7 @@ async def test_react_call_service_run_now(hass: HomeAssistant, workflow_name, re
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_run_not_found()
         await tc.async_send_action_event()
         tc.verify_run_found()

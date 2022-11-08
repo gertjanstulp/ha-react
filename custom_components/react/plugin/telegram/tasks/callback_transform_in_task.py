@@ -54,9 +54,9 @@ class CallbackTransformInTask(DefaultTransformTask):
                 ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT: source_event.payload.acknowledgement,
                 ATTR_EVENT_PLUGIN: PLUGIN_NAME,
                 ATTR_EVENT_PLUGIN_PAYLOAD: {
-                    ATTR_TEXT: source_event.payload.message.text,
                     ATTR_CHAT_ID: source_event.payload.chat_id,
-                    ATTR_MESSAGEID: source_event.payload.message.message_id
+                    ATTR_MESSAGEID: source_event.payload.message.message_id,
+                    ATTR_TEXT: source_event.payload.message.text,
                 }
             }
         }
