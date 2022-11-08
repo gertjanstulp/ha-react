@@ -45,17 +45,34 @@ class Api():
         message: str, 
         language: str, 
         options: dict, 
-        interrupt: bool = False, 
-        volume: float = None
+        volume: float = None,
+        interrupt_service: str = None, 
+        resume_service: str = None, 
     ):
         self._debug(f"Speeking '{message}'")
+
         if not self.config.say_service:
             self.react.log.error("TtsPlugin - No say_service configured")
             return
 
+        if interrupt_service:
+            await self.async_media_player_interrupt(context, entity_id, interrupt_service)
         if volume:
             await self.async_media_player_set_volume(context, entity_id, volume)
         await self.async_say(context, entity_id, message, language, options)
+
+
+    async def async_media_player_interrupt(self, context: Context, entity_id: str, interrupt_service: str):
+        interrupt_data = {
+            ATTR_ENTITY_ID: f"media_player.{entity_id}",
+        }
+        service_items = interrupt_service.split('.')
+        await self.react.hass.services.async_call(
+            service_items[0],
+            service_items[1],
+            interrupt_data,
+            context,
+        )
 
 
     async def async_media_player_set_volume(self, context: Context, entity_id: str, volume: float):
@@ -67,7 +84,7 @@ class Api():
             Platform.MEDIA_PLAYER,
             SERVICE_VOLUME_SET,
             volume_data,
-            context
+            context,
         )
 
 
@@ -83,5 +100,6 @@ class Api():
             Platform.TTS, 
             self.config.say_service,
             speek_data,
-            context)
+            context,
+        )
         

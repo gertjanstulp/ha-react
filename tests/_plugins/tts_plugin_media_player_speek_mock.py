@@ -8,11 +8,16 @@ from homeassistant.const import (
 
 from custom_components.react.base import ReactBase
 from custom_components.react.const import ATTR_EVENT_MESSAGE
-from custom_components.react.plugin.plugin_factory import PluginApi
-from custom_components.react.plugin.tts.const import ATTR_EVENT_LANGUAGE, ATTR_EVENT_OPTIONS
 from custom_components.react.utils.struct import DynamicData
 
+from custom_components.react.plugin.plugin_factory import PluginApi
 from custom_components.react.plugin.tts.tasks.media_player_speek import MediaPlayerSpeekTask
+from custom_components.react.plugin.tts.const import (
+    ATTR_EVENT_LANGUAGE, 
+    ATTR_EVENT_OPTIONS, 
+    ATTR_INTERRUPT_SERVICE, 
+    ATTR_RESUME_SERVICE,
+)
 
 from tests.tst_context import TstContext
 
@@ -32,11 +37,18 @@ class TtsApiMock():
         message: str, 
         language: str, 
         options: dict, 
-        interrupt: bool = False, 
         volume: float = None,
+        interrupt_service: str = None, 
+        resume_service: str = None, 
     ):
         context: TstContext = self.react.hass.data["test_context"]
         
+        if interrupt_service:
+            context.register_plugin_data({
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_INTERRUPT_SERVICE: interrupt_service,
+            })
+
         if volume:
             context.register_plugin_data({
                 ATTR_ENTITY_ID: entity_id,
@@ -49,6 +61,12 @@ class TtsApiMock():
             ATTR_EVENT_LANGUAGE: language,
             ATTR_EVENT_OPTIONS: options
         })
+
+        if resume_service:
+            context.register_plugin_data({
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_RESUME_SERVICE: resume_service,
+            })
 
 
 class MediaPlayerSpeekTaskMock(MediaPlayerSpeekTask):

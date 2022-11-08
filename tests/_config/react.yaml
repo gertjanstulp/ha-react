@@ -555,14 +555,30 @@ workflow:
             at: "00:00:00"
             restart_mode: force
 
-  workflow_tts_media_player_speek_volume:
+  workflow_tts_media_player_speek:
     actor:
-      actor_tts_media_player_speek_volume:
-        entity: actor_entity_tts_media_player_speek_volume
-        type: actor_type_tts_media_player_speek_volume
-        action: actor_action_tts_media_player_speek_volume
+      actor_tts_media_player_speek:
+        entity: actor_entity_tts_media_player_speek
+        type: actor_type_tts_media_player_speek
+        action: actor_action_tts_media_player_speek
     reactor:
-      reactor_tts_media_player_speek_volume:
+      reactor_tts_media_player_speek:
+        entity: browser
+        type: media_player
+        action: speek
+        data:
+          plugin: tts
+          message: This is a test without volume
+          language: en
+
+  workflow_tts_media_player_speek_with_volume:
+    actor:
+      actor_tts_media_player_speek_with_volume:
+        entity: actor_entity_tts_media_player_speek_with_volume
+        type: actor_type_tts_media_player_speek_with_volume
+        action: actor_action_tts_media_player_speek_with_volume
+    reactor:
+      reactor_tts_media_player_speek_with_volume:
         entity: browser
         type: media_player
         action: speek
@@ -572,21 +588,40 @@ workflow:
           language: en
           volume: 0.1
 
-  workflow_tts_media_player_speek_no_volume:
+  workflow_tts_media_player_speek_with_interrupt:
     actor:
-      actor_tts_media_player_speek_no_volume:
-        entity: actor_entity_tts_media_player_speek_no_volume
-        type: actor_type_tts_media_player_speek_no_volume
-        action: actor_action_tts_media_player_speek_no_volume
+      actor_tts_media_player_speek_with_interrupt:
+        entity: actor_entity_tts_media_player_speek_with_interrupt
+        type: actor_type_tts_media_player_speek_with_interrupt
+        action: actor_action_tts_media_player_speek_with_interrupt
     reactor:
-      reactor_tts_media_player_speek_no_volume:
+      reactor_tts_media_player_speek_with_interrupt:
         entity: browser
         type: media_player
         action: speek
         data:
           plugin: tts
-          message: This is a test without volume
+          message: This is a test with interrupt service
           language: en
+          interrupt_service: sonos.snapshot
+
+
+  workflow_tts_media_player_speek_with_resume:
+    actor:
+      actor_tts_media_player_speek_with_resume:
+        entity: actor_entity_tts_media_player_speek_with_resume
+        type: actor_type_tts_media_player_speek_with_resume
+        action: actor_action_tts_media_player_speek_with_resume
+    reactor:
+      reactor_tts_media_player_speek_with_resume:
+        entity: browser
+        type: media_player
+        action: speek
+        data:
+          plugin: tts
+          message: This is a test with resume service
+          language: en
+          resume_service: sonos.restore
 
   workflow_telegram_notify_send_message:
     actor:

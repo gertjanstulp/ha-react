@@ -38,8 +38,9 @@ class MediaPlayerSpeekTask(DefaultReactionTask):
             event.payload.data.message,
             event.payload.data.language,
             event.payload.data.options,
-            event.payload.data.interrupt,
             event.payload.data.volume,
+            event.payload.data.interrupt_service,
+            event.payload.data.resume_service,
         )
 
 
@@ -53,7 +54,8 @@ class MediaPlayerSpeekReactionEventData(DynamicData):
         self.options: dict = None
         self.language: str = None
         self.volume: float = None
-        self.interrupt: bool = None
+        self.interrupt_service: str = None
+        self.resume_service: str = None
 
         self.load(source)
 
