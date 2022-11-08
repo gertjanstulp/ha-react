@@ -6,14 +6,23 @@ from homeassistant.components.telegram_bot import (
 )
 
 from custom_components.react.base import ReactBase
+from custom_components.react.utils.logger import get_react_logger
+
+_LOGGER = get_react_logger()
 
 
 class Api():
-    def __init__(self, react: ReactBase) -> None:
+    def __init__(self, react: ReactBase, config: dict) -> None:
         self.react = react
+        self.config = config
+
+
+    def _debug(self, message: str):
+        _LOGGER.debug(f"Telegram plugin: Api - {message}")
 
 
     async def async_send_message(self, entity: str, message_data: dict, context: Context):
+        self._debug("Sending message to telegram")
         await self.react.hass.services.async_call(
             Platform.NOTIFY, 
             entity,
@@ -22,6 +31,7 @@ class Api():
 
 
     async def async_confirm_feedback(self, feedback_data: dict, context: Context):
+        self._debug("Confirming feedback to telegram")
         await self.react.hass.services.async_call(
             DOMAIN,
             SERVICE_EDIT_MESSAGE,

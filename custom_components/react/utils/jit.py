@@ -55,7 +55,7 @@ class CompositeJitter(BaseJitter, Generic[T]):
 
         self.jit_attrs = []
 
-        for attr in config_source.names:
+        for attr in config_source.keys():
             self.add_jitter(attr, PROP_TYPE_SOURCE)
         
 

@@ -5,7 +5,11 @@ entity_maps:
   -719737734: mobile_group
 
 plugins:
-  - custom_components.react.plugin.telegram.plugin
+  - module: custom_components.react.plugin.telegram.plugin
+  - module: custom_components.react.plugin.tts.plugin
+    config:
+      say_service: google_say
+      language: nl
 
 stencil:
   full_stencil:
@@ -593,3 +597,19 @@ workflow:
           schedule:
             at: "00:00:00"
             restart_mode: force
+
+
+  workflow_speek:
+    actor:
+      actor_speek:
+        entity: actor_entity_speek
+        type: actor_type_speek
+        action: actor_action_speek
+    reactor:
+      reactor_speek:
+        entity: browser
+        type: media_player
+        action: speek
+        data:
+          plugin: tts
+          message: Dit is een test

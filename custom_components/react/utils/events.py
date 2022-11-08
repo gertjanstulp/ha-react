@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from typing import Generic, Type, TypeVar
+
+from aioesphomeapi import Any
 from homeassistant.core import Event as HassEvent
 from custom_components.react.const import ATTR_DATA
 
@@ -12,11 +14,11 @@ T_data = TypeVar('T_data', bound=DynamicData)
 
 class Event(Generic[T_payload]):
     
-    def __init__(self, hass_event: HassEvent, t_payload_type: Type[T_payload] = DynamicData) -> None:
+    def __init__(self, hass_event: HassEvent, t_payload_type: Type[T_payload] = DynamicData, *t_payload_args: Any) -> None:
         self.context = hass_event.context
         self.event_type = hass_event.event_type
 
-        self.payload: T_payload = t_payload_type()
+        self.payload: T_payload = t_payload_type(*t_payload_args)
         self.payload.load(hass_event.data)
 
 
@@ -72,4 +74,4 @@ class ReactionEventPayload(ReactEventPayload[T_data], Generic[T_data]):
 
 class ReactionEvent(Event[ReactionEventPayload[T_data]], Generic[T_data]):
     def __init__(self, hass_event: HassEvent, t_data_type: Type[T_data] = DynamicData) -> None:
-        super().__init__(hass_event, ReactionEventPayload[t_data_type])
+        super().__init__(hass_event, ReactionEventPayload, t_data_type)

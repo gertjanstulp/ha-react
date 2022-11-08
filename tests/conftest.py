@@ -14,6 +14,7 @@ from homeassistant.setup import async_setup_component
 
 from custom_components.react.const import (
     ATTR_NOTIFY,
+    ATTR_PLUGIN_MODULE,
     ATTR_REACTION_ID,
     ATTR_RUN_ID,
     CONF_PLUGINS,
@@ -27,6 +28,7 @@ from custom_components.react.const import (
     SERVICE_TRIGGER_REACTION,
     SERVICE_TRIGGER_WORKFLOW
 )
+from custom_components.react.lib.config import Plugin
 
 from tests.common import (
     GROUP_CONFIG,
@@ -55,7 +57,7 @@ def auto_enable_custom_integrations(patch_config_dir, enable_custom_integrations
 async def react_component(hass: HomeAssistant):
     hass.data[DATA_TRACE] = {}
 
-    async def async_setup(workflow_name: str, additional_workflows: list[str] = [], plugins: list[str] = []):
+    async def async_setup(workflow_name: str, additional_workflows: list[str] = [], plugins: list[dict] = []):
         data = None
         workflow_id = f"{WORKFLOW_ID_PREFIX}{workflow_name}"
         with open(get_test_config_dir(REACT_CONFIG)) as f:

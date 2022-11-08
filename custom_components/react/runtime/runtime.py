@@ -692,11 +692,11 @@ class Reaction:
 
     def step_reaction_main(self, reaction: ReactionData) -> Generator[StepResult, None, None]:
         if self._reactor.wait:
-            if ATTR_STATE in self._reactor.wait.names:
+            if ATTR_STATE in self._reactor.wait.keys():
                 yield from self.step_reaction_state()
-            if ATTR_DELAY in self._reactor.wait.names:
+            if ATTR_DELAY in self._reactor.wait.keys():
                 yield from self.step_reaction_delay()
-            elif ATTR_SCHEDULE in self._reactor.wait.names:
+            elif ATTR_SCHEDULE in self._reactor.wait.keys():
                 yield from self.step_reaction_schedule()
         if self._reactor.reset_workflow:
             self.step_reaction_reset()

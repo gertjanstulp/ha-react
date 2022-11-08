@@ -52,7 +52,7 @@ class CompositeTracker(BaseTracker, Generic[T], Destroyable):
         super().__init__(hass)
 
         self.config_source = config_source
-        self.names = config_source.names
+        self.keys = config_source.keys()
         self.tctx = tctx
 
         self.trackers: list[BaseTracker] = []
@@ -60,12 +60,12 @@ class CompositeTracker(BaseTracker, Generic[T], Destroyable):
         if id := self.config_source.get(ATTR_ID):
             self.value_container.set(ATTR_ID, id)
 
-        for attr in config_source.names:
+        for attr in config_source.keys():
             self.add_tracker(attr, PROP_TYPE_SOURCE)
 
 
     def as_trace_dict(self) -> dict:
-        return { name : self.value_container.get(name) for name in self.config_source.names }
+        return { name : self.value_container.get(name) for name in self.config_source.keys() }
     
 
     def add_tracker(self, attr: str, type_converter: Any, default: Any = None) -> None:

@@ -18,8 +18,10 @@ from custom_components.react.const import (
     ATTR_EVENT_MESSAGE,
     ATTR_EVENT_PLUGIN,
     ATTR_EVENT_PLUGIN_PAYLOAD,
+    ATTR_PLUGIN_MODULE,
     DOMAIN
 )
+from custom_components.react.lib.config import Plugin
 from custom_components.react.plugin.telegram.const import ATTR_MESSAGE_DATA, ATTR_SERVICE_DATA_INLINE_KEYBOARD, PLUGIN_NAME
 
 from tests.tst_context import TstContext
@@ -31,7 +33,8 @@ async def test_telegram_notify_send_message(hass: HomeAssistant, workflow_name, 
     Test for actionable notifications
     """
 
-    await react_component.async_setup(workflow_name, plugins=["tests._plugins.telegram_plugin_notify_send_message_mock"])
+    mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.telegram_plugin_notify_send_message_mock"}
+    await react_component.async_setup(workflow_name, plugins=[mock_plugin])
     react: ReactBase = hass.data[DOMAIN]
     
     message_data = {
@@ -63,7 +66,8 @@ async def test_telegram_notify_confirm_feedback(hass: HomeAssistant, workflow_na
     Test for actionable notifications
     """
 
-    await react_component.async_setup(workflow_name, plugins=["tests._plugins.telegram_plugin_notify_confirm_feedback_mock"])
+    mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.telegram_plugin_notify_confirm_feedback_mock"}
+    await react_component.async_setup(workflow_name, plugins=[mock_plugin])
     react: ReactBase = hass.data[DOMAIN]
 
     data_in = {

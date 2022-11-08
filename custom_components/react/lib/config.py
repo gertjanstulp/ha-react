@@ -153,7 +153,7 @@ class Ctor(CtorConfig):
                 if self.get(a) is not None
             }
         }
-        if ATTR_CONDITION in self.names and self.condition != None:
+        if ATTR_CONDITION in self.keys() and self.condition != None:
             result[ATTR_CONDITION] = { ATTR_TEMPLATE: self.condition}
         if self.data is not None:
             result_data = [ data_item.as_dict() for data_item in self.data ]
@@ -271,10 +271,21 @@ class Workflow():
 class PluginConfiguration:
 
     def __init__(self) -> None:
-        self.plugins: Union[list[str], None] = None
+        self.plugins: Union[list[Plugin], None] = None
+
 
     def load(self, react_config: ConfigType) -> None:
-        self.plugins = react_config.get(CONF_PLUGINS, {})
+        plugins_raw = react_config.get(CONF_PLUGINS, {})
+        self.plugins = [Plugin(plugin_raw) for plugin_raw in plugins_raw]
+        test = 1
+
+
+class Plugin(DynamicData):
+    def __init__(self, source: dict = None) -> None:
+        super().__init__()
+        self.module: str = None
+        self.config: dict = None
+        self.load(source)
 
 
 class WorkflowConfiguration:

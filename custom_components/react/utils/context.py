@@ -37,7 +37,7 @@ class VariableContextDataProvider(TemplateContextDataProvider):
 
 
     def provide(self, context_data: dict):
-        for name in self.variable_tracker.names:
+        for name in self.variable_tracker.keys:
             context_data[name] = getattr(self.variable_tracker.value_container, name)
 
 

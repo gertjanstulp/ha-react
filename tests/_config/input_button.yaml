@@ -56,3 +56,5 @@ button_trigger_wait:
   name: Wait
 button_trigger_wait_delayed:
   name: Wait delayed
+button_trigger_speek:
+  name: Speek

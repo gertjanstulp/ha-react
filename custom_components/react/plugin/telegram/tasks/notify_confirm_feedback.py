@@ -13,6 +13,7 @@ from homeassistant.components.telegram_bot import (
 from custom_components.react.base import ReactBase
 from custom_components.react.tasks.defaults.default_task import DefaultReactionTask
 from custom_components.react.utils.events import ReactionEvent
+from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData
 from custom_components.react.const import (
     ATTR_EVENT_PLUGIN_PAYLOAD, 
@@ -23,6 +24,8 @@ from custom_components.react.const import (
 from custom_components.react.plugin.telegram.const import PLUGIN_NAME
 from custom_components.react.plugin.telegram.api import Api
 
+_LOGGER = get_react_logger()
+
 
 class NotifyConfirmFeedbackTask(DefaultReactionTask):
     def __init__(self, react: ReactBase, api: Api) -> None:
@@ -30,8 +33,12 @@ class NotifyConfirmFeedbackTask(DefaultReactionTask):
         self.api = api
 
 
+    def _debug(self, message: str):
+        _LOGGER.debug(f"Telegram plugin: NotifyConfirmFeedbackTask - {message}")
+
+
     async def async_execute_default(self, event: NotifyConfirmFeedbackReactionEvent):
-        self.react.log.debug("NotifyConfirmFeedbackTask: confirming feedback to telegram")
+        self._debug("Confirming feedback")
         await self.api.async_confirm_feedback(event.create_feedback_data(), event.context)
 
 

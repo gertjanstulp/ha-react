@@ -381,3 +381,15 @@
           entity: actor_entity_immediate2
           type: actor_type_immediate2
           action: actor_action_immediate2
+
+- id: trigger_speek
+  alias: Trigger speek
+  trigger:
+    platform: state
+    entity_id: input_button.button_trigger_speek
+  action:
+    event: ev_react_action
+    event_data:
+      entity: actor_entity_speek
+      type: actor_type_speek
+      action: actor_action_speek

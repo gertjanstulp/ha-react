@@ -40,6 +40,10 @@ ATTR_ID = "id"
 # workflow attributes
 ATTR_MODE = "mode"
 
+# plugin config attributes
+ATTR_PLUGIN_MODULE = "module"
+ATTR_PLUGIN_CONFIG = "config"
+
 # actor attributes
 ATTR_ACTOR = "actor"
 ATTR_ACTOR_ID = "actor_id"
@@ -374,6 +378,7 @@ WORKFLOW_SCHEMA = vol.Schema({
     }, None)
 })
 
-# PLUGIN_SCHEMA = vol.Schema({
-#     vol.Optional(ATTR_NOTIFY): cv.string
-# })
+PLUGIN_SCHEMA = vol.Schema({
+    vol.Required(ATTR_PLUGIN_MODULE): cv.string,
+    vol.Optional(ATTR_PLUGIN_CONFIG): dict
+})

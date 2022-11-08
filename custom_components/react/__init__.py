@@ -49,6 +49,7 @@ from .const import (
     DEFAULT_INITIAL_STATE, 
     DOMAIN,
     EVENT_REACT_ACTION,
+    PLUGIN_SCHEMA,
     SIGNAL_ACTION_HANDLER_CREATED,
     SIGNAL_ACTION_HANDLER_DESTROYED,
     SIGNAL_WAIT_FINISHED,
@@ -60,7 +61,7 @@ from .const import (
 CONFIG_SCHEMA = vol.Schema({
     vol.Optional(DOMAIN, default={}): vol.Schema({
         vol.Optional(CONF_FRONTEND_REPO_URL): cv.string,
-        vol.Optional(CONF_PLUGINS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_PLUGINS): vol.All(cv.ensure_list, [PLUGIN_SCHEMA]),
         vol.Optional(CONF_ENTITY_MAPS): dict,
         vol.Optional(CONF_WORKFLOW): WORKFLOW_SCHEMA,
         vol.Optional(CONF_STENCIL): STENCIL_SCHEMA,
@@ -311,8 +312,8 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
                     match: bool
                     for data_item in actor_runtime.data:
                         match = True
-                        for name in data_item.names:
-                            if not name in action_event.payload.data.names or action_event.payload.data.get(name) != data_item.get(name):
+                        for name in data_item.keys():
+                            if not name in action_event.payload.data.keys() or action_event.payload.data.get(name) != data_item.get(name):
                                 match = False
                                 break
                         if match:

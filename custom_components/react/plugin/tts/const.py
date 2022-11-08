@@ -1,0 +1,3 @@
+PLUGIN_NAME = "tts"
+ATTR_SAY_SERVICE = "say_service"
+DEFAULT_LANGUAGE = "en"

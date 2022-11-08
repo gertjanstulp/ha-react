@@ -18,12 +18,18 @@ class PluginApi():
 class PluginFactory:
     def __init__(self, react: ReactBase) -> None:
         self.react = react
-        self.api = PluginApi(react)
+        self.plugin_api = PluginApi(react)
 
 
     def load_plugins(self):
-        for plugin_name in self.react.configuration.plugin_config.plugins:
-            plugin_module = import_module(plugin_name)
-            if not hasattr(plugin_module, "setup_plugin"):
-                raise Exception(f"Invalid plugin configuration: setup_plugin method missing in {plugin_name}")
-            plugin_module.setup_plugin(plugin_api=self.api)
+        for plugin in self.react.configuration.plugin_config.plugins:
+            try:
+                plugin_module = import_module(plugin.module)
+                if hasattr(plugin_module, "setup_plugin"):
+                    plugin_module.setup_plugin(plugin_api=self.plugin_api, config=plugin.config)
+                else:
+                    self.react.log.error(f"PluginFactory - Invalid plugin configuration: setup_plugin method missing in '{plugin_module}'")
+            except:
+                self.react.log.exception(f"PluginFactory - Could not load plugin '{plugin.module}'")
+
+            

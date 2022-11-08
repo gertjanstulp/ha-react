@@ -12,6 +12,7 @@ from homeassistant.components.telegram_bot import (
 from custom_components.react.utils.events import Event
 from custom_components.react.base import ReactBase
 from custom_components.react.tasks.defaults.default_task import DefaultTransformTask
+from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData
 from custom_components.react.const import (
     ATTR_ACTION, 
@@ -29,13 +30,20 @@ from custom_components.react.const import (
 
 from custom_components.react.plugin.telegram.const import PLUGIN_NAME
 
+_LOGGER = get_react_logger()
+
 
 class CallbackTransformInTask(DefaultTransformTask):
     def __init__(self, react: ReactBase) -> None:
         super().__init__(react, EVENT_TELEGRAM_CALLBACK, CallbackTransformEvent)
 
 
+    def _debug(self, message: str):
+        _LOGGER.debug(f"Telegram plugin: CallbackTransformInTask - {message}")
+
+
     def create_action_event_payload(self, source_event: CallbackTransformEvent) -> dict:
+        self._debug("Transforming callback event from telegram")
         entity_maps = self.react.configuration.workflow_config.entity_maps_config
         return {
             ATTR_ENTITY: entity_maps.get(source_event.payload.entity_source, None),
@@ -97,7 +105,7 @@ class CallbackTransformEventPayload(DynamicData):
 class CallbackTransformEvent(Event[CallbackTransformEventPayload]):
 
     def __init__(self, hass_event: HassEvent) -> None:
-        super().__init__(hass_event, CallbackTransformEventPayload)
+        super().__init__(hass_event,  CallbackTransformEventPayload)
         
 
     @property
