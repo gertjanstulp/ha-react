@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 from homeassistant.core import HomeAssistant
 
-from custom_components.react.utils.events import ActionEventData
+from custom_components.react.utils.events import ActionEventPayload
 from custom_components.react.utils.updatable import Updatable
 
 from custom_components.react.const import (
@@ -37,21 +37,21 @@ class VariableContextDataProvider(TemplateContextDataProvider):
 
 
     def provide(self, context_data: dict):
-        for name in self.variable_tracker.names:
+        for name in self.variable_tracker.keys:
             context_data[name] = getattr(self.variable_tracker.value_container, name)
 
 
 class ActorTemplateContextDataProvider(TemplateContextDataProvider):
     
-    def __init__(self, hass: HomeAssistant, event_data: ActionEventData, actor_id: str) -> None:
+    def __init__(self, hass: HomeAssistant, event_payload: ActionEventPayload, actor_id: str) -> None:
         super().__init__(hass)
         
-        self.event_data = event_data
+        self.event_payload = event_payload
         self.actor_id = actor_id
 
 
     def provide(self, context_data: dict):
-        context_data[ATTR_EVENT] = self.event_data.as_dict() 
+        context_data[ATTR_EVENT] = self.event_payload.as_dict() 
         context_data[ATTR_ACTOR] = {
             ATTR_ID: self.actor_id
         }

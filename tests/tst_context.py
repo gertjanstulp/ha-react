@@ -100,8 +100,8 @@ class TstContext():
         self.workflow_id = f"workflow_{workflow_name}"
         self.workflow_config = self.react.configuration.workflow_config.workflows.get(self.workflow_id)
 
-        self.notifications = list[dict]()
-        self.acknowledgements = list[dict]()
+        self.plugin_data_register: list[dict] = []
+        self.notify_confirm_feedback_register: list[dict] = []
 
     
     async def async_send_action_event(self, 
@@ -125,10 +125,25 @@ class TstContext():
         await self.hass.async_block_till_done()
 
 
+    async def async_send_event(self, event_type: str, event_data: dict):
+        self.hass.bus.async_fire(event_type, event_data)
+        await self.hass.async_block_till_done()
+
+
     @asynccontextmanager
-    async def async_listen_react_event(self):
+    async def async_listen_reaction_event(self):
         try:
             self.cancel_listen = self.hass.bus.async_listen(EVENT_REACT_REACTION, self.event_mock)
+            yield
+        finally:
+            if self.cancel_listen:
+                self.cancel_listen()
+
+
+    @asynccontextmanager
+    async def async_listen_action_event(self):
+        try:
+            self.cancel_listen = self.hass.bus.async_listen(EVENT_REACT_ACTION, self.event_mock)
             yield
         finally:
             if self.cancel_listen:
@@ -242,6 +257,34 @@ class TstContext():
     #     assert data_got == data_expected, f"Expected reaction data '{data_expected}', got '{data_got}'"
 
 
+    def verify_action_event_count(self, expected_count: int = 1):
+        got_count = self.event_mock.call_count
+        assert got_count == expected_count, f"Expected event count {expected_count}, got {got_count}"
+
+
+    async def async_verify_action_event_not_received(self, delay: int = 0) -> None:
+        if delay > 0:
+            await sleep(delay)
+        self.verify_action_event_count(0)
+
+
+    async def async_verify_action_event_received(self, expected_count: int = 1, delay: int = 0) -> None:
+        if delay > 0:
+            await sleep(delay)
+        self.verify_action_event_count(expected_count)
+        for i,call in enumerate(self.event_mock.mock_calls):
+            assert len(call.args) > 0, f"Expected args for call {i}, got none"
+
+
+    def verify_action_event_data(self, event_index: int = 0, expected_data: dict = None):
+        event: Event = self.event_mock.mock_calls[event_index].args[0]
+        event_type_got = event.event_type
+        event_type_expected = EVENT_REACT_ACTION
+        data_got = event.data
+        assert event_type_got == event_type_expected, f"Expected eventtype '{event_type_expected}', got '{event_type_got}'"
+        assert DeepDiff(data_got, expected_data) == {}, f"Expected event entity '{expected_data}', got '{data_got}'"
+
+
     def verify_reaction_event_count(self, expected_count: int = 1):
         got_count = self.event_mock.call_count
         assert got_count == expected_count, f"Expected event count {expected_count}, got {got_count}"
@@ -304,7 +347,7 @@ class TstContext():
         expected_runtime_reactor_entity: list[str] = None, 
         expected_runtime_reactor_type: list[str] = None, 
         expected_runtime_reactor_action: list[str] = None, 
-        expected_runtime_reactor_data: dict = None,
+        expected_runtime_reactor_data: list[dict] = None,
         expected_runtime_reactor_delay_seconds: int = None,
         expected_runtime_reactor_delay_minutes: int = None,
         expected_runtime_reactor_delay_hours: int = None,
@@ -323,6 +366,8 @@ class TstContext():
             expected_runtime_reactor_type = [None] * len(self.workflow_config.reactors)
         if not expected_runtime_reactor_action:
             expected_runtime_reactor_action = [None] * len(self.workflow_config.reactors)
+        if not expected_runtime_reactor_data:
+            expected_runtime_reactor_data = [None] * len(self.workflow_config.reactors)
 
         trace_data: dict = self.hass.data[DATA_TRACE]
         key = f"{DOMAIN}.{self.workflow_id}"
@@ -531,7 +576,7 @@ class TstContext():
                     trace_trace_reactor_event_result_reaction.assert_property_match(ATTR_ENTITY, expected_runtime_reactor_entity[i] or workflow_config_reactor.entity[0])
                     trace_trace_reactor_event_result_reaction.assert_property_match(ATTR_TYPE, expected_runtime_reactor_type[i] or workflow_config_reactor.type[0])
                     trace_trace_reactor_event_result_reaction.assert_property_match(ATTR_ACTION, expected_runtime_reactor_action[i] or (expected_runtime_actor_action if workflow_config_reactor.forward_action else workflow_config_reactor.action[0]))
-                    trace_trace_reactor_event_result_reaction.assert_property_match(ATTR_DATA, expected_runtime_reactor_data or (workflow_config_reactor.data[0] if workflow_config_reactor.data else None))
+                    trace_trace_reactor_event_result_reaction.assert_property_match(ATTR_DATA, expected_runtime_reactor_data[i] or (workflow_config_reactor.data[0] if workflow_config_reactor.data else None))
 
                 # Test for variables in event section of trace data if only 1 reactor configured without condition and delay
                 if (len(self.workflow_config.reactors) == 1 and 
@@ -557,55 +602,18 @@ class TstContext():
         await self.hass.async_block_till_done()
 
 
-    def send_notification(self, entity: str, notification_data: dict, context: Context):
-        self.notifications.append({
-            ATTR_ENTITY: entity,
-            ATTR_DATA: notification_data,
-            ATTR_CONTEXT: context
-        })
+    def register_plugin_data(self, plugin_data: dict):
+        self.plugin_data_register.append(plugin_data)
 
 
-    def acknowledge_feedback(self, feedback_data: dict):
-        self.acknowledgements.append({
-            ATTR_ENTITY: feedback_data.get(ATTR_ENTITY, None),
-            ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK: feedback_data.get(ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK, None),
-            ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT: feedback_data.get(ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT, None),
-        })
+    def verify_plugin_data_sent(self, expected_count: int = 1):
+        got_count = len(self.plugin_data_register)
+        assert got_count == expected_count, f"Expected plugin_data count {expected_count}, got {got_count}"
 
 
-    def verify_notification_sent(self, expected_count: int = 1):
-        got_count = len(self.notifications)
-        assert got_count == expected_count, f"Expected notification count {expected_count}, got {got_count}"
-
-
-    def verify_acknowledgement_sent(self, expected_count: int = 1):
-        got_count = len(self.acknowledgements)
-        assert got_count == expected_count, f"Expected acknowledgement count {expected_count}, got {got_count}"
-
-
-    def verify_notification_data(self, notification_index: int = 0, reactor_index: int = 0, reactor_data_index: int = 0):
-        notification = self.notifications[0]
-        notification_data = notification.get(ATTR_DATA, None)
-
-        workflow_config_reactor = self.workflow_config.reactors[reactor_index]
-        workflow_config_reactor_data = workflow_config_reactor.data[reactor_data_index].as_dict()
-
-        self.assert_attribute(ATTR_ENTITY, workflow_config_reactor, notification)
-        self.assert_attribute(ATTR_EVENT_MESSAGE, workflow_config_reactor_data, notification_data)
-        self.assert_attribute(ATTR_EVENT_FEEDBACK_ITEMS, workflow_config_reactor_data, notification_data)
-
-
-    def verify_acknowledgement_data(self, send_workflow: Workflow, send_reactor_index: int = 0, send_reactor_data_index: int = 0, send_feedback_item_index: int = 0, acknowledgement_index: int = 0):
-        acknowledgement = self.acknowledgements[acknowledgement_index]
-
-        send_workflow_config_reactor = send_workflow.reactors[send_reactor_index]
-        send_workflow_config_reactor_data = send_workflow_config_reactor.data[send_reactor_data_index].as_dict()
-        send_feedback_items: list[dict] = send_workflow_config_reactor_data.get(ATTR_EVENT_FEEDBACK_ITEMS)
-        send_feedback_item = send_feedback_items[send_feedback_item_index]
-
-        self.assert_attribute(ATTR_ENTITY, send_workflow_config_reactor, acknowledgement)
-        self.assert_attribute(ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK, send_feedback_item, acknowledgement)
-        self.assert_attribute(ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT, send_feedback_item, acknowledgement)
+    def verify_plugin_data_content(self, expected_data: dict, reactor_index: int = 0):
+        got_data = self.plugin_data_register[0]
+        assert DeepDiff(got_data, expected_data) == {}, f"Expected plugin data '{expected_data}', got '{got_data}'"
 
 
     def assert_attribute(self, attr: str, expected: dict, got: dict):    

@@ -86,7 +86,7 @@ async def test_runtime_workflow_mode_queued(hass: HomeAssistant, workflow_name, 
 
     try:
         tc = TstContext(hass, workflow_name)
-        async with tc.async_listen_react_event():
+        async with tc.async_listen_reaction_event():
             await tc.async_send_action_event()
             assert_run_count(runtime, 1)
             await tc.async_send_action_event()
@@ -113,7 +113,7 @@ async def test_runtime_workflow_mode_parallel(hass: HomeAssistant, workflow_name
     runtime = react.runtime.get_workflow_runtime(workflow_id)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         await tc.async_send_action_event()
         assert_run_count(runtime, 1)
         await tc.async_send_action_event()

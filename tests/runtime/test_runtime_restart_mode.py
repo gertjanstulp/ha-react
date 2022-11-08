@@ -16,7 +16,7 @@ async def test_runtime_restart_mode_abort(hass: HomeAssistant, workflow_name, re
     react: ReactBase = hass.data[DOMAIN]
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         await tc.async_send_action_event()
         tc.verify_run_found()
         await tc.async_verify_reaction_event_not_received()
@@ -34,7 +34,7 @@ async def test_runtime_restart_mode_force(hass: HomeAssistant, workflow_name, re
     react: ReactBase = hass.data[DOMAIN]
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         await tc.async_send_action_event()
         tc.verify_run_found()
         await tc.async_verify_reaction_event_not_received()

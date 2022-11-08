@@ -327,17 +327,17 @@
       location_name: not_home
       source_type: router
 
-- id: trigger_actionable_notification
-  alias: Trigger actionable_notification
+- id: trigger_telegram_notify_send_message
+  alias: Trigger telegram_notify_send_message
   trigger:
     platform: state
-    entity_id: input_button.button_trigger_actionable_notification
+    entity_id: input_button.button_trigger_telegram_notify_send_message
   action:
     event: ev_react_action
     event_data:
-      entity: actor_entity_actionable_notification
-      type: actor_type_actionable_notification
-      action: actor_action_actionable_notification
+      entity: actor_entity_telegram_notify_send_message
+      type: actor_type_telegram_notify_send_message
+      action: actor_action_telegram_notify_send_message
 
 - id: trigger_wait
   alias: Trigger wait
@@ -381,3 +381,15 @@
           entity: actor_entity_immediate2
           type: actor_type_immediate2
           action: actor_action_immediate2
+
+- id: trigger_tts_media_player_speek
+  alias: Trigger tts speek
+  trigger:
+    platform: state
+    entity_id: input_button.button_trigger_tts_media_player_speek
+  action:
+    event: ev_react_action
+    event_data:
+      entity: actor_entity_tts_media_player_speek
+      type: actor_type_tts_media_player_speek
+      action: actor_action_tts_media_player_speek

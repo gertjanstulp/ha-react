@@ -25,12 +25,10 @@ from custom_components.react.const import (
     ATTR_FORWARD_DATA,
     ATTR_INDEX,
     ATTR_MODE,
-    ATTR_NOTIFY,
     ATTR_OVERWRITE,
     ATTR_PARALLEL,
     ATTR_REACTOR,
     ATTR_RESET_WORKFLOW,
-    ATTR_RESTART_MODE,
     ATTR_SCHEDULE,
     ATTR_SCHEDULE_AT,
     ATTR_SCHEDULE_WEEKDAYS,
@@ -41,7 +39,7 @@ from custom_components.react.const import (
     ATTR_VARIABLES,
     ATTR_WAIT,
     CONF_ENTITY_MAPS,
-    CONF_PLUGIN,
+    CONF_PLUGINS,
     CONF_STENCIL,
     CONF_TRACE,
     CONF_WORKFLOW,
@@ -49,7 +47,6 @@ from custom_components.react.const import (
     MONIKER_DISPATCH,
     MONIKER_RESET,
     MONIKER_TRIGGER,
-    RESTART_MODE_ABORT,
     WORKFLOW_MODE_PARALLEL,
 )
 
@@ -153,7 +150,7 @@ class Ctor(CtorConfig):
                 if self.get(a) is not None
             }
         }
-        if ATTR_CONDITION in self.names and self.condition != None:
+        if ATTR_CONDITION in self.keys() and self.condition != None:
             result[ATTR_CONDITION] = { ATTR_TEMPLATE: self.condition}
         if self.data is not None:
             result_data = [ data_item.as_dict() for data_item in self.data ]
@@ -271,11 +268,21 @@ class Workflow():
 class PluginConfiguration:
 
     def __init__(self) -> None:
-        self.notify: Union[str, None] = None
+        self.plugins: Union[list[Plugin], None] = None
+
 
     def load(self, react_config: ConfigType) -> None:
-        plugin_config = react_config.get(CONF_PLUGIN, {})
-        self.notify = plugin_config.get(ATTR_NOTIFY, None)
+        plugins_raw = react_config.get(CONF_PLUGINS, {})
+        self.plugins = [Plugin(plugin_raw) for plugin_raw in plugins_raw]
+        test = 1
+
+
+class Plugin(DynamicData):
+    def __init__(self, source: dict = None) -> None:
+        super().__init__()
+        self.module: str = None
+        self.config: dict = None
+        self.load(source)
 
 
 class WorkflowConfiguration:

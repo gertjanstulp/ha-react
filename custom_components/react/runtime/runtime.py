@@ -20,7 +20,7 @@ from custom_components.react.enums import YIELD_RESULTS, StepResult
 from custom_components.react.lib.config import Workflow, calculate_reaction_datetime
 from custom_components.react.reactions.base import ReactionData
 from custom_components.react.runtime.snapshots import WorkflowSnapshot
-from custom_components.react.utils.events import ActionEventData
+from custom_components.react.utils.events import ActionEventPayload
 from custom_components.react.utils.logger import format_data, get_react_logger
 from custom_components.react.utils.struct import ReactorRuntime
 from custom_components.react.utils.trace import ReactTrace, create_trace
@@ -328,7 +328,7 @@ class WorkflowRuntime:
 
 
     async def async_run(self, snapshot: WorkflowSnapshot, entity_vars: dict, hass_run_context: Context):
-        self._debug(f"triggered by event ({format_data(entity=snapshot.event.data.entity, type=snapshot.event.data.type, action=snapshot.event.data.action, data=snapshot.event.data.data)})")
+        self._debug(f"triggered by event ({format_data(entity=snapshot.action_event.payload.entity, type=snapshot.action_event.payload.type, action=snapshot.action_event.payload.action, data=snapshot.action_event.payload.data)})")
         if not self.running:
             self._debug(f"skipping (workflow is disabled)")
             return
@@ -495,11 +495,11 @@ class WorkflowRun:
             ATTR_THIS: self._entity_vars,
             ATTR_VARIABLES: 
                 self.snapshot.variables.as_dict() | 
-                { ATTR_EVENT: self.snapshot.event.data } |
+                { ATTR_EVENT: self.snapshot.action_event.payload } |
                 { ATTR_ACTOR: { ATTR_ID: self.snapshot.actor.id } },
             ATTR_ACTOR: {
                 ATTR_ID: self.snapshot.actor.id, 
-                ATTR_CONTEXT: self.snapshot.event.context
+                ATTR_CONTEXT: self.snapshot.action_event.context
             }
         }
         self.trace = create_trace(self._hass, self._workflow, self._hass_run_context, variables)        
@@ -512,7 +512,7 @@ class WorkflowRun:
 
 
     def step_actor_trigger(self, parent_path: str):
-        self.trace.trace_node(make_path(TRACE_PATH_TRIGGER, parent_path), event=self.snapshot.event.data.as_dict(skip_none=True))
+        self.trace.trace_node(make_path(TRACE_PATH_TRIGGER, parent_path), event=self.snapshot.action_event.payload.as_dict(skip_none=True))
 
 
     def step_actor_condition(self, parent_path: str):
@@ -526,7 +526,7 @@ class WorkflowRun:
         
 
     def step_context_builder(self):
-        self.trace.set_var(ATTR_CONTEXT, self.snapshot.event.context)
+        self.trace.set_var(ATTR_CONTEXT, self.snapshot.action_event.context)
 
 
     async def async_step_reactors_root(self):
@@ -534,7 +534,7 @@ class WorkflowRun:
             self.trace.trace_node(TRACE_PATH_PARALLEL, parallel=True)
         
         def create_reaction(reactor: ReactorRuntime) -> Reaction:
-            reaction = Reaction(self._hass, self.id, self.workflow_id, self.snapshot.event.data, reactor, self.trace, self.reaction_done)
+            reaction = Reaction(self._hass, self.id, self.workflow_id, self.snapshot.action_event.payload, reactor, self.trace, self.reaction_done)
             self._reaction_registry.register(reactor, reaction)
             return reaction
         reactions = [ create_reaction(reactor) for reactor in self.snapshot.reactors ]
@@ -573,7 +573,7 @@ class Reaction:
         hass: HomeAssistant,
         workflow_run_id: str,
         workflow_id: str, 
-        event_data: ActionEventData,
+        event_payload: ActionEventPayload,
         reactor: ReactorRuntime,
         trace: ReactTrace,
         reaction_done_callback: Callable[[Reaction], None],
@@ -582,7 +582,7 @@ class Reaction:
         self._hass = hass
         self.workflow_run_id = workflow_run_id
         self.workflow_id = workflow_id
-        self._event_data = event_data
+        self._event_payload = event_payload
         self._reactor = reactor
         self._trace = trace
         self._reaction_done_callback = reaction_done_callback
@@ -683,8 +683,8 @@ class Reaction:
 
 
     def step_reactor_event(self) -> Generator[StepResult, None, None]:
-        reactor_action = [ self._event_data.action ] if self._reactor.forward_action else self._reactor.action
-        reactor_data = [ self._event_data.data ] if self._reactor.forward_data else self._reactor.data
+        reactor_action = [ self._event_payload.action ] if self._reactor.forward_action else self._reactor.action
+        reactor_data = [ self._event_payload.data ] if self._reactor.forward_data else self._reactor.data
         for entity, type, action, data in product(self._reactor.entity or [None], self._reactor.type or [None], reactor_action or [None], reactor_data or [None]):
             reaction = ReactionData(self._reactor.id, entity, type, action, data.as_dict() if data else None)
             yield from self.step_reaction_main(reaction)
@@ -692,11 +692,11 @@ class Reaction:
 
     def step_reaction_main(self, reaction: ReactionData) -> Generator[StepResult, None, None]:
         if self._reactor.wait:
-            if ATTR_STATE in self._reactor.wait.names:
+            if ATTR_STATE in self._reactor.wait.keys():
                 yield from self.step_reaction_state()
-            if ATTR_DELAY in self._reactor.wait.names:
+            if ATTR_DELAY in self._reactor.wait.keys():
                 yield from self.step_reaction_delay()
-            elif ATTR_SCHEDULE in self._reactor.wait.names:
+            elif ATTR_SCHEDULE in self._reactor.wait.keys():
                 yield from self.step_reaction_schedule()
         if self._reactor.reset_workflow:
             self.step_reaction_reset()
@@ -766,12 +766,12 @@ class Reaction:
 
     def step_reaction_dispatch(self, reaction: ReactionData):
         node = self._trace.trace_section_node(self.id, self.make_reactor_path(TRACE_PATH_DISPATCH))
-        if self._reactor.forward_action and self._event_data.action == ACTION_TOGGLE:
+        if self._reactor.forward_action and self._event_payload.action == ACTION_TOGGLE:
             # Don't forward toggle actions as they are always accompanied by other actions which will be forwarded
             self._debug(f"skipping (action 'toggle' with forward_action)")
             node.set_result(message="Skipped, toggle with forward-action")
                 
-        elif self._reactor.forward_action and (self._event_data.action == ACTION_AVAILABLE or self._event_data.action == ACTION_UNAVAILABLE):
+        elif self._reactor.forward_action and (self._event_payload.action == ACTION_AVAILABLE or self._event_payload.action == ACTION_UNAVAILABLE):
             # Don't forward availabililty actions as reactors don't support them
             self._debug(f"skipping reactor (availability action with forward_action)")
             node.set_result(message="Skipped, availability action with forward_action")

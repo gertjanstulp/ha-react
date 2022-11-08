@@ -2,7 +2,7 @@ from typing import Generic, Type, TypeVar, Union
 
 from anyio import Any
 from homeassistant.const import ATTR_ID
-from homeassistant.core import Event, callback, HomeAssistant
+from homeassistant.core import Event as HassEvent, callback, HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import TrackTemplate, TrackTemplateResult, async_track_template_result
@@ -52,7 +52,7 @@ class CompositeTracker(BaseTracker, Generic[T], Destroyable):
         super().__init__(hass)
 
         self.config_source = config_source
-        self.names = config_source.names
+        self.keys = config_source.keys()
         self.tctx = tctx
 
         self.trackers: list[BaseTracker] = []
@@ -60,12 +60,12 @@ class CompositeTracker(BaseTracker, Generic[T], Destroyable):
         if id := self.config_source.get(ATTR_ID):
             self.value_container.set(ATTR_ID, id)
 
-        for attr in config_source.names:
+        for attr in config_source.keys():
             self.add_tracker(attr, PROP_TYPE_SOURCE)
 
 
     def as_trace_dict(self) -> dict:
-        return { name : self.value_container.get(name) for name in self.config_source.names }
+        return { name : self.value_container.get(name) for name in self.config_source.keys() }
     
 
     def add_tracker(self, attr: str, type_converter: Any, default: Any = None) -> None:
@@ -177,7 +177,7 @@ class TemplatePropertyTracker(BaseTracker, Destroyable):
 
 
     @callback
-    def async_update_template(self, event: Union[Event, None], updates: list[TrackTemplateResult]):
+    def async_update_template(self, hass_event: Union[HassEvent, None], updates: list[TrackTemplateResult]):
         if updates and len(updates) > 0:
             result = updates.pop().result
             if isinstance(result, TemplateError):

@@ -50,9 +50,11 @@ button_trigger_device_tracker_home:
   name: Device tracker home
 button_trigger_device_tracker_not_home:
   name: Device tracker not_home
-button_trigger_actionable_notification:
-  name: Actionable notification
+button_trigger_telegram_notify_send_message:
+  name: Telegram notify send message
 button_trigger_wait:
   name: Wait
 button_trigger_wait_delayed:
   name: Wait delayed
+button_trigger_tts_media_player_speek:
+  name: TTS Media player speek

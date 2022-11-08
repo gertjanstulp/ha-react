@@ -24,7 +24,7 @@ from ..const import (
 class DynamicData():
 
     def __init__(self, source: dict = None) -> None:
-        self.names: list[str] = []
+        self._keys: list[str] = []
         self._prop_types: dict[str, str] = {}
         self._templates: dict[str, str] = {}
 
@@ -35,11 +35,23 @@ class DynamicData():
             self.load(source)
 
 
-    def load(self, source: dict) -> None:
+    def __contains__(self, key):
+        return key in self._keys
+
+
+    def keys(self):
+        return self._keys
+
+    # def items(self):
+    #     for name in self._keys:
+    #         yield self.get(name)
+
+
+    def load(self, source: Union[dict, DynamicData]) -> None:
         if not source:
             return
-        for k,v in source.items():
-            self.set(k, v)
+        for key in source.keys():
+            self.set(key, source.get(key))
 
 
     def type_hint(self, key):
@@ -48,11 +60,11 @@ class DynamicData():
 
     @property
     def has_data(self) -> bool:
-        return len(self.names) > 0
+        return len(self._keys) > 0
 
 
     def get(self, key: str, default: Any = None) -> Any:
-        if key in self.names:
+        if key in self._keys:
             return getattr(self, key)
         else:
             return default
@@ -78,8 +90,8 @@ class DynamicData():
 
 
     def set(self, key: str, value: Any):
-        if not key in self.names:
-            self.names.append(key)
+        if not key in self._keys:
+            self._keys.append(key)
         if isinstance(value, (MultiItem, DynamicData)):
             setattr(self, key, value)
         elif isinstance(value, dict):
@@ -102,10 +114,10 @@ class DynamicData():
 
 
     def ensure(self, key: str, default: Any):
-        if key in self.names: return
+        if key in self._keys: return
 
         if hasattr(self, key) and getattr(self, key, None) != None:
-            self.names.append(key)
+            self._keys.append(key)
             return
 
         self.set(key, default)
@@ -114,7 +126,7 @@ class DynamicData():
     def as_dict(self, skip_none: bool = False) -> dict:
         result = {}
 
-        for name in self.names:
+        for name in self._keys:
             v = getattr(self, name)
             if isinstance(v, MultiItem) and v.has_data:
                 result[name] = v.as_dict()
@@ -139,7 +151,7 @@ class DynamicData():
 
     @property
     def any(self) -> bool:
-        return len(self.names) > 0
+        return len(self._keys) > 0
 
 
     def is_value(self, key: str) -> bool:
@@ -170,32 +182,39 @@ class MultiItem(DynamicData):
 
     class MultiItemIterator:
         
-        def __init__(self, parent: Any, names: list[str]):
+        def __init__(self, parent: Any, keys: list[str]):
             self.parent = parent
-            self.names = names
+            self._keys = keys
             self.num = 0
-            self.end = len(names) - 1
+            self.end = len(keys) - 1
 
 
         def __next__(self):
             if self.num > self.end:
                 raise StopIteration
             else:
-                result = getattr(self.parent, self.names[self.num])
+                result = getattr(self.parent, self._keys[self.num])
                 self.num += 1
                 return result
 
 
     def as_dict(self):
-        return [getattr(self, name) for name in self.names]
+        return [getattr(self, name) for name in self._keys]
 
 
     def __iter__(self):
-        return MultiItem.MultiItemIterator(self, self.names)
+        return MultiItem.MultiItemIterator(self, self._keys)
 
 
     def __len__(self):
-        return len(self.names)
+        return len(self._keys)
+
+
+    def __contains__(self, key):
+        for value in self:
+            if value == key: 
+                return True
+        return False
 
 
     @property
@@ -211,13 +230,13 @@ class MultiItem(DynamicData):
 
 
     def __getitem__(self, k):
-        if self.any and len(self.names) > k:
-            return self.get(self.names[k])
+        if self.any and len(self._keys) > k:
+            return self.get(self._keys[k])
         return None
 
     
     def len(self):
-        return len(self.names)
+        return len(self._keys)
 
 
 class CtorConfig(DynamicData):

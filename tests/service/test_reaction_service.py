@@ -12,7 +12,7 @@ async def test_react_call_service_delete_reaction(hass: HomeAssistant, workflow_
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event()
         tc.verify_reaction_found()
@@ -28,7 +28,7 @@ async def test_react_call_service_react_now(hass: HomeAssistant, workflow_name, 
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event()
         tc.verify_reaction_found()

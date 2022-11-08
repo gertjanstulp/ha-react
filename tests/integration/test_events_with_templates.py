@@ -19,7 +19,7 @@ async def test_react_templated(hass: HomeAssistant, workflow_name, react_compone
     await react_component.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event(entity="actor_entity_templated", type="actor_type_templated", action="actor_action_templated")
         tc.verify_reaction_not_found()
@@ -49,7 +49,7 @@ async def test_react_templated_state(hass: HomeAssistant, workflow_name, templat
     await input_text_component.async_set_value("test_text", "templated_state")
 
     tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_react_event():
+    async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event(entity="actor_entity_templated_state", type="actor_type_templated_state", action="actor_action_templated_state")
         tc.verify_reaction_not_found()

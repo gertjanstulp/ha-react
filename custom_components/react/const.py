@@ -30,7 +30,7 @@ ICON = "mdi:sitemap-outline"
 
 CONF_FRONTEND_REPO_URL = "frontend_repo_url"
 CONF_ENTITY_MAPS = "entity_maps"
-CONF_PLUGIN = "plugin"
+CONF_PLUGINS = "plugins"
 CONF_WORKFLOW = "workflow"
 CONF_STENCIL = "stencil"
 
@@ -39,6 +39,10 @@ ATTR_ID = "id"
 
 # workflow attributes
 ATTR_MODE = "mode"
+
+# plugin config attributes
+ATTR_PLUGIN_MODULE = "module"
+ATTR_PLUGIN_CONFIG = "config"
 
 # actor attributes
 ATTR_ACTOR = "actor"
@@ -98,9 +102,6 @@ ATTR_WORKFLOW_ID = "workflow_id"
 ATTR_STENCIL = "stencil"
 CONF_TRACE = "trace"
 
-# # reaction attributes
-# ATTR_REACTION_DATETIME = "datetime"
-
 # Internal attributes
 ATTR_DATA = "data"
 ATTR_THIS = "this"
@@ -117,17 +118,13 @@ MONIKER_TRIGGER = "trigger"
 MONIKER_DISPATCH = "dispatch"
 MONIKER_RESET = "reset"
 
-# plugin attributes
-ATTR_NOTIFY = "notify"
-
-# Event custom attributes
-ATTR_EVENT_TYPE = "event_type"
-ATTR_ARGS = "args"
+# event custom attributes
 ATTR_EVENT_MESSAGE = "message"
 ATTR_EVENT_FEEDBACK_ITEMS = "feedback_items"
-ATTR_EVENT_FEEDBACK_ITEM_TITLE = "title"
 ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK = "feedback"
 ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT = "acknowledgement"
+ATTR_EVENT_PLUGIN = "plugin"
+ATTR_EVENT_PLUGIN_PAYLOAD = "plugin_payload"
 
 # service attributes
 ATTR_RUN_ID = "run_id"
@@ -149,15 +146,20 @@ EVENT_REACT_REACTION = "ev_react_reaction"
 EVENT_RUN_REGISTRY_UPDATED = "run_registry_updated"
 EVENT_REACTION_REGISTRY_UPDATED = "reaction_registry_updated"
 
-# event data
-EVENTDATA_COMMAND_REACT = "/react"
+# event payload
+EVENTPAYLOAD_COMMAND_REACT = "/react"
 
 # React types
 REACT_TYPE_NOTIFY = "notify"
+REACT_TYPE_TTS = "tts"
+REACT_TYPE_MEDIA_PLAYER = "media_player"
 
 # React actions
 REACT_ACTION_SEND_MESSAGE = "send_message"
 REACT_ACTION_FEEDBACK = "feedback"
+REACT_ACTION_FEEDBACK_RETRIEVED = "feedback_retrieved"
+REACT_ACTION_CONFIRM_FEEDBACK = "confirm_feedback"
+REACT_ACTION_SPEEK = "speek"
 
 # signals
 SIGNAL_ITEM_CREATED = "react_item_created"
@@ -243,10 +245,6 @@ WORKFLOW_MODE_SINGLE = "single"
 WORKFLOW_MODE_RESTART = "restart"
 WORKFLOW_MODE_QUEUED = "queued"
 WORKFLOW_MODE_PARALLEL = "parallel"
-
-# WAITING = "waiting"
-
-_EMPTY_ = '_'
 
 
 def is_list_of_strings(obj):
@@ -365,5 +363,6 @@ WORKFLOW_SCHEMA = vol.Schema({
 })
 
 PLUGIN_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_NOTIFY): cv.string
+    vol.Required(ATTR_PLUGIN_MODULE): cv.string,
+    vol.Optional(ATTR_PLUGIN_CONFIG): dict
 })
