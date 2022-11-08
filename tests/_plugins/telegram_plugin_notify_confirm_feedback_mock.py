@@ -16,7 +16,7 @@ class TelegramApiMock():
     def __init__(self, react: ReactBase) -> None:
         self.react = react
 
-    async def async_confirm_feedback(self, feedback_data: dict, context: Context):
+    async def async_confirm_feedback(self, context: Context, feedback_data: dict):
         context: TstContext = self.react.hass.data["test_context"]
         context.register_plugin_data(feedback_data)
 

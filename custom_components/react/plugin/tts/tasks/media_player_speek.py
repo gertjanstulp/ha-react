@@ -33,11 +33,13 @@ class MediaPlayerSpeekTask(DefaultReactionTask):
     async def async_execute_default(self, event: MediaPlayerSpeekReactionEvent):
         self._debug("Delivering media_player speek message")
         await self.api.async_media_player_speek( 
-            event.payload.entity or None,
+            event.context,
+            event.payload.entity,
             event.payload.data.message,
             event.payload.data.language,
             event.payload.data.options,
-            event.context
+            event.payload.data.interrupt,
+            event.payload.data.volume,
         )
 
 
@@ -50,6 +52,8 @@ class MediaPlayerSpeekReactionEventData(DynamicData):
         self.message: str = None
         self.options: dict = None
         self.language: str = None
+        self.volume: float = None
+        self.interrupt: bool = None
 
         self.load(source)
 

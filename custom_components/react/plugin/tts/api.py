@@ -1,5 +1,12 @@
-from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import Context
+from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_VOLUME_LEVEL
+)
+from homeassistant.const import (
+    ATTR_ENTITY_ID, 
+    SERVICE_VOLUME_SET,
+    Platform,
+)
 
 from custom_components.react.base import ReactBase
 from custom_components.react.utils.logger import get_react_logger
@@ -32,12 +39,39 @@ class Api():
         _LOGGER.debug(f"Tts plugin: Api - {message}")
 
 
-    async def async_media_player_speek(self, entity_id: str, message: str, language: str, options: dict, context: Context):
+    async def async_media_player_speek(self, 
+        context: Context, 
+        entity_id: str, 
+        message: str, 
+        language: str, 
+        options: dict, 
+        interrupt: bool = False, 
+        volume: float = None
+    ):
         self._debug(f"Speeking '{message}'")
         if not self.config.say_service:
             self.react.log.error("TtsPlugin - No say_service configured")
             return
 
+        if volume:
+            await self.async_media_player_set_volume(context, entity_id, volume)
+        await self.async_say(context, entity_id, message, language, options)
+
+
+    async def async_media_player_set_volume(self, context: Context, entity_id: str, volume: float):
+        volume_data = {
+            ATTR_ENTITY_ID: f"media_player.{entity_id}",
+            ATTR_MEDIA_VOLUME_LEVEL: volume,
+        }
+        await self.react.hass.services.async_call(
+            Platform.MEDIA_PLAYER,
+            SERVICE_VOLUME_SET,
+            volume_data,
+            context
+        )
+
+
+    async def async_say(self, context: Context, entity_id: str, message: str, language: str, options: dict):
         speek_data = {
             ATTR_ENTITY_ID: f"media_player.{entity_id}",
             ATTR_EVENT_MESSAGE: message,
@@ -50,3 +84,4 @@ class Api():
             self.config.say_service,
             speek_data,
             context)
+        

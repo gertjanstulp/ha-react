@@ -39,9 +39,9 @@ class NotifySendMessageTask(DefaultReactionTask):
     async def async_execute_default(self, event: NotifySendMessageReactionEvent):
         self._debug("Sending message")
         await self.api.async_send_message(
+            event.context,
             event.payload.entity,
             event.create_message_data(),
-            event.context
         )
 
 

@@ -1,4 +1,7 @@
 from homeassistant.core import Context
+from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_VOLUME_LEVEL
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID, 
 )
@@ -23,8 +26,23 @@ class TtsApiMock():
         self.react = react
 
 
-    async def async_media_player_speek(self, entity_id: str, message: str, language: str, options: dict, context: Context):
+    async def async_media_player_speek(self, 
+        context: Context,
+        entity_id: str, 
+        message: str, 
+        language: str, 
+        options: dict, 
+        interrupt: bool = False, 
+        volume: float = None,
+    ):
         context: TstContext = self.react.hass.data["test_context"]
+        
+        if volume:
+            context.register_plugin_data({
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_MEDIA_VOLUME_LEVEL: volume,
+            })
+
         context.register_plugin_data({
             ATTR_ENTITY_ID: entity_id,
             ATTR_EVENT_MESSAGE: message,

@@ -18,7 +18,7 @@ class TelegramApiMock():
         self.react = react
 
 
-    async def async_send_message(self, entity: str, message_data: dict, context: Context):
+    async def async_send_message(self, context: Context, entity: str, message_data: dict):
         context: TstContext = self.react.hass.data["test_context"]
         context.register_plugin_data({
             ATTR_ENTITY: entity,

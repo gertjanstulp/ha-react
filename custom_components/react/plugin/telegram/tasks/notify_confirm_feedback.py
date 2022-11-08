@@ -39,7 +39,7 @@ class NotifyConfirmFeedbackTask(DefaultReactionTask):
 
     async def async_execute_default(self, event: NotifyConfirmFeedbackReactionEvent):
         self._debug("Confirming feedback")
-        await self.api.async_confirm_feedback(event.create_feedback_data(), event.context)
+        await self.api.async_confirm_feedback(event.context, event.create_feedback_data())
 
 
 class NotifyConfirmFeedbackReactionEventPluginPayload(DynamicData):

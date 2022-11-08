@@ -56,5 +56,7 @@ button_trigger_wait:
   name: Wait
 button_trigger_wait_delayed:
   name: Wait delayed
-button_trigger_tts_media_player_speek:
-  name: TTS Media player speek
+button_trigger_tts_media_player_speek_volume:
+  name: TTS Media player speek with volume
+button_trigger_tts_media_player_speek_no_volume:
+  name: TTS Media player speek without volume
