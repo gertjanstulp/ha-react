@@ -1,12 +1,12 @@
 import pytest
 
 from homeassistant.core import HomeAssistant
-from homeassistant.const import (
-    ATTR_ENTITY_ID
-)
+from homeassistant.const import ATTR_ENTITY_ID
 
 from custom_components.react.base import ReactBase
-from custom_components.react.const import ATTR_EVENT_MESSAGE, ATTR_LANGUAGE, ATTR_OPTIONS, ATTR_PLUGIN_MODULE, DOMAIN
+from custom_components.react.const import ATTR_EVENT_MESSAGE, ATTR_PLUGIN_MODULE, DOMAIN
+
+from custom_components.react.plugin.tts.const import ATTR_EVENT_LANGUAGE, ATTR_EVENT_OPTIONS
 
 from tests.common import FIXTURE_WORKFLOW_NAME
 from tests.tst_context import TstContext
@@ -25,8 +25,8 @@ async def test_tts_media_player_speek(hass: HomeAssistant, workflow_name, react_
     plugin_data = {
         ATTR_ENTITY_ID: "browser",
         ATTR_EVENT_MESSAGE: "This is a test",
-        ATTR_LANGUAGE: "nl",
-        ATTR_OPTIONS: None
+        ATTR_EVENT_LANGUAGE: "nl",
+        ATTR_EVENT_OPTIONS: None
     }
 
     tc = TstContext(hass, workflow_name)

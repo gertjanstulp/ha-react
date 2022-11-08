@@ -14,7 +14,6 @@ from unittest.mock import Mock
 
 from custom_components.react.base import ReactBase
 from custom_components.react.lib.config import Workflow
-from custom_components.react.plugin.telegram.const import ATTR_FEEDBACK_DATA, ATTR_MESSAGE_DATA
 from custom_components.react.runtime.runtime import Reaction, WorkflowRun
 from custom_components.react.utils.struct import DynamicData, MultiItem
 from custom_components.react.utils.trace import ReactTrace

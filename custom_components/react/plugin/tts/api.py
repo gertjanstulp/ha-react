@@ -6,11 +6,9 @@ from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData
 from custom_components.react.const import (
     ATTR_EVENT_MESSAGE,
-    ATTR_LANGUAGE, 
-    ATTR_OPTIONS
 )
 
-from custom_components.react.plugin.tts.const import DEFAULT_LANGUAGE
+from custom_components.react.plugin.tts.const import ATTR_EVENT_LANGUAGE, ATTR_EVENT_OPTIONS, TTS_DEFAULT_LANGUAGE
 
 _LOGGER = get_react_logger()
 
@@ -43,8 +41,8 @@ class Api():
         speek_data = {
             ATTR_ENTITY_ID: f"media_player.{entity_id}",
             ATTR_EVENT_MESSAGE: message,
-            ATTR_LANGUAGE: language or self.config.language or DEFAULT_LANGUAGE,
-            ATTR_OPTIONS: options or self.config.options or {},
+            ATTR_EVENT_LANGUAGE: language or self.config.language or TTS_DEFAULT_LANGUAGE,
+            ATTR_EVENT_OPTIONS: options or self.config.options or {},
         }
 
         await self.react.hass.services.async_call(

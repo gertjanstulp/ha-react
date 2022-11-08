@@ -1,3 +1,6 @@
 PLUGIN_NAME = "tts"
-ATTR_SAY_SERVICE = "say_service"
-DEFAULT_LANGUAGE = "en"
+
+ATTR_EVENT_OPTIONS = "options"
+ATTR_EVENT_LANGUAGE = "language"
+
+TTS_DEFAULT_LANGUAGE = "en"

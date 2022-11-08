@@ -102,9 +102,6 @@ ATTR_WORKFLOW_ID = "workflow_id"
 ATTR_STENCIL = "stencil"
 CONF_TRACE = "trace"
 
-# # reaction attributes
-# ATTR_REACTION_DATETIME = "datetime"
-
 # Internal attributes
 ATTR_DATA = "data"
 ATTR_THIS = "this"
@@ -121,22 +118,13 @@ MONIKER_TRIGGER = "trigger"
 MONIKER_DISPATCH = "dispatch"
 MONIKER_RESET = "reset"
 
-# plugin attributes
-ATTR_NOTIFY = "notify"
-
 # event custom attributes
-ATTR_EVENT_TYPE = "event_type"
-ATTR_ARGS = "args"
 ATTR_EVENT_MESSAGE = "message"
 ATTR_EVENT_FEEDBACK_ITEMS = "feedback_items"
-ATTR_EVENT_FEEDBACK_ITEM_TITLE = "title"
 ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK = "feedback"
 ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT = "acknowledgement"
 ATTR_EVENT_PLUGIN = "plugin"
 ATTR_EVENT_PLUGIN_PAYLOAD = "plugin_payload"
-ATTR_OPTIONS = "options"
-ATTR_LANGUAGE = "language"
-
 
 # service attributes
 ATTR_RUN_ID = "run_id"
@@ -257,10 +245,6 @@ WORKFLOW_MODE_SINGLE = "single"
 WORKFLOW_MODE_RESTART = "restart"
 WORKFLOW_MODE_QUEUED = "queued"
 WORKFLOW_MODE_PARALLEL = "parallel"
-
-# WAITING = "waiting"
-
-_EMPTY_ = '_'
 
 
 def is_list_of_strings(obj):

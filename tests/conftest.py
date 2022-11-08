@@ -13,8 +13,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from custom_components.react.const import (
-    ATTR_NOTIFY,
-    ATTR_PLUGIN_MODULE,
     ATTR_REACTION_ID,
     ATTR_RUN_ID,
     CONF_PLUGINS,
@@ -25,7 +23,6 @@ from custom_components.react.const import (
     SERVICE_DELETE_RUN,
     SERVICE_REACT_NOW,
     SERVICE_RUN_NOW,
-    SERVICE_TRIGGER_REACTION,
     SERVICE_TRIGGER_WORKFLOW
 )
 from custom_components.react.lib.config import Plugin

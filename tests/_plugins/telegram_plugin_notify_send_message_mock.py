@@ -1,5 +1,3 @@
-
-
 from homeassistant.core import Context
 
 from custom_components.react.base import ReactBase
