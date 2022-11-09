@@ -305,9 +305,9 @@ class WorkflowConfiguration:
         if react_config:
             _LOGGER.debug("Config: found react configuration, processing")
 
-            self.entity_maps_config = react_config.get(CONF_ENTITY_MAPS, {})
-            self.stencil_config = react_config.get(CONF_STENCIL, {})
-            self.workflow_config = react_config.get(CONF_WORKFLOW, {})
+            self.entity_maps_config = react_config.get(CONF_ENTITY_MAPS, {}) or {}
+            self.stencil_config = react_config.get(CONF_STENCIL, {}) or {}
+            self.workflow_config = react_config.get(CONF_WORKFLOW, {}) or {}
 
             self.parse_workflow_config()
         else:
@@ -319,6 +319,8 @@ class WorkflowConfiguration:
         _LOGGER.debug("Config: loading react workflows")
 
         self.workflows: dict[str, Workflow] = {}
+
+        if not self.workflow_config: return
 
         for id, config in self.workflow_config.items():
             _LOGGER.debug(f"Config: '{id}' processing workflow")
@@ -333,7 +335,7 @@ class WorkflowConfiguration:
 
     def get_stencil_by_name(self, stencil_name) -> dict:
         result = {}
-        if stencil_name:
+        if stencil_name and self.stencil_config:
             stencil = self.stencil_config.get(stencil_name, None)
             if stencil:
                 result = stencil

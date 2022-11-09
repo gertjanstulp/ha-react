@@ -1,19 +1,19 @@
 """React task manager."""
 from __future__ import annotations
 
+
 import asyncio
 from importlib import import_module
-from itertools import chain
 from pathlib import Path
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING, Callable, Union
 
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.event import async_track_time_interval
 
-from .base import ReactTask
+from custom_components.react.tasks.base import ReactTask
 
 if TYPE_CHECKING:
-    from ..base import ReactBase
+    from custom_components.react.base import ReactBase
 
 
 class ReactTaskManager:
@@ -22,13 +22,14 @@ class ReactTaskManager:
     def __init__(self, react: ReactBase) -> None:
         """Initialize the setup manager class."""
         self.react = react
-        self.__tasks: dict[str, ReactTask] = {}
+        self._tasks: dict[str, ReactTask] = {}
+        self._unloaders: dict[str, TaskUnloader] = {}
 
 
     @property
     def tasks(self) -> list[ReactTask]:
         """Return all list of all tasks."""
-        return list(self.__tasks.values())
+        return list(self._tasks.values())
 
 
     async def async_load(self) -> None:
@@ -46,7 +47,7 @@ class ReactTaskManager:
         async def _load_module(module: dict):
             task_module = import_module(f"{__package__}.{module['parent']}.{module['name']}")
             if task := await task_module.async_setup_task(react=self.react):
-                self.__tasks[task.slug] = task
+                self._tasks[task.id] = task
 
         await asyncio.gather(*[_load_module(task) for task in task_modules])
         self.react.log.debug("Loaded %s tasks", len(self.tasks))
@@ -58,32 +59,38 @@ class ReactTaskManager:
 
 
     def start_task(self, task: ReactTask, schedule_tasks: bool = True):
+        if not task.id in self._tasks:
+            self._tasks[task.id] = task
         if task.event_types is not None:
             for event_type in task.event_types:
-                self.react.hass.bus.async_listen_once(event_type, task.execute_task)
+                cancel = self.react.hass.bus.async_listen_once(event_type, task.execute_task)
+                self._unloaders[task.id] = TaskUnloader(cancel)
         
         if task.events_with_filters is not None:
             for event_type,filter in task.events_with_filters:
-                self.react.hass.bus.async_listen(event_type, task.execute_task, filter)
+                cancel = self.react.hass.bus.async_listen(event_type, task.execute_task, filter)
+                self._unloaders[task.id] = TaskUnloader(cancel)
 
         if task.signals is not None:
             for signal in task.signals:
-                async_dispatcher_connect(self.react.hass, signal, task.execute_task)
+                cancel = async_dispatcher_connect(self.react.hass, signal, task.execute_task)
+                self._unloaders[task.id] = TaskUnloader(cancel)
 
         if task.schedule is not None and schedule_tasks:
             self.react.log.debug(
                 "Scheduling ReactTask<%s> to run every %s", task.slug, task.schedule
             )
-            self.react.recuring_tasks.append(
-                self.react.hass.helpers.event.async_track_time_interval(
-                    task.execute_task, task.schedule
-                )
-            )
 
+            cancel = async_track_time_interval(self.react.hass, task.execute_task, task.schedule)
+            self.react.recuring_tasks.append(cancel)
+            self._unloaders[task.id] = TaskUnloader(cancel)
 
-    def get(self, slug: str) -> Union[ReactTask, None]:
-        """Return a task."""
-        return self.__tasks.get(slug)
+    
+    def stop_task(self, task_id: str):
+        unloader = self._unloaders.pop(task_id, None)
+        if unloader:
+            unloader.unload()
+        self._tasks.pop(task_id).unload()
 
 
     async def async_execute_runtime_tasks(self) -> None:
@@ -95,3 +102,14 @@ class ReactTaskManager:
                 if task.stages is not None and self.react.stage in task.stages
             )
         )
+
+
+class TaskUnloader():
+    def __init__(self, cancel_event: Callable[[], None] ) -> None:
+        self.cancel_event = cancel_event
+
+
+    def unload(self):
+        if self.cancel_event:
+            self.cancel_event()
+            self.cancel_event = None

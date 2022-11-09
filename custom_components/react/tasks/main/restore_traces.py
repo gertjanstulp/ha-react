@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from homeassistant.components.trace import async_restore_traces
+from homeassistant.components.trace.const import DATA_TRACE_STORE
 
 from ..base import ReactTask
 
@@ -23,5 +24,5 @@ class Task(ReactTask):
 
 
     async def async_execute(self) -> None:
-        """Execute the task."""
-        await async_restore_traces(self.react.hass)
+        if DATA_TRACE_STORE in self.react.hass.data:
+            await async_restore_traces(self.react.hass)
