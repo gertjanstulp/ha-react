@@ -9,8 +9,8 @@ from custom_components.react.utils.struct import DynamicData
 
 
 
-def setup_plugin(plugin_api: PluginApi, config: DynamicData):
-    get_react_logger().debug(f"Telegram plugin: Setting up")
+def load(plugin_api: PluginApi, config: DynamicData):
+    get_react_logger().debug(f"Telegram plugin: Loading")
     api = Api(plugin_api.react, ApiConfig(config))
 
     plugin_api.register_default_task(CallbackTransformInTask)

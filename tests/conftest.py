@@ -8,7 +8,7 @@ from yaml import SafeLoader
 
 from homeassistant.components import template, input_boolean, input_text, group, binary_sensor, device_tracker, person
 from homeassistant.components.trace import DATA_TRACE
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -106,6 +106,10 @@ async def react_component(hass: HomeAssistant):
         await hass.services.async_call(REACT_DOMAIN, SERVICE_REACT_NOW, data)
 
 
+    async def async_call_service_reload():
+        await hass.services.async_call(REACT_DOMAIN, SERVICE_RELOAD)
+
+
     result = Mock()
     result.async_setup = async_setup
     result.async_call_service_trigger_workflow = async_call_service_trigger_workflow
@@ -113,6 +117,7 @@ async def react_component(hass: HomeAssistant):
     result.async_call_service_delete_reaction = async_call_service_delete_reaction
     result.async_call_service_run_now = async_call_service_run_now
     result.async_call_service_react_now = async_call_service_react_now
+    result.async_call_service_reload = async_call_service_reload
     return result
 
 

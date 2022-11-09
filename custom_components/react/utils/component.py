@@ -52,4 +52,8 @@ async def async_setup_component(react: ReactBase):
 
         # Load new workflow entities
         await async_load()
+
+        # Reload plugins
+        react.plugin_factory.reload()
+
     async_register_admin_service(react.hass, DOMAIN, SERVICE_RELOAD, reload_service_handler)
