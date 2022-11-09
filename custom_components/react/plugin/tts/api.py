@@ -39,30 +39,38 @@ class Api():
         _LOGGER.debug(f"Tts plugin: Api - {message}")
 
 
-    async def async_media_player_speek(self, 
-        context: Context, 
-        entity_id: str, 
-        message: str, 
-        language: str, 
-        options: dict, 
-        volume: float = None,
-        interrupt_service: str = None, 
-        resume_service: str = None, 
-    ):
-        self._debug(f"Speeking '{message}'")
-
+    def verify_config(self):
         if not self.config.say_service:
-            self.react.log.error("TtsPlugin - No say_service configured")
+            _LOGGER.error("TtsPlugin - No say_service configured")
             return
 
-        if interrupt_service:
-            await self.async_media_player_interrupt(context, entity_id, interrupt_service)
-        if volume:
-            await self.async_media_player_set_volume(context, entity_id, volume)
-        await self.async_say(context, entity_id, message, language, options)
+    # async def async_media_player_speek(self, 
+    #     context: Context, 
+    #     entity_id: str, 
+    #     message: str, 
+    #     language: str, 
+    #     options: dict, 
+    #     volume: float = None,
+    #     interrupt_service: str = None, 
+    #     resume_service: str = None, 
+    # ):
+    #     self._debug(f"Speeking on mediaplayer '{entity_id}'")
+
+    #     if not self.config.say_service:
+    #         self.react.log.error("TtsPlugin - No say_service configured")
+    #         return
+
+    #     if interrupt_service:
+    #         await self.async_media_player_interrupt(context, entity_id, interrupt_service)
+    #     if volume:
+    #         await self.async_media_player_set_volume(context, entity_id, volume)
+    #     await self.async_say(context, entity_id, message, language, options)
+    #     if resume_service:
+    #         await self.async_media_player_resume(context, entity_id, resume_service)
 
 
     async def async_media_player_interrupt(self, context: Context, entity_id: str, interrupt_service: str):
+        self._debug(f"Interrupting mediaplayer with '{interrupt_service}'")
         interrupt_data = {
             ATTR_ENTITY_ID: f"media_player.{entity_id}",
         }
@@ -76,6 +84,7 @@ class Api():
 
 
     async def async_media_player_set_volume(self, context: Context, entity_id: str, volume: float):
+        self._debug(f"Setting mediaplayer volume to '{str(volume)}'")
         volume_data = {
             ATTR_ENTITY_ID: f"media_player.{entity_id}",
             ATTR_MEDIA_VOLUME_LEVEL: volume,
@@ -89,6 +98,7 @@ class Api():
 
 
     async def async_say(self, context: Context, entity_id: str, message: str, language: str, options: dict):
+        self._debug(f"Saying '{message}' on mediaplayer")
         speek_data = {
             ATTR_ENTITY_ID: f"media_player.{entity_id}",
             ATTR_EVENT_MESSAGE: message,
@@ -100,6 +110,20 @@ class Api():
             Platform.TTS, 
             self.config.say_service,
             speek_data,
+            context,
+        )
+
+
+    async def async_media_player_resume(self, context: Context, entity_id: str, resume_service: str):
+        self._debug(f"Resuming mediaplayer with '{resume_service}'")
+        interrupt_data = {
+            ATTR_ENTITY_ID: f"media_player.{entity_id}",
+        }
+        service_items = resume_service.split('.')
+        await self.react.hass.services.async_call(
+            service_items[0],
+            service_items[1],
+            interrupt_data,
             context,
         )
         

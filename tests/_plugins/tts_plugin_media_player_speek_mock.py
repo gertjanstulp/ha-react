@@ -31,39 +31,36 @@ class TtsApiMock():
         self.react = react
 
 
-    async def async_media_player_speek(self, 
-        context: Context,
-        entity_id: str, 
-        message: str, 
-        language: str, 
-        options: dict, 
-        volume: float = None,
-        interrupt_service: str = None, 
-        resume_service: str = None, 
-    ):
-        context: TstContext = self.react.hass.data["test_context"]
-        
-        if interrupt_service:
-            context.register_plugin_data({
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_INTERRUPT_SERVICE: interrupt_service,
-            })
+    async def async_media_player_interrupt(self, context: Context, entity_id: str, interrupt_service: str):
+        tc: TstContext = self.react.hass.data["test_context"]
+        tc.register_plugin_data({
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_INTERRUPT_SERVICE: interrupt_service,
+        })
 
-        if volume:
-            context.register_plugin_data({
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_MEDIA_VOLUME_LEVEL: volume,
-            })
 
-        context.register_plugin_data({
+    async def async_media_player_set_volume(self, context: Context, entity_id: str, volume: float):
+        tc: TstContext = self.react.hass.data["test_context"]
+        tc.register_plugin_data({
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_VOLUME_LEVEL: volume,
+        })
+
+
+    async def async_say(self, context: Context, entity_id: str, message: str, language: str, options: dict):
+        tc: TstContext = self.react.hass.data["test_context"]
+        tc.register_plugin_data({
             ATTR_ENTITY_ID: entity_id,
             ATTR_EVENT_MESSAGE: message,
             ATTR_EVENT_LANGUAGE: language,
             ATTR_EVENT_OPTIONS: options
         })
 
+
+    async def async_media_player_resume(self, context: Context, entity_id: str, resume_service: str):
+        tc: TstContext = self.react.hass.data["test_context"]
         if resume_service:
-            context.register_plugin_data({
+            tc.register_plugin_data({
                 ATTR_ENTITY_ID: entity_id,
                 ATTR_RESUME_SERVICE: resume_service,
             })

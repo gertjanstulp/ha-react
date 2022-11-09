@@ -32,16 +32,30 @@ class MediaPlayerSpeekTask(DefaultReactionTask):
 
     async def async_execute_default(self, event: MediaPlayerSpeekReactionEvent):
         self._debug("Delivering media_player speek message")
-        await self.api.async_media_player_speek( 
-            event.context,
-            event.payload.entity,
-            event.payload.data.message,
-            event.payload.data.language,
-            event.payload.data.options,
-            event.payload.data.volume,
-            event.payload.data.interrupt_service,
-            event.payload.data.resume_service,
-        )
+        self._debug(f"Speeking on mediaplayer '{event.payload.entity}'")
+
+        # if not self.config.say_service:
+        #     self.react.log.error("TtsPlugin - No say_service configured")
+        #     return
+
+        if event.payload.data.interrupt_service:
+            await self.api.async_media_player_interrupt(event.context, event.payload.entity, event.payload.data.interrupt_service)
+        if event.payload.data.volume:
+            await self.api.async_media_player_set_volume(event.context, event.payload.entity, event.payload.data.volume)
+        await self.api.async_say(event.context, event.payload.entity, event.payload.data.message, event.payload.data.language, event.payload.data.options)
+        if event.payload.data.resume_service:
+            await self.api.async_media_player_resume(event.context, event.payload.entity, event.payload.data.resume_service)
+
+        # await self.api.async_media_player_speek( 
+        #     event.context,
+        #     event.payload.entity,
+        #     event.payload.data.message,
+        #     event.payload.data.language,
+        #     event.payload.data.options,
+        #     event.payload.data.volume,
+        #     event.payload.data.interrupt_service,
+        #     event.payload.data.resume_service,
+        # )
 
 
 class MediaPlayerSpeekReactionEventData(DynamicData):

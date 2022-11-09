@@ -605,7 +605,6 @@ workflow:
           language: en
           interrupt_service: sonos.snapshot
 
-
   workflow_tts_media_player_speek_with_resume:
     actor:
       actor_tts_media_player_speek_with_resume:
@@ -621,6 +620,25 @@ workflow:
           plugin: tts
           message: This is a test with resume service
           language: en
+          resume_service: sonos.restore
+
+  workflow_tts_media_player_speek_with_all:
+    actor:
+      actor_tts_media_player_speek_with_all:
+        entity: actor_entity_tts_media_player_speek_with_all
+        type: actor_type_tts_media_player_speek_with_all
+        action: actor_action_tts_media_player_speek_with_all
+    reactor:
+      reactor_tts_media_player_speek_with_all:
+        entity: browser
+        type: media_player
+        action: speek
+        data:
+          plugin: tts
+          message: This is a test with resume service
+          language: en
+          volume: 0.1
+          interrupt_service: sonos.snapshot
           resume_service: sonos.restore
 
   workflow_telegram_notify_send_message:
