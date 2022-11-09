@@ -6,6 +6,7 @@ from custom_components.react.plugin.plugin_factory import PluginApi
 from custom_components.react.plugin.telegram.const import ATTR_MESSAGE_DATA
 from custom_components.react.plugin.telegram.tasks.notify_send_message_task import NotifySendMessageTask
 from custom_components.react.utils.struct import DynamicData
+from tests.common import TEST_CONTEXT
 from tests.tst_context import TstContext
 
 
@@ -19,7 +20,7 @@ class TelegramApiMock():
 
 
     async def async_send_message(self, context: Context, entity: str, message_data: dict):
-        context: TstContext = self.react.hass.data["test_context"]
+        context: TstContext = self.react.hass.data[TEST_CONTEXT]
         context.register_plugin_data({
             ATTR_ENTITY: entity,
             ATTR_MESSAGE_DATA: message_data

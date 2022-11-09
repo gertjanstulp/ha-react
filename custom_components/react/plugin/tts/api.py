@@ -1,3 +1,4 @@
+from asyncio import sleep
 from homeassistant.core import Context
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_VOLUME_LEVEL
@@ -39,10 +40,11 @@ class Api():
         _LOGGER.debug(f"Tts plugin: Api - {message}")
 
 
-    def verify_config(self):
+    def verify_config(self) -> bool:
         if not self.config.say_service:
             _LOGGER.error("TtsPlugin - No say_service configured")
-            return
+            return False
+        return True
 
 
     async def async_media_player_interrupt(self, context: Context, entity_id: str, interrupt_service: str):
@@ -97,6 +99,11 @@ class Api():
             )
         except:
             _LOGGER.exception("Saying message failed")
+
+
+    async def async_wait(self, wait: int):
+        self._debug(f"Waiting '{wait}' seconds before continuing")
+        await sleep(wait)
 
 
     async def async_media_player_resume(self, context: Context, entity_id: str, resume_service: str):

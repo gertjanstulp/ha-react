@@ -4,6 +4,7 @@ from custom_components.react.base import ReactBase
 from custom_components.react.plugin.plugin_factory import PluginApi
 from custom_components.react.plugin.telegram.tasks.notify_confirm_feedback import NotifyConfirmFeedbackTask
 from custom_components.react.utils.struct import DynamicData
+from tests.common import TEST_CONTEXT
 
 from tests.tst_context import TstContext
 
@@ -17,7 +18,7 @@ class TelegramApiMock():
         self.react = react
 
     async def async_confirm_feedback(self, context: Context, feedback_data: dict):
-        context: TstContext = self.react.hass.data["test_context"]
+        context: TstContext = self.react.hass.data[TEST_CONTEXT]
         context.register_plugin_data(feedback_data)
 
 

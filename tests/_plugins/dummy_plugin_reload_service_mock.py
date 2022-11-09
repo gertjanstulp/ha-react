@@ -5,6 +5,7 @@ from custom_components.react.plugin.plugin_factory import PluginApi
 from custom_components.react.tasks.defaults.default_task import DefaultTask
 from custom_components.react.utils.events import Event
 from custom_components.react.utils.struct import DynamicData
+from tests.common import TEST_CONTEXT
 from tests.tst_context import TstContext
 
 
@@ -22,5 +23,5 @@ class DummyTask(DefaultTask):
 
 
     def unload(self):
-        context: TstContext = self.react.hass.data["test_context"]
+        context: TstContext = self.react.hass.data[TEST_CONTEXT]
         context.register_plugin_task_unload(self.id)

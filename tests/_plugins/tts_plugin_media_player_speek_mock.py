@@ -7,7 +7,7 @@ from homeassistant.const import (
 )
 
 from custom_components.react.base import ReactBase
-from custom_components.react.const import ATTR_EVENT_MESSAGE
+from custom_components.react.const import ATTR_EVENT_MESSAGE, ATTR_WAIT
 from custom_components.react.utils.struct import DynamicData
 
 from custom_components.react.plugin.plugin_factory import PluginApi
@@ -18,6 +18,7 @@ from custom_components.react.plugin.tts.const import (
     ATTR_INTERRUPT_SERVICE, 
     ATTR_RESUME_SERVICE,
 )
+from tests.common import TEST_CONTEXT, TEST_FLAG_VERIFY_CONFIG
 
 from tests.tst_context import TstContext
 
@@ -31,8 +32,12 @@ class TtsApiMock():
         self.react = react
 
 
+    def verify_config(self):
+        return self.react.hass.data.get(TEST_FLAG_VERIFY_CONFIG, True)
+
+
     async def async_media_player_interrupt(self, context: Context, entity_id: str, interrupt_service: str):
-        tc: TstContext = self.react.hass.data["test_context"]
+        tc: TstContext = self.react.hass.data[TEST_CONTEXT]
         tc.register_plugin_data({
             ATTR_ENTITY_ID: entity_id,
             ATTR_INTERRUPT_SERVICE: interrupt_service,
@@ -40,7 +45,7 @@ class TtsApiMock():
 
 
     async def async_media_player_set_volume(self, context: Context, entity_id: str, volume: float):
-        tc: TstContext = self.react.hass.data["test_context"]
+        tc: TstContext = self.react.hass.data[TEST_CONTEXT]
         tc.register_plugin_data({
             ATTR_ENTITY_ID: entity_id,
             ATTR_MEDIA_VOLUME_LEVEL: volume,
@@ -48,7 +53,7 @@ class TtsApiMock():
 
 
     async def async_say(self, context: Context, entity_id: str, message: str, language: str, options: dict):
-        tc: TstContext = self.react.hass.data["test_context"]
+        tc: TstContext = self.react.hass.data[TEST_CONTEXT]
         tc.register_plugin_data({
             ATTR_ENTITY_ID: entity_id,
             ATTR_EVENT_MESSAGE: message,
@@ -57,8 +62,15 @@ class TtsApiMock():
         })
 
 
+    async def async_wait(self, wait: int):
+        tc: TstContext = self.react.hass.data[TEST_CONTEXT]
+        tc.register_plugin_data({
+            ATTR_WAIT: wait
+        })
+
+
     async def async_media_player_resume(self, context: Context, entity_id: str, resume_service: str):
-        tc: TstContext = self.react.hass.data["test_context"]
+        tc: TstContext = self.react.hass.data[TEST_CONTEXT]
         if resume_service:
             tc.register_plugin_data({
                 ATTR_ENTITY_ID: entity_id,

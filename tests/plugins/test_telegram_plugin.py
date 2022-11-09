@@ -31,7 +31,7 @@ from custom_components.react.lib.config import Plugin
 from custom_components.react.plugin.telegram.const import ATTR_COMMAND, ATTR_ENTITY_SOURCE, ATTR_MESSAGE_DATA, ATTR_SERVICE_DATA_INLINE_KEYBOARD, PLUGIN_NAME
 
 from tests.tst_context import TstContext
-from tests.common import FIXTURE_WORKFLOW_NAME
+from tests.common import FIXTURE_WORKFLOW_NAME, TEST_CONTEXT
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["telegram_notify_send_message"])
 async def test_telegram_notify_send_message(hass: HomeAssistant, workflow_name, react_component):
@@ -54,7 +54,7 @@ async def test_telegram_notify_send_message(hass: HomeAssistant, workflow_name, 
     }
 
     tc = TstContext(hass, workflow_name)
-    react.hass.data["test_context"] = tc
+    react.hass.data[TEST_CONTEXT] = tc
     async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event()
@@ -94,7 +94,7 @@ async def test_telegram_notify_confirm_feedback(hass: HomeAssistant, workflow_na
     }
 
     tc = TstContext(hass, workflow_name)
-    react.hass.data["test_context"] = tc
+    react.hass.data[TEST_CONTEXT] = tc
     async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_send_action_event(data=data_in)
@@ -112,7 +112,7 @@ async def test_telegram_callback_transform_in(hass: HomeAssistant, react_compone
     react: ReactBase = hass.data[DOMAIN]
 
     tc = TstContext(hass, None)
-    react.hass.data["test_context"] = tc
+    react.hass.data[TEST_CONTEXT] = tc
 
     data_in = {
         ATTR_COMMAND: EVENTPAYLOAD_COMMAND_REACT,
