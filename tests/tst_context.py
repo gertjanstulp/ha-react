@@ -612,8 +612,8 @@ class TstContext():
         assert got_count == expected_count, f"Expected plugin_data count {expected_count}, got {got_count}"
 
 
-    def verify_plugin_data_content(self, expected_data: dict, reactor_index: int = 0):
-        got_data = self.plugin_data_register[0]
+    def verify_plugin_data_content(self, expected_data: dict, data_index: int = 0):
+        got_data = self.plugin_data_register[data_index]
         assert DeepDiff(got_data, expected_data) == {}, f"Expected plugin data '{expected_data}', got '{got_data}'"
 
 

@@ -28,7 +28,7 @@ class Api():
         _LOGGER.exception(f"Telegram plugin: Api - {message}")
 
 
-    async def async_send_message(self, entity: str, message_data: dict, context: Context):
+    async def async_send_message(self, context: Context, entity: str, message_data: dict):
         self._debug("Sending message to telegram")
         try:
             await self.react.hass.services.async_call(
@@ -40,13 +40,17 @@ class Api():
             _LOGGER.exception("Sending message to telegram failed")
 
 
-    async def async_confirm_feedback(self, feedback_data: dict, context: Context):
+    async def async_confirm_feedback(self, 
+        context: Context,
+        feedback_data: dict, 
+    ):
         self._debug("Confirming feedback to telegram")
         try:
             await self.react.hass.services.async_call(
                 DOMAIN,
                 SERVICE_EDIT_MESSAGE,
                 service_data=feedback_data, 
-                context=context)
+                context=context,
+            )
         except:
             _LOGGER.exception("Confirming feedback to telegram failed")

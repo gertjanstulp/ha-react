@@ -13,6 +13,8 @@ INPUT_TEXT_CONFIG = "input_text.yaml"
 GROUP_CONFIG = "group.yaml"
 PERSON_CONFIG = "person.yaml"
 
+TEST_CONTEXT = "test_context"
+TEST_FLAG_VERIFY_CONFIG = "test_flag_verify_config"
 
 def get_test_config_dir(*add_path):
     """Return a path to a test config dir."""

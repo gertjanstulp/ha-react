@@ -382,6 +382,18 @@
           type: actor_type_immediate2
           action: actor_action_immediate2
 
+- id: trigger_tts_media_player_speek_with_volume
+  alias: Trigger tts speek
+  trigger:
+    platform: state
+    entity_id: input_button.button_trigger_tts_media_player_speek_with_volume
+  action:
+    event: ev_react_action
+    event_data:
+      entity: actor_entity_tts_media_player_speek_with_volume
+      type: actor_type_tts_media_player_speek_with_volume
+      action: actor_action_tts_media_player_speek_with_volume
+
 - id: trigger_tts_media_player_speek
   alias: Trigger tts speek
   trigger:
