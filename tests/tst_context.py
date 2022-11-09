@@ -102,6 +102,7 @@ class TstContext():
 
         self.plugin_data_register: list[dict] = []
         self.notify_confirm_feedback_register: list[dict] = []
+        self.plugin_task_unloaded_register: list[str] = []
 
     
     async def async_send_action_event(self, 
@@ -614,6 +615,15 @@ class TstContext():
     def verify_plugin_data_content(self, expected_data: dict, data_index: int = 0):
         got_data = self.plugin_data_register[data_index]
         assert DeepDiff(got_data, expected_data) == {}, f"Expected plugin data '{expected_data}', got '{got_data}'"
+
+
+    def register_plugin_task_unload(self, id: str):
+        self.plugin_task_unloaded_register.append(id)
+
+
+    def verify_plugin_task_unload_sent(self, expected_count: int = 1):
+        got_count = len(self.plugin_task_unloaded_register)
+        assert got_count == expected_count, f"Expected plugin_task_unload count {expected_count}, got {got_count}"
 
 
     def assert_attribute(self, attr: str, expected: dict, got: dict):    

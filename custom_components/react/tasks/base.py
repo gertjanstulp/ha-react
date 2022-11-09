@@ -1,8 +1,8 @@
 from datetime import timedelta
 from logging import Handler
 from time import monotonic
-from types import TracebackType
 from typing import Callable, Union
+import uuid
 
 from homeassistant.core import Event as HassEvent
 
@@ -14,6 +14,7 @@ class ReactTask:
 
     def __init__(self, react: ReactBase) -> None:
         self.react = react
+        self.id = uuid.uuid4().hex
     
         self.event_types: Union[list[str], None] = None
         self.events_with_filters: Union[list[tuple[str, Callable[[HassEvent], bool]]], None] = None
@@ -63,3 +64,6 @@ class ReactTask:
             self.react.log.debug(
                 "ReactTask<%s> took %.3f seconds to complete", self.slug, monotonic() - start_time
             )
+
+    def unload(self):
+        pass

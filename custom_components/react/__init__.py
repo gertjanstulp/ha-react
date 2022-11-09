@@ -62,9 +62,9 @@ CONFIG_SCHEMA = vol.Schema({
     vol.Optional(DOMAIN, default={}): vol.Schema({
         vol.Optional(CONF_FRONTEND_REPO_URL): cv.string,
         vol.Optional(CONF_PLUGINS): vol.All(cv.ensure_list, [PLUGIN_SCHEMA]),
-        vol.Optional(CONF_ENTITY_MAPS): dict,
-        vol.Optional(CONF_WORKFLOW): WORKFLOW_SCHEMA,
-        vol.Optional(CONF_STENCIL): STENCIL_SCHEMA,
+        vol.Optional(CONF_ENTITY_MAPS): vol.Any(dict, None),
+        vol.Optional(CONF_WORKFLOW): vol.Any(WORKFLOW_SCHEMA, None),
+        vol.Optional(CONF_STENCIL): vol.Any(STENCIL_SCHEMA, None),
     })
 }, extra=vol.ALLOW_EXTRA)
 

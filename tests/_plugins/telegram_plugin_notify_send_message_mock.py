@@ -9,7 +9,7 @@ from custom_components.react.utils.struct import DynamicData
 from tests.tst_context import TstContext
 
 
-def setup_plugin(plugin_api: PluginApi, config: DynamicData):
+def load(plugin_api: PluginApi, config: DynamicData):
     plugin_api.register_default_task(NotifySendMessageTaskMock)
 
 
