@@ -13,6 +13,7 @@ from .struct import DynamicData, MultiItem
 from .context import TemplateContext, TemplateContextDataProvider
 
 from ..const import (
+    ATTR_TYPE_HINTS,
     PROP_ATTR_TYPE_POSTFIX,
     PROP_TYPE_DEFAULT,
     PROP_TYPE_LIST,
@@ -61,11 +62,12 @@ class CompositeJitter(BaseJitter, Generic[T]):
 
     def add_jitter(self, attr: str, type_converter: Any, default: Any = None):
         attr_value = getattr(self.config_source, attr, None)
-
+        
         if isinstance(attr_value, MultiItem):
             self.set_jitter(attr, MultiItemJitter(self.react, attr_value, self.tctx))
         elif isinstance(attr_value, DynamicData):
-            self.set_jitter(attr, ObjectJitter(self.react, attr_value, self.tctx, self.t_type.type_hints.get(attr, DynamicData) if self.t_type.type_hints else DynamicData))
+            t_type = self.t_type.type_hints.get(attr, DynamicData) if hasattr(self.t_type, ATTR_TYPE_HINTS) else DynamicData
+            self.set_jitter(attr, ObjectJitter(self.react, attr_value, self.tctx, t_type))
         elif isinstance(attr_value, list):
             if len(attr_value) > 0 and isinstance(attr_value[0], DynamicData):
                 self.set_jitter(attr, ListJitter(self.react, attr_value, self.tctx))

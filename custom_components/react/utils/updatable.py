@@ -26,4 +26,4 @@ class Updatable:
 
     
     def destroy(self) -> None:
-        del self._on_update
+        self._on_update.clear()

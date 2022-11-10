@@ -112,6 +112,7 @@ ATTR_TEMPLATE = "template"
 ATTR_INDEX = "index"
 ATTR_TRIGGER = "trigger"
 ATTR_EVENT = "event"
+ATTR_TYPE_HINTS = "type_hints"
 
 # Monikers
 MONIKER_TRIGGER = "trigger"

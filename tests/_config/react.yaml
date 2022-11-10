@@ -701,3 +701,26 @@ workflow:
         type: notify
         action: confirm_feedback
         forward_data: True
+
+
+  workflow_debug:
+    actor:
+      debug:
+        entity: debug
+        type: debug
+        action: debug
+    reactor:
+      tts_message:
+        entity: sonos_living_room
+        type: media_player
+        action: speek
+        # condition: "{{ is_state('group.group_persons_home', 'home') }}"
+        data:
+          plugin: tts
+          message: Er is iemand bij de voordeur
+          interrupt_service: sonos.snapshot
+          resume_service: sonos.restore
+          wait: 2
+          volume: 0.15
+          options:
+            gender: female
