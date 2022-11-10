@@ -26,7 +26,7 @@ class ApiConfig(DynamicData):
         super().__init__()
         self.say_service: str = None
         self.language: str = None
-        self.options: dict = None
+        self.options: DynamicData = None
         self.load(source)
 
 
@@ -81,14 +81,14 @@ class Api():
             _LOGGER.exception("Setting mediaplayer volume failed")
 
 
-    async def async_say(self, context: Context, entity_id: str, message: str, language: str, options: dict):
+    async def async_say(self, context: Context, entity_id: str, message: str, language: str, options: DynamicData):
         self._debug(f"Saying '{message}' on mediaplayer")
         try:
             speek_data = {
                 ATTR_ENTITY_ID: f"media_player.{entity_id}",
                 ATTR_EVENT_MESSAGE: message,
                 ATTR_EVENT_LANGUAGE: language or self.config.language or TTS_DEFAULT_LANGUAGE,
-                ATTR_EVENT_OPTIONS: options or self.config.options or {},
+                ATTR_EVENT_OPTIONS: options.as_dict() if options else self.config.options.as_dict() if self.config.options else {},
             }
 
             await self.react.hass.services.async_call(
