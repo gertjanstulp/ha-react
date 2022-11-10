@@ -55,7 +55,7 @@ class MediaPlayerSpeekReactionEventData(DynamicData):
         
         self.plugin: str = None
         self.message: str = None
-        self.options: dict = None
+        self.options: DynamicData = None
         self.language: str = None
         self.volume: float = None
         self.interrupt_service: str = None
