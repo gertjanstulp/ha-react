@@ -1,11 +1,11 @@
 from datetime import datetime
-from typing import Any, Union
+from typing import Any, Awaitable, Callable, Union
 import voluptuous as vol
 from awesomeversion import AwesomeVersion
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, STATE_ON, __version__ as HAVERSION
-from homeassistant.core import Context, CoreState, HomeAssistant, callback, Event as HassEvent
+from homeassistant.core import Context, CoreState, HomeAssistant, callback, CALLBACK_TYPE, Event as HassEvent
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -70,6 +70,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 _LOGGER = get_react_logger()
 
+AWAITABLE_TYPE = Awaitable[Any]
 
 async def async_initialize_integration(
     hass: HomeAssistant,
@@ -172,76 +173,98 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
         self._attr_name = workflow.name or workflow.id.capitalize().replace("_", " ")
         self._attr_icon = workflow.icon
         self._last_triggered: datetime = None
-        self._destroyables: list[Destroyable] = None
+        self._destroyers: list[CALLBACK_TYPE] = None
+        self._async_destroyers: list[AWAITABLE_TYPE] = None
+
+        self._variable_tracker: ObjectTracker = None
         
 
     async def async_added_to_hass(self) -> None:
         """Startup with initial state or previous state."""
         _LOGGER.debug(f"Registry: Entity {self.entity_id} - added to registry")
 
-        self._destroyables = []
+        self._destroyers = []
+        self._async_destroyers = []
 
         await super().async_added_to_hass()
 
-        # Create a tracker for workflow variables
-        self.variable_tracker = ObjectTracker(self.hass, self.workflow.variables, TemplateContext(self.hass))
-        self.variable_tracker.start()
-        self.on_destroy(self.variable_tracker)
-        
-        # Create a template context for other trackers/jitters that depend on variables
-        self.tctx = TemplateContext(self.hass, VariableContextDataProvider(self.hass, self.variable_tracker))
-        self.on_destroy(self.tctx)
-        
-        # Create trackers for all actors
-        def create_actor_tracker(actor: Actor):
-            actor_tracker = ObjectTracker[ActorRuntime](self.hass, actor, self.tctx, ActorRuntime)
-            async_dispatcher_send(self.hass, SIGNAL_ACTION_HANDLER_CREATED, actor_tracker.value_container.entity, actor_tracker.value_container.type)
-            self.on_destroy(actor_tracker)
-            actor_tracker.start()
-            return actor_tracker
-        self.actor_trackers = [ create_actor_tracker(actor) for actor in self.workflow.actors ]
+        try:
+            # Create a tracker for workflow variables
+            self._variable_tracker = ObjectTracker(self.hass, self.workflow.variables, TemplateContext(self.hass))
+            self.on_destroy(self._variable_tracker.destroy)
+            self._variable_tracker.start()
+            
+            # Create a template context for other trackers/jitters that depend on variables
+            self.tctx = TemplateContext(self.hass, VariableContextDataProvider(self.hass, self._variable_tracker))
+            self.on_destroy(self.tctx.destroy)
+            
+            # Create trackers for all actors
+            def create_actor_tracker(actor: Actor):
+                actor_tracker = ObjectTracker[ActorRuntime](self.hass, actor, self.tctx, ActorRuntime)
 
-        # Create jitters for all reactors
-        def create_reactor_jitter(reactor: Reactor):
-            return ObjectJitter[ReactorRuntime](self.hass, reactor, self.tctx, ReactorRuntime)
-        self.reactor_jitters = [ create_reactor_jitter(reactor) for reactor in self.workflow.reactors ]
+                def destroy_dispatch():
+                    async_dispatcher_send(self.hass, SIGNAL_ACTION_HANDLER_DESTROYED, actor_tracker.value_container.entity)
+                self.on_destroy(destroy_dispatch)
+                self.on_destroy(actor_tracker.destroy)
+                
+                async_dispatcher_send(self.hass, SIGNAL_ACTION_HANDLER_CREATED, actor_tracker.value_container.entity, actor_tracker.value_container.type)
 
-        # Create the runtime and start listening for events
-        self.runtime.create_workflow_runtime(self.workflow)
-        self.disconnect_event_listener = self.hass.bus.async_listen(EVENT_REACT_ACTION, self.async_handle)    
+                actor_tracker.start()
+                return actor_tracker
 
-        if state := await self.async_get_last_state():
-            enable_workflow = state.state == STATE_ON
-            last_triggered = state.attributes.get("last_triggered")
-            if last_triggered is not None:
-                self._last_triggered = parse_datetime(last_triggered)
-            _LOGGER.debug(f"Registry: Entity {self.entity_id} - setting state: {format_data(last_state=enable_workflow, enabled=state.state)}")
-        else:
-            enable_workflow = DEFAULT_INITIAL_STATE
-            _LOGGER.debug(f"Registry: Entity {self.entity_id} - setting state (no last state found): {format_data(enabled=enable_workflow)}")
+            self.actor_trackers = [ create_actor_tracker(actor) for actor in self.workflow.actors ]
+
+            # Create jitters for all reactors
+            def create_reactor_jitter(reactor: Reactor):
+                return ObjectJitter[ReactorRuntime](self.hass, reactor, self.tctx, ReactorRuntime)
+            self.reactor_jitters = [ create_reactor_jitter(reactor) for reactor in self.workflow.reactors ]
+
+            # Create the runtime and start listening for events
+            self.runtime.create_workflow_runtime(self.workflow)
+            async def async_destroy_runtime():
+                await self.runtime.async_destroy_workflow_runtime(self.workflow.id)
+            self.on_destroy_async(async_destroy_runtime)
+            self.on_destroy(self.hass.bus.async_listen(EVENT_REACT_ACTION, self.async_handle))
         
-        if enable_workflow:
-            await self.async_enable()
+            if state := await self.async_get_last_state():
+                enable_workflow = state.state == STATE_ON
+                last_triggered = state.attributes.get("last_triggered")
+                if last_triggered is not None:
+                    self._last_triggered = parse_datetime(last_triggered)
+                _LOGGER.debug(f"Registry: Entity {self.entity_id} - setting state: {format_data(last_state=enable_workflow, enabled=state.state)}")
+            else:
+                enable_workflow = DEFAULT_INITIAL_STATE
+                _LOGGER.debug(f"Registry: Entity {self.entity_id} - setting state (no last state found): {format_data(enabled=enable_workflow)}")
+            
+            if enable_workflow:
+                await self.async_enable()
+        
+        except:
+            _LOGGER.exception(f"Failed adding workflow entity {self.entity_id} to hass")
+            self._attr_available = False
+            await self.async_destroy()
 
 
     async def async_will_remove_from_hass(self):
         _LOGGER.debug(f"Registry: Entity {self.entity_id} - removing from registry")
-        
-        for actor_tracker in self.actor_trackers:
-            async_dispatcher_send(self.hass, SIGNAL_ACTION_HANDLER_DESTROYED, actor_tracker.value_container.entity)
-
-        if self.disconnect_event_listener:
-            self.disconnect_event_listener()
-            self.disconnect_event_listener = None
-
-        for destroyable in self._destroyables:
-            destroyable.destroy()
-
-        await self.runtime.async_destroy_workflow_runtime(self.workflow.id)
+        await self.async_destroy()
         
 
-    def on_destroy(self, destroyable: Destroyable):
-        self._destroyables.append(destroyable)
+    def on_destroy(self, destroyer: CALLBACK_TYPE):
+        self._destroyers.append(destroyer)
+
+
+    def on_destroy_async(self, destroyer: AWAITABLE_TYPE):
+        self._async_destroyers.append(destroyer)
+
+
+    async def async_destroy(self):
+        for destroyer in self._destroyers:
+            destroyer()
+        for destroyer in self._async_destroyers:
+            await destroyer()
+        self._destroyers.clear()
+        self._async_destroyers.clear()
 
 
     @property
@@ -335,7 +358,7 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
                         entity_vars = state.as_dict()
                     
 
-                    await self.runtime.async_run(self.workflow.id, create_snapshot(self.hass, self.variable_tracker, actor_tracker, self.reactor_jitters, action_event), entity_vars, hass_run_context)
+                    await self.runtime.async_run(self.workflow.id, create_snapshot(self.hass, self._variable_tracker, actor_tracker, self.reactor_jitters, action_event), entity_vars, hass_run_context)
                 else:
                     _LOGGER.debug(f"WorkflowEntity: '{self.workflow.id}'.'{actor_runtime.id}' skipping (workflow is disabled)")
 
