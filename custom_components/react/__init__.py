@@ -169,7 +169,7 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
         self.workflow = workflow
         self.runtime = runtime
 
-        self.is_enabled = False
+        self.is_enabled: bool = False
         self._attr_unique_id = workflow.id
         self._attr_name = workflow.name or workflow.id.capitalize().replace("_", " ")
         self._attr_icon = workflow.icon
@@ -351,7 +351,7 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
                         run = False
 
             if run: 
-                if self.enabled:
+                if self.is_enabled:
                     self._last_triggered = utcnow()
                     self.async_write_ha_state()
 
@@ -361,11 +361,10 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
                     entity_vars = None
                     if state := self.hass.states.get(self.entity_id):
                         entity_vars = state.as_dict()
-                    
 
                     await self.runtime.async_run(self.workflow.id, create_snapshot(self.hass, self._variable_tracker, actor_tracker, self.reactor_jitters, action_event), entity_vars, hass_run_context)
                 else:
-                    _LOGGER.debug(f"WorkflowEntity: '{self.workflow.id}'.'{actor_runtime.id}' skipping (workflow is disabled)")
+                    _LOGGER.debug(f"WorkflowEntity: {self.workflow.id} {actor_runtime.id} skipping (workflow is disabled)")
 
 
     @callback
