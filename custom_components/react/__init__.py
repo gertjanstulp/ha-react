@@ -190,6 +190,10 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
         await super().async_added_to_hass()
 
         try:
+            if not self.workflow.is_valid:
+                self._attr_available = False
+                return
+
             # Create a tracker for workflow variables
             self._variable_tracker = ObjectTracker(self.hass, self.workflow.variables, TemplateContext(self.hass))
             self.on_destroy(self._variable_tracker.destroy)

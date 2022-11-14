@@ -334,7 +334,7 @@ REACTOR_DATA_SCHEMA = ENTITY_DATA_SCHEMA.extend(
 
 # stencil schema
 STENCIL_SCHEMA = vol.Schema({
-    cv.slug: vol.Any({
+    cv.slug: vol.Schema({
         vol.Optional(ATTR_ACTOR) : vol.Schema({
             cv.slug: ENTITY_DATA_SCHEMA,
         }),
@@ -342,12 +342,12 @@ STENCIL_SCHEMA = vol.Schema({
             cv.slug: REACTOR_DATA_SCHEMA
         }),
         vol.Optional(ATTR_RESET_WORKFLOW) : cv.string,
-    }, None)
+    })
 })
 
 # workflow schema
 WORKFLOW_SCHEMA = vol.Schema({
-    cv.slug: vol.Any({
+    cv.slug: vol.Schema({
         vol.Optional(ATTR_STENCIL) : cv.string,
         vol.Optional(ATTR_MODE) : vol.In([WORKFLOW_MODE_SINGLE, WORKFLOW_MODE_RESTART, WORKFLOW_MODE_QUEUED, WORKFLOW_MODE_PARALLEL]),
         vol.Optional(ATTR_VARIABLES) : vol.All(dict),
@@ -360,7 +360,7 @@ WORKFLOW_SCHEMA = vol.Schema({
         vol.Optional(ATTR_NAME): cv.string,
         vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(CONF_TRACE, default={}): TRACE_CONFIG_SCHEMA,
-    }, None)
+    }, )
 })
 
 PLUGIN_SCHEMA = vol.Schema({

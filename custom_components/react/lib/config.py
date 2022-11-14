@@ -226,12 +226,34 @@ class Workflow():
         self.variables = DynamicData(config.get(ATTR_VARIABLES, {}))
         self.actors: Union[list[Actor], None] = None
         self.reactors: Union[list[Reactor], None] = None
+        
+        self.errors: list[str] = []
+
+
+    @property
+    def is_valid(self):
+        return len(self.errors) == 0
 
 
     def load(self, config: dict, stencil: dict):
         merged_config = dict_merge(stencil, config)
         self.actors: list[Actor] = self.load_items(merged_config, ATTR_ACTOR, Actor)
         self.reactors: list[Reactor] = self.load_items(merged_config, ATTR_REACTOR, Reactor)
+        self.validate()
+
+
+    def validate(self):
+        if not self.actors:
+            self.errors.append("No actors found. A workflow must have at least one actor")
+        if not self.reactors:
+            self.errors.append("No reactors found. A workflow must have at least one reactor")
+        for reactor in self.reactors:
+            if reactor.wait :
+                if reactor.wait.delay:
+                    if reactor.wait.schedule:
+                        self.errors.append(f"Reactor {reactor.id} has a delay and schedule. A reactor can only have one instance of either a delay or schedule")
+                    if not (reactor.wait.delay.hours or reactor.wait.delay.minutes or reactor.wait.delay.seconds):
+                        self.errors.append(f"Reactor {reactor.id} has a delay without timing settings. A delay must have at least one of hour, minute or second settings.")
 
 
     def load_items(self, config: dict, item_property: str, item_type: ctor_type) -> list[Union[Actor, Reactor]]:
@@ -330,6 +352,8 @@ class WorkflowConfiguration:
             workflow = Workflow(id, config)
             stencil = self.get_stencil_by_name(workflow.stencil)
             workflow.load(config, stencil)
+            if not workflow.is_valid:
+                _LOGGER.error(f"Config: '{id}' has invalid configuration and will not be loaded:" + '\n- '.join([""] + workflow.errors))
             self.workflows[id] = workflow
 
 
