@@ -39,6 +39,7 @@ from .const import (
     ATTR_DATA,
     ATTR_ENTITY,
     ATTR_LAST_TRIGGERED,
+    ATTR_TRIGGER,
     ATTR_TYPE,
     ATTR_WORKFLOW_ID,
     CONF_ENTITY_MAPS,
@@ -370,7 +371,7 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
         data = {
             ATTR_ENTITY: actor_runtime.entity.first_or_none,
             ATTR_TYPE: actor_runtime.type.first_or_none,
-            ATTR_ACTION: actor_runtime.action.first_or_none,
+            ATTR_ACTION: actor_runtime.action.first_or_none if actor_runtime.action else ATTR_TRIGGER,
             ATTR_DATA: actor_runtime.data[0].as_dict() if actor_runtime.data and len(actor_runtime.data) > 0 else None,
         }
         await self.async_handle(HassEvent(EVENT_REACT_ACTION, data, context=context))
