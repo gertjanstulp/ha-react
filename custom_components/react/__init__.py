@@ -206,6 +206,7 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
             # Create trackers for all actors
             def create_actor_tracker(actor: Actor):
                 actor_tracker = ObjectTracker[ActorRuntime](self.hass, actor, self.tctx, ActorRuntime)
+                actor_tracker.start()
 
                 def destroy_dispatch():
                     async_dispatcher_send(self.hass, SIGNAL_ACTION_HANDLER_DESTROYED, actor_tracker.value_container.entity)
@@ -214,7 +215,6 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
                 
                 async_dispatcher_send(self.hass, SIGNAL_ACTION_HANDLER_CREATED, actor_tracker.value_container.entity, actor_tracker.value_container.type)
 
-                actor_tracker.start()
                 return actor_tracker
 
             self.actor_trackers = [ create_actor_tracker(actor) for actor in self.workflow.actors ]
