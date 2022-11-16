@@ -1,14 +1,9 @@
 """"Store React data."""
 from __future__ import annotations
-from typing import Any
 
-from homeassistant.core import Event as HassEvent
-
-from ..transform_base import NonBinaryStateData, StateData, StateTransformTask
-
-from ...base import ReactBase
-
-from ...const import (
+from custom_components.react.base import ReactBase
+from custom_components.react.tasks.transform_base import NonBinaryStateData, StateChangedEvent, StateChangedEventPayload, StateData, StateTransformTask
+from custom_components.react.const import (
     ACTION_PRESS,
     INPUT_BUTTON,
     INPUT_BUTTON_PREFIX,
@@ -22,7 +17,7 @@ async def async_setup_task(react: ReactBase) -> Task:
 
 class InputButtonStateData(NonBinaryStateData):
 
-    def __init__(self, event_payload: dict[str, Any]):
+    def __init__(self, event_payload: StateChangedEventPayload):
         super().__init__(INPUT_BUTTON_PREFIX, event_payload)
 
         if self.old_state_value != None and self.new_state_value != None and self.old_state_value != self.new_state_value:
@@ -37,5 +32,5 @@ class Task(StateTransformTask):
         self.can_run_disabled = True
 
 
-    def read_state_data(self, hass_event: HassEvent) -> StateData:
-        return InputButtonStateData(hass_event.data)
+    def read_state_data(self, event: StateChangedEvent) -> StateData:
+        return InputButtonStateData(event.payload)

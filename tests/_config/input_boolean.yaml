@@ -18,8 +18,8 @@ test_binary_sensor:
   name: test_binary_sensor
   initial: False
 
-test_group:
-  name: test_group
+test_binary_group:
+  name: test_binary_group
   initial: False
 
 test_binary_sensor_available:

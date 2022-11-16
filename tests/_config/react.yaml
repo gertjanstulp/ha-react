@@ -367,17 +367,29 @@ workflow:
         type: reactor_type_binary_sensor
         action: reactor_action_binary_sensor
 
-  workflow_group:
+  workflow_binary_group:
     actor:
-      actor_group:
-        entity: test_group
+      actor_binary_group:
+        entity: test_binary_group
         type: group
         action: 'on'
     reactor:
-      reactor_group: 
-        entity: reactor_entity_group
-        type: reactor_type_group
-        action: reactor_action_group
+      reactor_binary_group: 
+        entity: reactor_entity_binary_group
+        type: reactor_type_binary_group
+        action: reactor_action_binary_group
+
+  workflow_person_group:
+    actor:
+      actor_person_group:
+        entity: test_person_group
+        type: group
+        action: home
+    reactor:
+      reactor_person_group: 
+        entity: reactor_entity_person_group
+        type: reactor_type_person_group
+        action: reactor_action_person_group
 
   workflow_device_tracker:
     actor:

@@ -1,14 +1,9 @@
 """"Store React data."""
 from __future__ import annotations
-from typing import Any
 
-from homeassistant.core import Event as HassEvent
-
-from ..transform_base import BinaryStateData, StateData, StateTransformTask
-
-from ...base import ReactBase
-
-from ...const import (
+from custom_components.react.base import ReactBase
+from custom_components.react.tasks.transform_base import BinaryStateData, StateChangedEvent, StateData, StateTransformTask
+from custom_components.react.const import (
     LIGHT, 
     LIGHT_PREFIX,
 )
@@ -19,12 +14,6 @@ async def async_setup_task(react: ReactBase) -> Task:
     return Task(react=react)
 
 
-class LightStateData(BinaryStateData):
-    
-    def __init__(self, event_payload: dict[str, Any]):
-        super().__init__(LIGHT_PREFIX, event_payload)
-
-
 class Task(StateTransformTask):
     """ "React task base."""
     
@@ -33,5 +22,5 @@ class Task(StateTransformTask):
         self.can_run_disabled = True
 
 
-    def read_state_data(self, hass_event: HassEvent) -> StateData:
-        return LightStateData(hass_event.data)
+    def read_state_data(self, event: StateChangedEvent) -> StateData:
+        return BinaryStateData(LIGHT_PREFIX, event.payload)

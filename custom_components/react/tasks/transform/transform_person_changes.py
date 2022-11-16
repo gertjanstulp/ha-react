@@ -1,14 +1,14 @@
 """"Store React data."""
 from __future__ import annotations
-from typing import Any
 
-from homeassistant.core import Event as HassEvent
+from homeassistant.const import (
+    STATE_HOME, 
+    STATE_NOT_HOME
+)
 
-from ..transform_base import NonBinaryStateData, StateData, StateTransformTask
-
-from ...base import ReactBase
-
-from ...const import (
+from custom_components.react.base import ReactBase
+from custom_components.react.tasks.transform_base import BinaryStateData, StateChangedEvent, StateChangedEventPayload, StateData, StateTransformTask
+from custom_components.react.const import (
     PERSON, 
     PERSON_PREFIX,
 )
@@ -19,15 +19,6 @@ async def async_setup_task(react: ReactBase) -> Task:
     return Task(react=react)
 
 
-class PersonStateData(NonBinaryStateData):
-    
-    def __init__(self, event_payload: dict[str, Any]):
-        super().__init__(PERSON_PREFIX, event_payload)
-
-        if self.old_state_value != self.new_state_value:
-            self.actions.append(self.new_state_value)
-
-
 class Task(StateTransformTask):
     """ "React task base."""
     
@@ -36,5 +27,5 @@ class Task(StateTransformTask):
         self.can_run_disabled = True
 
 
-    def read_state_data(self, hass_event: HassEvent) -> StateData:
-        return PersonStateData(hass_event.data)
+    def read_state_data(self, event: StateChangedEvent) -> StateData:
+        return BinaryStateData(PERSON_PREFIX, event.payload, on_state=STATE_HOME, off_state=STATE_NOT_HOME)
