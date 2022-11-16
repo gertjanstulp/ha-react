@@ -1,43 +1,52 @@
-from typing import Any
-from homeassistant.core import Event as HassEvent, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from __future__ import annotations
+
+from typing import Any, Type
+
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    EVENT_STATE_CHANGED, 
+    ATTR_ENTITY_ID, 
+    EVENT_STATE_CHANGED,
     STATE_OFF, 
-    STATE_ON,
+    STATE_ON, 
     STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
+    STATE_UNKNOWN
 )
+from homeassistant.core import Event as HassEvent, State
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .base import ReactTask
+from custom_components.react.utils.events import Event
+from custom_components.react.utils.struct import DynamicData
+
 from ..base import ReactBase
-from ..lib.config import MultiItem
-
 from ..const import (
-    ACTION_AVAILABLE,
-    ACTION_TOGGLE,
+    ACTION_AVAILABLE, 
+    ACTION_TOGGLE, 
     ACTION_UNAVAILABLE,
-    ATTR_ACTION,
+    ATTR_ACTION, 
     ATTR_ENTITY, 
-    ATTR_TYPE,
+    ATTR_TYPE, 
     EVENT_REACT_ACTION,
-    NEW_STATE,
-    OLD_STATE,
     SIGNAL_ACTION_HANDLER_CREATED,
-    SIGNAL_ACTION_HANDLER_DESTROYED,
+    SIGNAL_ACTION_HANDLER_DESTROYED
 )
+from ..lib.config import MultiItem
+from .base import ReactTask
 
 
 class StateData:
 
-    def __init__(self, entity_prefix: str, event_payload: dict[str, Any]):
-        self.entity = event_payload.get(ATTR_ENTITY_ID, '').replace(entity_prefix, '')
+    def __init__(self, entity_prefix: str, event_payload: StateChangedEventPayload):
+        self.entity = event_payload.entity_id.replace(entity_prefix, '')
         self.actions = []
         
-        self.old_state_value: Any = None
-        self.new_state_value: Any = None
+        self.old_state_value = event_payload.old_state.state if event_payload.old_state else None
+        self.new_state_value = event_payload.new_state.state if event_payload.new_state else None
 
+        if (self.old_state_value == STATE_UNAVAILABLE and self.new_state_value != STATE_UNAVAILABLE):
+            self.actions.append(ACTION_AVAILABLE)
+        if (self.old_state_value != STATE_UNAVAILABLE and self.old_state_value != STATE_UNKNOWN and self.new_state_value == STATE_UNAVAILABLE):
+            self.actions.append(ACTION_UNAVAILABLE)
+            
 
     def to_react_events(self, type: str):
         result = []
@@ -52,72 +61,80 @@ class StateData:
 
 class BinaryStateData(StateData):
 
-    def __init__(self, entity_prefix: str, event_payload: dict[str, Any]):
+    def __init__(self, entity_prefix: str, event_payload: StateChangedEventPayload, on_state: str = STATE_ON, off_state: str = STATE_OFF):
         super().__init__(entity_prefix, event_payload)
-        old_state = event_payload.get(OLD_STATE, None)
-        new_state = event_payload.get(NEW_STATE, None)
-        self.old_state_value = old_state.state if old_state else None
-        self.new_state_value = new_state.state if new_state else None
 
-        if (self.old_state_value == STATE_UNAVAILABLE and self.new_state_value != STATE_UNAVAILABLE):
-            self.actions.append(ACTION_AVAILABLE)
-        if (self.old_state_value != STATE_UNAVAILABLE and self.old_state_value != STATE_UNKNOWN and self.new_state_value == STATE_UNAVAILABLE):
-            self.actions.append(ACTION_UNAVAILABLE)
-        if (self.old_state_value == STATE_OFF and self.new_state_value == STATE_ON):
-            self.actions.append(STATE_ON)
+        if (self.old_state_value == off_state and self.new_state_value == on_state):
+            self.actions.append(on_state)
             self.actions.append(ACTION_TOGGLE)
-        if (self.old_state_value == STATE_ON and self.new_state_value == STATE_OFF):
-            self.actions.append(STATE_OFF)
+        if (self.old_state_value == on_state and self.new_state_value == off_state):
+            self.actions.append(off_state)
             self.actions.append(ACTION_TOGGLE)
 
 
 class NonBinaryStateData(StateData):
 
-    def __init__(self, entity_prefix: str, event_payload: dict[str, Any]):
+    def __init__(self, entity_prefix: str, event_payload: StateChangedEventPayload):
         super().__init__(entity_prefix, event_payload)
         
-        old_state = event_payload.get(OLD_STATE, None)
-        new_state = event_payload.get(NEW_STATE, None)
-        self.old_state_value = old_state.state if old_state else None
-        self.new_state_value = new_state.state if new_state else None
 
-        if (self.old_state_value == STATE_UNAVAILABLE and self.new_state_value != STATE_UNAVAILABLE):
-            self.actions.append(ACTION_AVAILABLE)
-        if (self.old_state_value != STATE_UNAVAILABLE and self.old_state_value != STATE_UNKNOWN and self.new_state_value == STATE_UNAVAILABLE):
-            self.actions.append(ACTION_UNAVAILABLE)
+
+class StateChangedEventPayload(DynamicData):
+    def __init__(self, source: dict = None) -> None:
+        super().__init__()
+
+        self.entity_id: str = None
+        self.old_state: State = None
+        self.new_state: State = None
+
+        self.load(source)
+
+
+class StateChangedEvent(Event[StateChangedEventPayload]):
+
+    def __init__(self, hass_event: HassEvent) -> None:
+        super().__init__(hass_event,  StateChangedEventPayload)
+
+
+    def applies(self) -> bool:
+        return True
+
 
    
 class StateTransformTask(ReactTask):
     
-    def __init__(self, react: ReactBase, prefix: str, type: str) -> None:
+    def __init__(self, react: ReactBase, prefix: str, type: str, payload_type: Type[StateChangedEventPayload] = StateChangedEventPayload) -> None:
         super().__init__(react)
         
         self.prefix = prefix
         self.type = type
+        self.payload_type = payload_type
+
         self.entities = []
         self.events_with_filters = [(EVENT_STATE_CHANGED, self.async_filter)]
         async_dispatcher_connect(self.react.hass, SIGNAL_ACTION_HANDLER_CREATED, self.async_register_entity)
         async_dispatcher_connect(self.react.hass, SIGNAL_ACTION_HANDLER_DESTROYED, self.async_unregister_entity)
         
-
     
     @callback
     def async_filter(self, hass_event: HassEvent) -> bool:
-        if ATTR_ENTITY_ID in hass_event.data and hass_event.data[ATTR_ENTITY_ID].startswith(self.prefix):
-            entity: str = hass_event.data.get(ATTR_ENTITY_ID).split('.')[1]
+        entity_id: str = hass_event.data.get(ATTR_ENTITY_ID, None)
+        if entity_id and entity_id.startswith(self.prefix):
+            entity: str = entity_id.split('.')[1]
             return entity in self.entities
         return False
       
 
     async def async_execute(self, hass_event: HassEvent) -> None:
         """Execute the task."""
-        state_data = self.read_state_data( hass_event)
+        event = StateChangedEvent(hass_event)
+        state_data = self.read_state_data(event)
         react_events = state_data.to_react_events(self.type)
         for react_event in react_events:
             self.react.hass.bus.async_fire(EVENT_REACT_ACTION, react_event)
 
     
-    def read_state_data(self, hass_event: HassEvent) -> StateData: 
+    def read_state_data(self, event: StateChangedEvent) -> StateData: 
         raise NotImplementedError()
 
 

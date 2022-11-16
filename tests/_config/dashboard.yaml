@@ -38,7 +38,7 @@ views:
           - entity: input_boolean.test_trace
           - entity: input_boolean.test_trace2
           - entity: input_boolean.test_binary_sensor
-          - entity: input_boolean.test_group
+          - entity: input_boolean.test_binary_group
           - entity: input_boolean.test_binary_sensor_available
           - entity: input_boolean.test_wait
           - entity: input_text.test_text

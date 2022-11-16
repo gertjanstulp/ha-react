@@ -1,15 +1,11 @@
 """"Store React data."""
 from __future__ import annotations
-from typing import Any
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_ON
 
-from homeassistant.core import Event as HassEvent
+from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 
-from ..transform_base import NonBinaryStateData, StateData, StateTransformTask
-
-from ...base import ReactBase
-
-from ...const import (
+from custom_components.react.base import ReactBase
+from custom_components.react.tasks.transform_base import BinaryStateData, StateChangedEvent, StateData, StateTransformTask
+from custom_components.react.const import (
     DEVICE_TRACKER, 
     DEVICE_TRACKER_PREFIX,
 )
@@ -18,17 +14,6 @@ from ...const import (
 async def async_setup_task(react: ReactBase) -> Task:
     """Set up this task."""
     return Task(react=react)
-     
-
-class DeviceTrackerStateData(NonBinaryStateData):
-    
-    def __init__(self, event_payload: dict[str, Any]):
-        super().__init__(DEVICE_TRACKER_PREFIX, event_payload)
-        
-        if self.old_state_value == STATE_NOT_HOME and self.new_state_value == STATE_HOME:
-            self.actions.append(STATE_HOME)
-        elif self.old_state_value == STATE_HOME and self.new_state_value == STATE_NOT_HOME:
-            self.actions.append(STATE_NOT_HOME)
 
 
 class Task(StateTransformTask):
@@ -39,5 +24,5 @@ class Task(StateTransformTask):
         self.can_run_disabled = True
 
 
-    def read_state_data(self, hass_event: HassEvent) -> StateData:
-        return DeviceTrackerStateData(hass_event.data)
+    def read_state_data(self, event: StateChangedEvent) -> StateData:
+        return BinaryStateData(DEVICE_TRACKER_PREFIX, event.payload, on_state=STATE_HOME, off_state=STATE_NOT_HOME)
