@@ -56,7 +56,7 @@ class Task(StateTransformTask):
 
     def test_states(self, states: list[State], test_dict: dict[str, str], key1: str, key2: str):
         for state in states:
-            if state.state in test_dict:
+            if state and state.state in test_dict:
                 return {
                     key1: state.state,
                     key2: test_dict[state.state]
