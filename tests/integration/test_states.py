@@ -126,3 +126,19 @@ async def test_react_person(hass: HomeAssistant, workflow_name, react_component,
         tc.verify_trace_record()
 
     await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["input_number"])
+async def test_react_input_number(hass: HomeAssistant, workflow_name, react_component, input_number_component):
+    
+    await react_component.async_setup(workflow_name)
+
+    tc = TstContext(hass, workflow_name)
+    async with tc.async_listen_reaction_event():
+        tc.verify_reaction_not_found()
+        await input_number_component.async_set_value("test_input_number", 123.45)
+        tc.verify_reaction_not_found()
+        await tc.async_verify_reaction_event_received()
+        tc.verify_reaction_event_data()
+        tc.verify_trace_record()
+    await hass.async_block_till_done()

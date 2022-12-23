@@ -78,7 +78,6 @@ class NonBinaryStateData(StateData):
         super().__init__(entity_prefix, event_payload)
         
 
-
 class StateChangedEventPayload(DynamicData):
     def __init__(self, source: dict = None) -> None:
         super().__init__()
@@ -98,7 +97,6 @@ class StateChangedEvent(Event[StateChangedEventPayload]):
 
     def applies(self) -> bool:
         return True
-
 
    
 class StateTransformTask(ReactTask):

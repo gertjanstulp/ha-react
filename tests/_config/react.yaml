@@ -416,6 +416,18 @@ workflow:
         type: reactor_type_person
         action: reactor_action_person
 
+  workflow_input_number:
+    actor:
+      actor_input_number:
+        entity: test_input_number
+        type: input_number
+        action: change
+    reactor:
+      reactor_input_number: 
+        entity: reactor_entity_input_number
+        type: reactor_type_input_number
+        action: reactor_action_input_number
+
   workflow_binary_sensor_available:
     actor:
       actor_binary_sensor_available:
