@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 from yaml import SafeLoader
 
 from homeassistant.components import template, input_boolean, input_number, input_text, group, binary_sensor, device_tracker, person
+from homeassistant.components.input_number import SERVICE_SET_VALUE, ATTR_VALUE
 from homeassistant.components.trace import DATA_TRACE
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
@@ -30,6 +31,7 @@ from custom_components.react.lib.config import Plugin
 from tests.common import (
     GROUP_CONFIG,
     INPUT_BOOLEAN_CONFIG,
+    INPUT_NUMBER_CONFIG,
     INPUT_TEXT_CONFIG,
     PERSON_CONFIG,
     REACT_CONFIG,
@@ -164,34 +166,24 @@ async def input_boolean_component(hass: HomeAssistant):
 
 @pytest.fixture
 async def input_number_component(hass: HomeAssistant):
-    with open(get_test_config_dir(INPUT_BOOLEAN_CONFIG)) as f:
+    with open(get_test_config_dir(INPUT_NUMBER_CONFIG)) as f:
         data = yaml.load(f, Loader=SafeLoader) or {}
-    assert await async_setup_component(hass, input_number.DOMAIN, { input_boolean.DOMAIN: data })
+    assert await async_setup_component(hass, input_number.DOMAIN, { input_number.DOMAIN: data })
     await hass.async_block_till_done()
 
-    async def async_turn_on(name: str, ):
+    async def async_set_value(name: str, value: float):
         await hass.services.async_call(
-            input_boolean.DOMAIN,
-            SERVICE_TURN_ON,
+            input_number.DOMAIN,
+            SERVICE_SET_VALUE,
             {
-                ATTR_ENTITY_ID: f"input_boolean.{name}"
-            }
-        )
-        await hass.async_block_till_done()
-
-    async def async_turn_off(name: str):
-        await hass.services.async_call(
-            input_boolean.DOMAIN,
-            SERVICE_TURN_OFF,
-            {
-                ATTR_ENTITY_ID: f"input_boolean.{name}"
+                ATTR_ENTITY_ID: f"input_number.{name}",
+                ATTR_VALUE: value
             }
         )
         await hass.async_block_till_done()
 
     result = Mock()
-    result.async_turn_on = async_turn_on
-    result.async_turn_off = async_turn_off
+    result.async_set_value = async_set_value
     return result
 
 

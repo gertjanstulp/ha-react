@@ -195,6 +195,8 @@ ALARM = "alarm_control_panel"
 ALARM_PREFIX = f"{ALARM}."
 INPUT_BUTTON = "input_button"
 INPUT_BUTTON_PREFIX = f"{INPUT_BUTTON}."
+INPUT_NUMBER = "input_number"
+INPUT_NUMBER_PREFIX = f"{INPUT_NUMBER}."
 LIGHT = "light"
 LIGHT_PREFIX = f"{LIGHT}."
 # transformer states
