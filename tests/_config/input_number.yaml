@@ -1,0 +1,4 @@
+input_number_set_test:
+  name: input_number_set_test
+  min: 0
+  max: 100

@@ -31,6 +31,7 @@ views:
           - entity: input_button.button_trigger_wait_delayed
           - entity: input_button.button_trigger_tts_media_player_speek_with_volume
           - entity: input_button.button_trigger_tts_media_player_speek
+          - entity: input_button.button_trigger_input_number_set
       - type: entities
         entities:
           - entity: input_boolean.test_actor_condition

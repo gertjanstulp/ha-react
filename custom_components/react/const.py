@@ -154,6 +154,7 @@ EVENTPAYLOAD_COMMAND_REACT = "/react"
 REACT_TYPE_NOTIFY = "notify"
 REACT_TYPE_TTS = "tts"
 REACT_TYPE_MEDIA_PLAYER = "media_player"
+REACT_TYPE_INPUT_NUMBER = "input_number"
 
 # React actions
 REACT_ACTION_SEND_MESSAGE = "send_message"

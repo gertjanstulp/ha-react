@@ -10,6 +10,7 @@ plugins:
     config:
       say_service: google_say
       language: nl
+  - module: custom_components.react.plugin.input.plugin
 
 stencil:
   full_stencil:
@@ -714,6 +715,20 @@ workflow:
         action: confirm_feedback
         forward_data: True
 
+  workflow_input_number_set:
+    actor:
+      actor_input_number_set:
+        entity: actor_entity_input_number_set
+        type: actor_type_input_number_set
+        action: actor_action_input_number_set
+    reactor:
+      reactor_input_number_set:
+        entity: input_number_set_test
+        type: input_number
+        action: set_value
+        data:
+          plugin: input
+          value: 12.34
 
   workflow_debug:
     actor:
