@@ -60,3 +60,5 @@ button_trigger_tts_media_player_speek_with_volume:
   name: TTS Media player speek with volume
 button_trigger_tts_media_player_speek:
   name: TTS Media player speek without volume
+button_trigger_input_number_set:
+  name: Input number set

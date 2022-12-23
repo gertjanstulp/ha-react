@@ -405,3 +405,15 @@
       entity: actor_entity_tts_media_player_speek
       type: actor_type_tts_media_player_speek
       action: actor_action_tts_media_player_speek
+
+- id: trigger_input_number_set
+  alias: Trigger input number set
+  trigger:
+    platform: state
+    entity_id: input_button.button_trigger_input_number_set
+  action:
+    event: ev_react_action
+    event_data:
+      entity: actor_entity_input_number_set
+      type: actor_type_input_number_set
+      action: actor_action_input_number_set

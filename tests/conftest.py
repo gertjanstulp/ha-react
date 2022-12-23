@@ -6,7 +6,7 @@ import yaml
 from unittest.mock import Mock, patch
 from yaml import SafeLoader
 
-from homeassistant.components import template, input_boolean, input_text, group, binary_sensor, device_tracker, person
+from homeassistant.components import template, input_boolean, input_number, input_text, group, binary_sensor, device_tracker, person
 from homeassistant.components.trace import DATA_TRACE
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
@@ -134,6 +134,39 @@ async def input_boolean_component(hass: HomeAssistant):
     with open(get_test_config_dir(INPUT_BOOLEAN_CONFIG)) as f:
         data = yaml.load(f, Loader=SafeLoader) or {}
     assert await async_setup_component(hass, input_boolean.DOMAIN, { input_boolean.DOMAIN: data })
+    await hass.async_block_till_done()
+
+    async def async_turn_on(name: str, ):
+        await hass.services.async_call(
+            input_boolean.DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: f"input_boolean.{name}"
+            }
+        )
+        await hass.async_block_till_done()
+
+    async def async_turn_off(name: str):
+        await hass.services.async_call(
+            input_boolean.DOMAIN,
+            SERVICE_TURN_OFF,
+            {
+                ATTR_ENTITY_ID: f"input_boolean.{name}"
+            }
+        )
+        await hass.async_block_till_done()
+
+    result = Mock()
+    result.async_turn_on = async_turn_on
+    result.async_turn_off = async_turn_off
+    return result
+
+
+@pytest.fixture
+async def input_number_component(hass: HomeAssistant):
+    with open(get_test_config_dir(INPUT_BOOLEAN_CONFIG)) as f:
+        data = yaml.load(f, Loader=SafeLoader) or {}
+    assert await async_setup_component(hass, input_number.DOMAIN, { input_boolean.DOMAIN: data })
     await hass.async_block_till_done()
 
     async def async_turn_on(name: str, ):
