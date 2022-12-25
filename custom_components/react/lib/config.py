@@ -239,6 +239,8 @@ class Workflow():
         merged_config = dict_merge(stencil, config)
         self.actors: list[Actor] = self.load_items(merged_config, ATTR_ACTOR, Actor)
         self.reactors: list[Reactor] = self.load_items(merged_config, ATTR_REACTOR, Reactor)
+        if ATTR_MODE in merged_config:
+            self.mode = merged_config.get(ATTR_MODE)
         self.validate()
 
 
