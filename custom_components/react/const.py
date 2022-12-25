@@ -338,6 +338,7 @@ REACTOR_DATA_SCHEMA = ENTITY_DATA_SCHEMA.extend(
 # stencil schema
 STENCIL_SCHEMA = vol.Schema({
     cv.slug: vol.Schema({
+        vol.Optional(ATTR_MODE) : vol.In([WORKFLOW_MODE_SINGLE, WORKFLOW_MODE_RESTART, WORKFLOW_MODE_QUEUED, WORKFLOW_MODE_PARALLEL]),
         vol.Optional(ATTR_ACTOR) : vol.Schema({
             cv.slug: ENTITY_DATA_SCHEMA,
         }),
