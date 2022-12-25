@@ -200,5 +200,5 @@ class TemplatePropertyJitter(BaseJitter):
             self.tctx.build(runtime_variables, template_context_data_provider)
             value = self.template.async_render(runtime_variables)
         except TemplateError as te:
-            _LOGGER.error(f"Config: Error rendering {self.attr}: {te}")
+            _LOGGER.exception(f"Config: Error rendering {self.attr}: {te}")
         return self.type_converter(value) if self.type_converter else value
