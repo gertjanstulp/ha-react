@@ -15,7 +15,7 @@ async def test_react_time_clock(hass: HomeAssistant, workflow_name, react_compon
     def set_time(workflow: dict):
         actor = workflow.get(ATTR_ACTOR, {}).get("actor_time_clock", {})
         if actor:
-            action_time = datetime.now() + timedelta(seconds=5)
+            action_time = dt_util.now() + timedelta(seconds=5)
             time_pattern = action_time.strftime("%H:%M:%S")
             actor[ATTR_ACTION] = time_pattern
         pass
