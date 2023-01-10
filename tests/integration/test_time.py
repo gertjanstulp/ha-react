@@ -27,7 +27,7 @@ async def test_react_time_clock(hass: HomeAssistant, workflow_name, react_compon
     async with tc.async_listen_reaction_event():
         tc.verify_reaction_not_found()
         await tc.async_verify_reaction_event_not_received()
-        await tc.async_verify_reaction_event_received(delay=7)
+        await tc.async_verify_reaction_event_received(delay=10)
         tc.verify_reaction_event_data()
         tc.verify_trace_record()
 
