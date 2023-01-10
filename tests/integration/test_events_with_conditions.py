@@ -6,6 +6,7 @@ from tests.common import FIXTURE_WORKFLOW_NAME
 from tests.tst_context import TstContext
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["actor_condition"])
 async def test_react_actor_condition_true(hass: HomeAssistant, workflow_name, react_component, template_component, input_boolean_component):
     """
@@ -16,8 +17,11 @@ async def test_react_actor_condition_true(hass: HomeAssistant, workflow_name, re
     - Trace data should match configuration
     """
     
-    await react_component.async_setup(workflow_name)
-    await input_boolean_component.async_turn_on("test_actor_condition")
+    comp = await react_component
+    await comp.async_setup(workflow_name)
+    ibc = await input_boolean_component
+    await ibc.async_turn_on("test_actor_condition")
+    await template_component
 
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():
@@ -29,6 +33,7 @@ async def test_react_actor_condition_true(hass: HomeAssistant, workflow_name, re
         tc.verify_trace_record()
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["actor_condition"])
 async def test_react_actor_condition_false(hass: HomeAssistant, workflow_name, react_component, template_component, input_boolean_component):
     """
@@ -39,8 +44,11 @@ async def test_react_actor_condition_false(hass: HomeAssistant, workflow_name, r
     - Trace data should match configuration
     """
     
-    await react_component.async_setup(workflow_name)
-    await input_boolean_component.async_turn_off("test_actor_condition")
+    comp = await react_component
+    await comp.async_setup(workflow_name)
+    ibc = await input_boolean_component
+    await ibc.async_turn_off("test_actor_condition")
+    await template_component
 
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():
@@ -51,6 +59,7 @@ async def test_react_actor_condition_false(hass: HomeAssistant, workflow_name, r
         tc.verify_trace_record(expected_actor_condition_result=False)
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["reactor_condition"])
 async def test_react_reactor_condition_false(hass: HomeAssistant, workflow_name, react_component, input_boolean_component):
     """
@@ -60,8 +69,10 @@ async def test_react_reactor_condition_false(hass: HomeAssistant, workflow_name,
     - Trace data should match configuration
     """
 
-    await react_component.async_setup(workflow_name)
-    await input_boolean_component.async_turn_off("test_reactor_condition")
+    comp = await react_component
+    await comp.async_setup(workflow_name)
+    ibc = await input_boolean_component
+    await ibc.async_turn_off("test_reactor_condition")
 
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():
@@ -74,6 +85,7 @@ async def test_react_reactor_condition_false(hass: HomeAssistant, workflow_name,
         )
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["reactor_condition"])
 async def test_react_reactor_condition_true(hass: HomeAssistant, workflow_name, react_component, input_boolean_component):
     """
@@ -84,8 +96,10 @@ async def test_react_reactor_condition_true(hass: HomeAssistant, workflow_name, 
     - Trace data should match configuration
     """
 
-    await react_component.async_setup(workflow_name)
-    await input_boolean_component.async_turn_on("test_reactor_condition")
+    comp = await react_component
+    await comp.async_setup(workflow_name)
+    ibc = await input_boolean_component
+    await ibc.async_turn_on("test_reactor_condition")
 
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():

@@ -8,10 +8,12 @@ from tests.common import FIXTURE_WORKFLOW_NAME
 from tests.tst_context import TstContext
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["scheduled_restart_abort"])
 async def test_runtime_restart_mode_abort(hass: HomeAssistant, workflow_name, react_component):
     
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
 
     react: ReactBase = hass.data[DOMAIN]
 
@@ -26,10 +28,12 @@ async def test_runtime_restart_mode_abort(hass: HomeAssistant, workflow_name, re
         tc.verify_run_not_found()
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["scheduled_restart_force"])
 async def test_runtime_restart_mode_force(hass: HomeAssistant, workflow_name, react_component):
     
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
 
     react: ReactBase = hass.data[DOMAIN]
 

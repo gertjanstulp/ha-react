@@ -54,7 +54,7 @@ def auto_enable_custom_integrations(patch_config_dir, enable_custom_integrations
 
 
 @pytest.fixture
-async def hass_setup(hass: HomeAssistant):
+def hass_setup(hass: HomeAssistant):
     hass.data[DATA_TRACE] = {}
     hass.config.set_time_zone("Europe/Amsterdam")
     hass.config.units = METRIC_SYSTEM

@@ -260,7 +260,7 @@ def is_list_of_strings(obj):
     return bool(obj) and isinstance(obj, list) and all(isinstance(elem, str) for elem in obj)
 
 
-def list(value: Union[str, list]) -> list[str]:
+def list(value: str | list) -> list[str]:
     if is_list_of_strings(value):
         return value
     raise vol.Invalid("Not a valid list")

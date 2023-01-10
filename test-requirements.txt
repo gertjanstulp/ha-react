@@ -1,14 +1,15 @@
-codecov
-coverage
-pytest
-pytest-cov
+aiohttp==3.8.1
+codecov==2.1.12
+coverage==7.0.0
+pytest==7.2.0
+pytest-cov==3.0.0
 pytest-homeassistant-custom-component
-pyyaml
+pyyaml==6.0
 deepdiff
 
-aiohttp_cors
-Pillow
+aiohttp_cors==0.7.0
+Pillow==9.3.0
 homeassistant
 home-assistant-frontend
-hass-nabucasa
-python-telegram-bot
+hass-nabucasa==0.61.0
+python-telegram-bot==13.1

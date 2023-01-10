@@ -9,6 +9,7 @@ from custom_components.react.const import ATTR_ACTION, ATTR_ACTOR
 from tests.common import FIXTURE_WORKFLOW_NAME
 from tests.tst_context import TstContext
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["time_clock"])
 async def test_react_time_clock(hass: HomeAssistant, workflow_name, react_component):
     def set_time(workflow: dict):
@@ -19,7 +20,8 @@ async def test_react_time_clock(hass: HomeAssistant, workflow_name, react_compon
             actor[ATTR_ACTION] = time_pattern
         pass
 
-    await react_component.async_setup(workflow_name, process_workflow=set_time)
+    comp = await react_component
+    await comp.async_setup(workflow_name, process_workflow=set_time)
 
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():
@@ -30,10 +32,12 @@ async def test_react_time_clock(hass: HomeAssistant, workflow_name, react_compon
         tc.verify_trace_record()
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["time_pattern"])
 async def test_react_time_pattern(hass: HomeAssistant, workflow_name, react_component):
     
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():
