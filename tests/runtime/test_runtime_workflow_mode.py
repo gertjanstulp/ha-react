@@ -10,10 +10,12 @@ from tests.common import FIXTURE_WORKFLOW_NAME
 from tests.tst_context import TstContext
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["delayed_long_single"])
 async def test_runtime_workflow_mode_abort(hass: HomeAssistant, workflow_name, react_component):
 
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
 
     react: ReactBase = hass.data[DOMAIN]
     workflow_id = f"workflow_{workflow_name}"
@@ -30,10 +32,12 @@ async def test_runtime_workflow_mode_abort(hass: HomeAssistant, workflow_name, r
         await runtime.async_stop_all_runs()
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["delayed_long_single"])
 async def test_runtime_workflow_mode_single(hass: HomeAssistant, workflow_name, react_component):
     
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
 
     react: ReactBase = hass.data[DOMAIN]
     workflow_id = f"workflow_{workflow_name}"
@@ -53,10 +57,12 @@ async def test_runtime_workflow_mode_single(hass: HomeAssistant, workflow_name, 
         await runtime.async_stop_all_runs()
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["delayed_long_restart"])
 async def test_runtime_workflow_mode_restart(hass: HomeAssistant, workflow_name, react_component):
     
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
 
     react: ReactBase = hass.data[DOMAIN]
     workflow_id = f"workflow_{workflow_name}"
@@ -75,10 +81,12 @@ async def test_runtime_workflow_mode_restart(hass: HomeAssistant, workflow_name,
         await runtime.async_stop_all_runs()
  
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["delayed_long_queued"])
 async def test_runtime_workflow_mode_queued(hass: HomeAssistant, workflow_name, react_component):
     
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
 
     react: ReactBase = hass.data[DOMAIN]
     workflow_id = f"workflow_{workflow_name}"
@@ -102,11 +110,12 @@ async def test_runtime_workflow_mode_queued(hass: HomeAssistant, workflow_name, 
         await runtime.async_stop_all_runs()
     
 
-
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["delayed_long_parallel"])
 async def test_runtime_workflow_mode_parallel(hass: HomeAssistant, workflow_name, react_component):
     
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
 
     react: ReactBase = hass.data[DOMAIN]
     workflow_id = f"workflow_{workflow_name}"

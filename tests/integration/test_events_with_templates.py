@@ -6,6 +6,7 @@ from tests.common import FIXTURE_WORKFLOW_NAME
 from tests.tst_context import TstContext
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["templated"])
 async def test_react_templated(hass: HomeAssistant, workflow_name, react_component):
     """
@@ -16,7 +17,8 @@ async def test_react_templated(hass: HomeAssistant, workflow_name, react_compone
     - Trace data should match configuration
     """
 
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():
@@ -35,6 +37,7 @@ async def test_react_templated(hass: HomeAssistant, workflow_name, react_compone
         )
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["templated_state"])
 async def test_react_templated_state(hass: HomeAssistant, workflow_name, template_component, react_component, input_text_component):
     """
@@ -45,8 +48,11 @@ async def test_react_templated_state(hass: HomeAssistant, workflow_name, templat
     - Trace data should match configuration
     """
     
-    await react_component.async_setup(workflow_name)
-    await input_text_component.async_set_value("test_text", "templated_state")
+    comp = await react_component
+    await comp.async_setup(workflow_name)
+    itc = await input_text_component
+    await itc.async_set_value("test_text", "templated_state")
+    await template_component
 
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():

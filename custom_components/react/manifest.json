@@ -6,7 +6,6 @@
     "dependencies": [
         "http",
         "websocket_api",
-        "frontend",
         "lovelace"
     ],
 

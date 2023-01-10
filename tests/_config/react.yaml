@@ -428,6 +428,30 @@ workflow:
         type: reactor_type_input_number
         action: reactor_action_input_number
 
+  workflow_time_clock:
+    actor:
+      actor_time_clock:
+        entity: time
+        type: clock
+        action: CLOCK
+    reactor:
+      reactor_time_clock:
+        entity: reactor_entity_time_clock
+        type: reactor_type_time_clock
+        action: reactor_action_time_clock
+
+  workflow_time_pattern:
+    actor:
+      actor_time_pattern:
+        entity: time
+        type: pattern
+        action: 5s
+    reactor:
+      reactor_time_pattern:
+        entity: reactor_entity_time_pattern
+        type: reactor_type_time_pattern
+        action: reactor_action_time_pattern
+
   workflow_binary_sensor_available:
     actor:
       actor_binary_sensor_available:

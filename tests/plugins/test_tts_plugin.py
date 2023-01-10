@@ -27,6 +27,7 @@ from tests.common import FIXTURE_WORKFLOW_NAME, TEST_CONTEXT, TEST_FLAG_VERIFY_C
 from tests.tst_context import TstContext
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["tts_media_player_speek"])
 async def test_tts_media_player_speek_invalid_config(hass: HomeAssistant, workflow_name, react_component):
     """
@@ -34,7 +35,8 @@ async def test_tts_media_player_speek_invalid_config(hass: HomeAssistant, workfl
     """
 
     mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.tts_plugin_media_player_speek_mock"}
-    await react_component.async_setup(workflow_name, plugins=[mock_plugin])
+    comp = await react_component
+    await comp.async_setup(workflow_name, plugins=[mock_plugin])
     react: ReactBase = hass.data[DOMAIN]
 
     tc = TstContext(hass, workflow_name)
@@ -47,6 +49,7 @@ async def test_tts_media_player_speek_invalid_config(hass: HomeAssistant, workfl
         tc.verify_plugin_data_sent(expected_count=0)
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["tts_media_player_speek"])
 async def test_tts_media_player_speek(hass: HomeAssistant, workflow_name, react_component):
     """
@@ -54,7 +57,8 @@ async def test_tts_media_player_speek(hass: HomeAssistant, workflow_name, react_
     """
 
     mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.tts_plugin_media_player_speek_mock"}
-    await react_component.async_setup(workflow_name, plugins=[mock_plugin])
+    comp = await react_component
+    await comp.async_setup(workflow_name, plugins=[mock_plugin])
     react: ReactBase = hass.data[DOMAIN]
     
     plugin_data_speek = {
@@ -76,6 +80,7 @@ async def test_tts_media_player_speek(hass: HomeAssistant, workflow_name, react_
         tc.verify_plugin_data_content(plugin_data_speek, data_index=0)
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["tts_media_player_speek_with_volume"])
 async def test_tts_media_player_speek_with_volume(hass: HomeAssistant, workflow_name, react_component):
     """
@@ -83,7 +88,8 @@ async def test_tts_media_player_speek_with_volume(hass: HomeAssistant, workflow_
     """
 
     mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.tts_plugin_media_player_speek_mock"}
-    await react_component.async_setup(workflow_name, plugins=[mock_plugin])
+    comp = await react_component
+    await comp.async_setup(workflow_name, plugins=[mock_plugin])
     react: ReactBase = hass.data[DOMAIN]
     
     plugin_data_volume = {
@@ -111,6 +117,7 @@ async def test_tts_media_player_speek_with_volume(hass: HomeAssistant, workflow_
         tc.verify_plugin_data_content(plugin_data_speek, data_index=1)
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["tts_media_player_speek_with_interrupt"])
 async def test_tts_media_player_speek_with_interrupt(hass: HomeAssistant, workflow_name, react_component):
     """
@@ -118,7 +125,8 @@ async def test_tts_media_player_speek_with_interrupt(hass: HomeAssistant, workfl
     """
 
     mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.tts_plugin_media_player_speek_mock"}
-    await react_component.async_setup(workflow_name, plugins=[mock_plugin])
+    comp = await react_component
+    await comp.async_setup(workflow_name, plugins=[mock_plugin])
     react: ReactBase = hass.data[DOMAIN]
     
     plugin_data_interrupt = {
@@ -146,6 +154,7 @@ async def test_tts_media_player_speek_with_interrupt(hass: HomeAssistant, workfl
         tc.verify_plugin_data_content(plugin_data_speek, data_index=1)
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["tts_media_player_speek_with_resume"])
 async def test_tts_media_player_speek_with_resume(hass: HomeAssistant, workflow_name, react_component):
     """
@@ -153,7 +162,8 @@ async def test_tts_media_player_speek_with_resume(hass: HomeAssistant, workflow_
     """
 
     mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.tts_plugin_media_player_speek_mock"}
-    await react_component.async_setup(workflow_name, plugins=[mock_plugin])
+    comp = await react_component
+    await comp.async_setup(workflow_name, plugins=[mock_plugin])
     react: ReactBase = hass.data[DOMAIN]
     
     plugin_data_resume = {
@@ -181,6 +191,7 @@ async def test_tts_media_player_speek_with_resume(hass: HomeAssistant, workflow_
         tc.verify_plugin_data_content(plugin_data_resume, data_index=1)
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["tts_media_player_speek_with_wait"])
 async def test_tts_media_player_speek_with_wait(hass: HomeAssistant, workflow_name, react_component):
     """
@@ -188,7 +199,8 @@ async def test_tts_media_player_speek_with_wait(hass: HomeAssistant, workflow_na
     """
 
     mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.tts_plugin_media_player_speek_mock"}
-    await react_component.async_setup(workflow_name, plugins=[mock_plugin])
+    comp = await react_component
+    await comp.async_setup(workflow_name, plugins=[mock_plugin])
     react: ReactBase = hass.data[DOMAIN]
     
     plugin_data_wait = {
@@ -214,6 +226,7 @@ async def test_tts_media_player_speek_with_wait(hass: HomeAssistant, workflow_na
         tc.verify_plugin_data_content(plugin_data_wait, data_index=1)
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["tts_media_player_speek_with_all"])
 async def test_tts_media_player_speek_with_all(hass: HomeAssistant, workflow_name, react_component):
     """
@@ -221,7 +234,8 @@ async def test_tts_media_player_speek_with_all(hass: HomeAssistant, workflow_nam
     """
 
     mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.tts_plugin_media_player_speek_mock"}
-    await react_component.async_setup(workflow_name, plugins=[mock_plugin])
+    comp = await react_component
+    await comp.async_setup(workflow_name, plugins=[mock_plugin])
     react: ReactBase = hass.data[DOMAIN]
     
     plugin_data_interrupt = {

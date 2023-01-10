@@ -15,7 +15,7 @@ from tests.tst_context import TstContext
 
 
 def load(plugin_api: PluginApi, config: DynamicData):
-    plugin_api.register_default_task(NotifyConfirmFeedbackTaskMock)
+    plugin_api.register_default_task(InputNumberSetTaskMock)
 
 
 class InputApiMock():
@@ -31,7 +31,7 @@ class InputApiMock():
         })
 
 
-class NotifyConfirmFeedbackTaskMock(InputNumberSetTask):
+class InputNumberSetTaskMock(InputNumberSetTask):
 
     def __init__(self, react: ReactBase) -> None:
         api = InputApiMock(react)

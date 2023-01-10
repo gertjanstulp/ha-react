@@ -12,6 +12,7 @@ from homeassistant.components.trace import DATA_TRACE
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from custom_components.react.const import (
     ATTR_REACTION_ID,
@@ -53,10 +54,19 @@ def auto_enable_custom_integrations(patch_config_dir, enable_custom_integrations
 
 
 @pytest.fixture
-async def react_component(hass: HomeAssistant):
+def hass_setup(hass: HomeAssistant):
     hass.data[DATA_TRACE] = {}
+    hass.config.set_time_zone("Europe/Amsterdam")
+    hass.config.units = METRIC_SYSTEM
+    result = Mock()
+    result.hass = hass
+    return result
 
-    async def async_setup(workflow_name: str = None, additional_workflows: list[str] = [], plugins: list[dict] = []):
+
+@pytest.fixture
+async def react_component(hass_setup):
+    hass: HomeAssistant = hass_setup.hass
+    async def async_setup(workflow_name: str = None, additional_workflows: list[str] = [], plugins: list[dict] = [], process_workflow: callable(dict) = None):
         with open(get_test_config_dir(REACT_CONFIG)) as f:
             raw_data: dict = yaml.load(f, Loader=SafeLoader)
 
@@ -68,7 +78,10 @@ async def react_component(hass: HomeAssistant):
 
         if workflow_name:
             workflow_id = f"{WORKFLOW_ID_PREFIX}{workflow_name}"
-            data[CONF_WORKFLOW][workflow_id] = raw_data.get(CONF_WORKFLOW, {}).get(workflow_id, {})
+            workflow_raw = raw_data.get(CONF_WORKFLOW, {}).get(workflow_id, {})
+            if process_workflow:
+                process_workflow(workflow_raw)
+            data[CONF_WORKFLOW][workflow_id] = workflow_raw
           
         for additional_workflow in additional_workflows:
             additional_workflow_ID = f"{WORKFLOW_ID_PREFIX}{additional_workflow}"
@@ -120,11 +133,13 @@ async def react_component(hass: HomeAssistant):
     result.async_call_service_run_now = async_call_service_run_now
     result.async_call_service_react_now = async_call_service_react_now
     result.async_call_service_reload = async_call_service_reload
+    # result.async
     return result
 
 
 @pytest.fixture
-async def template_component(hass: HomeAssistant):
+async def template_component(hass_setup):
+    hass: HomeAssistant = hass_setup.hass
     with open(get_test_config_dir(TEMPLATE_CONFIG)) as f:
         data = yaml.load(f, Loader=SafeLoader) or {}
     assert await async_setup_component(hass, template.DOMAIN, { template.DOMAIN: data })
@@ -132,7 +147,8 @@ async def template_component(hass: HomeAssistant):
 
 
 @pytest.fixture
-async def input_boolean_component(hass: HomeAssistant):
+async def input_boolean_component(hass_setup):
+    hass: HomeAssistant = hass_setup.hass
     with open(get_test_config_dir(INPUT_BOOLEAN_CONFIG)) as f:
         data = yaml.load(f, Loader=SafeLoader) or {}
     assert await async_setup_component(hass, input_boolean.DOMAIN, { input_boolean.DOMAIN: data })
@@ -165,7 +181,8 @@ async def input_boolean_component(hass: HomeAssistant):
 
 
 @pytest.fixture
-async def input_number_component(hass: HomeAssistant):
+async def input_number_component(hass_setup):
+    hass: HomeAssistant = hass_setup.hass
     with open(get_test_config_dir(INPUT_NUMBER_CONFIG)) as f:
         data = yaml.load(f, Loader=SafeLoader) or {}
     assert await async_setup_component(hass, input_number.DOMAIN, { input_number.DOMAIN: data })
@@ -188,7 +205,8 @@ async def input_number_component(hass: HomeAssistant):
 
 
 @pytest.fixture
-async def input_text_component(hass: HomeAssistant):
+async def input_text_component(hass_setup):
+    hass: HomeAssistant = hass_setup.hass
     with open(get_test_config_dir(INPUT_TEXT_CONFIG)) as f:
         data = yaml.load(f, Loader=SafeLoader) or {}
     assert await async_setup_component(hass, input_text.DOMAIN, { input_text.DOMAIN: data })
@@ -211,7 +229,8 @@ async def input_text_component(hass: HomeAssistant):
 
 
 @pytest.fixture
-async def group_component(hass: HomeAssistant):
+async def group_component(hass_setup):
+    hass: HomeAssistant = hass_setup.hass
     with open(get_test_config_dir(GROUP_CONFIG)) as f:
         data = yaml.load(f, Loader=SafeLoader) or {}
     assert await async_setup_component(hass, group.DOMAIN, { group.DOMAIN: data })
@@ -219,13 +238,15 @@ async def group_component(hass: HomeAssistant):
 
     
 @pytest.fixture
-async def binary_sensor_component(hass: HomeAssistant):
+async def binary_sensor_component(hass_setup):
+    hass: HomeAssistant = hass_setup.hass
     assert await async_setup_component(hass, binary_sensor.DOMAIN, {})
     await hass.async_block_till_done()
 
     
 @pytest.fixture
-async def device_tracker_component(hass: HomeAssistant):
+async def device_tracker_component(hass_setup):
+    hass: HomeAssistant = hass_setup.hass
     assert await async_setup_component(hass, device_tracker.DOMAIN, {})
     await hass.async_block_till_done()
     
@@ -247,7 +268,8 @@ async def device_tracker_component(hass: HomeAssistant):
 
 
 @pytest.fixture
-async def person_component(hass: HomeAssistant):
+async def person_component(hass_setup):
+    hass: HomeAssistant = hass_setup.hass
     with open(get_test_config_dir(PERSON_CONFIG)) as f:
         data = yaml.load(f, Loader=SafeLoader) or {}
     assert await async_setup_component(hass, person.DOMAIN, { person.DOMAIN: data })

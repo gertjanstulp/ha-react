@@ -18,6 +18,7 @@ manage/secrets.json
 coverage.xml
 htmlcov
 venv
+venv.bak
 config
 
 homeassistant

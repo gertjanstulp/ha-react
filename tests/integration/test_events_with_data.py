@@ -5,6 +5,7 @@ from homeassistant.core import HomeAssistant
 from tests.tst_context import TstContext
 from tests.common import FIXTURE_WORKFLOW_NAME
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["data"])
 async def test_react_data_no_event_1(hass: HomeAssistant, workflow_name, react_component):
     """
@@ -13,7 +14,8 @@ async def test_react_data_no_event_1(hass: HomeAssistant, workflow_name, react_c
     - No Event should be received
     """
 
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():
@@ -23,6 +25,7 @@ async def test_react_data_no_event_1(hass: HomeAssistant, workflow_name, react_c
         await tc.async_verify_reaction_event_not_received()
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["data"])
 async def test_react_data_no_event_2(hass: HomeAssistant, workflow_name, react_component):
     """
@@ -31,7 +34,8 @@ async def test_react_data_no_event_2(hass: HomeAssistant, workflow_name, react_c
     - No Event should be received
     """
 
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
     
     tc = TstContext(hass, workflow_name)
     data_in: dict = {"actor_data_data" : 4}
@@ -42,6 +46,7 @@ async def test_react_data_no_event_2(hass: HomeAssistant, workflow_name, react_c
         await tc.async_verify_reaction_event_not_received()
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["data"])
 async def test_react_data_event(hass: HomeAssistant, workflow_name, react_component):
     """
@@ -52,7 +57,8 @@ async def test_react_data_event(hass: HomeAssistant, workflow_name, react_compon
     - Trace data should match configuration
     """
 
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
     
     tc = TstContext(hass, workflow_name)
     data_in: dict = {"actor_data_data" : 3}
@@ -72,6 +78,7 @@ async def test_react_data_event(hass: HomeAssistant, workflow_name, react_compon
         tc.verify_trace_record(expected_runtime_actor_data=data_in, expected_runtime_reactor_data=[data_out])
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["data_delayed"])
 async def test_react_data_delayed_event(hass: HomeAssistant, workflow_name, react_component):
     """
@@ -83,7 +90,8 @@ async def test_react_data_delayed_event(hass: HomeAssistant, workflow_name, reac
     - Trace data should match configuration
     """
 
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
     
     tc = TstContext(hass, workflow_name)
     data_out: dict = {
@@ -101,6 +109,7 @@ async def test_react_data_delayed_event(hass: HomeAssistant, workflow_name, reac
         await tc.async_stop_all_runs()
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["multiple_actor_data"])
 async def test_react_multiple_actor_data_event_1(hass: HomeAssistant, workflow_name, react_component):
     """
@@ -111,7 +120,8 @@ async def test_react_multiple_actor_data_event_1(hass: HomeAssistant, workflow_n
     - Trace data should match configuration
     """
 
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
     
     tc = TstContext(hass, workflow_name)
     data_in: dict = {"actor_data_multiple_actor_data" : 1}
@@ -124,6 +134,7 @@ async def test_react_multiple_actor_data_event_1(hass: HomeAssistant, workflow_n
         tc.verify_trace_record()
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["multiple_actor_data"])
 async def test_react_multiple_actor_data_event_2(hass: HomeAssistant, workflow_name, react_component):
     """
@@ -134,7 +145,8 @@ async def test_react_multiple_actor_data_event_2(hass: HomeAssistant, workflow_n
     - Trace data should match configuration
     """
 
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
     
     tc = TstContext(hass, workflow_name)
     data_in: dict = {"actor_data_multiple_actor_data" : 2}

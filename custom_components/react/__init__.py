@@ -209,11 +209,19 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
                 actor_tracker.start()
 
                 def destroy_dispatch():
-                    async_dispatcher_send(self.hass, SIGNAL_ACTION_HANDLER_DESTROYED, actor_tracker.value_container.entity)
+                    async_dispatcher_send(
+                        self.hass, 
+                        SIGNAL_ACTION_HANDLER_DESTROYED, 
+                        self.workflow.id,
+                        actor_tracker.value_container)
                 self.on_destroy(destroy_dispatch)
                 self.on_destroy(actor_tracker.destroy)
                 
-                async_dispatcher_send(self.hass, SIGNAL_ACTION_HANDLER_CREATED, actor_tracker.value_container.entity, actor_tracker.value_container.type)
+                async_dispatcher_send(
+                    self.hass, 
+                    SIGNAL_ACTION_HANDLER_CREATED,
+                    self.workflow.id,
+                    actor_tracker.value_container)
 
                 return actor_tracker
 

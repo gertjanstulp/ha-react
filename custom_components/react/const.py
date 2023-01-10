@@ -250,12 +250,17 @@ WORKFLOW_MODE_RESTART = "restart"
 WORKFLOW_MODE_QUEUED = "queued"
 WORKFLOW_MODE_PARALLEL = "parallel"
 
+# time
+ACTOR_ENTITY_TIME = "time"
+ACTOR_TYPE_CLOCK = "clock"
+ACTOR_TYPE_PATTERN = "pattern"
+
 
 def is_list_of_strings(obj):
     return bool(obj) and isinstance(obj, list) and all(isinstance(elem, str) for elem in obj)
 
 
-def list(value: Union[str, list]) -> list[str]:
+def list(value: str | list) -> list[str]:
     if is_list_of_strings(value):
         return value
     raise vol.Invalid("Not a valid list")

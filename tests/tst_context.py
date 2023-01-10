@@ -286,9 +286,12 @@ class TstContext():
         assert DeepDiff(data_got, expected_data) == {}, f"Expected event entity '{expected_data}', got '{data_got}'"
 
 
-    def verify_reaction_event_count(self, expected_count: int = 1):
+    def verify_reaction_event_count(self, expected_count: int = 1, at_least_count: bool = False):
         got_count = self.event_mock.call_count
-        assert got_count == expected_count, f"Expected event count {expected_count}, got {got_count}"
+        if at_least_count:
+            assert got_count >= expected_count, f"Expected event count {expected_count}, got {got_count}"
+        else:
+            assert got_count == expected_count, f"Expected event count {expected_count}, got {got_count}"
 
 
     async def async_verify_reaction_event_not_received(self, delay: int = 0) -> None:
@@ -297,10 +300,10 @@ class TstContext():
         self.verify_reaction_event_count(0)
 
 
-    async def async_verify_reaction_event_received(self, expected_count: int = 1, delay: int = 0) -> None:
+    async def async_verify_reaction_event_received(self, expected_count: int = 1, delay: int = 0, at_least_count: bool = False) -> None:
         if delay > 0:
             await sleep(delay)
-        self.verify_reaction_event_count(expected_count)
+        self.verify_reaction_event_count(expected_count, at_least_count)
         for i,call in enumerate(self.event_mock.mock_calls):
             assert len(call.args) > 0, f"Expected args for call {i}, got none"
 

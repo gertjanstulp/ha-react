@@ -5,6 +5,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import FIXTURE_WORKFLOW_NAME
 from tests.tst_context import TstContext
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["multiple_actor"])
 async def test_react_multiple_actor_1(hass: HomeAssistant, workflow_name, react_component):
     """
@@ -15,7 +16,8 @@ async def test_react_multiple_actor_1(hass: HomeAssistant, workflow_name, react_
     - Trace data should match configuration
     """
 
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():
@@ -27,6 +29,7 @@ async def test_react_multiple_actor_1(hass: HomeAssistant, workflow_name, react_
         tc.verify_trace_record()
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["multiple_actor"])
 async def test_react_multiple_actor_2(hass: HomeAssistant, workflow_name, react_component):
     """
@@ -37,7 +40,8 @@ async def test_react_multiple_actor_2(hass: HomeAssistant, workflow_name, react_
     - Trace data should match configuration
     """
 
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():
@@ -49,6 +53,7 @@ async def test_react_multiple_actor_2(hass: HomeAssistant, workflow_name, react_
         tc.verify_trace_record(actor_index=1)
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["multiple_reactor"])
 async def test_react_multiple_reactor(hass: HomeAssistant, workflow_name, react_component):
     """
@@ -59,7 +64,8 @@ async def test_react_multiple_reactor(hass: HomeAssistant, workflow_name, react_
     - Trace data should match configuration
     """
 
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():
@@ -72,6 +78,7 @@ async def test_react_multiple_reactor(hass: HomeAssistant, workflow_name, react_
         tc.verify_trace_record()
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["multiple_entities"])
 async def test_react_multiple_entities_1(hass: HomeAssistant, workflow_name, react_component):
     """
@@ -82,7 +89,8 @@ async def test_react_multiple_entities_1(hass: HomeAssistant, workflow_name, rea
     - Trace data should match configuration
     """
     
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():
@@ -94,6 +102,7 @@ async def test_react_multiple_entities_1(hass: HomeAssistant, workflow_name, rea
         tc.verify_trace_record()
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["multiple_entities"])
 async def test_react_multiple_entities_2(hass: HomeAssistant, workflow_name, react_component):
     """
@@ -104,7 +113,8 @@ async def test_react_multiple_entities_2(hass: HomeAssistant, workflow_name, rea
     - Trace data should match configuration
     """
     
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():

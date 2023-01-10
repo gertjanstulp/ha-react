@@ -15,6 +15,7 @@ from tests.common import FIXTURE_WORKFLOW_NAME, TEST_CONTEXT
 from tests.tst_context import TstContext
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["input_number_set"])
 async def test_input_number_set(hass: HomeAssistant, workflow_name, react_component):
     """
@@ -22,7 +23,8 @@ async def test_input_number_set(hass: HomeAssistant, workflow_name, react_compon
     """
 
     mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.input_plugin_input_number_set_mock"}
-    await react_component.async_setup(workflow_name, plugins=[mock_plugin])
+    comp = await react_component
+    await comp.async_setup(workflow_name, plugins=[mock_plugin])
     react: ReactBase = hass.data[DOMAIN]
     
     plugin_data = {

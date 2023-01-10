@@ -1,6 +1,6 @@
-aiohttp_cors
-Pillow
+aiohttp_cors==0.7.0
+Pillow==9.3.0
 homeassistant
 home-assistant-frontend
-hass-nabucasa
-python-telegram-bot
+hass-nabucasa==0.61.0
+python-telegram-bot==13.1

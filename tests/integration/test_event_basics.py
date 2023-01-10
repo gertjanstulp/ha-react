@@ -8,7 +8,7 @@ from tests.common import FIXTURE_WORKFLOW_NAME
 
 FIXTURE_ADDITIONAL_TESTS = "additional_tests"
 
-
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["immediate"])
 async def test_react_immediate(hass: HomeAssistant, workflow_name, react_component):
     """
@@ -19,7 +19,8 @@ async def test_react_immediate(hass: HomeAssistant, workflow_name, react_compone
     - Trace data should match configuration
     """
 
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():
@@ -31,6 +32,7 @@ async def test_react_immediate(hass: HomeAssistant, workflow_name, react_compone
         tc.verify_trace_record()
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["delayed"])
 async def test_react_delayed(hass: HomeAssistant, workflow_name, react_component):
     """
@@ -43,7 +45,8 @@ async def test_react_delayed(hass: HomeAssistant, workflow_name, react_component
     - Trace data should match configuration
     """
 
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():
@@ -58,6 +61,7 @@ async def test_react_delayed(hass: HomeAssistant, workflow_name, react_component
         tc.verify_reaction_not_found()
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["scheduled"])
 async def test_react_scheduled(hass: HomeAssistant, workflow_name, react_component):
     """ 
@@ -68,7 +72,8 @@ async def test_react_scheduled(hass: HomeAssistant, workflow_name, react_compone
     - Trace data should match configuration
     """
 
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():
@@ -81,6 +86,7 @@ async def test_react_scheduled(hass: HomeAssistant, workflow_name, react_compone
         await tc.async_stop_all_runs()
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["reset"])
 async def test_react_reset(hass: HomeAssistant, workflow_name, react_component):
     """
@@ -90,7 +96,8 @@ async def test_react_reset(hass: HomeAssistant, workflow_name, react_component):
     - Trace data should match configuration
     """
     
-    await react_component.async_setup(workflow_name, ["delayed", "scheduled"])
+    comp = await react_component
+    await comp.async_setup(workflow_name, ["delayed", "scheduled"])
 
     tc = TstContext(hass, workflow_name)
     tc_delayed = TstContext(hass, "delayed")
@@ -111,6 +118,7 @@ async def test_react_reset(hass: HomeAssistant, workflow_name, react_component):
     await tc_scheduled.async_stop_all_runs()
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["forward_action"])
 async def test_react_forward_action_no_toggle(hass: HomeAssistant, workflow_name, react_component):
     """ 
@@ -121,7 +129,8 @@ async def test_react_forward_action_no_toggle(hass: HomeAssistant, workflow_name
     - Trace data should match configuration
     """
 
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():
@@ -133,6 +142,7 @@ async def test_react_forward_action_no_toggle(hass: HomeAssistant, workflow_name
         tc.verify_trace_record(expected_runtime_actor_action="test")
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["forward_action"])
 async def test_react_forward_action_toggle(hass: HomeAssistant, workflow_name, react_component):
     """ 
@@ -142,7 +152,8 @@ async def test_react_forward_action_toggle(hass: HomeAssistant, workflow_name, r
     - Trace data should match configuration
     """
 
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():
@@ -153,6 +164,7 @@ async def test_react_forward_action_toggle(hass: HomeAssistant, workflow_name, r
         tc.verify_trace_record(expected_result_message="Skipped, toggle with forward-action")
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["forward_data"])
 async def test_react_forward_data(hass: HomeAssistant, workflow_name, react_component):
     """ 
@@ -163,7 +175,8 @@ async def test_react_forward_data(hass: HomeAssistant, workflow_name, react_comp
     - Trace data should match configuration
     """
 
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
 
     data_in: dict = {
         "data1" : 37,
@@ -180,6 +193,7 @@ async def test_react_forward_data(hass: HomeAssistant, workflow_name, react_comp
         tc.verify_trace_record(expected_runtime_reactor_data=[data_in])
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["full_stencil"])
 async def test_react_full_stencil(hass: HomeAssistant, workflow_name, react_component):
     """
@@ -190,7 +204,8 @@ async def test_react_full_stencil(hass: HomeAssistant, workflow_name, react_comp
     - Trace data should match configuration
     """
 
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
     data_out: dict = {
@@ -205,6 +220,7 @@ async def test_react_full_stencil(hass: HomeAssistant, workflow_name, react_comp
         tc.verify_trace_record()
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["partial_stencil"])
 async def test_react_partial_stencil(hass: HomeAssistant, workflow_name, react_component):
     """
@@ -215,7 +231,8 @@ async def test_react_partial_stencil(hass: HomeAssistant, workflow_name, react_c
     - Trace data should match configuration
     """
 
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():
@@ -227,13 +244,15 @@ async def test_react_partial_stencil(hass: HomeAssistant, workflow_name, react_c
         tc.verify_trace_record()
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["overwrite"])
 async def test_react_overwrite(hass: HomeAssistant, workflow_name, react_component):
     """
     Test for workflow with overwrite reactor:
     """
 
-    await react_component.async_setup(workflow_name)
+    comp = await react_component
+    await comp.async_setup(workflow_name)
 
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():

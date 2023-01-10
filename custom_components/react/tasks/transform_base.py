@@ -15,7 +15,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from custom_components.react.utils.events import Event
-from custom_components.react.utils.struct import DynamicData
+from custom_components.react.utils.struct import ActorRuntime, DynamicData
 
 from ..base import ReactBase
 from ..const import (
@@ -137,12 +137,12 @@ class StateTransformTask(ReactTask):
 
 
     @callback
-    def async_register_entity(self, entity: MultiItem, type: MultiItem):
-        if self.type in type:
-            self.entities.extend(entity)
+    def async_register_entity(self, workflow_id: str, actor: ActorRuntime):
+        if self.type in actor.type:
+            self.entities.extend(actor.entity)
 
     
     @callback
-    def async_unregister_entity(self, entity: MultiItem):
-        if entity in self.entities:
-            self.entities.remove(entity)
+    def async_unregister_entity(self, workflow_id: str, actor: ActorRuntime):
+        if actor.entity in self.entities:
+            self.entities.remove(actor.entity)

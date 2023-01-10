@@ -4,6 +4,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import FIXTURE_WORKFLOW_NAME
 from tests.tst_context import TstContext
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["trace"])
 async def test_react_trace_switched_off_actor_1(hass: HomeAssistant, workflow_name, react_component, input_boolean_component):
     """
@@ -14,8 +15,10 @@ async def test_react_trace_switched_off_actor_1(hass: HomeAssistant, workflow_na
     - Trace data should match configuration
     """
 
-    await react_component.async_setup(workflow_name)
-    await input_boolean_component.async_turn_off("test_trace")
+    comp = await react_component
+    await comp.async_setup(workflow_name)
+    ibc = await input_boolean_component
+    await ibc.async_turn_off("test_trace")
     
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():
@@ -29,6 +32,7 @@ async def test_react_trace_switched_off_actor_1(hass: HomeAssistant, workflow_na
         )
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["trace"])
 async def test_react_trace_switched_on_actor_1(hass: HomeAssistant, workflow_name, react_component, input_boolean_component):
     """
@@ -39,8 +43,10 @@ async def test_react_trace_switched_on_actor_1(hass: HomeAssistant, workflow_nam
     - Trace data should match configuration
     """
 
-    await react_component.async_setup(workflow_name)
-    await input_boolean_component.async_turn_on("test_trace")
+    comp = await react_component
+    await comp.async_setup(workflow_name)
+    ibc = await input_boolean_component
+    await ibc.async_turn_on("test_trace")
 
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():
@@ -53,6 +59,7 @@ async def test_react_trace_switched_on_actor_1(hass: HomeAssistant, workflow_nam
         )
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["trace"])
 async def test_react_trace_switched_off_actor_2(hass: HomeAssistant, workflow_name, react_component, input_boolean_component):
     """
@@ -63,8 +70,10 @@ async def test_react_trace_switched_off_actor_2(hass: HomeAssistant, workflow_na
     - Trace data should match configuration
     """
 
-    await react_component.async_setup(workflow_name)
-    await input_boolean_component.async_turn_off("test_trace")
+    comp = await react_component
+    await comp.async_setup(workflow_name)
+    ibc = await input_boolean_component
+    await ibc.async_turn_off("test_trace")
     
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():
@@ -79,6 +88,7 @@ async def test_react_trace_switched_off_actor_2(hass: HomeAssistant, workflow_na
         )
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["trace"])
 async def test_react_trace_switched_on_actor_2(hass: HomeAssistant, workflow_name, react_component, input_boolean_component):
     """
@@ -89,8 +99,10 @@ async def test_react_trace_switched_on_actor_2(hass: HomeAssistant, workflow_nam
     - Trace data should match configuration
     """
 
-    await react_component.async_setup(workflow_name)
-    await input_boolean_component.async_turn_on("test_trace")
+    comp = await react_component
+    await comp.async_setup(workflow_name)
+    ibc = await input_boolean_component
+    await ibc.async_turn_on("test_trace")
 
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():

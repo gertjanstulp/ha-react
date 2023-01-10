@@ -33,6 +33,8 @@ from custom_components.react.plugin.telegram.const import ATTR_COMMAND, ATTR_ENT
 from tests.tst_context import TstContext
 from tests.common import FIXTURE_WORKFLOW_NAME, TEST_CONTEXT
 
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["telegram_notify_send_message"])
 async def test_telegram_notify_send_message(hass: HomeAssistant, workflow_name, react_component):
     """
@@ -40,7 +42,8 @@ async def test_telegram_notify_send_message(hass: HomeAssistant, workflow_name, 
     """
 
     mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.telegram_plugin_notify_send_message_mock"}
-    await react_component.async_setup(workflow_name, plugins=[mock_plugin])
+    comp = await react_component
+    await comp.async_setup(workflow_name, plugins=[mock_plugin])
     react: ReactBase = hass.data[DOMAIN]
     
     plugin_data = {
@@ -66,6 +69,7 @@ async def test_telegram_notify_send_message(hass: HomeAssistant, workflow_name, 
         tc.verify_plugin_data_content(plugin_data)
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["telegram_notify_confirm_feedback"])
 async def test_telegram_notify_confirm_feedback(hass: HomeAssistant, workflow_name, react_component):
     """
@@ -73,7 +77,8 @@ async def test_telegram_notify_confirm_feedback(hass: HomeAssistant, workflow_na
     """
 
     mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.telegram_plugin_notify_confirm_feedback_mock"}
-    await react_component.async_setup(workflow_name, plugins=[mock_plugin])
+    comp = await react_component
+    await comp.async_setup(workflow_name, plugins=[mock_plugin])
     react: ReactBase = hass.data[DOMAIN]
 
     data_in = {
@@ -106,9 +111,11 @@ async def test_telegram_notify_confirm_feedback(hass: HomeAssistant, workflow_na
         tc.verify_plugin_data_content(feedback_data)
 
 
+@pytest.mark.asyncio
 async def test_telegram_callback_transform_in(hass: HomeAssistant, react_component):
     mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.telegram_plugin_callback_transform_in_mock"}
-    await react_component.async_setup(None, plugins=[mock_plugin])
+    comp = await react_component
+    await comp.async_setup(None, plugins=[mock_plugin])
     react: ReactBase = hass.data[DOMAIN]
 
     tc = TstContext(hass, None)
