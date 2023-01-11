@@ -73,11 +73,15 @@ class Task(ReactTask):
             # Do not catch exception here, should be propagated to caller
             value,type = parse_pattern(action)
             time_key = f"{value}{type}"
-            time_data = TimeData(
-                f"/{value}" if type == "h" else None,
-                f"/{value}" if type == "m" else None,
-                f"/{value}" if type == "s" else None,
-            )
+            hours = f"/{value}" if type == "h" else None
+            minutes = f"/{value}" if type == "m" else None
+            seconds = f"/{value}" if type == "s" else None
+            # If larger units are specified, default the smaller units to zero
+            if minutes is None and hours is not None:
+                minutes = 0
+            if seconds is None and minutes is not None:
+                seconds = 0
+            time_data = TimeData(hours, minutes, seconds)
         
         event_key = f"{workflow_id}_{actor_id}_{time_key}"
 
