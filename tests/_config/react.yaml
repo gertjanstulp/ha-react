@@ -428,6 +428,18 @@ workflow:
         type: reactor_type_input_number
         action: reactor_action_input_number
 
+  workflow_input_boolean:
+    actor:
+      actor_input_boolean:
+        entity: test_input_boolean
+        type: input_boolean
+        action: toggle
+    reactor:
+      reactor_input_boolean: 
+        entity: reactor_entity_input_boolean
+        type: reactor_type_input_boolean
+        action: reactor_action_input_boolean
+
   workflow_time_clock:
     actor:
       actor_time_clock:
