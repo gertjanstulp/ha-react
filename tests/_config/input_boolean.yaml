@@ -29,3 +29,7 @@ test_binary_sensor_available:
 test_wait:
   name: test_wait
   initial: False
+
+test_input_boolean:
+  name: test_input_boolean
+  initial: False

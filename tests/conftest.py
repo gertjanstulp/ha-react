@@ -154,7 +154,7 @@ async def input_boolean_component(hass_setup):
     assert await async_setup_component(hass, input_boolean.DOMAIN, { input_boolean.DOMAIN: data })
     await hass.async_block_till_done()
 
-    async def async_turn_on(name: str, ):
+    async def async_turn_on(name: str):
         await hass.services.async_call(
             input_boolean.DOMAIN,
             SERVICE_TURN_ON,
