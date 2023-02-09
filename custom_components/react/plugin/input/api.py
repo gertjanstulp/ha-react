@@ -1,7 +1,12 @@
 from homeassistant.components.input_number import (
-    DOMAIN,
+    DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
     ATTR_VALUE
+)
+from homeassistant.components.input_boolean import (
+    DOMAIN as BOOLEAN_DOMAIN,
+    SERVICE_TURN_ON,
+    SERVICE_TURN_OFF,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID, 
@@ -40,10 +45,42 @@ class Api():
                 ATTR_VALUE: value,
             }
             await self.react.hass.services.async_call(
-                DOMAIN,
+                NUMBER_DOMAIN,
                 SERVICE_SET_VALUE,
                 input_number_data,
                 context,
             )
         except:
             _LOGGER.exception("Setting input_number failed")
+
+
+    async def async_input_boolean_turn_on(self, context: Context, entity_id: str):
+        self._debug(f"Turning on input_boolean '{entity_id}'")
+        try:
+            input_boolean_data = {
+                ATTR_ENTITY_ID: f"input_boolean.{entity_id}",
+            }
+            await self.react.hass.services.async_call(
+                BOOLEAN_DOMAIN,
+                SERVICE_TURN_ON,
+                input_boolean_data,
+                context,
+            )
+        except:
+            _LOGGER.exception("Turning on input_boolean failed")
+
+
+    async def async_input_boolean_turn_off(self, context: Context, entity_id: str):
+        self._debug(f"Turning off input_boolean '{entity_id}'")
+        try:
+            input_boolean_data = {
+                ATTR_ENTITY_ID: f"input_boolean.{entity_id}",
+            }
+            await self.react.hass.services.async_call(
+                BOOLEAN_DOMAIN,
+                SERVICE_TURN_OFF,
+                input_boolean_data,
+                context,
+            )
+        except:
+            _LOGGER.exception("Turning off input_boolean failed")

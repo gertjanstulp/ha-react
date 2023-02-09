@@ -62,3 +62,7 @@ button_trigger_tts_media_player_speek:
   name: TTS Media player speek without volume
 button_trigger_input_number_set:
   name: Input number set
+button_trigger_input_boolean_turn_on:
+  name: Input boolean turn on
+button_trigger_input_boolean_turn_off:
+  name: Input boolean turn off

@@ -155,6 +155,7 @@ REACT_TYPE_NOTIFY = "notify"
 REACT_TYPE_TTS = "tts"
 REACT_TYPE_MEDIA_PLAYER = "media_player"
 REACT_TYPE_INPUT_NUMBER = "input_number"
+REACT_TYPE_INPUT_BOOLEAN = "input_boolean"
 
 # React actions
 REACT_ACTION_SEND_MESSAGE = "send_message"

@@ -33,3 +33,11 @@ test_wait:
 test_input_boolean:
   name: test_input_boolean
   initial: False
+
+input_boolean_turn_on_test:
+  name: input_boolean_turn_on_test
+  initial: False
+
+input_boolean_turn_off_test:
+  name: input_boolean_turn_off_test
+  initial: True

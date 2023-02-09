@@ -417,3 +417,27 @@
       entity: actor_entity_input_number_set
       type: actor_type_input_number_set
       action: actor_action_input_number_set
+
+- id: trigger_input_boolean_turn_on
+  alias: Trigger input boolean turn on
+  trigger:
+    platform: state
+    entity_id: input_button.button_trigger_input_boolean_turn_on
+  action:
+    event: ev_react_action
+    event_data:
+      entity: actor_entity_input_boolean_turn_on
+      type: actor_type_input_boolean_turn_on
+      action: actor_action_input_boolean_turn_on
+
+- id: trigger_input_boolean_turn_off
+  alias: Trigger input boolean turn off
+  trigger:
+    platform: state
+    entity_id: input_button.button_trigger_input_boolean_turn_off
+  action:
+    event: ev_react_action
+    event_data:
+      entity: actor_entity_input_boolean_turn_off
+      type: actor_type_input_boolean_turn_off
+      action: actor_action_input_boolean_turn_off
