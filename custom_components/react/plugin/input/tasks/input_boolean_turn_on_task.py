@@ -52,5 +52,6 @@ class InputBooleanTurnOnReactionEvent(ReactionEvent[InputBooleanTurnOnReactionEv
         return (
             self.payload.type == REACT_TYPE_INPUT_BOOLEAN and
             self.payload.action == SERVICE_TURN_ON and 
+            self.payload.data and
             self.payload.data.plugin == PLUGIN_NAME
         )
