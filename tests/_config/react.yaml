@@ -778,6 +778,34 @@ workflow:
           plugin: input
           value: 12.34
 
+  workflow_input_boolean_turn_on:
+    actor:
+      actor_input_boolean_turn_on:
+        entity: actor_entity_input_boolean_turn_on
+        type: actor_type_input_boolean_turn_on
+        action: actor_action_input_boolean_turn_on
+    reactor:
+      reactor_input_boolean_turn_on:
+        entity: input_boolean_turn_on_test
+        type: input_boolean
+        action: turn_on
+        data:
+          plugin: input
+
+  workflow_input_boolean_turn_off:
+    actor:
+      actor_input_boolean_turn_off:
+        entity: actor_entity_input_boolean_turn_off
+        type: actor_type_input_boolean_turn_off
+        action: actor_action_input_boolean_turn_off
+    reactor:
+      reactor_input_boolean_turn_off:
+        entity: input_boolean_turn_off_test
+        type: input_boolean
+        action: turn_off
+        data:
+          plugin: input
+
   workflow_debug:
     actor:
       debug:
