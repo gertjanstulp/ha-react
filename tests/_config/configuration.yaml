@@ -1,5 +1,35 @@
+
 default_config:
-react:
-  plugins:
-  stencil:
-  workflow:
+
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+logger:
+  default: warn
+  logs:
+    custom_components.react: debug
+
+lovelace:
+  mode: yaml
+  resources: !include_dir_merge_list lovelace/custom_resources
+  dashboards:
+    react-test:
+      mode: yaml
+      filename: config/dashboard.yaml
+      title: React test
+      icon: mdi:view-dashboard
+
+device_tracker:
+
+input_boolean: !include config/input_boolean.yaml
+input_text: !include config/input_text.yaml
+input_number: !include config/input_number.yaml
+input_button: !include config/input_button.yaml
+automation: !include config/automations.yaml
+template: !include config/template.yaml
+group: !include config/group.yaml
+telegram_bot: !include config/telegram_bot.yaml
+notify: !include config/notify.yaml
+react: !include config/react.yaml
+person: !include config/person.yaml
+tts: !include config/tts.yaml

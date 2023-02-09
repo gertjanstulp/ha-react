@@ -445,7 +445,7 @@ workflow:
       actor_time_clock:
         entity: time
         type: clock
-        action: CLOCK
+        action: '12:34:56'
     reactor:
       reactor_time_clock:
         entity: reactor_entity_time_clock
