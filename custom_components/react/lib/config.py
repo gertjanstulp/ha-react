@@ -13,6 +13,7 @@ from custom_components.react.utils.struct import ActorConfig, CtorConfig, DelayD
 from custom_components.react.const import (
     ATTR_ACTION,
     ATTR_ACTOR,
+    ATTR_REACTOR,
     ATTR_CONDITION,
     ATTR_DATA,
     ATTR_DELAY,
@@ -27,7 +28,6 @@ from custom_components.react.const import (
     ATTR_MODE,
     ATTR_OVERWRITE,
     ATTR_PARALLEL,
-    ATTR_REACTOR,
     ATTR_RESET_WORKFLOW,
     ATTR_SCHEDULE,
     ATTR_SCHEDULE_AT,
@@ -38,6 +38,8 @@ from custom_components.react.const import (
     ATTR_TYPE,
     ATTR_VARIABLES,
     ATTR_WAIT,
+    ATTR_WORKFLOW_THEN,
+    ATTR_WORKFLOW_WHEN,
     CONF_ENTITY_MAPS,
     CONF_PLUGINS,
     CONF_STENCIL,
@@ -112,33 +114,22 @@ class Wait(WaitConfig):
         self.load(config)
 
 
-    # def get_trace_config(self) -> dict:
-    #     result = {}
-    #     if self.state:
-    #         result[ATTR_STATE] = self.state.get_trace_config()
-    #     if self.delay:
-    #         result[ATTR_DELAY] = self.delay.get_trace_config()
-    #     if self.schedule:
-    #         result[ATTR_SCHEDULE] = self.schedule.get_trace_config()
-    #     return result
-
-
 class Ctor(CtorConfig):
     
     type_hints: dict = {ATTR_ENTITY: MultiItem}
 
 
-    def __init__(self, config: dict, id: str, index: int):
+    def __init__(self, config: dict, index: int):
         super().__init__()
 
         self.load(config)
     
-        self.id: str = None
         self.enabled: bool = False
 
-        self.set(ATTR_ID, id)
         self.set(ATTR_ENABLED, True)
         self.set(ATTR_INDEX, index)
+        if not self.id:
+            self.set(ATTR_ID, str(index))
 
 
     def get_trace_config(self, moniker) -> dict:
@@ -164,8 +155,8 @@ class Ctor(CtorConfig):
 
 class Actor(Ctor, ActorConfig):
     
-    def __init__(self, config: dict, id: str, workflow_id: str, index: int):
-        super().__init__(config, id, index)
+    def __init__(self, config: dict, index: int, workflow_id: str):
+        super().__init__(config, index)
         
         self.workflow_id = workflow_id
 
@@ -180,8 +171,8 @@ class Reactor(Ctor, ReactorConfig):
         ATTR_WAIT: Wait,
     }
 
-    def __init__(self, config: dict, id: str, workflow_id: str, index: int):
-        super().__init__(config, id, index)
+    def __init__(self, config: dict, index: int, workflow_id: str):
+        super().__init__(config, index)
         
         self.workflow_id = workflow_id
 
@@ -211,7 +202,7 @@ class Reactor(Ctor, ReactorConfig):
         return dict_merge(base_dict, self_dict)
 
 
-ctor_type = Callable[[dict, str, str, int], Union[Actor, Reactor] ]
+ctor_type = Callable[[dict, int, str], Union[Actor, Reactor] ]
 
 
 class Workflow():
@@ -237,8 +228,8 @@ class Workflow():
 
     def load(self, config: dict, stencil: dict):
         merged_config = dict_merge(stencil, config)
-        self.actors: list[Actor] = self.load_items(merged_config, ATTR_ACTOR, Actor)
-        self.reactors: list[Reactor] = self.load_items(merged_config, ATTR_REACTOR, Reactor)
+        self.actors: list[Actor] = self.load_items(merged_config, ATTR_WORKFLOW_WHEN, Actor)
+        self.reactors: list[Reactor] = self.load_items(merged_config, ATTR_WORKFLOW_THEN, Reactor)
         if ATTR_MODE in merged_config:
             self.mode = merged_config.get(ATTR_MODE)
         self.validate()
@@ -260,14 +251,12 @@ class Workflow():
 
     def load_items(self, config: dict, item_property: str, item_type: ctor_type) -> list[Union[Actor, Reactor]]:
         if not config: return []
-        items_config = config.get(item_property, {})
+        items_config = config.get(item_property, [])
 
         result = []
-        index = 0
-        for id,item_config in items_config.items():
-            item: Ctor = item_type(item_config, id, self.id, index)
+        for idx,item_config in enumerate(items_config):
+            item: Ctor = item_type(item_config, idx, self.id)
             result.append(item)
-            index += 1
 
         return result
 
@@ -415,19 +404,25 @@ def calculate_next_schedule_hit(schedule: ScheduleRuntime) -> datetime:
 
 
 def dict_merge(dct: dict, merge_dct: dict) -> dict:
-    rtn_dct = dct.copy()
+    result = dct.copy()
     
-    for k, v in merge_dct.items():
-        if not rtn_dct.get(k):
-            rtn_dct[k] = v
-        elif k in rtn_dct and type(v) != type(rtn_dct[k]):
-            raise TypeError(f"Overlapping keys exist with different types: original is {type(rtn_dct[k])}, new value is {type(v)}")
-        elif isinstance(rtn_dct[k], dict) and isinstance(merge_dct[k], dict):
-            rtn_dct[k] = dict_merge(rtn_dct[k], merge_dct[k])
-        elif isinstance(v, list):
-            for list_value in v:
-                if list_value not in rtn_dct[k]:
-                    rtn_dct[k].append(list_value)
+    for key, new in merge_dct.items():
+        existing = result.get(key)
+        if not existing:
+            result[key] = new
+        elif type(new) != type(existing):
+            raise TypeError(f"Overlapping keys exist with different types: original is {type(existing)}, new value is {type(new)}")
+        elif isinstance(existing, dict) and isinstance(merge_dct[key], dict):
+            result[key] = dict_merge(existing, merge_dct[key])
+        elif isinstance(new, list):
+            existing_dict = { ex.get(ATTR_ID):ex for ex in existing }
+            new_dict = { n.get(ATTR_ID):n for n in new }
+            result_dict = dict_merge(existing_dict, new_dict)
+            # for li,lv in enumerate(result_dict):
+            #     if lv.id == lv.index:
+            #         lv.id = li
+            #     lv.index = li
+            result[key] = list(result_dict.values())
         else:
-            rtn_dct[k] = v
-    return rtn_dct
+            result[key] = new
+    return result
