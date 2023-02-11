@@ -54,5 +54,5 @@ class InputNumberSetReactionEvent(ReactionEvent[InputNumberSetReactionEventData]
             self.payload.type == REACT_TYPE_INPUT_NUMBER and
             self.payload.action == SERVICE_SET_VALUE and 
             self.payload.data and 
-            self.payload.data.plugin == PLUGIN_NAME
+            (not self.payload.data.plugin or self.payload.data.plugin == PLUGIN_NAME)
         )
