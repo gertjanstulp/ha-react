@@ -80,7 +80,7 @@ class NotifySendMessageReactionEvent(ReactionEvent[NotifySendMessageReactionEven
         return (
             self.payload.type == REACT_TYPE_NOTIFY and
             self.payload.action == REACT_ACTION_SEND_MESSAGE and 
-            self.payload.data.plugin == PLUGIN_NAME
+            (not self.payload.data.plugin or self.payload.data.plugin == PLUGIN_NAME)
         )
 
 
