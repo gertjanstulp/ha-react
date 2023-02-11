@@ -21,7 +21,6 @@ from custom_components.react.const import (
     ATTR_ACTION,
     ATTR_ACTOR,
     ATTR_CONDITION,
-    ATTR_CONTEXT,
     ATTR_DATA,
     ATTR_DELAY,
     ATTR_DELAY_HOURS,
@@ -33,10 +32,10 @@ from custom_components.react.const import (
     ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT,
     ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK,
     ATTR_EVENT_FEEDBACK_ITEMS,
-    ATTR_EVENT_MESSAGE,
     ATTR_ID,
     ATTR_INDEX,
     ATTR_REACTOR,
+    ATTR_WORKFLOW_THEN,
     ATTR_REACTOR_ID,
     ATTR_RESET_WORKFLOW,
     ATTR_SCHEDULE,
@@ -49,11 +48,13 @@ from custom_components.react.const import (
     ATTR_VARIABLES,
     ATTR_WAIT,
     ATTR_WAIT_CONDITION,
+    ATTR_WORKFLOW_WHEN,
     DOMAIN, 
     EVENT_REACT_ACTION,
     EVENT_REACT_REACTION,
     MONIKER_DISPATCH,
     MONIKER_RESET,
+    TRACE_PATH_ACTOR,
     TRACE_PATH_CONDITION,
     TRACE_PATH_DELAY,
     TRACE_PATH_DISPATCH,
@@ -478,7 +479,7 @@ class TstContext():
 
         # Test for actor condition in trace data
         if workflow_config_actor.condition:
-            trace_trace_actor_condition_path = f"{ATTR_ACTOR}/{actor_index}/{ATTR_CONDITION}"
+            trace_trace_actor_condition_path = f"{TRACE_PATH_ACTOR}/{actor_index}/{ATTR_CONDITION}"
             trace_trace_actor_condition = trace_trace.assert_property_list_item(trace_trace_actor_condition_path)
             trace_trace_actor_condition.assert_property_match(TRACE_PATH, trace_trace_actor_condition_path)
             trace_trace_actor_condition_result = trace_trace_actor_condition.assert_property_not_none(TRACE_RESULT)
@@ -519,7 +520,7 @@ class TstContext():
 
             if workflow_config_reactor.wait:
                 if workflow_config_reactor.wait.state:
-                    trace_trace_reactor_state_path = f"{ATTR_REACTOR}/{i}/{TRACE_PATH_STATE}"
+                    trace_trace_reactor_state_path = f"{TRACE_PATH_REACTOR}/{i}/{TRACE_PATH_STATE}"
                     trace_trace_reactor_state = trace_trace.assert_property_list_item(trace_trace_reactor_state_path)
                     trace_trace_reactor_state.assert_property_match(TRACE_PATH, trace_trace_reactor_state_path)
                     trace_trace_reactor_state_variables = trace_trace_reactor_state.assert_property_not_none(TRACE_CHANGED_VARIABLES)
@@ -527,7 +528,7 @@ class TstContext():
 
                 # If the reactor is delayed check for delay trace data
                 if workflow_config_reactor.wait.delay:
-                    trace_trace_reactor_delay_path = f"{ATTR_REACTOR}/{i}/{TRACE_PATH_DELAY}"
+                    trace_trace_reactor_delay_path = f"{TRACE_PATH_REACTOR}/{i}/{TRACE_PATH_DELAY}"
                     trace_trace_reactor_delay = trace_trace.assert_property_list_item(trace_trace_reactor_delay_path)
                     trace_trace_reactor_delay.assert_property_match(TRACE_PATH, trace_trace_reactor_delay_path)
                     trace_trace_reactor_delay_result = trace_trace_reactor_delay.assert_property_not_none(TRACE_RESULT)
@@ -545,7 +546,7 @@ class TstContext():
 
                 # If the reactor is scheduled check for schedule trace data
                 if workflow_config_reactor.wait.schedule:
-                    trace_trace_reactor_schedule_path = f"{ATTR_REACTOR}/{i}/{TRACE_PATH_SCHEDULE}"
+                    trace_trace_reactor_schedule_path = f"{TRACE_PATH_REACTOR}/{i}/{TRACE_PATH_SCHEDULE}"
                     trace_trace_reactor_schedule = trace_trace.assert_property_list_item(trace_trace_reactor_schedule_path)
                     trace_trace_reactor_schedule.assert_property_match(TRACE_PATH, trace_trace_reactor_schedule_path)
                     trace_trace_reactor_schedule_result = trace_trace_reactor_schedule.assert_property_not_none(TRACE_RESULT)

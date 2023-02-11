@@ -1,4 +1,4 @@
-# frontend_repo_url: http://localhost:5000
+frontend_repo_url: http://localhost:5000
 
 entity_maps:
   2095689255: mobile_user
@@ -14,158 +14,158 @@ plugins:
 
 stencil:
   full_stencil:
-    actor:
-      actor_full_stencil:
-        entity: actor_entity_full_stencil
-        type: actor_type_full_stencil
-        action: actor_action_full_stencil
-    reactor: 
-      reactor_full_stencil:
-        entity: reactor_entity_full_stencil
-        type: reactor_type_full_stencil
-        action: reactor_action_full_stencil
-        data:
-          test: 37
+    when:
+      id: actor_full_stencil
+      entity: actor_entity_full_stencil
+      type: actor_type_full_stencil
+      action: actor_action_full_stencil
+    then: 
+      id: reactor_full_stencil
+      entity: reactor_entity_full_stencil
+      type: reactor_type_full_stencil
+      action: reactor_action_full_stencil
+      data:
+        test: 37
 
   partial_stencil:
-    reactor: 
-      reactor_partial_stencil:
-        type: reactor_type_partial_stencil
-        action: reactor_action_partial_stencil
+    then: 
+      id: reactor_partial_stencil
+      type: reactor_type_partial_stencil
+      action: reactor_action_partial_stencil
 
 workflow:
   workflow_immediate:
-    actor:
-      actor_immediate:
-        entity: actor_entity_immediate
-        type: actor_type_immediate
-        action: actor_action_immediate
-    reactor: 
-      reactor_immediate:
-        entity: reactor_entity_immediate
-        type: reactor_type_immediate
-        action: reactor_action_immediate
+    when:
+      id: actor_immediate
+      entity: actor_entity_immediate
+      type: actor_type_immediate
+      action: actor_action_immediate
+    then: 
+      id: reactor_immediate
+      entity: reactor_entity_immediate
+      type: reactor_type_immediate
+      action: reactor_action_immediate
 
   workflow_delayed:
-    actor:
-      actor_delayed:
-        entity: actor_entity_delayed
-        type: actor_type_delayed
-        action: actor_action_delayed
-    reactor:
-      reactor_delayed: 
-        entity: reactor_entity_delayed
-        type: reactor_type_delayed
-        action: reactor_action_delayed
-        wait:
-          delay: 
-            seconds: 3
+    when:
+      id: actor_delayed
+      entity: actor_entity_delayed
+      type: actor_type_delayed
+      action: actor_action_delayed
+    then:
+      id: reactor_delayed 
+      entity: reactor_entity_delayed
+      type: reactor_type_delayed
+      action: reactor_action_delayed
+      wait:
+        delay: 
+          seconds: 3
 
   workflow_overwrite:
-    actor:
-      actor_overwrite:
-        entity: actor_entity_overwrite
-        type: actor_type_overwrite
-        action: actor_action_overwrite
-    reactor:
-      reactor_overwrite: 
-        entity: reactor_entity_overwrite
-        type: reactor_type_overwrite
-        action: reactor_action_overwrite
-        overwrite: True
-        wait:
-          delay: 
-            seconds: 10
+    when:
+      id: actor_overwrite
+      entity: actor_entity_overwrite
+      type: actor_type_overwrite
+      action: actor_action_overwrite
+    then:
+      id: reactor_overwrite 
+      entity: reactor_entity_overwrite
+      type: reactor_type_overwrite
+      action: reactor_action_overwrite
+      overwrite: True
+      wait:
+        delay: 
+          seconds: 10
 
   workflow_scheduled:
-    actor: 
-      actor_scheduled:
-        entity: actor_entity_scheduled
-        type: actor_type_scheduled
-        action: actor_action_scheduled
-    reactor: 
-      reactor_scheduled: 
-        entity: reactor_entity_scheduled
-        type: reactor_type_scheduled
-        action: reactor_action_scheduled
-        wait:
-          schedule:
-            at: "12:34:56"
-            weekdays:
-              - fri
+    when: 
+      id: actor_scheduled
+      entity: actor_entity_scheduled
+      type: actor_type_scheduled
+      action: actor_action_scheduled
+    then: 
+      id: reactor_scheduled 
+      entity: reactor_entity_scheduled
+      type: reactor_type_scheduled
+      action: reactor_action_scheduled
+      wait:
+        schedule:
+          at: "12:34:56"
+          weekdays:
+            fri
 
   workflow_reset:
-    actor: 
-      actor_reset:
-        entity: actor_entity_reset
-        type: actor_type_reset
-        action: actor_action_reset
-    reactor:
-      reactor_reset_1:
+    when: 
+      id: actor_reset
+      entity: actor_entity_reset
+      type: actor_type_reset
+      action: actor_action_reset
+    then:
+      - id: reactor_reset_1
         reset_workflow: workflow_delayed
-      reactor_reset_2:
+      - id: reactor_reset_2
         reset_workflow: workflow_scheduled
 
   workflow_forward_action:
-    actor:
-      actor_forward_action:
-        entity: actor_entity_forward_action
-        type: actor_type_forward_action
-    reactor: 
-      reactor_forward_action:
-        entity: reactor_entity_forward_action
-        type: reactor_type_forward_action
-        forward_action: True
+    when:
+      id: actor_forward_action
+      entity: actor_entity_forward_action
+      type: actor_type_forward_action
+    then: 
+      id: reactor_forward_action
+      entity: reactor_entity_forward_action
+      type: reactor_type_forward_action
+      forward_action: True
   
   workflow_forward_data:
-    actor:
-      actor_forward_data:
-        entity: actor_entity_forward_data
-        type: actor_type_forward_data
-        action: actor_action_forward_data
-    reactor: 
-      reactor_forward_data:
-        entity: reactor_entity_forward_data
-        type: reactor_type_forward_data
-        action: reactor_action_forward_data
-        forward_data: True
+    when:
+      id: actor_forward_data
+      entity: actor_entity_forward_data
+      type: actor_type_forward_data
+      action: actor_action_forward_data
+    then: 
+      id: reactor_forward_data
+      entity: reactor_entity_forward_data
+      type: reactor_type_forward_data
+      action: reactor_action_forward_data
+      forward_data: True
 
   workflow_trace:
-    actor:
-      actor_trace_1:
+    when:
+      - id: actor_trace_1
         entity: actor_entity_trace_1
         type: actor_type_trace_1
         action: actor_action_trace_1
         condition: "{{ is_state('input_boolean.test_trace', 'off') }}"
-      actor_trace_2:
+      - id: actor_trace_2
         entity: actor_entity_trace_2
         type: actor_type_trace_2
         action: actor_action_trace_2
-    reactor: 
-      reactor_trace_1:
+    then: 
+      - id: reactor_trace_1
         entity: reactor_entity_trace_1
         type: reactor_type_trace_1
         action: reactor_action_trace_1
         condition: "{{ is_state('input_boolean.test_trace', 'on') }}"
-      reactor_trace_2:
+      - id: reactor_trace_2
         entity: reactor_entity_trace_2
         type: reactor_type_trace_2
         action: reactor_action_trace_2
 
   workflow_trace2:
-    actor:
-      actor_trace2_1:
+    when:
+      - id: actor_trace2_1
         entity: actor_entity_trace2_1
         type: actor_type_trace2_1
         action: actor_action_trace2_1
         condition: "{{ is_state('input_boolean.test_trace2', 'off') }}"
-      actor_trace2_2:
+      - id: actor_trace2_2
         entity: actor_entity_trace2_2
         type: actor_type_trace2_2
         action: actor_action_trace2_2
         condition: "{{ is_state('input_boolean.test_trace2', 'on') }}"
-    reactor: 
-      reactor_trace2_1:
+    then: 
+      - id: reactor_trace2_1
         entity: reactor_entity_trace2_1
         type: reactor_type_trace2_1
         action: reactor_action_trace2_1
@@ -175,9 +175,9 @@ workflow:
             seconds: 3
           state:
             condition: "{{ is_state('input_boolean.test_trace2', 'off') }}"
-      reactor_trace2_2:
+      - id: reactor_trace2_2
         reset_workflow: workflow_scheduled
-      reactor_trace2_3:
+        id: reactor_trace2_3
         entity: reactor_entity_trace2_3
         type: reactor_type_trace2_3
         action: reactor_action_trace2_3
@@ -188,656 +188,656 @@ workflow:
             condition: "{{ is_state('input_boolean.test_trace2', 'on') }}"
 
   workflow_multiple_actor:
-    actor:
-      actor_multiple_actor_1:
+    when:
+      - id: actor_multiple_actor_1
         entity: actor_entity_multiple_actor_1
         type: actor_type_multiple_actor_1
         action: actor_action_multiple_actor_1
-      actor_multiple_actor_2:
+      - id: actor_multiple_actor_2
         entity: actor_entity_multiple_actor_2
         type: actor_type_multiple_actor_2
         action: actor_action_multiple_actor_2
-    reactor: 
-      reactor_multiple_actor:
-        entity: reactor_entity_multiple_actor
-        type: reactor_type_multiple_actor
-        action: reactor_action_multiple_actor
+    then: 
+      id: reactor_multiple_actor
+      entity: reactor_entity_multiple_actor
+      type: reactor_type_multiple_actor
+      action: reactor_action_multiple_actor
 
   workflow_multiple_reactor:
-    actor:
-      actor_multiple_reactor:
-        entity: actor_entity_multiple_reactor
-        type: actor_type_multiple_reactor
-        action: actor_action_multiple_reactor
-    reactor: 
-      actor_multiple_reactor_1:
+    when:
+      id: actor_multiple_reactor
+      entity: actor_entity_multiple_reactor
+      type: actor_type_multiple_reactor
+      action: actor_action_multiple_reactor
+    then: 
+      - id: reactor_multiple_reactor_1
         entity: reactor_entity_multiple_reactor_1
         type: reactor_type_multiple_reactor_1
         action: reactor_action_multiple_reactor_1
-      actor_multiple_reactor_2:
+      - id: reactor_multiple_reactor_2
         entity: reactor_entity_multiple_reactor_2
         type: reactor_type_multiple_reactor_2
         action: reactor_action_multiple_reactor_2
 
   workflow_multiple_entities:
-    actor:
-      actor_multiple_entities:
-        entity: 
-          - actor_entity_multiple_entities_1
-          - actor_entity_multiple_entities_2
-        type: actor_type_multiple_entities
-        action: actor_action_multiple_entities
-    reactor:
-      reactor_multiple_entities:
-        entity: reactor_entity_multiple_entities
-        type: reactor_type_multiple_entities
-        action: reactor_action_multiple_entities
+    when:
+      id: actor_multiple_entities
+      entity: 
+        - actor_entity_multiple_entities_1
+        - actor_entity_multiple_entities_2
+      type: actor_type_multiple_entities
+      action: actor_action_multiple_entities
+    then:
+      id: reactor_multiple_entities
+      entity: reactor_entity_multiple_entities
+      type: reactor_type_multiple_entities
+      action: reactor_action_multiple_entities
 
   workflow_data:
     variables:
       type_templated: "{{ 1 + 2 }}"
-    actor:
-      actor_data:
-        entity: actor_entity_data
-        type: actor_type_data
-        action: actor_action_data
-        data:
-          actor_data_data: "{{ type_templated }}"
-    reactor: 
-      reactor_data:
-        entity: reactor_entity_data
-        type: reactor_type_data
-        action: reactor_action_data
-        data:
-          data1: 1
-          data2: "{{ event.action }}"
-          data3: "{{ type_templated }}"
-          data4: 
-            - asdf
-            - qwer
-          data5: "{{ actor.id }}"
+    when:
+      id: actor_data
+      entity: actor_entity_data
+      type: actor_type_data
+      action: actor_action_data
+      data:
+        actor_data_data: "{{ type_templated }}"
+    then: 
+      id: reactor_data
+      entity: reactor_entity_data
+      type: reactor_type_data
+      action: reactor_action_data
+      data:
+        data1: 1
+        data2: "{{ event.action }}"
+        data3: "{{ type_templated }}"
+        data4: 
+          - asdf
+          - qwer
+        data5: "{{ actor.id }}"
 
   workflow_data_delayed:
-    actor:
-      actor_data_delayed:
-        entity: actor_entity_data_delayed
-        type: actor_type_data_delayed
-        action: actor_action_data_delayed
-    reactor: 
-      reactor_data_delayed:
-        entity: reactor_entity_data_delayed
-        type: reactor_type_data_delayed
-        action: reactor_action_data_delayed
-        wait:
-          delay:
-            seconds: "{{ 60 }}"
-        data:
-          data1: 1
-          data2: True
+    when:
+      id: actor_data_delayed
+      entity: actor_entity_data_delayed
+      type: actor_type_data_delayed
+      action: actor_action_data_delayed
+    then: 
+      id: reactor_data_delayed
+      entity: reactor_entity_data_delayed
+      type: reactor_type_data_delayed
+      action: reactor_action_data_delayed
+      wait:
+        delay:
+          seconds: "{{ 60 }}"
+      data:
+        data1: 1
+        data2: True
 
   workflow_multiple_actor_data:
-    actor:
-      actor_multiple_actor_data:
-        entity: actor_entity_multiple_actor_data
-        type: actor_type_multiple_actor_data
-        action: actor_action_multiple_actor_data
-        data:
-          - actor_data_multiple_actor_data: 1
-          - actor_data_multiple_actor_data: 2
-    reactor:
-      reactor_multiple_actor_data:
-        entity: reactor_entity_multiple_actor_data
-        type: reactor_type_multiple_actor_data
-        action: reactor_action_multiple_actor_data
+    when:
+      id: actor_multiple_actor_data
+      entity: actor_entity_multiple_actor_data
+      type: actor_type_multiple_actor_data
+      action: actor_action_multiple_actor_data
+      data:
+        - actor_data_multiple_actor_data: 1
+        - actor_data_multiple_actor_data: 2
+    then:
+      id: reactor_multiple_actor_data
+      entity: reactor_entity_multiple_actor_data
+      type: reactor_type_multiple_actor_data
+      action: reactor_action_multiple_actor_data
 
   workflow_full_stencil:
     stencil: full_stencil
 
   workflow_partial_stencil:
     stencil: partial_stencil
-    actor:
-      actor_partial_stencil:
-        entity: actor_entity_partial_stencil
-        type: actor_type_partial_stencil
-        action: actor_action_partial_stencil
-    reactor:
-      reactor_partial_stencil:
-        entity: reactor_entity_partial_stencil
+    when:
+      id: actor_partial_stencil
+      entity: actor_entity_partial_stencil
+      type: actor_type_partial_stencil
+      action: actor_action_partial_stencil
+    then:
+      id: reactor_partial_stencil
+      entity: reactor_entity_partial_stencil
 
   workflow_templated:
     variables:
       templated: templated
-    actor:
-      actor_templated:
-        entity: "{{ 'actor_entity_templated' }}"
-        type: "{{ 'actor' ~ '_type' ~ '_templated' }}"
-        action: "{{ 'actor_action_' ~ templated }}"
-    reactor:
-      reactor_templated:
-        entity: "{{ 're' ~ event.entity }}"
-        type: "{{ 'reactor' ~ '_type' ~ '_templated' }}"
-        action: "{{ 'reactor_action_' ~ templated }}"
+    when:
+      id: actor_templated
+      entity: "{{ 'actor_entity_templated' }}"
+      type: "{{ 'actor' ~ '_type' ~ '_templated' }}"
+      action: "{{ 'actor_action_' ~ templated }}"
+    then:
+      id: reactor_templated
+      entity: "{{ 're' ~ event.entity }}"
+      type: "{{ 'reactor' ~ '_type' ~ '_templated' }}"
+      action: "{{ 'reactor_action_' ~ templated }}"
 
   workflow_templated_state:
-    actor:
-      actor_templated_state:
-        entity: "{{ 'actor_entity_templated_state' }}"
-        type: "{{ 'actor' ~ '_type' ~ '_templated_state' }}"
-        action: "{{ 'actor_action_' ~ states('input_text.test_text') }}"
-    reactor:
-      reactor_templated_state:
-        entity: "{{ 're' ~ event.entity }}"
-        type: "{{ 'reactor' ~ '_type' ~ '_templated_state' }}"
-        action: "{{ 'reactor_action_' ~ states('input_text.test_text') }}"
+    when:
+      id: actor_templated_state
+      entity: "{{ 'actor_entity_templated_state' }}"
+      type: "{{ 'actor' ~ '_type' ~ '_templated_state' }}"
+      action: "{{ 'actor_action_' ~ states('input_text.test_text') }}"
+    then:
+      id: reactor_templated_state
+      entity: "{{ 're' ~ event.entity }}"
+      type: "{{ 'reactor' ~ '_type' ~ '_templated_state' }}"
+      action: "{{ 'reactor_action_' ~ states('input_text.test_text') }}"
 
   workflow_actor_condition:
-    actor:
-      actor_actor_condition:
-        entity: actor_entity_actor_condition
-        type: actor_type_actor_condition
-        action: actor_action_actor_condition
-        condition: "{{ is_state('input_boolean.test_actor_condition', 'on') }}"
-    reactor:
-      reactor_actor_condition:
-        entity: reactor_entity_actor_condition
-        type: reactor_type_actor_condition
-        action: reactor_action_actor_condition
-        
+    when:
+      id: actor_actor_condition
+      entity: actor_entity_actor_condition
+      type: actor_type_actor_condition
+      action: actor_action_actor_condition
+      condition: "{{ is_state('input_boolean.test_actor_condition', 'on') }}"
+    then:
+      id: reactor_actor_condition
+      entity: reactor_entity_actor_condition
+      type: reactor_type_actor_condition
+      action: reactor_action_actor_condition
+
   workflow_reactor_condition:
-    actor:
-      actor_reactor_condition:
-        entity: actor_entity_reactor_condition
-        type: actor_type_reactor_condition
-        action: actor_action_reactor_condition
-    reactor:
-      reactor_reactor_condition:
-        entity: reactor_entity_reactor_condition
-        type: reactor_type_reactor_condition
-        action: reactor_action_reactor_condition
-        condition: "{{ is_state('input_boolean.test_reactor_condition', 'on') }}"
+    when:
+      id: actor_reactor_condition
+      entity: actor_entity_reactor_condition
+      type: actor_type_reactor_condition
+      action: actor_action_reactor_condition
+    then:
+      id: reactor_reactor_condition
+      entity: reactor_entity_reactor_condition
+      type: reactor_type_reactor_condition
+      action: reactor_action_reactor_condition
+      condition: "{{ is_state('input_boolean.test_reactor_condition', 'on') }}"
 
   workflow_binary_sensor:
-    actor:
-      actor_binary_sensor:
-        entity: test_binary_sensor
-        type: binary_sensor
-        action: 'on'
-    reactor:
-      reactor_binary_sensor:
-        entity: reactor_entity_binary_sensor
-        type: reactor_type_binary_sensor
-        action: reactor_action_binary_sensor
+    when:
+      id: actor_binary_sensor
+      entity: test_binary_sensor
+      type: binary_sensor
+      action: 'on'
+    then:
+      id: reactor_binary_sensor
+      entity: reactor_entity_binary_sensor
+      type: reactor_type_binary_sensor
+      action: reactor_action_binary_sensor
 
   workflow_binary_group:
-    actor:
-      actor_binary_group:
-        entity: test_binary_group
-        type: group
-        action: 'on'
-    reactor:
-      reactor_binary_group: 
-        entity: reactor_entity_binary_group
-        type: reactor_type_binary_group
-        action: reactor_action_binary_group
+    when:
+      id: actor_binary_group
+      entity: test_binary_group
+      type: group
+      action: 'on'
+    then:
+      id: reactor_binary_group 
+      entity: reactor_entity_binary_group
+      type: reactor_type_binary_group
+      action: reactor_action_binary_group
 
   workflow_person_group:
-    actor:
-      actor_person_group:
-        entity: test_person_group
-        type: group
-        action: home
-    reactor:
-      reactor_person_group: 
-        entity: reactor_entity_person_group
-        type: reactor_type_person_group
-        action: reactor_action_person_group
+    when:
+      id: actor_person_group
+      entity: test_person_group
+      type: group
+      action: home
+    then:
+      id: reactor_person_group 
+      entity: reactor_entity_person_group
+      type: reactor_type_person_group
+      action: reactor_action_person_group
 
   workflow_device_tracker:
-    actor:
-      actor_device_tracker:
-        entity: test_device_tracker
-        type: device_tracker
-        action: home
-    reactor:
-      reactor_device_tracker: 
-        entity: reactor_entity_device_tracker
-        type: reactor_type_device_tracker
-        action: reactor_action_device_tracker
+    when:
+      id: actor_device_tracker
+      entity: test_device_tracker
+      type: device_tracker
+      action: home
+    then:
+      id: reactor_device_tracker 
+      entity: reactor_entity_device_tracker
+      type: reactor_type_device_tracker
+      action: reactor_action_device_tracker
 
   workflow_person:
-    actor:
-      actor_person:
-        entity: test_person
-        type: person
-        action: not_home
-    reactor:
-      reactor_person: 
-        entity: reactor_entity_person
-        type: reactor_type_person
-        action: reactor_action_person
+    when:
+      id: actor_person
+      entity: test_person
+      type: person
+      action: not_home
+    then:
+      id: reactor_person 
+      entity: reactor_entity_person
+      type: reactor_type_person
+      action: reactor_action_person
 
   workflow_input_number:
-    actor:
-      actor_input_number:
-        entity: test_input_number
-        type: input_number
-        action: change
-    reactor:
-      reactor_input_number: 
-        entity: reactor_entity_input_number
-        type: reactor_type_input_number
-        action: reactor_action_input_number
+    when:
+      id: actor_input_number
+      entity: test_input_number
+      type: input_number
+      action: change
+    then:
+      id: reactor_input_number 
+      entity: reactor_entity_input_number
+      type: reactor_type_input_number
+      action: reactor_action_input_number
 
   workflow_input_boolean:
-    actor:
-      actor_input_boolean:
-        entity: test_input_boolean
-        type: input_boolean
-        action: toggle
-    reactor:
-      reactor_input_boolean: 
-        entity: reactor_entity_input_boolean
-        type: reactor_type_input_boolean
-        action: reactor_action_input_boolean
+    when:
+      id: actor_input_boolean
+      entity: test_input_boolean
+      type: input_boolean
+      action: toggle
+    then:
+      id: reactor_input_boolean 
+      entity: reactor_entity_input_boolean
+      type: reactor_type_input_boolean
+      action: reactor_action_input_boolean
 
   workflow_time_clock:
-    actor:
-      actor_time_clock:
-        entity: time
-        type: clock
-        action: '12:34:56'
-    reactor:
-      reactor_time_clock:
-        entity: reactor_entity_time_clock
-        type: reactor_type_time_clock
-        action: reactor_action_time_clock
+    when:
+      id: actor_time_clock
+      entity: time
+      type: clock
+      action: '12:34:56'
+    then:
+      id: reactor_time_clock
+      entity: reactor_entity_time_clock
+      type: reactor_type_time_clock
+      action: reactor_action_time_clock
 
   workflow_time_pattern:
-    actor:
-      actor_time_pattern:
-        entity: time
-        type: pattern
-        action: 5s
-    reactor:
-      reactor_time_pattern:
-        entity: reactor_entity_time_pattern
-        type: reactor_type_time_pattern
-        action: reactor_action_time_pattern
+    when:
+      id: actor_time_pattern
+      entity: time
+      type: pattern
+      action: 59s
+    then:
+      id: reactor_time_pattern
+      entity: reactor_entity_time_pattern
+      type: reactor_type_time_pattern
+      action: reactor_action_time_pattern
 
   workflow_binary_sensor_available:
-    actor:
-      actor_binary_sensor_available:
-        entity: test_binary_sensor_available
-        type: binary_sensor
-        action: available
-    reactor:
-      actor_binary_sensor_available:
-        entity: actor_entity_binary_sensor_available
-        type: actor_type_binary_sensor_available
-        action: actor_action_binary_sensor_available
-        
+    when:
+      id: actor_binary_sensor_available
+      entity: test_binary_sensor_available
+      type: binary_sensor
+      action: available
+    then:
+      id: reactor_binary_sensor_available
+      entity: actor_entity_binary_sensor_available
+      type: actor_type_binary_sensor_available
+      action: actor_action_binary_sensor_available
+
   workflow_binary_sensor_unavailable:
-    actor:
-      actor_binary_sensor_unavailable:
-        entity: test_binary_sensor_available
-        type: binary_sensor
-        action: unavailable
-    reactor:
-      actor_binary_sensor_unavailable:
-        entity: actor_entity_binary_sensor_unavailable
-        type: actor_type_binary_sensor_unavailable
-        action: actor_action_binary_sensor_unavailable
+    when:
+      id: actor_binary_sensor_unavailable
+      entity: test_binary_sensor_available
+      type: binary_sensor
+      action: unavailable
+    then:
+      id: reactor_binary_sensor_unavailable
+      entity: actor_entity_binary_sensor_unavailable
+      type: actor_type_binary_sensor_unavailable
+      action: actor_action_binary_sensor_unavailable
 
   workflow_wait:
-    actor:
-      actor_wait:
-        entity: actor_entity_wait
-        type: actor_type_wait
-        action: actor_action_wait
-    reactor: 
-      reactor_wait:
-        entity: reactor_entity_wait
-        type: reactor_type_wait
-        action: reactor_action_wait
-        wait:
-          state:
-            condition: "{{ is_state('input_boolean.test_wait', 'on') }}"
+    when:
+      id: actor_wait
+      entity: actor_entity_wait
+      type: actor_type_wait
+      action: actor_action_wait
+    then: 
+      id: reactor_wait
+      entity: reactor_entity_wait
+      type: reactor_type_wait
+      action: reactor_action_wait
+      wait:
+        state:
+          condition: "{{ is_state('input_boolean.test_wait', 'on') }}"
 
   workflow_wait_delayed:
-    actor:
-      actor_wait_delayed:
-        entity: actor_entity_wait_delayed
-        type: actor_type_wait_delayed
-        action: actor_action_wait_delayed
-    reactor: 
-      reactor_wait_delayed:
-        entity: reactor_entity_wait_delayed
-        type: reactor_type_wait_delayed
-        action: reactor_action_wait_delayed
-        wait:
-          delay: 
-            seconds: 3
-          state:
-            condition: "{{ is_state('input_boolean.test_wait', 'on') }}"
-          
+    when:
+      id: actor_wait_delayed
+      entity: actor_entity_wait_delayed
+      type: actor_type_wait_delayed
+      action: actor_action_wait_delayed
+    then: 
+      id: reactor_wait_delayed
+      entity: reactor_entity_wait_delayed
+      type: reactor_type_wait_delayed
+      action: reactor_action_wait_delayed
+      wait:
+        delay: 
+          seconds: 3
+        state:
+          condition: "{{ is_state('input_boolean.test_wait', 'on') }}"
+
   workflow_delayed_long_single:
     mode: single
-    actor:
-      actor_delayed_long_single:
-        entity: actor_entity_delayed_long_single
-        type: actor_type_delayed_long_single
-        action: actor_action_delayed_long_single
-    reactor:
-      reactor_delayed_long_single: 
-        entity: reactor_entity_delayed_long_single
-        type: reactor_type_delayed_long_single
-        action: reactor_action_delayed_long_single
-        wait:
-          delay: 
-            seconds: 300
-          
+    when:
+      id: actor_delayed_long_single
+      entity: actor_entity_delayed_long_single
+      type: actor_type_delayed_long_single
+      action: actor_action_delayed_long_single
+    then:
+      id: reactor_delayed_long_single 
+      entity: reactor_entity_delayed_long_single
+      type: reactor_type_delayed_long_single
+      action: reactor_action_delayed_long_single
+      wait:
+        delay: 
+          seconds: 300
+
   workflow_delayed_long_restart:
     mode: restart
-    actor:
-      actor_delayed_long_restart:
-        entity: actor_entity_delayed_long_restart
-        type: actor_type_delayed_long_restart
-        action: actor_action_delayed_long_restart
-    reactor:
-      reactor_delayed_long_restart: 
-        entity: reactor_entity_delayed_long_restart
-        type: reactor_type_delayed_long_restart
-        action: reactor_action_delayed_long_restart
-        wait:
-          delay: 
-            seconds: 300
-          
+    when:
+      id: actor_delayed_long_restart
+      entity: actor_entity_delayed_long_restart
+      type: actor_type_delayed_long_restart
+      action: actor_action_delayed_long_restart
+    then:
+      id: reactor_delayed_long_restart 
+      entity: reactor_entity_delayed_long_restart
+      type: reactor_type_delayed_long_restart
+      action: reactor_action_delayed_long_restart
+      wait:
+        delay: 
+          seconds: 300
+
   workflow_delayed_long_queued:
     mode: queued
-    actor:
-      actor_delayed_long_queued:
-        entity: actor_entity_delayed_long_queued
-        type: actor_type_delayed_long_queued
-        action: actor_action_delayed_long_queued
-    reactor:
-      reactor_delayed_long_queued: 
-        entity: reactor_entity_delayed_long_queued
-        type: reactor_type_delayed_long_queued
-        action: reactor_action_delayed_long_queued
-        wait:
-          delay: 
-            seconds: 3
-          
+    when:
+      id: actor_delayed_long_queued
+      entity: actor_entity_delayed_long_queued
+      type: actor_type_delayed_long_queued
+      action: actor_action_delayed_long_queued
+    then:
+      id: reactor_delayed_long_queued 
+      entity: reactor_entity_delayed_long_queued
+      type: reactor_type_delayed_long_queued
+      action: reactor_action_delayed_long_queued
+      wait:
+        delay: 
+          seconds: 3
+
   workflow_delayed_long_parallel:
     mode: parallel
-    actor:
-      actor_delayed_long_parallel:
-        entity: actor_entity_delayed_long_parallel
-        type: actor_type_delayed_long_parallel
-        action: actor_action_delayed_long_parallel
-    reactor:
-      reactor_delayed_long_parallel: 
-        entity: reactor_entity_delayed_long_parallel
-        type: reactor_type_delayed_long_parallel
-        action: reactor_action_delayed_long_parallel
-        wait:
-          delay: 
-            seconds: 3
+    when:
+      id: actor_delayed_long_parallel
+      entity: actor_entity_delayed_long_parallel
+      type: actor_type_delayed_long_parallel
+      action: actor_action_delayed_long_parallel
+    then:
+      id: reactor_delayed_long_parallel 
+      entity: reactor_entity_delayed_long_parallel
+      type: reactor_type_delayed_long_parallel
+      action: reactor_action_delayed_long_parallel
+      wait:
+        delay: 
+          seconds: 3
 
   workflow_scheduled_restart_abort:
-    actor:
-      actor_scheduled_restart_abort:
-        entity: actor_entity_scheduled_restart_abort
-        type: actor_type_scheduled_restart_abort
-        action: actor_action_scheduled_restart_abort
-    reactor:
-      reactor_scheduled_restart_abort: 
-        entity: reactor_entity_scheduled_restart_abort
-        type: reactor_type_scheduled_restart_abort
-        action: reactor_action_scheduled_restart_abort
-        wait:
-          schedule:
-            at: "00:00:00"
-            restart_mode: abort
+    when:
+      id: actor_scheduled_restart_abort
+      entity: actor_entity_scheduled_restart_abort
+      type: actor_type_scheduled_restart_abort
+      action: actor_action_scheduled_restart_abort
+    then:
+      id: reactor_scheduled_restart_abort 
+      entity: reactor_entity_scheduled_restart_abort
+      type: reactor_type_scheduled_restart_abort
+      action: reactor_action_scheduled_restart_abort
+      wait:
+        schedule:
+          at: "00:00:00"
+          restart_mode: abort
 
   workflow_scheduled_restart_force:
-    actor:
-      actor_scheduled_restart_force:
-        entity: actor_entity_scheduled_restart_force
-        type: actor_type_scheduled_restart_force
-        action: actor_action_scheduled_restart_force
-    reactor:
-      reactor_scheduled_restart_force: 
-        entity: reactor_entity_scheduled_restart_force
-        type: reactor_type_scheduled_restart_force
-        action: reactor_action_scheduled_restart_force
-        wait:
-          schedule:
-            at: "00:00:00"
-            restart_mode: force
+    when:
+      id: actor_scheduled_restart_force
+      entity: actor_entity_scheduled_restart_force
+      type: actor_type_scheduled_restart_force
+      action: actor_action_scheduled_restart_force
+    then:
+      id: reactor_scheduled_restart_force 
+      entity: reactor_entity_scheduled_restart_force
+      type: reactor_type_scheduled_restart_force
+      action: reactor_action_scheduled_restart_force
+      wait:
+        schedule:
+          at: "00:00:00"
+          restart_mode: force
 
   workflow_tts_media_player_speek:
-    actor:
-      actor_tts_media_player_speek:
-        entity: actor_entity_tts_media_player_speek
-        type: actor_type_tts_media_player_speek
-        action: actor_action_tts_media_player_speek
-    reactor:
-      reactor_tts_media_player_speek:
-        entity: browser
-        type: media_player
-        action: speek
-        data:
-          plugin: tts
-          message: This is a test without volume
-          language: en
+    when:
+      id: actor_tts_media_player_speek
+      entity: actor_entity_tts_media_player_speek
+      type: actor_type_tts_media_player_speek
+      action: actor_action_tts_media_player_speek
+    then:
+      id: reactor_tts_media_player_speek
+      entity: browser
+      type: media_player
+      action: speek
+      data:
+        plugin: tts
+        message: This is a test without volume
+        language: en
 
   workflow_tts_media_player_speek_with_volume:
-    actor:
-      actor_tts_media_player_speek_with_volume:
-        entity: actor_entity_tts_media_player_speek_with_volume
-        type: actor_type_tts_media_player_speek_with_volume
-        action: actor_action_tts_media_player_speek_with_volume
-    reactor:
-      reactor_tts_media_player_speek_with_volume:
-        entity: browser
-        type: media_player
-        action: speek
-        data:
-          plugin: tts
-          message: This is a test with volume
-          language: en
-          volume: 0.1
+    when:
+      id: actor_tts_media_player_speek_with_volume
+      entity: actor_entity_tts_media_player_speek_with_volume
+      type: actor_type_tts_media_player_speek_with_volume
+      action: actor_action_tts_media_player_speek_with_volume
+    then:
+      id: reactor_tts_media_player_speek_with_volume
+      entity: browser
+      type: media_player
+      action: speek
+      data:
+        plugin: tts
+        message: This is a test with volume
+        language: en
+        volume: 0.1
 
   workflow_tts_media_player_speek_with_interrupt:
-    actor:
-      actor_tts_media_player_speek_with_interrupt:
-        entity: actor_entity_tts_media_player_speek_with_interrupt
-        type: actor_type_tts_media_player_speek_with_interrupt
-        action: actor_action_tts_media_player_speek_with_interrupt
-    reactor:
-      reactor_tts_media_player_speek_with_interrupt:
-        entity: browser
-        type: media_player
-        action: speek
-        data:
-          plugin: tts
-          message: This is a test with interrupt service
-          language: en
-          interrupt_service: sonos.snapshot
+    when:
+      id: actor_tts_media_player_speek_with_interrupt
+      entity: actor_entity_tts_media_player_speek_with_interrupt
+      type: actor_type_tts_media_player_speek_with_interrupt
+      action: actor_action_tts_media_player_speek_with_interrupt
+    then:
+      id: reactor_tts_media_player_speek_with_interrupt
+      entity: browser
+      type: media_player
+      action: speek
+      data:
+        plugin: tts
+        message: This is a test with interrupt service
+        language: en
+        interrupt_service: sonos.snapshot
 
   workflow_tts_media_player_speek_with_resume:
-    actor:
-      actor_tts_media_player_speek_with_resume:
-        entity: actor_entity_tts_media_player_speek_with_resume
-        type: actor_type_tts_media_player_speek_with_resume
-        action: actor_action_tts_media_player_speek_with_resume
-    reactor:
-      reactor_tts_media_player_speek_with_resume:
-        entity: browser
-        type: media_player
-        action: speek
-        data:
-          plugin: tts
-          message: This is a test with resume service
-          language: en
-          resume_service: sonos.restore
+    when:
+      id: actor_tts_media_player_speek_with_resume
+      entity: actor_entity_tts_media_player_speek_with_resume
+      type: actor_type_tts_media_player_speek_with_resume
+      action: actor_action_tts_media_player_speek_with_resume
+    then:
+      id: reactor_tts_media_player_speek_with_resume
+      entity: browser
+      type: media_player
+      action: speek
+      data:
+        plugin: tts
+        message: This is a test with resume service
+        language: en
+        resume_service: sonos.restore
 
   workflow_tts_media_player_speek_with_wait:
-    actor:
-      actor_tts_media_player_speek_with_wait:
-        entity: actor_entity_tts_media_player_speek_with_wait
-        type: actor_type_tts_media_player_speek_with_wait
-        action: actor_action_tts_media_player_speek_with_wait
-    reactor:
-      reactor_tts_media_player_speek_with_wait:
-        entity: browser
-        type: media_player
-        action: speek
-        data:
-          plugin: tts
-          message: This is a test with resume service
-          language: en
-          wait: 3
+    when:
+      id: actor_tts_media_player_speek_with_wait
+      entity: actor_entity_tts_media_player_speek_with_wait
+      type: actor_type_tts_media_player_speek_with_wait
+      action: actor_action_tts_media_player_speek_with_wait
+    then:
+      id: reactor_tts_media_player_speek_with_wait
+      entity: browser
+      type: media_player
+      action: speek
+      data:
+        plugin: tts
+        message: This is a test with resume service
+        language: en
+        wait: 3
 
   workflow_tts_media_player_speek_with_all:
-    actor:
-      actor_tts_media_player_speek_with_all:
-        entity: actor_entity_tts_media_player_speek_with_all
-        type: actor_type_tts_media_player_speek_with_all
-        action: actor_action_tts_media_player_speek_with_all
-    reactor:
-      reactor_tts_media_player_speek_with_all:
-        entity: browser
-        type: media_player
-        action: speek
-        data:
-          plugin: tts
-          message: This is a test with resume service
-          language: en
-          volume: 0.1
-          interrupt_service: sonos.snapshot
-          resume_service: sonos.restore
-          wait: 2
+    when:
+      id: actor_tts_media_player_speek_with_all
+      entity: actor_entity_tts_media_player_speek_with_all
+      type: actor_type_tts_media_player_speek_with_all
+      action: actor_action_tts_media_player_speek_with_all
+    then:
+      id: reactor_tts_media_player_speek_with_all
+      entity: browser
+      type: media_player
+      action: speek
+      data:
+        plugin: tts
+        message: This is a test with resume service
+        language: en
+        volume: 0.1
+        interrupt_service: sonos.snapshot
+        resume_service: sonos.restore
+        wait: 2
 
   workflow_telegram_notify_send_message:
-    actor:
-      actor_telegram_notify_send_message:
-        entity: actor_entity_telegram_notify_send_message
-        type: actor_type_telegram_notify_send_message
-        action: actor_action_telegram_notify_send_message
-    reactor:
-      reactor_telegram_notify_send_message:
-        entity: mobile_group
-        type: notify
-        action: send_message
-        data:
-          plugin: telegram
-          message: Approve something
-          feedback_items:
-            - title: Approve
-              feedback: approve
-              acknowledgement: approved
-            - title: Deny
-              feedback: deny
-              acknowledgement: denied
+    when:
+      id: actor_telegram_notify_send_message
+      entity: actor_entity_telegram_notify_send_message
+      type: actor_type_telegram_notify_send_message
+      action: actor_action_telegram_notify_send_message
+    then:
+      id: reactor_telegram_notify_send_message
+      entity: mobile_group
+      type: notify
+      action: send_message
+      data:
+        plugin: telegram
+        message: Approve something
+        feedback_items:
+          - title: Approve
+            feedback: approve
+            acknowledgement: approved
+          - title: Deny
+            feedback: deny
+            acknowledgement: denied
 
   workflow_telegram_notify_confirm_feedback:
-    actor:
-      actor_telegram_notify_confirm_feedback:
-        entity: mobile_user
-        type: notify
-        action: feedback_retrieved
-        data:
-          plugin: telegram
-    reactor:
-      reactor_telegram_notify_confirm_feedback:
+    when:
+      id: actor_telegram_notify_confirm_feedback
+      entity: mobile_user
+      type: notify
+      action: feedback_retrieved
+      data:
+        plugin: telegram
+    then:
+      - id: reactor_telegram_notify_confirm_feedback
         entity: reactor_entity_telegram_notify_confirm_feedback
         type: reactor_type_telegram_notify_confirm_feedback
         action: reactor_action_telegram_notify_confirm_feedback
         data:
           feedback: "{{ event.data.feedback }}"
-      reactor_telegram_confirm_feedback:
+      - id: reactor_telegram_confirm_feedback
         entity: mobile_user
         type: notify
         action: confirm_feedback
         forward_data: True
 
   workflow_input_number_set:
-    actor:
-      actor_input_number_set:
-        entity: actor_entity_input_number_set
-        type: actor_type_input_number_set
-        action: actor_action_input_number_set
-    reactor:
-      reactor_input_number_set:
-        entity: input_number_set_test
-        type: input_number
-        action: set_value
-        data:
-          plugin: input
-          value: 12.34
+    when:
+      id: actor_input_number_set
+      entity: actor_entity_input_number_set
+      type: actor_type_input_number_set
+      action: actor_action_input_number_set
+    then:
+      id: reactor_input_number_set
+      entity: input_number_set_test
+      type: input_number
+      action: set_value
+      data:
+        plugin: input
+        value: 12.34
 
   workflow_input_boolean_turn_on:
-    actor:
-      actor_input_boolean_turn_on:
-        entity: actor_entity_input_boolean_turn_on
-        type: actor_type_input_boolean_turn_on
-        action: actor_action_input_boolean_turn_on
-    reactor:
-      reactor_input_boolean_turn_on:
-        entity: input_boolean_turn_on_test
-        type: input_boolean
-        action: 'on'
-        data:
-          plugin: input
+    when:
+      id: actor_input_boolean_turn_on
+      entity: actor_entity_input_boolean_turn_on
+      type: actor_type_input_boolean_turn_on
+      action: actor_action_input_boolean_turn_on
+    then:
+      id: reactor_input_boolean_turn_on
+      entity: input_boolean_turn_on_test
+      type: input_boolean
+      action: 'on'
+      data:
+        plugin: input
 
   workflow_input_boolean_turn_off:
-    actor:
-      actor_input_boolean_turn_off:
-        entity: actor_entity_input_boolean_turn_off
-        type: actor_type_input_boolean_turn_off
-        action: actor_action_input_boolean_turn_off
-    reactor:
-      reactor_input_boolean_turn_off:
-        entity: input_boolean_turn_off_test
-        type: input_boolean
-        action: 'off'
-        data:
-          plugin: input
+    when:
+      id: actor_input_boolean_turn_off
+      entity: actor_entity_input_boolean_turn_off
+      type: actor_type_input_boolean_turn_off
+      action: actor_action_input_boolean_turn_off
+    then:
+      id: reactor_input_boolean_turn_off
+      entity: input_boolean_turn_off_test
+      type: input_boolean
+      action: 'off'
+      data:
+        plugin: input
 
   workflow_input_boolean_toggle:
-    actor:
-      actor_input_boolean_toggle:
-        entity: actor_entity_input_boolean_toggle
-        type: actor_type_input_boolean_toggle
-        action: actor_action_input_boolean_toggle
-    reactor:
-      reactor_input_boolean_toggle:
-        entity: input_boolean_toggle_test
-        type: input_boolean
-        action: toggle
-        data:
-          plugin: input
+    when:
+      id: actor_input_boolean_toggle
+      entity: actor_entity_input_boolean_toggle
+      type: actor_type_input_boolean_toggle
+      action: actor_action_input_boolean_toggle
+    then:
+      id: reactor_input_boolean_toggle
+      entity: input_boolean_toggle_test
+      type: input_boolean
+      action: toggle
+      data:
+        plugin: input
 
   workflow_debug:
-    actor:
-      debug:
-        entity: debug
-        type: debug
-        action: debug
-    reactor:
-      tts_message:
-        entity: sonos_living_room
-        type: media_player
-        action: speek
+    when:
+      id: debug
+      entity: debug
+      type: debug
+      action: debug
+    then:
+      id: tts_message
+      entity: sonos_living_room
+      type: media_player
+      action: speek
         # condition: "{{ is_state('group.group_persons_home', 'home') }}"
-        data:
-          plugin: tts
-          message: Er is iemand bij de voordeur
-          interrupt_service: sonos.snapshot
-          resume_service: sonos.restore
-          wait: 2
-          volume: 0.15
-          options:
-            gender: female
+      data:
+        plugin: tts
+        message: Er is iemand bij de voordeur
+        interrupt_service: sonos.snapshot
+        resume_service: sonos.restore
+        wait: 2
+        volume: 0.15
+        options:
+          gender: female

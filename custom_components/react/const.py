@@ -44,6 +44,9 @@ ATTR_MODE = "mode"
 ATTR_PLUGIN_MODULE = "module"
 ATTR_PLUGIN_CONFIG = "config"
 
+ATTR_WORKFLOW_WHEN = "when"
+ATTR_WORKFLOW_THEN = "then"
+
 # actor attributes
 ATTR_ACTOR = "actor"
 ATTR_ACTOR_ID = "actor_id"
@@ -325,6 +328,7 @@ WAIT_SCHEMA = vol.Schema({
 
 # schema for common elements of actors/reactors
 ENTITY_DATA_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ID) : cv.string,
     vol.Optional(ATTR_ENTITY) : vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_TYPE) : vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_ACTION) : vol.All(cv.ensure_list, [cv.string]),
@@ -347,12 +351,8 @@ REACTOR_DATA_SCHEMA = ENTITY_DATA_SCHEMA.extend(
 STENCIL_SCHEMA = vol.Schema({
     cv.slug: vol.Schema({
         vol.Optional(ATTR_MODE) : vol.In([WORKFLOW_MODE_SINGLE, WORKFLOW_MODE_RESTART, WORKFLOW_MODE_QUEUED, WORKFLOW_MODE_PARALLEL]),
-        vol.Optional(ATTR_ACTOR) : vol.Schema({
-            cv.slug: ENTITY_DATA_SCHEMA,
-        }),
-        vol.Optional(ATTR_REACTOR) : vol.Schema({
-            cv.slug: REACTOR_DATA_SCHEMA
-        }),
+        vol.Optional(ATTR_WORKFLOW_WHEN) : vol.All(cv.ensure_list, [ENTITY_DATA_SCHEMA]),
+        vol.Optional(ATTR_WORKFLOW_THEN) : vol.All(cv.ensure_list, [REACTOR_DATA_SCHEMA]),
         vol.Optional(ATTR_RESET_WORKFLOW) : cv.string,
     })
 })
@@ -363,12 +363,8 @@ WORKFLOW_SCHEMA = vol.Schema({
         vol.Optional(ATTR_STENCIL) : cv.string,
         vol.Optional(ATTR_MODE) : vol.In([WORKFLOW_MODE_SINGLE, WORKFLOW_MODE_RESTART, WORKFLOW_MODE_QUEUED, WORKFLOW_MODE_PARALLEL]),
         vol.Optional(ATTR_VARIABLES) : vol.All(dict),
-        vol.Optional(ATTR_ACTOR): vol.Schema({
-            cv.slug: ENTITY_DATA_SCHEMA,
-        }),
-        vol.Optional(ATTR_REACTOR): vol.Schema({
-            cv.slug: REACTOR_DATA_SCHEMA
-        }),
+        vol.Optional(ATTR_WORKFLOW_WHEN) : vol.All(cv.ensure_list, [ENTITY_DATA_SCHEMA]),
+        vol.Optional(ATTR_WORKFLOW_THEN) : vol.All(cv.ensure_list, [REACTOR_DATA_SCHEMA]),
         vol.Optional(ATTR_NAME): cv.string,
         vol.Optional(CONF_ICON): cv.icon,
         vol.Optional(CONF_TRACE, default={}): TRACE_CONFIG_SCHEMA,

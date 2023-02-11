@@ -253,7 +253,6 @@ class CtorConfig(DynamicData):
         self.data: list[DynamicData] = None
 
 
-
 class CtorRuntime(DynamicData):
 
     def __init__(self) -> None:
