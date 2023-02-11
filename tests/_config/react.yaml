@@ -806,6 +806,20 @@ workflow:
         data:
           plugin: input
 
+  workflow_input_boolean_toggle:
+    actor:
+      actor_input_boolean_toggle:
+        entity: actor_entity_input_boolean_toggle
+        type: actor_type_input_boolean_toggle
+        action: actor_action_input_boolean_toggle
+    reactor:
+      reactor_input_boolean_toggle:
+        entity: input_boolean_toggle_test
+        type: input_boolean
+        action: toggle
+        data:
+          plugin: input
+
   workflow_debug:
     actor:
       debug:
