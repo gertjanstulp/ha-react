@@ -66,3 +66,5 @@ button_trigger_input_boolean_turn_on:
   name: Input boolean turn on
 button_trigger_input_boolean_turn_off:
   name: Input boolean turn off
+button_trigger_input_boolean_toggle:
+  name: Input boolean toggle

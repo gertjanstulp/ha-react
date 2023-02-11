@@ -788,7 +788,7 @@ workflow:
       reactor_input_boolean_turn_on:
         entity: input_boolean_turn_on_test
         type: input_boolean
-        action: turn_on
+        action: 'on'
         data:
           plugin: input
 
@@ -802,7 +802,7 @@ workflow:
       reactor_input_boolean_turn_off:
         entity: input_boolean_turn_off_test
         type: input_boolean
-        action: turn_off
+        action: 'off'
         data:
           plugin: input
 

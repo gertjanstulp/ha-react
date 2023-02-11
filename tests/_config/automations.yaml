@@ -441,3 +441,15 @@
       entity: actor_entity_input_boolean_turn_off
       type: actor_type_input_boolean_turn_off
       action: actor_action_input_boolean_turn_off
+
+- id: trigger_input_boolean_toggle
+  alias: Trigger input boolean toggle
+  trigger:
+    platform: state
+    entity_id: input_button.button_trigger_input_boolean_toggle
+  action:
+    event: ev_react_action
+    event_data:
+      entity: actor_entity_input_boolean_toggle
+      type: actor_type_input_boolean_toggle
+      action: actor_action_input_boolean_toggle

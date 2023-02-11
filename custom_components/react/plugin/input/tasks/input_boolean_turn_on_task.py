@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from homeassistant.components.input_boolean import SERVICE_TURN_ON
 from homeassistant.core import Event
+from homeassistant.const import STATE_ON
 
 from custom_components.react.base import ReactBase
 from custom_components.react.const import REACT_TYPE_INPUT_BOOLEAN
@@ -51,7 +51,7 @@ class InputBooleanTurnOnReactionEvent(ReactionEvent[InputBooleanTurnOnReactionEv
     def applies(self) -> bool:
         return (
             self.payload.type == REACT_TYPE_INPUT_BOOLEAN and
-            self.payload.action == SERVICE_TURN_ON and 
+            self.payload.action == STATE_ON and 
             self.payload.data and
             self.payload.data.plugin == PLUGIN_NAME
         )

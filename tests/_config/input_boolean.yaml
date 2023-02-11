@@ -41,3 +41,8 @@ input_boolean_turn_on_test:
 input_boolean_turn_off_test:
   name: input_boolean_turn_off_test
   initial: True
+
+input_boolean_toggle_test:
+  name: input_boolean_toggle_test
+  initial: True
+
