@@ -412,17 +412,18 @@ def dict_merge(dct: dict, merge_dct: dict) -> dict:
             result[key] = new
         elif type(new) != type(existing):
             raise TypeError(f"Overlapping keys exist with different types: original is {type(existing)}, new value is {type(new)}")
-        elif isinstance(existing, dict) and isinstance(merge_dct[key], dict):
-            result[key] = dict_merge(existing, merge_dct[key])
-        elif isinstance(new, list):
-            existing_dict = { ex.get(ATTR_ID):ex for ex in existing }
-            new_dict = { n.get(ATTR_ID):n for n in new }
-            result_dict = dict_merge(existing_dict, new_dict)
-            # for li,lv in enumerate(result_dict):
-            #     if lv.id == lv.index:
-            #         lv.id = li
-            #     lv.index = li
-            result[key] = list(result_dict.values())
+        elif isinstance(new, dict):
+            result[key] = dict_merge(existing, new)
+        elif isinstance(new, list) and len(new) > 0:
+            if isinstance(new[0], dict) and ATTR_ID in new[0]: 
+                existing_dict = { ex.get(ATTR_ID, exidx):ex for exidx,ex in enumerate(existing) }
+                new_dict = { n.get(ATTR_ID, nidx + 1000):n for nidx,n in enumerate(new) }
+                result_dict = dict_merge(existing_dict, new_dict)
+                result[key] = list(result_dict.values())
+            else:
+                for list_value in new:
+                    if list_value not in existing:
+                        existing.append(list_value)
         else:
             result[key] = new
     return result
