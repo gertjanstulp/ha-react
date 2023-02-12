@@ -78,6 +78,7 @@ class NotifyConfirmFeedbackReactionEvent(ReactionEvent[NotifyConfirmFeedbackReac
         return (
             self.payload.type == REACT_TYPE_NOTIFY and
             self.payload.action == REACT_ACTION_CONFIRM_FEEDBACK and 
+            self.payload.data and
             (not self.payload.data.plugin or self.payload.data.plugin == PLUGIN_NAME)
         )
 
