@@ -628,7 +628,6 @@ workflow:
       type: media_player
       action: speek
       data:
-        plugin: tts
         message: This is a test without volume
         language: en
 
@@ -644,7 +643,6 @@ workflow:
       type: media_player
       action: speek
       data:
-        plugin: tts
         message: This is a test with volume
         language: en
         volume: 0.1
@@ -661,7 +659,6 @@ workflow:
       type: media_player
       action: speek
       data:
-        plugin: tts
         message: This is a test with interrupt service
         language: en
         interrupt_service: sonos.snapshot
@@ -678,7 +675,6 @@ workflow:
       type: media_player
       action: speek
       data:
-        plugin: tts
         message: This is a test with resume service
         language: en
         resume_service: sonos.restore
@@ -695,7 +691,6 @@ workflow:
       type: media_player
       action: speek
       data:
-        plugin: tts
         message: This is a test with resume service
         language: en
         wait: 3
@@ -712,7 +707,6 @@ workflow:
       type: media_player
       action: speek
       data:
-        plugin: tts
         message: This is a test with resume service
         language: en
         volume: 0.1
@@ -732,7 +726,6 @@ workflow:
       type: notify
       action: send_message
       data:
-        plugin: telegram
         message: Approve something
         feedback_items:
           - title: Approve
@@ -775,7 +768,6 @@ workflow:
       type: input_number
       action: set_value
       data:
-        plugin: input
         value: 12.34
 
   workflow_input_boolean_turn_on:
@@ -789,8 +781,6 @@ workflow:
       entity: input_boolean_turn_on_test
       type: input_boolean
       action: 'on'
-      data:
-        plugin: input
 
   workflow_input_boolean_turn_off:
     when:
@@ -803,8 +793,6 @@ workflow:
       entity: input_boolean_turn_off_test
       type: input_boolean
       action: 'off'
-      data:
-        plugin: input
 
   workflow_input_boolean_toggle:
     when:
@@ -817,8 +805,6 @@ workflow:
       entity: input_boolean_toggle_test
       type: input_boolean
       action: toggle
-      data:
-        plugin: input
 
   workflow_debug:
     when:
@@ -833,7 +819,6 @@ workflow:
       action: speek
         # condition: "{{ is_state('group.group_persons_home', 'home') }}"
       data:
-        plugin: tts
         message: Er is iemand bij de voordeur
         interrupt_service: sonos.snapshot
         resume_service: sonos.restore

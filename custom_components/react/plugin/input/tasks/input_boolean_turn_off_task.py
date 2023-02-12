@@ -52,6 +52,8 @@ class InputBooleanTurnOffReactionEvent(ReactionEvent[InputBooleanTurnOffReaction
         return (
             self.payload.type == REACT_TYPE_INPUT_BOOLEAN and
             self.payload.action == STATE_OFF and 
-            self.payload.data and
-            (not self.payload.data.plugin or self.payload.data.plugin == PLUGIN_NAME)
+            (not self.payload.data or
+             (self.payload.data and (
+              (not self.payload.data.plugin or 
+               self.payload.data.plugin == PLUGIN_NAME))))
         )

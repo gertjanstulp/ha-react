@@ -76,5 +76,6 @@ class MediaPlayerSpeekReactionEvent(ReactionEvent[MediaPlayerSpeekReactionEventD
         return (
             self.payload.type == REACT_TYPE_MEDIA_PLAYER and
             self.payload.action == REACT_ACTION_SPEEK and 
+            self.payload.data and
             (not self.payload.data.plugin or self.payload.data.plugin == PLUGIN_NAME)
         )
