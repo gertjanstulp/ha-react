@@ -1,3 +1,4 @@
+from copy import deepcopy
 from datetime import datetime, timedelta, timezone
 from time import strptime
 from typing import Callable, Union
@@ -404,7 +405,7 @@ def calculate_next_schedule_hit(schedule: ScheduleRuntime) -> datetime:
 
 
 def dict_merge(dct: dict, merge_dct: dict) -> dict:
-    result = dct.copy()
+    result = deepcopy(dct)
     
     for key, new in merge_dct.items():
         existing = result.get(key)
