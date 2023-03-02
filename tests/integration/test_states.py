@@ -171,6 +171,25 @@ async def test_react_input_number(hass: HomeAssistant, workflow_name, react_comp
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["input_text"])
+async def test_react_input_text(hass: HomeAssistant, workflow_name, react_component, input_text_component):
+    
+    inc = await input_text_component
+    comp = await react_component
+    await comp.async_setup(workflow_name)
+
+    tc = TstContext(hass, workflow_name)
+    async with tc.async_listen_reaction_event():
+        tc.verify_reaction_not_found()
+        await inc.async_set_value("test_input_text", "test_value")
+        tc.verify_reaction_not_found()
+        await tc.async_verify_reaction_event_received()
+        tc.verify_reaction_event_data()
+        tc.verify_trace_record()
+    await hass.async_block_till_done()
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["input_boolean"])
 async def test_react_input_boolean(hass: HomeAssistant, workflow_name, react_component, input_boolean_component):
     

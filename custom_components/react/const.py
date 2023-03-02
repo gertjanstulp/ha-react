@@ -158,6 +158,7 @@ REACT_TYPE_NOTIFY = "notify"
 REACT_TYPE_TTS = "tts"
 REACT_TYPE_MEDIA_PLAYER = "media_player"
 REACT_TYPE_INPUT_NUMBER = "input_number"
+REACT_TYPE_INPUT_TEXT = "input_text"
 REACT_TYPE_INPUT_BOOLEAN = "input_boolean"
 
 # React actions
@@ -203,6 +204,8 @@ INPUT_BOOLEAN = "input_boolean"
 INPUT_BOOLEAN_PREFIX = f"{INPUT_BOOLEAN}."
 INPUT_NUMBER = "input_number"
 INPUT_NUMBER_PREFIX = f"{INPUT_NUMBER}."
+INPUT_TEXT = "input_text"
+INPUT_TEXT_PREFIX = f"{INPUT_TEXT}."
 LIGHT = "light"
 LIGHT_PREFIX = f"{LIGHT}."
 # transformer states
