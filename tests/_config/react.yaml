@@ -428,6 +428,18 @@ workflow:
       type: reactor_type_input_number
       action: reactor_action_input_number
 
+  workflow_input_text:
+    when:
+      id: actor_input_text
+      entity: test_input_text
+      type: input_text
+      action: change
+    then:
+      id: reactor_input_text 
+      entity: reactor_entity_input_text
+      type: reactor_type_input_text
+      action: reactor_action_input_text
+
   workflow_input_boolean:
     when:
       id: actor_input_boolean
@@ -769,6 +781,20 @@ workflow:
       action: set_value
       data:
         value: 12.34
+
+  workflow_input_text_set:
+    when:
+      id: actor_input_text_set
+      entity: actor_entity_input_text_set
+      type: actor_type_input_text_set
+      action: actor_action_input_text_set
+    then:
+      id: reactor_input_text_set
+      entity: input_text_set_test
+      type: input_text
+      action: set_value
+      data:
+        value: test_value
 
   workflow_input_boolean_turn_on:
     when:

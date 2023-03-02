@@ -1,7 +1,12 @@
 from homeassistant.components.input_number import (
     DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
-    ATTR_VALUE,
+    SERVICE_SET_VALUE as NUMBER_SERVICE_SET_VALUE,
+    ATTR_VALUE as NUMBER_ATTR_VALUE,
+)
+from homeassistant.components.input_text import (
+    DOMAIN as TEXT_DOMAIN,
+    SERVICE_SET_VALUE as TEXT_SERVICE_SET_VALUE,
+    ATTR_VALUE as TEXT_ATTR_VALUE,
 )
 from homeassistant.components.input_boolean import (
     DOMAIN as BOOLEAN_DOMAIN,
@@ -43,16 +48,33 @@ class Api():
         try:
             input_number_data = {
                 ATTR_ENTITY_ID: f"input_number.{entity_id}",
-                ATTR_VALUE: value,
+                NUMBER_ATTR_VALUE: value,
             }
             await self.react.hass.services.async_call(
                 NUMBER_DOMAIN,
-                SERVICE_SET_VALUE,
+                NUMBER_SERVICE_SET_VALUE,
                 input_number_data,
                 context,
             )
         except:
             _LOGGER.exception("Setting input_number failed")
+
+
+    async def async_input_text_set(self, context: Context, entity_id: str, value: str):
+        self._debug(f"Setting input_text '{entity_id}' to '{str(value)}'")
+        try:
+            input_text_data = {
+                ATTR_ENTITY_ID: f"input_text.{entity_id}",
+                TEXT_ATTR_VALUE: value,
+            }
+            await self.react.hass.services.async_call(
+                TEXT_DOMAIN,
+                TEXT_SERVICE_SET_VALUE,
+                input_text_data,
+                context,
+            )
+        except:
+            _LOGGER.exception("Setting input_text failed")
 
 
     async def async_input_boolean_turn_on(self, context: Context, entity_id: str):

@@ -1,3 +1,9 @@
+input_text_set_test:
+  name: input_text_set_test
+
+test_input_text:
+  name: test_input_text
+  
 test_text:
   name: test_text
   initial: ""
