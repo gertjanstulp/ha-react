@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import Generic, Type, TypeVar
+from typing import Any, Generic, Type, TypeVar
 
 from homeassistant.core import Event as HassEvent
-from custom_components.react.const import ATTR_DATA
+from custom_components.react.const import ATTR_ACTION, ATTR_DATA, ATTR_ENTITY, ATTR_TYPE
 
 from custom_components.react.utils.struct import DynamicData
 
@@ -33,10 +33,10 @@ class ReactEventPayload(DynamicData, Generic[T_data]):
         
         self.type_hints: dict = {ATTR_DATA: t_dd_type}
 
-        self.entity: str = None
-        self.type: str = None
-        self.action: str = None
-        self.data: T_data = None
+        self.ensure(ATTR_ENTITY, None)
+        self.ensure(ATTR_TYPE, None)
+        self.ensure(ATTR_ACTION, None)
+        self.ensure(ATTR_DATA, None)
 
 
     def load(self, source: dict) -> None:

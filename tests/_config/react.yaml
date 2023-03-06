@@ -832,23 +832,33 @@ workflow:
       type: input_boolean
       action: toggle
 
-  workflow_debug:
+  workflow_hass_started:
     when:
-      id: debug
-      entity: debug
-      type: debug
-      action: debug
+      entity: hass
+      type: system
+      action: start
     then:
-      id: tts_message
-      entity: sonos_living_room
-      type: media_player
-      action: speek
-        # condition: "{{ is_state('group.group_persons_home', 'home') }}"
-      data:
-        message: Er is iemand bij de voordeur
-        interrupt_service: sonos.snapshot
-        resume_service: sonos.restore
-        wait: 2
-        volume: 0.15
-        options:
-          gender: female
+      entity: input_boolean_hass_started
+      type: input_boolean
+      action: toggle
+      
+  # workflow_debug:
+  #   when:
+  #     id: debug
+  #     entity: debug
+  #     type: debug
+  #     action: debug
+  #   then:
+  #     id: tts_message
+  #     entity: sonos_living_room
+  #     type: media_player
+  #     action: speek
+  #       # condition: "{{ is_state('group.group_persons_home', 'home') }}"
+  #     data:
+  #       message: Er is iemand bij de voordeur
+  #       interrupt_service: sonos.snapshot
+  #       resume_service: sonos.restore
+  #       wait: 2
+  #       volume: 0.15
+  #       options:
+  #         gender: female

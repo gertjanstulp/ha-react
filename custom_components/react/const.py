@@ -264,6 +264,13 @@ ACTOR_ENTITY_TIME = "time"
 ACTOR_TYPE_CLOCK = "clock"
 ACTOR_TYPE_PATTERN = "pattern"
 
+# transforms
+ENTITY_HASS = "hass"
+TYPE_SYSTEM = "system"
+ACTION_SHUTDOWN = "shutdown"
+ACTION_START = "start"
+ACTION_STARTED = "started"
+
 
 def is_list_of_strings(obj):
     return bool(obj) and isinstance(obj, list) and all(isinstance(elem, str) for elem in obj)
