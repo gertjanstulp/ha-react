@@ -6,7 +6,7 @@ from custom_components.react.base import ReactBase
 from custom_components.react.const import REACT_ACTION_PLAY_MEDIA, REACT_TYPE_MEDIA_PLAYER
 from custom_components.react.plugin.media_player.api import Api
 from custom_components.react.plugin.media_player.const import PLUGIN_NAME
-from custom_components.react.tasks.defaults.default_task import DefaultReactionTask
+from custom_components.react.tasks.plugin.base import PluginReactionTask
 from custom_components.react.utils.events import ReactionEvent
 from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData
@@ -14,7 +14,7 @@ from custom_components.react.utils.struct import DynamicData
 _LOGGER = get_react_logger()
 
 
-class MediaPlayerPlayMediaTask(DefaultReactionTask):
+class MediaPlayerPlayMediaTask(PluginReactionTask):
 
     def __init__(self, react: ReactBase, api: Api) -> None:
         super().__init__(react, MediaPlayerPlayMediaReactionEvent)
@@ -25,7 +25,7 @@ class MediaPlayerPlayMediaTask(DefaultReactionTask):
         _LOGGER.debug(f"Input plugin: MediaPlayerPlayMediaTask - {message}")
 
 
-    async def async_execute_default(self, event: MediaPlayerPlayMediaReactionEvent):
+    async def async_execute_plugin(self, event: MediaPlayerPlayMediaReactionEvent):
         self._debug(f"Setting input_number '{event.payload.entity}'")
         await self.api.async_play_media(
             event.context, 

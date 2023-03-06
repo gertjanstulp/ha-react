@@ -15,8 +15,8 @@ def load(plugin_api: PluginApi, config: DynamicData):
     _LOGGER.debug(f"Input plugin: Loading")
 
     api = Api(plugin_api.react, ApiConfig(config))
-    plugin_api.register_default_task(InputNumberSetTask, api=api)
-    plugin_api.register_default_task(InputTextSetTask, api=api)
-    plugin_api.register_default_task(InputBooleanTurnOnTask, api=api)
-    plugin_api.register_default_task(InputBooleanTurnOffTask, api=api)
-    plugin_api.register_default_task(InputBooleanToggleTask, api=api)
+    plugin_api.register_plugin_task(InputNumberSetTask, api=api)
+    plugin_api.register_plugin_task(InputTextSetTask, api=api)
+    plugin_api.register_plugin_task(InputBooleanTurnOnTask, api=api)
+    plugin_api.register_plugin_task(InputBooleanTurnOffTask, api=api)
+    plugin_api.register_plugin_task(InputBooleanToggleTask, api=api)

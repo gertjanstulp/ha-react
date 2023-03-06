@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Callable, Union
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_time_interval
 
-from custom_components.react.tasks.base import ReactTask
+from custom_components.react.tasks.base import ReactTask, ReactTaskType
 
 if TYPE_CHECKING:
     from custom_components.react.base import ReactBase
@@ -52,15 +52,13 @@ class ReactTaskManager:
         await asyncio.gather(*[_load_module(task) for task in task_modules])
         self.react.log.debug("Loaded %s tasks", len(self.tasks))
 
-        schedule_tasks = len(self.react.recuring_tasks) == 0
 
-        for task in self.tasks:
-            self.start_task(task, schedule_tasks)
-
-
-    def start_task(self, task: ReactTask, schedule_tasks: bool = True):
+    def register_task(self, task: ReactTask):
         if not task.id in self._tasks:
             self._tasks[task.id] = task
+
+
+    def start_task(self, task: ReactTask):
         if task.event_types is not None:
             for event_type in task.event_types:
                 cancel = self.react.hass.bus.async_listen_once(event_type, task.execute_task)
@@ -76,32 +74,38 @@ class ReactTaskManager:
                 cancel = async_dispatcher_connect(self.react.hass, signal, task.execute_task)
                 self._unloaders[task.id] = TaskUnloader(cancel)
 
-        if task.schedule is not None and schedule_tasks:
-            self.react.log.debug(
-                "Scheduling ReactTask<%s> to run every %s", task.slug, task.schedule
-            )
-
-            cancel = async_track_time_interval(self.react.hass, task.execute_task, task.schedule)
-            self.react.recuring_tasks.append(cancel)
-            self._unloaders[task.id] = TaskUnloader(cancel)
-
     
-    def stop_task(self, task_id: str):
-        unloader = self._unloaders.pop(task_id, None)
+    def unload_task(self, task: ReactTask):
+        unloader = self._unloaders.pop(task.id, None)
         if unloader:
             unloader.unload()
-        self._tasks.pop(task_id).unload()
+        if task in self.tasks:
+            self.tasks.remove(task)
+            task.unload()
 
 
-    async def async_execute_runtime_tasks(self) -> None:
-        """Execute the execute methods of each runtime task if the stage matches."""
+    async def async_execute_startup_tasks(self) -> None:
         await asyncio.gather(
             *(
                 task.execute_task()
                 for task in self.tasks
-                if task.stages is not None and self.react.stage in task.stages
+                if task.task_type == ReactTaskType.STARTUP
             )
         )
+    
+
+    def execute_runtime_tasks(self) -> None:
+        self.execute_tasks(ReactTaskType.RUNTIME)
+
+
+    def execute_plugin_tasks(self) -> None:
+        self.execute_tasks(ReactTaskType.PLUGIN)
+
+
+    def execute_tasks(self, task_type: ReactTaskType) -> None:
+        runtime_tasks = (task for task in self.tasks if task.task_type == task_type)
+        for task in runtime_tasks:
+            self.start_task(task)
 
 
 class TaskUnloader():

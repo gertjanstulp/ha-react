@@ -4,24 +4,24 @@ from importlib import import_module
 from types import ModuleType
 
 from custom_components.react.base import ReactBase
-from custom_components.react.tasks.defaults.default_task import DefaultTask
+from custom_components.react.tasks.plugin.base import PluginTask
 
 
 class PluginApi():
     def __init__(self, react: ReactBase) -> None:
         self.react = react
-        self.tasks: list[str] = []
+        self.tasks: list[PluginTask] = []
 
 
-    def register_default_task(self, task_type: type[DefaultTask], **kwargs):
+    def register_plugin_task(self, task_type: type[PluginTask], **kwargs):
         task = task_type(self.react, **kwargs)
-        self.react.task_manager.start_task(task)
-        self.tasks.append(task.id)
+        self.react.task_manager.register_task(task)
+        self.tasks.append(task)
 
 
     def unload_tasks(self):
-        for task_id in self.tasks:
-            self.react.task_manager.stop_task(task_id)
+        for task in self.tasks:
+            self.react.task_manager.unload_task(task)
         self.tasks.clear()
 
 
@@ -41,6 +41,7 @@ class PluginFactory:
                     self.react.log.error(f"PluginFactory - Invalid plugin configuration: load method missing in '{plugin_module}'")
             except:
                 self.react.log.exception(f"PluginFactory - Could not load plugin '{plugin.module}'")
+        self.react.task_manager.execute_plugin_tasks()
 
 
     def reload(self):

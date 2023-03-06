@@ -2,7 +2,7 @@
 
 from custom_components.react.base import ReactBase
 from custom_components.react.plugin.plugin_factory import PluginApi
-from custom_components.react.tasks.defaults.default_task import DefaultTask
+from custom_components.react.tasks.plugin.base import PluginReactionTask
 from custom_components.react.utils.events import Event
 from custom_components.react.utils.struct import DynamicData
 from tests.common import TEST_CONTEXT
@@ -10,15 +10,15 @@ from tests.tst_context import TstContext
 
 
 def load(plugin_api: PluginApi, config: DynamicData):
-    plugin_api.register_default_task(DummyTask)
+    plugin_api.register_plugin_task(DummyTask)
 
 
-class DummyTask(DefaultTask):
+class DummyTask(PluginReactionTask):
     def __init__(self, react: ReactBase) -> None:
         super().__init__(react, None)
 
         
-    async def async_execute_default(self, event: Event):
+    async def async_execute_plugin(self, event: Event):
         pass
 
 

@@ -21,7 +21,7 @@ https://github.com/gertjanstulp/ha-react/issues
 
 # VERSION = "0.7.0"
 VERSION_STORAGE = "6"
-MINIMUM_HA_VERSION = "2021.9.0"
+MINIMUM_HA_VERSION = "2023.0.0"
 
 TITLE = 'React'
 DOMAIN = 'react'

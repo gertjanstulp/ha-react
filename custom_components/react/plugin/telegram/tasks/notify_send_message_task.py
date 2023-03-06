@@ -5,7 +5,7 @@ from telegram.utils.helpers import escape_markdown
 from homeassistant.core import Event as HassEvent
 
 from custom_components.react.base import ReactBase
-from custom_components.react.tasks.defaults.default_task import DefaultReactionTask
+from custom_components.react.tasks.plugin.base import PluginReactionTask
 from custom_components.react.utils.events import ReactionEvent
 from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData
@@ -26,7 +26,7 @@ from custom_components.react.plugin.telegram.const import (
 _LOGGER = get_react_logger()
 
 
-class NotifySendMessageTask(DefaultReactionTask):
+class NotifySendMessageTask(PluginReactionTask):
     def __init__(self, react: ReactBase, api: Api) -> None:
         super().__init__(react, NotifySendMessageReactionEvent)
         self.api = api
@@ -36,7 +36,7 @@ class NotifySendMessageTask(DefaultReactionTask):
         _LOGGER.debug(f"Telegram plugin: NotifySendMessageTask - {message}")
 
 
-    async def async_execute_default(self, event: NotifySendMessageReactionEvent):
+    async def async_execute_plugin(self, event: NotifySendMessageReactionEvent):
         self._debug("Sending message")
         await self.api.async_send_message(
             event.context,
