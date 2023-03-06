@@ -29,6 +29,8 @@ views:
           - entity: input_button.button_trigger_reactor_condition
           - entity: input_button.button_trigger_wait
           - entity: input_button.button_trigger_wait_delayed
+      - type: entities
+        entities:
           - entity: input_button.button_trigger_tts_media_player_speek_with_volume
           - entity: input_button.button_trigger_tts_media_player_speek
           - entity: input_button.button_trigger_input_number_set
@@ -50,6 +52,7 @@ views:
           - entity: input_boolean.input_boolean_turn_on_test
           - entity: input_boolean.input_boolean_turn_off_test
           - entity: input_boolean.input_boolean_toggle_test
+          - entity: input_boolean.input_boolean_hass_started
       - type: entities
         entities:
           - entity: input_button.button_trigger_device_tracker_home

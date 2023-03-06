@@ -46,3 +46,6 @@ input_boolean_toggle_test:
   name: input_boolean_toggle_test
   initial: True
 
+input_boolean_hass_started:
+  name: input_boolean_hass_started
+  initial: False

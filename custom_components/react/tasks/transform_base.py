@@ -1,6 +1,7 @@
 from __future__ import annotations
+from asyncio import Queue
 
-from typing import Any, Type
+from typing import Any, Type, Union
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, 
@@ -14,7 +15,7 @@ from homeassistant.core import Event as HassEvent, State
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from custom_components.react.utils.events import Event
+from custom_components.react.utils.events import ActionEventPayload, Event
 from custom_components.react.utils.struct import ActorRuntime, DynamicData
 
 from ..base import ReactBase
@@ -146,3 +147,21 @@ class StateTransformTask(ReactTask):
     def async_unregister_entity(self, workflow_id: str, actor: ActorRuntime):
         if actor.entity in self.entities:
             self.entities.remove(actor.entity)
+
+
+class EventTransformTask(ReactTask):
+    def __init__(self, react: ReactBase, event_names: Union[str, list[str]]) -> None:
+        super().__init__(react)
+
+        if isinstance(event_names, str):
+            event_names = [event_names]
+        self.event_types = event_names
+
+    
+    def transform_event_payload(self, hass_event: HassEvent) -> ActionEventPayload:
+        raise NotImplementedError()
+
+    
+    async def async_execute(self, hass_event: HassEvent) -> None:
+        payload = self.transform_event_payload(hass_event)
+        self.react.hass.bus.async_fire(EVENT_REACT_ACTION, payload)
