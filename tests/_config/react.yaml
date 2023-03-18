@@ -832,6 +832,21 @@ workflow:
       type: input_boolean
       action: toggle
 
+  workflow_media_player_play_media:
+    when:
+      id: actor_media_player_play_media
+      entity: actor_entity_media_player_play_media
+      type: actor_type_media_player_play_media
+      action: actor_action_media_player_play_media
+    then:
+      id: reactor_media_player_play_media
+      entity: media_player_play_media_test
+      type: media_player
+      action: play_media
+      data:
+        media_content_type: test_type
+        media_content_id: test_id
+
   workflow_hass_started:
     when:
       entity: hass
