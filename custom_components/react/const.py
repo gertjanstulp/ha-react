@@ -160,6 +160,7 @@ REACT_TYPE_MEDIA_PLAYER = "media_player"
 REACT_TYPE_INPUT_NUMBER = "input_number"
 REACT_TYPE_INPUT_TEXT = "input_text"
 REACT_TYPE_INPUT_BOOLEAN = "input_boolean"
+REACT_TYPE_MEDIA_PLAYER = "media_player"
 
 # React actions
 REACT_ACTION_SEND_MESSAGE = "send_message"
@@ -167,6 +168,7 @@ REACT_ACTION_FEEDBACK = "feedback"
 REACT_ACTION_FEEDBACK_RETRIEVED = "feedback_retrieved"
 REACT_ACTION_CONFIRM_FEEDBACK = "confirm_feedback"
 REACT_ACTION_SPEEK = "speek"
+REACT_ACTION_PLAY_MEDIA = "play_media"
 
 # signals
 SIGNAL_ITEM_CREATED = "react_item_created"
