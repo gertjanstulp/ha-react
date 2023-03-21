@@ -37,6 +37,9 @@ views:
           - entity: input_button.button_trigger_input_boolean_turn_on
           - entity: input_button.button_trigger_input_boolean_turn_off
           - entity: input_button.button_trigger_input_boolean_toggle
+          - entity: input_button.button_trigger_light_turn_on
+          - entity: input_button.button_trigger_light_turn_off
+          - entity: input_button.button_trigger_light_toggle
       - type: entities
         entities:
           - entity: input_boolean.test_actor_condition
@@ -53,6 +56,9 @@ views:
           - entity: input_boolean.input_boolean_turn_off_test
           - entity: input_boolean.input_boolean_toggle_test
           - entity: input_boolean.input_boolean_hass_started
+          - entity: light.light_turn_on_test
+          - entity: light.light_turn_off_test
+          - entity: light.light_toggle_test
       - type: entities
         entities:
           - entity: input_button.button_trigger_device_tracker_home

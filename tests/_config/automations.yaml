@@ -453,3 +453,39 @@
       entity: actor_entity_input_boolean_toggle
       type: actor_type_input_boolean_toggle
       action: actor_action_input_boolean_toggle
+
+- id: trigger_light_turn_on
+  alias: Trigger light turn on
+  trigger:
+    platform: state
+    entity_id: input_button.button_trigger_light_turn_on
+  action:
+    event: ev_react_action
+    event_data:
+      entity: actor_entity_light_turn_on
+      type: actor_type_light_turn_on
+      action: actor_action_light_turn_on
+
+- id: trigger_light_turn_off
+  alias: Trigger light turn off
+  trigger:
+    platform: state
+    entity_id: input_button.button_trigger_light_turn_off
+  action:
+    event: ev_react_action
+    event_data:
+      entity: actor_entity_light_turn_off
+      type: actor_type_light_turn_off
+      action: actor_action_light_turn_off
+
+- id: trigger_light_toggle
+  alias: Trigger light toggle
+  trigger:
+    platform: state
+    entity_id: input_button.button_trigger_light_toggle
+  action:
+    event: ev_react_action
+    event_data:
+      entity: actor_entity_light_toggle
+      type: actor_type_light_toggle
+      action: actor_action_light_toggle
