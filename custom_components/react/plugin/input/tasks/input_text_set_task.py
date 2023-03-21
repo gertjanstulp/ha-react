@@ -7,7 +7,7 @@ from custom_components.react.base import ReactBase
 from custom_components.react.const import REACT_TYPE_INPUT_TEXT
 from custom_components.react.plugin.input.api import Api
 from custom_components.react.plugin.input.const import PLUGIN_NAME
-from custom_components.react.tasks.defaults.default_task import DefaultReactionTask
+from custom_components.react.tasks.plugin.base import PluginReactionTask
 from custom_components.react.utils.events import ReactionEvent
 from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData
@@ -15,7 +15,7 @@ from custom_components.react.utils.struct import DynamicData
 _LOGGER = get_react_logger()
 
 
-class InputTextSetTask(DefaultReactionTask):
+class InputTextSetTask(PluginReactionTask):
 
     def __init__(self, react: ReactBase, api: Api) -> None:
         super().__init__(react, InputTextSetReactionEvent)
@@ -26,7 +26,7 @@ class InputTextSetTask(DefaultReactionTask):
         _LOGGER.debug(f"Input plugin: InputTextSetTask - {message}")
 
 
-    async def async_execute_default(self, event: InputTextSetReactionEvent):
+    async def async_execute_plugin(self, event: InputTextSetReactionEvent):
         self._debug(f"Setting input_text '{event.payload.entity}'")
         await self.api.async_input_text_set(event.context, event.payload.entity, event.payload.data.value)
         

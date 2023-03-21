@@ -11,4 +11,4 @@ def load(plugin_api: PluginApi, config: DynamicData):
     _LOGGER.debug(f"Media-player plugin: Loading")
 
     api = Api(plugin_api.react, ApiConfig(config))
-    plugin_api.register_default_task(MediaPlayerPlayMediaTask, api=api)
+    plugin_api.register_plugin_task(MediaPlayerPlayMediaTask, api=api)

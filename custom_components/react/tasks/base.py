@@ -1,4 +1,5 @@
 from datetime import timedelta
+from enum import Enum
 from logging import Handler
 from time import monotonic
 from typing import Callable, Union
@@ -7,7 +8,13 @@ import uuid
 from homeassistant.core import Event as HassEvent
 
 from ..base import ReactBase
-from ..enums import ReactStage
+
+
+class ReactTaskType(str, Enum):
+    STARTUP = "startup"
+    RUNTIME = "runtime"
+    PLUGIN = "plugin"
+
 
 class ReactTask:
     """React task base."""
@@ -19,14 +26,11 @@ class ReactTask:
         self.event_types: Union[list[str], None] = None
         self.events_with_filters: Union[list[tuple[str, Callable[[HassEvent], bool]]], None] = None
         self.signals: Union[list[str], None] = None
-        self.schedule: Union[timedelta, None] = None
-        self.stages: Union[list[ReactStage], None] = None
-        self.can_run_disabled = False  ## Set to True if task can run while disabled
 
 
     @property
-    def enabled(self) -> bool:
-        return True
+    def task_type(self) -> ReactTaskType:
+        raise NotImplementedError()
 
 
     @property
@@ -42,12 +46,6 @@ class ReactTask:
 
     async def execute_task(self, *args, **kwargs) -> None:
         """Execute the task defined in subclass."""
-        if not self.can_run_disabled and self.react.system.disabled:
-            self.task_logger(
-                self.react.log.debug,
-                f"Skipping task, React is disabled {self.react.system.disabled_reason}",
-            )
-            return
         self.task_logger(self.react.log.debug, "Executing task")
         start_time = monotonic()
 

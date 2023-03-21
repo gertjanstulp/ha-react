@@ -27,7 +27,6 @@ from custom_components.react.utils.track import ObjectTracker
 
 
 from .base import ReactBase
-from .enums import ReactStage
 from .plugin.plugin_factory import PluginFactory
 from .lib.config import Actor, Reactor, Workflow
 from .tasks.manager import ReactTaskManager
@@ -96,8 +95,6 @@ async def async_initialize_integration(
 
     integration = await async_get_integration(hass, DOMAIN)
 
-    await react.async_set_stage(None)
-
     react.log.info(STARTUP, integration.version)
 
     clientsession = async_get_clientsession(hass)
@@ -121,28 +118,17 @@ async def async_initialize_integration(
 
     # Run startup sequence
     async def async_startup():
-        """React startup tasks."""
         react.enable_react()
-
-        await react.async_set_stage(ReactStage.SETUP)
+        await react.task_manager.async_execute_startup_tasks()
+        react.task_manager.execute_runtime_tasks()
         if react.system.disabled:
             return False
 
-        # Setup startup tasks
-        if react.hass.state == CoreState.running:
-            # async_call_later(react.hass, 5, react.startup_tasks)
-            react.hass.async_create_task(react.startup_tasks())
-        else:   
-            react.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, react.startup_tasks)
+        react.log.debug("Setup complete")
 
-        await react.async_set_stage(ReactStage.WAITING)
-        react.log.debug("Setup complete, waiting for Home Assistant before startup tasks starts")
+        return True
 
-        return not react.system.disabled
-
-    await async_startup()
-
-    return True
+    return await async_startup()
 
 
 async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:

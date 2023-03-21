@@ -11,7 +11,7 @@ from homeassistant.components.telegram_bot import (
 
 from custom_components.react.utils.events import Event
 from custom_components.react.base import ReactBase
-from custom_components.react.tasks.defaults.default_task import DefaultTransformTask
+from custom_components.react.tasks.plugin.base import PluginTransformTask
 from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData
 from custom_components.react.const import (
@@ -33,7 +33,7 @@ from custom_components.react.plugin.telegram.const import PLUGIN_NAME
 _LOGGER = get_react_logger()
 
 
-class CallbackTransformInTask(DefaultTransformTask):
+class CallbackTransformInTask(PluginTransformTask):
     def __init__(self, react: ReactBase) -> None:
         super().__init__(react, EVENT_TELEGRAM_CALLBACK, CallbackTransformEvent)
 

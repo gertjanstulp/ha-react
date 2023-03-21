@@ -11,7 +11,7 @@ from custom_components.react.const import ATTR_EVENT_MESSAGE, ATTR_WAIT
 from custom_components.react.utils.struct import DynamicData
 
 from custom_components.react.plugin.plugin_factory import PluginApi
-from custom_components.react.plugin.tts.tasks.media_player_speek import MediaPlayerSpeekTask
+from custom_components.react.plugin.tts.tasks.media_player_speek_task import MediaPlayerSpeekTask
 from custom_components.react.plugin.tts.const import (
     ATTR_EVENT_LANGUAGE, 
     ATTR_EVENT_OPTIONS, 
@@ -24,7 +24,7 @@ from tests.tst_context import TstContext
 
 
 def load(plugin_api: PluginApi, config: DynamicData):
-    plugin_api.register_default_task(MediaPlayerSpeekTaskMock)
+    plugin_api.register_plugin_task(MediaPlayerSpeekTaskMock)
 
 
 class TtsApiMock():

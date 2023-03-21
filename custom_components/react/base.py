@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.loader import Integration
 
 
-from custom_components.react.enums import ReactStage, ReactDisabledReason
+from custom_components.react.enums import ReactDisabledReason
 from custom_components.react.exceptions import ReactException
 from custom_components.react.lib.config import PluginConfiguration, WorkflowConfiguration
 from custom_components.react.runtime.runtime import ReactRuntime
@@ -76,7 +76,6 @@ class ReactSystem:
 
     disabled_reason: Union[ReactDisabledReason, None] = None
     running: bool = False
-    stage = ReactStage.SETUP
     action: bool = False
 
     @property
@@ -105,7 +104,6 @@ class ReactBase():
         self.hass: Union[HomeAssistant, None] = None
         self.integration: Union[Integration, None] = None
         self.log: logging.Logger = get_react_logger()
-        self.recuring_tasks = []
         self.session: Union[ClientSession, None] = None
         self.status = ReactStatus()
         self.system = ReactSystem()
@@ -121,18 +119,6 @@ class ReactBase():
         return self.integration.file_path
 
 
-    async def async_set_stage(self, stage: Union[ReactStage, None]) -> None:
-        """Set React stage."""
-        if stage and self.stage == stage:
-            return
-
-        self.stage = stage
-        if stage is not None:
-            self.log.info("Stage changed: %s", self.stage)
-            self.hass.bus.async_fire("react/stage", {"stage": self.stage})
-            await self.task_manager.async_execute_runtime_tasks()
-
-
     def disable_react(self, reason: ReactDisabledReason) -> None:
         if self.system.disabled_reason == reason:
             return
@@ -146,23 +132,6 @@ class ReactBase():
         if self.system.disabled_reason is not None:
             self.system.disabled_reason = None
             self.log.debug("React is enabled")
-
-    
-    async def startup_tasks(self, _event=None) -> None:
-        """Tasks that are started after setup."""
-        await self.async_set_stage(ReactStage.STARTUP)
-        self.status.startup = False
-
-        self.hass.bus.async_fire("react/status", {})
-
-        await self.async_set_stage(ReactStage.RUNNING)
-
-        self.hass.bus.async_fire("react/reload", {"force": True})
-
-        # if queue_task := self.tasks.get("prosess_queue"):
-        #     await queue_task.execute_task()
-
-        self.hass.bus.async_fire("react/status", {})
 
 
     async def async_shutdown(self) -> None:

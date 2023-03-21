@@ -13,7 +13,7 @@ def load(plugin_api: PluginApi, config: DynamicData):
     get_react_logger().debug(f"Telegram plugin: Loading")
     api = Api(plugin_api.react, ApiConfig(config))
 
-    plugin_api.register_default_task(CallbackTransformInTask)
+    plugin_api.register_plugin_task(CallbackTransformInTask)
 
-    plugin_api.register_default_task(NotifySendMessageTask, api=api)
-    plugin_api.register_default_task(NotifyConfirmFeedbackTask, api=api)
+    plugin_api.register_plugin_task(NotifySendMessageTask, api=api)
+    plugin_api.register_plugin_task(NotifyConfirmFeedbackTask, api=api)

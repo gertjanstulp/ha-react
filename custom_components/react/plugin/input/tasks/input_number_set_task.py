@@ -7,7 +7,7 @@ from custom_components.react.base import ReactBase
 from custom_components.react.const import REACT_TYPE_INPUT_NUMBER
 from custom_components.react.plugin.input.api import Api
 from custom_components.react.plugin.input.const import PLUGIN_NAME
-from custom_components.react.tasks.defaults.default_task import DefaultReactionTask
+from custom_components.react.tasks.plugin.base import PluginReactionTask
 from custom_components.react.utils.events import ReactionEvent
 from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData
@@ -15,7 +15,7 @@ from custom_components.react.utils.struct import DynamicData
 _LOGGER = get_react_logger()
 
 
-class InputNumberSetTask(DefaultReactionTask):
+class InputNumberSetTask(PluginReactionTask):
 
     def __init__(self, react: ReactBase, api: Api) -> None:
         super().__init__(react, InputNumberSetReactionEvent)
@@ -26,7 +26,7 @@ class InputNumberSetTask(DefaultReactionTask):
         _LOGGER.debug(f"Input plugin: InputNumberSetTask - {message}")
 
 
-    async def async_execute_default(self, event: InputNumberSetReactionEvent):
+    async def async_execute_plugin(self, event: InputNumberSetReactionEvent):
         self._debug(f"Setting input_number '{event.payload.entity}'")
         await self.api.async_input_number_set(event.context, event.payload.entity, event.payload.data.value)
         
