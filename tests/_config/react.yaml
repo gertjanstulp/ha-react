@@ -11,6 +11,8 @@ plugins:
       say_service: google_say
       language: nl
   - module: custom_components.react.plugin.input.plugin
+  - module: custom_components.react.plugin.light.plugin
+  - module: custom_components.react.plugin.media_player.plugin
 
 stencil:
   full_stencil:
@@ -177,7 +179,6 @@ workflow:
             condition: "{{ is_state('input_boolean.test_trace2', 'off') }}"
       - id: reactor_trace2_2
         reset_workflow: workflow_scheduled
-        id: reactor_trace2_3
         entity: reactor_entity_trace2_3
         type: reactor_type_trace2_3
         action: reactor_action_trace2_3
@@ -846,6 +847,42 @@ workflow:
       data:
         media_content_type: test_type
         media_content_id: test_id
+
+  workflow_light_turn_on:
+    when:
+      id: actor_light_turn_on
+      entity: actor_entity_light_turn_on
+      type: actor_type_light_turn_on
+      action: actor_action_light_turn_on
+    then:
+      id: reactor_light_turn_on
+      entity: light_turn_on_test
+      type: light
+      action: 'on'
+
+  workflow_light_turn_off:
+    when:
+      id: actor_light_turn_off
+      entity: actor_entity_light_turn_off
+      type: actor_type_light_turn_off
+      action: actor_action_light_turn_off
+    then:
+      id: reactor_light_turn_off
+      entity: light_turn_off_test
+      type: light
+      action: 'off'
+
+  workflow_light_toggle:
+    when:
+      id: actor_light_toggle
+      entity: actor_entity_light_toggle
+      type: actor_type_light_toggle
+      action: actor_action_light_toggle
+    then:
+      id: reactor_light_toggle
+      entity: light_toggle_test
+      type: light
+      action: toggle
 
   workflow_hass_started:
     when:
