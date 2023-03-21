@@ -311,7 +311,7 @@
   action:
     service: device_tracker.see
     data:
-      dev_id: test_device_tracker
+      dev_id: device_tracker_state_test
       location_name: home
       source_type: router
 
@@ -323,7 +323,7 @@
   action:
     service: device_tracker.see
     data:
-      dev_id: test_device_tracker
+      dev_id: device_tracker_state_test
       location_name: not_home
       source_type: router
 
@@ -489,3 +489,39 @@
       entity: actor_entity_light_toggle
       type: actor_type_light_toggle
       action: actor_action_light_toggle
+
+- id: trigger_alarm_arm_away
+  alias: Trigger alarm arm away
+  trigger:
+    platform: state
+    entity_id: input_button.button_trigger_alarm_arm_away
+  action:
+    event: ev_react_action
+    event_data:
+      entity: actor_entity_alarm_arm_away
+      type: actor_type_alarm_arm_away
+      action: actor_action_alarm_arm_away
+
+- id: trigger_alarm_disarm
+  alias: Trigger alarm disarm
+  trigger:
+    platform: state
+    entity_id: input_button.button_trigger_alarm_disarm
+  action:
+    event: ev_react_action
+    event_data:
+      entity: actor_entity_alarm_disarm
+      type: actor_type_alarm_disarm
+      action: actor_action_alarm_disarm
+
+- id: trigger_alarm_trigger
+  alias: Trigger alarm trigger
+  trigger:
+    platform: state
+    entity_id: input_button.button_trigger_alarm_trigger
+  action:
+    event: ev_react_action
+    event_data:
+      entity: actor_entity_alarm_trigger
+      type: actor_type_alarm_trigger
+      action: actor_action_alarm_trigger

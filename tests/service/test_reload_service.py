@@ -10,7 +10,7 @@ from tests.tst_context import TstContext
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["immediate"])
-async def test_react_call_service_reload(hass: HomeAssistant, workflow_name, react_component):
+async def test_call_service_reload(hass: HomeAssistant, workflow_name, react_component):
     mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.dummy_plugin_reload_service_mock"}
     comp = await react_component 
     await comp.async_setup(workflow_name, plugins=[mock_plugin])

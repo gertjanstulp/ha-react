@@ -1,3 +1,6 @@
+input_button_state_test:
+  name: input_button_state_test
+  
 button_trigger_immediate:
   name: Immediate
 button_trigger_delayed:
@@ -74,3 +77,9 @@ button_trigger_light_turn_off:
   name: Light turn off
 button_trigger_light_toggle:
   name: Light toggle
+button_trigger_alarm_arm_away:
+  name: Alarm arm away
+button_trigger_alarm_disarm:
+  name: Alarm disarm
+button_trigger_alarm_trigger:
+  name: Alarm trigger

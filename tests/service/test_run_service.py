@@ -8,7 +8,7 @@ from tests.common import FIXTURE_WORKFLOW_NAME
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["scheduled"])
-async def test_react_call_service_delete_run(hass: HomeAssistant, workflow_name, react_component):
+async def test_call_service_delete_run(hass: HomeAssistant, workflow_name, react_component):
     
     comp = await react_component
     await comp.async_setup(workflow_name)
@@ -25,8 +25,8 @@ async def test_react_call_service_delete_run(hass: HomeAssistant, workflow_name,
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["trace2"])
-async def test_react_call_service_delete_run_multiple_reactions(hass: HomeAssistant, workflow_name, react_component, input_boolean_component):
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["trace_advanced_test"])
+async def test_call_service_delete_run_multiple_reactions(hass: HomeAssistant, workflow_name, react_component, input_boolean_component):
     
     comp = await react_component
     await comp.async_setup(workflow_name)
@@ -36,8 +36,8 @@ async def test_react_call_service_delete_run_multiple_reactions(hass: HomeAssist
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():
         tc.verify_run_not_found()
-        await ibc.async_turn_on("test_trace2")
-        await tc.async_send_action_event(entity="actor_entity_trace2_2", type="actor_type_trace2_2", action="actor_action_trace2_2")
+        await ibc.async_turn_on("trace_advanced_test")
+        await tc.async_send_action_event(entity="actor_entity_trace_advanced_test_2", type="actor_type_trace_advanced_test_2", action="actor_action_trace_advanced_test_2")
         tc.verify_run_found()
         tc.verify_reaction_found(expected_count=2)
         run_id = tc.retrieve_run_id()
@@ -49,7 +49,7 @@ async def test_react_call_service_delete_run_multiple_reactions(hass: HomeAssist
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["scheduled"])
-async def test_react_call_service_run_now(hass: HomeAssistant, workflow_name, react_component):
+async def test_call_service_run_now(hass: HomeAssistant, workflow_name, react_component):
     
     comp = await react_component
     await comp.async_setup(workflow_name)

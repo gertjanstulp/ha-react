@@ -1,4 +1,8 @@
 - platform: virtual
+  name: '!light_state_test'
+  persistent: false
+  initial_value: 'off'
+- platform: virtual
   name: '!light_turn_on_test'
   persistent: false
   initial_value: 'off'

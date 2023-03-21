@@ -1,37 +1,29 @@
-test_actor_condition:
-  name: test_actor_condition
+actor_condition_test:
+  name: actor_condition_test
   initial: False
 
-test_reactor_condition:
-  name: test_reactor_condition
+reactor_condition_test:
+  name: reactor_condition_test
   initial: False
 
-test_trace:
-  name: test_trace
+trace_basic_test:
+  name: trace_basic_test
   initial: False
 
-test_trace2:
-  name: test_trace2
+trace_advanced_test:
+  name: trace_advanced_test
   initial: False
 
-test_binary_sensor:
-  name: test_binary_sensor
+wait_for_state_test:
+  name: wait_for_state_test
   initial: False
 
-test_binary_group:
-  name: test_binary_group
+wait_for_state_delayed_test:
+  name: wait_for_state_delayed_test
   initial: False
 
-test_binary_sensor_available:
-  name: test_binary_sensor_available
-  initial: False
-
-test_wait:
-  name: test_wait
-  initial: False
-
-test_input_boolean:
-  name: test_input_boolean
+input_boolean_state_test:
+  name: input_boolean_state_test
   initial: False
 
 input_boolean_turn_on_test:
@@ -46,6 +38,6 @@ input_boolean_toggle_test:
   name: input_boolean_toggle_test
   initial: True
 
-input_boolean_hass_started:
-  name: input_boolean_hass_started
+input_boolean_hass_started_test:
+  name: input_boolean_hass_started_test
   initial: False

@@ -24,3 +24,5 @@ config
 homeassistant
 tests/config/custom_components
 tests/config/known_devices.yaml
+
+tests/_config/known_devices.yaml

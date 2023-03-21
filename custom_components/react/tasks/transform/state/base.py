@@ -98,10 +98,10 @@ class StateChangedEvent(Event[StateChangedEventPayload]):
    
 class StateTransformTask(ReactTask):
     
-    def __init__(self, react: ReactBase, prefix: str, type: str, payload_type: Type[StateChangedEventPayload] = StateChangedEventPayload) -> None:
+    def __init__(self, react: ReactBase, entity_prefix: str, type: str, payload_type: Type[StateChangedEventPayload] = StateChangedEventPayload) -> None:
         super().__init__(react)
         
-        self.prefix = prefix
+        self.entity_prefix = entity_prefix
         self.type = type
         self.payload_type = payload_type
 
@@ -119,7 +119,7 @@ class StateTransformTask(ReactTask):
     @callback
     def async_filter(self, hass_event: HassEvent) -> bool:
         entity_id: str = hass_event.data.get(ATTR_ENTITY_ID, None)
-        if entity_id and entity_id.startswith(self.prefix):
+        if entity_id and entity_id.startswith(self.entity_prefix):
             entity: str = entity_id.split('.')[1]
             return entity in self.entities
         return False

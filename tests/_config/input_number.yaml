@@ -3,7 +3,7 @@ input_number_set_test:
   min: 0
   max: 100
 
-test_input_number:
-  name: test_input_number
+input_number_state_test:
+  name: input_number_state_test
   min: 0
   max: 1000

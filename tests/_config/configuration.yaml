@@ -21,6 +21,9 @@ lovelace:
 
 device_tracker:
 
+binary_sensor: !include config/binary_sensor.yaml
+sensor: !include config/sensor.yaml
+device_tracker: !include config/device_tracker.yaml
 input_boolean: !include config/input_boolean.yaml
 input_text: !include config/input_text.yaml
 input_number: !include config/input_number.yaml
@@ -34,3 +37,4 @@ react: !include config/react.yaml
 person: !include config/person.yaml
 tts: !include config/tts.yaml
 light: !include config/light.yaml
+alarm_control_panel: !include config/alarm.yaml

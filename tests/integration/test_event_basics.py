@@ -10,7 +10,7 @@ FIXTURE_ADDITIONAL_TESTS = "additional_tests"
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["immediate"])
-async def test_react_immediate(hass: HomeAssistant, workflow_name, react_component):
+async def test_immediate(hass: HomeAssistant, workflow_name, react_component):
     """
     Test for workflow with immediate reactor:
     - No reaction entity should be created
@@ -34,7 +34,7 @@ async def test_react_immediate(hass: HomeAssistant, workflow_name, react_compone
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["delayed"])
-async def test_react_delayed(hass: HomeAssistant, workflow_name, react_component):
+async def test_delayed(hass: HomeAssistant, workflow_name, react_component):
     """
     Test for workflow with delayed reactor:
     - An event should not be sent immediately
@@ -63,7 +63,7 @@ async def test_react_delayed(hass: HomeAssistant, workflow_name, react_component
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["scheduled"])
-async def test_react_scheduled(hass: HomeAssistant, workflow_name, react_component):
+async def test_scheduled(hass: HomeAssistant, workflow_name, react_component):
     """ 
     Test for workflow with scheduled reactor:
     - An event should not be sent immediately
@@ -88,7 +88,7 @@ async def test_react_scheduled(hass: HomeAssistant, workflow_name, react_compone
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["reset"])
-async def test_react_reset(hass: HomeAssistant, workflow_name, react_component):
+async def test_reset(hass: HomeAssistant, workflow_name, react_component):
     """
     Test for workflow with reset reactor:
     - Reactions should be found before sending reset event
@@ -120,7 +120,7 @@ async def test_react_reset(hass: HomeAssistant, workflow_name, react_component):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["forward_action"])
-async def test_react_forward_action_no_toggle(hass: HomeAssistant, workflow_name, react_component):
+async def test_forward_action_no_toggle(hass: HomeAssistant, workflow_name, react_component):
     """ 
     Test for workflow with reactor with forwardaction and not event action 'toggle':
     - No reaction entity should be created
@@ -144,7 +144,7 @@ async def test_react_forward_action_no_toggle(hass: HomeAssistant, workflow_name
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["forward_action"])
-async def test_react_forward_action_toggle(hass: HomeAssistant, workflow_name, react_component):
+async def test_forward_action_toggle(hass: HomeAssistant, workflow_name, react_component):
     """ 
     Test for workflow with reactor with forwardaction and event action 'toggle':
     - No reaction entity should be created
@@ -166,7 +166,7 @@ async def test_react_forward_action_toggle(hass: HomeAssistant, workflow_name, r
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["forward_data"])
-async def test_react_forward_data(hass: HomeAssistant, workflow_name, react_component):
+async def test_forward_data(hass: HomeAssistant, workflow_name, react_component):
     """ 
     Test for workflow with reactor with forwarddata :
     - No reaction entity should be created
@@ -195,7 +195,7 @@ async def test_react_forward_data(hass: HomeAssistant, workflow_name, react_comp
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["full_stencil"])
-async def test_react_full_stencil(hass: HomeAssistant, workflow_name, react_component):
+async def test_full_stencil(hass: HomeAssistant, workflow_name, react_component):
     """
     Test for workflow with full stencil:
     - No reaction entity should be created
@@ -222,7 +222,7 @@ async def test_react_full_stencil(hass: HomeAssistant, workflow_name, react_comp
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["partial_stencil"])
-async def test_react_partial_stencil(hass: HomeAssistant, workflow_name, react_component):
+async def test_partial_stencil(hass: HomeAssistant, workflow_name, react_component):
     """
     Test for workflow with partial stencil:
     - No reaction entity should be created
@@ -246,7 +246,7 @@ async def test_react_partial_stencil(hass: HomeAssistant, workflow_name, react_c
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["overwrite"])
-async def test_react_overwrite(hass: HomeAssistant, workflow_name, react_component):
+async def test_overwrite(hass: HomeAssistant, workflow_name, react_component):
     """
     Test for workflow with overwrite reactor:
     """
