@@ -37,4 +37,5 @@ react: !include config/react.yaml
 person: !include config/person.yaml
 tts: !include config/tts.yaml
 light: !include config/light.yaml
+switch: !include config/switch.yaml
 alarm_control_panel: !include config/alarm.yaml

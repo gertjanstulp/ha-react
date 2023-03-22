@@ -161,6 +161,7 @@ REACT_TYPE_INPUT_NUMBER = "input_number"
 REACT_TYPE_INPUT_TEXT = "input_text"
 REACT_TYPE_INPUT_BOOLEAN = "input_boolean"
 REACT_TYPE_LIGHT = "light"
+REACT_TYPE_SWITCH = "switch"
 REACT_TYPE_MEDIA_PLAYER = "media_player"
 REACT_TYPE_ALARM = "alarm"
 

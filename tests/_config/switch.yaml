@@ -1,2 +1,8 @@
 - platform: virtual
   name: '!switch_state_test'
+- platform: virtual
+  name: '!switch_turn_on_test'
+- platform: virtual
+  name: '!switch_turn_off_test'
+- platform: virtual
+  name: '!switch_toggle_test'
