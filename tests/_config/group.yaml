@@ -1,9 +1,9 @@
-test_binary_group:
-  name: test_binary_group
+group_state_test:
+  name: group_state_test
   entities:
-    - binary_sensor.test_binary_group
+    - binary_sensor.group_state_test
 
-test_person_group:
-  name: test_person_group
+person_group_state_test:
+  name: person_group_state_test
   entities:
-    - person.test_person
+    - person.person_group_state_test

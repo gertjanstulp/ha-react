@@ -7,7 +7,7 @@ from tests.common import FIXTURE_WORKFLOW_NAME
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["data"])
-async def test_react_data_no_event_1(hass: HomeAssistant, workflow_name, react_component):
+async def test_data_no_event_1(hass: HomeAssistant, workflow_name, react_component):
     """
     Test for workflow with actor data where action has no data:
     - No reaction entity should be found
@@ -27,7 +27,7 @@ async def test_react_data_no_event_1(hass: HomeAssistant, workflow_name, react_c
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["data"])
-async def test_react_data_no_event_2(hass: HomeAssistant, workflow_name, react_component):
+async def test_data_no_event_2(hass: HomeAssistant, workflow_name, react_component):
     """
     Test for workflow with actor data where action data does not match actor data:
     - No reaction entity should be found
@@ -48,7 +48,7 @@ async def test_react_data_no_event_2(hass: HomeAssistant, workflow_name, react_c
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["data"])
-async def test_react_data_event(hass: HomeAssistant, workflow_name, react_component):
+async def test_data_event(hass: HomeAssistant, workflow_name, react_component):
     """
     Test for workflow with actor data where action data does match actor data:
     - No reaction entity should be found
@@ -80,7 +80,7 @@ async def test_react_data_event(hass: HomeAssistant, workflow_name, react_compon
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["data_delayed"])
-async def test_react_data_delayed_event(hass: HomeAssistant, workflow_name, react_component):
+async def test_data_delayed_event(hass: HomeAssistant, workflow_name, react_component):
     """
     Test for workflow with delayed reactor with data:
     - No event should be sent
@@ -111,7 +111,7 @@ async def test_react_data_delayed_event(hass: HomeAssistant, workflow_name, reac
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["multiple_actor_data"])
-async def test_react_multiple_actor_data_event_1(hass: HomeAssistant, workflow_name, react_component):
+async def test_multiple_actor_data_event_1(hass: HomeAssistant, workflow_name, react_component):
     """
     Test for workflow with multiple actor data where action data does match first actor data:
     - No reaction entity should be found
@@ -136,7 +136,7 @@ async def test_react_multiple_actor_data_event_1(hass: HomeAssistant, workflow_n
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["multiple_actor_data"])
-async def test_react_multiple_actor_data_event_2(hass: HomeAssistant, workflow_name, react_component):
+async def test_multiple_actor_data_event_2(hass: HomeAssistant, workflow_name, react_component):
     """
     Test for workflow with multiple actor data where action data does match second actor data:
     - No reaction entity should be found

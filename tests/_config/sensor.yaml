@@ -1,0 +1,3 @@
+- platform: virtual
+  name: '!sensor_state_test'
+  initial_value: 0

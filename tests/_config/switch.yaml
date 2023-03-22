@@ -1,0 +1,2 @@
+- platform: virtual
+  name: '!switch_state_test'

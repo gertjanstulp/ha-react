@@ -7,8 +7,8 @@ from tests.tst_context import TstContext
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["actor_condition"])
-async def test_react_actor_condition_true(hass: HomeAssistant, workflow_name, react_component, template_component, input_boolean_component):
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["actor_condition_test"])
+async def test_actor_condition_true(hass: HomeAssistant, workflow_name, react_component, template_component, input_boolean_component):
     """
     Test for workflow with an actor with a condition that evaluates to 'true'
     - No reaction entity should be created
@@ -20,7 +20,7 @@ async def test_react_actor_condition_true(hass: HomeAssistant, workflow_name, re
     comp = await react_component
     await comp.async_setup(workflow_name)
     ibc = await input_boolean_component
-    await ibc.async_turn_on("test_actor_condition")
+    await ibc.async_turn_on("actor_condition_test")
     await template_component
 
     tc = TstContext(hass, workflow_name)
@@ -34,8 +34,8 @@ async def test_react_actor_condition_true(hass: HomeAssistant, workflow_name, re
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["actor_condition"])
-async def test_react_actor_condition_false(hass: HomeAssistant, workflow_name, react_component, template_component, input_boolean_component):
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["actor_condition_test"])
+async def test_actor_condition_false(hass: HomeAssistant, workflow_name, react_component, template_component, input_boolean_component):
     """
     Test for workflow with an actor with a condition that evaluates to 'false'
     - No reaction entity should be created
@@ -47,7 +47,7 @@ async def test_react_actor_condition_false(hass: HomeAssistant, workflow_name, r
     comp = await react_component
     await comp.async_setup(workflow_name)
     ibc = await input_boolean_component
-    await ibc.async_turn_off("test_actor_condition")
+    await ibc.async_turn_off("actor_condition_test")
     await template_component
 
     tc = TstContext(hass, workflow_name)
@@ -60,8 +60,8 @@ async def test_react_actor_condition_false(hass: HomeAssistant, workflow_name, r
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["reactor_condition"])
-async def test_react_reactor_condition_false(hass: HomeAssistant, workflow_name, react_component, input_boolean_component):
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["reactor_condition_test"])
+async def test_reactor_condition_false(hass: HomeAssistant, workflow_name, react_component, input_boolean_component):
     """
     Test for workflow with a reactor with a condition that is false:
     - No reaction entity should be created
@@ -72,7 +72,7 @@ async def test_react_reactor_condition_false(hass: HomeAssistant, workflow_name,
     comp = await react_component
     await comp.async_setup(workflow_name)
     ibc = await input_boolean_component
-    await ibc.async_turn_off("test_reactor_condition")
+    await ibc.async_turn_off("reactor_condition_test")
 
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():
@@ -86,8 +86,8 @@ async def test_react_reactor_condition_false(hass: HomeAssistant, workflow_name,
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["reactor_condition"])
-async def test_react_reactor_condition_true(hass: HomeAssistant, workflow_name, react_component, input_boolean_component):
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["reactor_condition_test"])
+async def test_reactor_condition_true(hass: HomeAssistant, workflow_name, react_component, input_boolean_component):
     """
     Test for workflow with a reactor with a condition that is false:
     - No reaction entity should be created
@@ -99,7 +99,7 @@ async def test_react_reactor_condition_true(hass: HomeAssistant, workflow_name, 
     comp = await react_component
     await comp.async_setup(workflow_name)
     ibc = await input_boolean_component
-    await ibc.async_turn_on("test_reactor_condition")
+    await ibc.async_turn_on("reactor_condition_test")
 
     tc = TstContext(hass, workflow_name)
     async with tc.async_listen_reaction_event():

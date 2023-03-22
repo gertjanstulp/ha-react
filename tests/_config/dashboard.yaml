@@ -40,25 +40,31 @@ views:
           - entity: input_button.button_trigger_light_turn_on
           - entity: input_button.button_trigger_light_turn_off
           - entity: input_button.button_trigger_light_toggle
+          - entity: input_button.button_trigger_alarm_arm_away
+          - entity: input_button.button_trigger_alarm_disarm
+          - entity: input_button.button_trigger_alarm_trigger
       - type: entities
         entities:
-          - entity: input_boolean.test_actor_condition
-          - entity: input_boolean.test_reactor_condition
-          - entity: input_boolean.test_trace
-          - entity: input_boolean.test_trace2
-          - entity: input_boolean.test_binary_sensor
-          - entity: input_boolean.test_binary_group
-          - entity: input_boolean.test_binary_sensor_available
-          - entity: input_boolean.test_wait
-          - entity: input_text.test_text
-          - entity: input_number.test_input_number
+          - entity: input_boolean.actor_condition_test
+          - entity: input_boolean.reactor_condition_test
+          - entity: input_boolean.trace_basic_test
+          - entity: input_boolean.trace_advanced_test
+          - entity: input_boolean.wait_for_state_test
+          - entity: input_boolean.wait_for_state_delayed_test
+          - entity: input_text.templated_state_test
+          # - entity: input_number.input_number_state_test
+      - type: entities
+        title: plugins
+        show_header_toggle: false
+        entities:    
           - entity: input_boolean.input_boolean_turn_on_test
           - entity: input_boolean.input_boolean_turn_off_test
           - entity: input_boolean.input_boolean_toggle_test
-          - entity: input_boolean.input_boolean_hass_started
+          - entity: input_boolean.input_boolean_hass_started_test
           - entity: light.light_turn_on_test
           - entity: light.light_turn_off_test
           - entity: light.light_toggle_test
+          - entity: alarm_control_panel.alarm_plugin_test
       - type: entities
         entities:
           - entity: input_button.button_trigger_device_tracker_home

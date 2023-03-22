@@ -1,9 +1,9 @@
 input_text_set_test:
   name: input_text_set_test
 
-test_input_text:
-  name: test_input_text
+input_text_state_test:
+  name: input_text_state_test
   
-test_text:
-  name: test_text
+templated_state_test:
+  name: templated_state_test
   initial: ""

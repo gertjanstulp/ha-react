@@ -1,4 +1,4 @@
-frontend_repo_url: http://localhost:5000
+# frontend_repo_url: http://localhost:5000
 
 entity_maps:
   2095689255: mobile_user
@@ -13,6 +13,9 @@ plugins:
   - module: custom_components.react.plugin.input.plugin
   - module: custom_components.react.plugin.light.plugin
   - module: custom_components.react.plugin.media_player.plugin
+  - module: custom_components.react.plugin.alarm.plugin
+    config:
+      code: '1234'
 
 stencil:
   full_stencil:
@@ -132,61 +135,53 @@ workflow:
       action: reactor_action_forward_data
       forward_data: True
 
-  workflow_trace:
+  workflow_trace_basic_test:
     when:
-      - id: actor_trace_1
-        entity: actor_entity_trace_1
-        type: actor_type_trace_1
-        action: actor_action_trace_1
-        condition: "{{ is_state('input_boolean.test_trace', 'off') }}"
-      - id: actor_trace_2
-        entity: actor_entity_trace_2
-        type: actor_type_trace_2
-        action: actor_action_trace_2
+      - entity: actor_entity_trace_basic_test_1
+        type: actor_type_trace_basic_test_1
+        action: actor_action_trace_basic_test_1
+        condition: "{{ is_state('input_boolean.trace_basic_test', 'off') }}"
+      - entity: actor_entity_trace_basic_test_2
+        type: actor_type_trace_basic_test_2
+        action: actor_action_trace_basic_test_2
     then: 
-      - id: reactor_trace_1
-        entity: reactor_entity_trace_1
-        type: reactor_type_trace_1
-        action: reactor_action_trace_1
-        condition: "{{ is_state('input_boolean.test_trace', 'on') }}"
-      - id: reactor_trace_2
-        entity: reactor_entity_trace_2
-        type: reactor_type_trace_2
-        action: reactor_action_trace_2
+      - entity: reactor_entity_trace_basic_test_1
+        type: reactor_type_trace_basic_test_1
+        action: reactor_action_trace_basic_test_1
+        condition: "{{ is_state('input_boolean.trace_basic_test', 'on') }}"
+      - entity: reactor_entity_trace_basic_test_2
+        type: reactor_type_trace_basic_test_2
+        action: reactor_action_trace_basic_test_2
 
-  workflow_trace2:
+  workflow_trace_advanced_test:
     when:
-      - id: actor_trace2_1
-        entity: actor_entity_trace2_1
-        type: actor_type_trace2_1
-        action: actor_action_trace2_1
-        condition: "{{ is_state('input_boolean.test_trace2', 'off') }}"
-      - id: actor_trace2_2
-        entity: actor_entity_trace2_2
-        type: actor_type_trace2_2
-        action: actor_action_trace2_2
-        condition: "{{ is_state('input_boolean.test_trace2', 'on') }}"
+      - entity: actor_entity_trace_advanced_test_1
+        type: actor_type_trace_advanced_test_1
+        action: actor_action_trace_advanced_test_1
+        condition: "{{ is_state('input_boolean.trace_advanced_test', 'off') }}"
+      - entity: actor_entity_trace_advanced_test_2
+        type: actor_type_trace_advanced_test_2
+        action: actor_action_trace_advanced_test_2
+        condition: "{{ is_state('input_boolean.trace_advanced_test', 'on') }}"
     then: 
-      - id: reactor_trace2_1
-        entity: reactor_entity_trace2_1
-        type: reactor_type_trace2_1
-        action: reactor_action_trace2_1
-        condition: "{{ is_state('input_boolean.test_trace2', 'on') }}"
+      - entity: reactor_entity_trace_advanced_test_1
+        type: reactor_type_trace_advanced_test_1
+        action: reactor_action_trace_advanced_test_1
+        condition: "{{ is_state('input_boolean.trace_advanced_test', 'on') }}"
         wait:
           delay:
             seconds: 3
           state:
-            condition: "{{ is_state('input_boolean.test_trace2', 'off') }}"
-      - id: reactor_trace2_2
-        reset_workflow: workflow_scheduled
-        entity: reactor_entity_trace2_3
-        type: reactor_type_trace2_3
-        action: reactor_action_trace2_3
+            condition: "{{ is_state('input_boolean.trace_advanced_test', 'off') }}"
+      - reset_workflow: workflow_scheduled
+        entity: reactor_entity_trace_advanced_test_2
+        type: reactor_type_trace_advanced_test_2
+        action: reactor_action_trace_advanced_test_2
         wait:
           schedule:
             at: '21:00:00'
           state:
-            condition: "{{ is_state('input_boolean.test_trace2', 'on') }}"
+            condition: "{{ is_state('input_boolean.trace_advanced_test', 'on') }}"
 
   workflow_multiple_actor:
     when:
@@ -319,139 +314,167 @@ workflow:
       type: "{{ 'reactor' ~ '_type' ~ '_templated' }}"
       action: "{{ 'reactor_action_' ~ templated }}"
 
-  workflow_templated_state:
+  workflow_templated_state_test:
     when:
-      id: actor_templated_state
-      entity: "{{ 'actor_entity_templated_state' }}"
-      type: "{{ 'actor' ~ '_type' ~ '_templated_state' }}"
-      action: "{{ 'actor_action_' ~ states('input_text.test_text') }}"
+      entity: "{{ 'actor_entity_templated_state_test' }}"
+      type: "{{ 'actor' ~ '_type' ~ '_templated_state_test' }}"
+      action: "{{ 'actor_action_' ~ states('input_text.templated_state_test') }}"
     then:
-      id: reactor_templated_state
       entity: "{{ 're' ~ event.entity }}"
-      type: "{{ 'reactor' ~ '_type' ~ '_templated_state' }}"
-      action: "{{ 'reactor_action_' ~ states('input_text.test_text') }}"
+      type: "{{ 'reactor' ~ '_type' ~ '_templated_state_test' }}"
+      action: "{{ 'reactor_action_' ~ states('input_text.templated_state_test') }}"
 
-  workflow_actor_condition:
+  workflow_actor_condition_test:
     when:
-      id: actor_actor_condition
-      entity: actor_entity_actor_condition
-      type: actor_type_actor_condition
-      action: actor_action_actor_condition
-      condition: "{{ is_state('input_boolean.test_actor_condition', 'on') }}"
+      entity: actor_entity_actor_condition_test
+      type: actor_type_actor_condition_test
+      action: actor_action_actor_condition_test
+      condition: "{{ is_state('input_boolean.actor_condition_test', 'on') }}"
     then:
-      id: reactor_actor_condition
-      entity: reactor_entity_actor_condition
-      type: reactor_type_actor_condition
-      action: reactor_action_actor_condition
+      entity: reactor_entity_actor_condition_test
+      type: reactor_type_actor_condition_test
+      action: reactor_action_actor_condition_test
 
-  workflow_reactor_condition:
+  workflow_reactor_condition_test:
     when:
-      id: actor_reactor_condition
-      entity: actor_entity_reactor_condition
-      type: actor_type_reactor_condition
-      action: actor_action_reactor_condition
+      entity: actor_entity_reactor_condition_test
+      type: actor_type_reactor_condition_test
+      action: actor_action_reactor_condition_test
     then:
-      id: reactor_reactor_condition
-      entity: reactor_entity_reactor_condition
-      type: reactor_type_reactor_condition
-      action: reactor_action_reactor_condition
-      condition: "{{ is_state('input_boolean.test_reactor_condition', 'on') }}"
+      entity: reactor_entity_reactor_condition_test
+      type: reactor_type_reactor_condition_test
+      action: reactor_action_reactor_condition_test
+      condition: "{{ is_state('input_boolean.reactor_condition_test', 'on') }}"
 
-  workflow_binary_sensor:
+  workflow_binary_sensor_state_test:
     when:
-      id: actor_binary_sensor
-      entity: test_binary_sensor
+      entity: binary_sensor_state_test
       type: binary_sensor
       action: 'on'
     then:
-      id: reactor_binary_sensor
-      entity: reactor_entity_binary_sensor
-      type: reactor_type_binary_sensor
-      action: reactor_action_binary_sensor
+      entity: reactor_entity_binary_sensor_state_test
+      type: reactor_type_binary_sensor_state_test
+      action: reactor_action_binary_sensor_state_test
 
-  workflow_binary_group:
+  workflow_group_state_test:
     when:
-      id: actor_binary_group
-      entity: test_binary_group
+      entity: group_state_test
       type: group
       action: 'on'
     then:
-      id: reactor_binary_group 
-      entity: reactor_entity_binary_group
-      type: reactor_type_binary_group
-      action: reactor_action_binary_group
+      entity: reactor_entity_group_state_test
+      type: reactor_type_group_state_test
+      action: reactor_action_group_state_test
 
-  workflow_person_group:
+  workflow_person_group_state_test:
     when:
-      id: actor_person_group
-      entity: test_person_group
+      entity: person_group_state_test
       type: group
       action: home
     then:
-      id: reactor_person_group 
-      entity: reactor_entity_person_group
-      type: reactor_type_person_group
-      action: reactor_action_person_group
+      entity: reactor_entity_person_group_state_test
+      type: reactor_type_person_group_state_test
+      action: reactor_action_person_group_state_test
 
-  workflow_device_tracker:
+  workflow_device_tracker_state_test:
     when:
-      id: actor_device_tracker
-      entity: test_device_tracker
+      entity: device_tracker_state_test
       type: device_tracker
       action: home
     then:
-      id: reactor_device_tracker 
-      entity: reactor_entity_device_tracker
-      type: reactor_type_device_tracker
-      action: reactor_action_device_tracker
+      entity: reactor_entity_device_tracker_state_test
+      type: reactor_type_device_tracker_state_test
+      action: reactor_action_device_tracker_state_test
 
-  workflow_person:
+  workflow_person_state_test:
     when:
-      id: actor_person
-      entity: test_person
+      entity: person_state_test
       type: person
       action: not_home
     then:
-      id: reactor_person 
-      entity: reactor_entity_person
-      type: reactor_type_person
-      action: reactor_action_person
+      entity: reactor_entity_person_state_test
+      type: reactor_type_person_state_test
+      action: reactor_action_person_state_test
 
-  workflow_input_number:
+  workflow_input_number_state_test:
     when:
-      id: actor_input_number
-      entity: test_input_number
+      entity: input_number_state_test
       type: input_number
       action: change
     then:
-      id: reactor_input_number 
-      entity: reactor_entity_input_number
-      type: reactor_type_input_number
-      action: reactor_action_input_number
+      entity: reactor_entity_input_number_state_test
+      type: reactor_type_input_number_state_test
+      action: reactor_action_input_number_state_test
 
-  workflow_input_text:
+  workflow_input_text_state_test:
     when:
-      id: actor_input_text
-      entity: test_input_text
+      entity: input_text_state_test
       type: input_text
       action: change
     then:
-      id: reactor_input_text 
-      entity: reactor_entity_input_text
-      type: reactor_type_input_text
-      action: reactor_action_input_text
+      entity: reactor_entity_input_text_state_test
+      type: reactor_type_input_text_state_test
+      action: reactor_action_input_text_state_test
 
-  workflow_input_boolean:
+  workflow_input_boolean_state_test:
     when:
-      id: actor_input_boolean
-      entity: test_input_boolean
+      entity: input_boolean_state_test
       type: input_boolean
       action: toggle
     then:
-      id: reactor_input_boolean 
-      entity: reactor_entity_input_boolean
-      type: reactor_type_input_boolean
-      action: reactor_action_input_boolean
+      entity: reactor_entity_input_boolean_state_test
+      type: reactor_type_input_boolean_state_test
+      action: reactor_action_input_boolean_state_test
+
+  workflow_input_button_state_test:
+    when:
+      entity: input_button_state_test
+      type: input_button
+      action: press
+    then:
+      entity: reactor_entity_input_button_state_test
+      type: reactor_type_input_button_state_test
+      action: reactor_action_input_button_state_test
+
+  workflow_light_state_test:
+    when:
+      entity: light_state_test
+      type: light
+      action: toggle
+    then:
+      entity: reactor_entity_light_state_test
+      type: reactor_type_light_state_test
+      action: reactor_action_light_state_test
+
+  workflow_switch_state_test:
+    when:
+      entity: switch_state_test
+      type: switch
+      action: toggle
+    then:
+      entity: reactor_entity_switch_state_test
+      type: reactor_type_switch_state_test
+      action: reactor_action_switch_state_test
+
+  workflow_alarm_state_test:
+    when:
+      entity: alarm_state_test
+      type: alarm
+      action: armed_away
+    then:
+      entity: reactor_entity_alarm_state_test
+      type: reactor_type_alarm_state_test
+      action: reactor_action_alarm_state_test
+
+  workflow_sensor_state_test:
+    when:
+      entity: sensor_state_test
+      type: sensor
+      action: change
+    then:
+      entity: reactor_entity_sensor_state_test
+      type: reactor_type_sensor_state_test
+      action: reactor_action_sensor_state_test
 
   workflow_time_clock:
     when:
@@ -477,61 +500,53 @@ workflow:
       type: reactor_type_time_pattern
       action: reactor_action_time_pattern
 
-  workflow_binary_sensor_available:
+  workflow_binary_sensor_available_test:
     when:
-      id: actor_binary_sensor_available
-      entity: test_binary_sensor_available
+      entity: binary_sensor_available_test
       type: binary_sensor
       action: available
     then:
-      id: reactor_binary_sensor_available
-      entity: actor_entity_binary_sensor_available
-      type: actor_type_binary_sensor_available
-      action: actor_action_binary_sensor_available
+      entity: actor_entity_binary_sensor_available_test
+      type: actor_type_binary_sensor_available_test
+      action: actor_action_binary_sensor_available_test
 
-  workflow_binary_sensor_unavailable:
+  workflow_binary_sensor_unavailable_test:
     when:
-      id: actor_binary_sensor_unavailable
-      entity: test_binary_sensor_available
+      entity: binary_sensor_unavailable_test
       type: binary_sensor
       action: unavailable
     then:
-      id: reactor_binary_sensor_unavailable
-      entity: actor_entity_binary_sensor_unavailable
-      type: actor_type_binary_sensor_unavailable
-      action: actor_action_binary_sensor_unavailable
+      entity: actor_entity_binary_sensor_unavailable_test
+      type: actor_type_binary_sensor_unavailable_test
+      action: actor_action_binary_sensor_unavailable_test
 
-  workflow_wait:
+  workflow_wait_for_state_test:
     when:
-      id: actor_wait
-      entity: actor_entity_wait
-      type: actor_type_wait
-      action: actor_action_wait
+      entity: actor_entity_wait_for_state_test
+      type: actor_type_wait_for_state_test
+      action: actor_action_wait_for_state_test
     then: 
-      id: reactor_wait
-      entity: reactor_entity_wait
-      type: reactor_type_wait
-      action: reactor_action_wait
+      entity: reactor_entity_wait_for_state_test
+      type: reactor_type_wait_for_state_test
+      action: reactor_action_wait_for_state_test
       wait:
         state:
-          condition: "{{ is_state('input_boolean.test_wait', 'on') }}"
+          condition: "{{ is_state('input_boolean.wait_for_state_test', 'on') }}"
 
-  workflow_wait_delayed:
+  workflow_wait_for_state_delayed_test:
     when:
-      id: actor_wait_delayed
-      entity: actor_entity_wait_delayed
-      type: actor_type_wait_delayed
-      action: actor_action_wait_delayed
+      entity: actor_entity_wait_for_state_delayed_test
+      type: actor_type_wait_for_state_delayed_test
+      action: actor_action_wait_for_state_delayed_test
     then: 
-      id: reactor_wait_delayed
-      entity: reactor_entity_wait_delayed
-      type: reactor_type_wait_delayed
-      action: reactor_action_wait_delayed
+      entity: reactor_entity_wait_for_state_delayed_test
+      type: reactor_type_wait_for_state_delayed_test
+      action: reactor_action_wait_for_state_delayed_test
       wait:
         delay: 
           seconds: 3
         state:
-          condition: "{{ is_state('input_boolean.test_wait', 'on') }}"
+          condition: "{{ is_state('input_boolean.wait_for_state_delayed_test', 'on') }}"
 
   workflow_delayed_long_single:
     mode: single
@@ -783,14 +798,12 @@ workflow:
       data:
         value: 12.34
 
-  workflow_input_text_set:
+  workflow_input_text_set_test:
     when:
-      id: actor_input_text_set
-      entity: actor_entity_input_text_set
-      type: actor_type_input_text_set
-      action: actor_action_input_text_set
+      entity: actor_entity_input_text_set_test
+      type: actor_type_input_text_set_test
+      action: actor_action_input_text_set_test
     then:
-      id: reactor_input_text_set
       entity: input_text_set_test
       type: input_text
       action: set_value
@@ -884,33 +897,42 @@ workflow:
       type: light
       action: toggle
 
-  workflow_hass_started:
+  workflow_alarm_plugin_arm_away_test:
+    when:
+      entity: actor_entity_alarm_arm_away
+      type: actor_type_alarm_arm_away
+      action: actor_action_alarm_arm_away
+    then:
+      entity: alarm_plugin_test
+      type: alarm
+      action: arm_away
+
+  workflow_alarm_plugin_disarm_test:
+    when:
+      entity: actor_entity_alarm_disarm
+      type: actor_type_alarm_disarm
+      action: actor_action_alarm_disarm
+    then:
+      entity: alarm_plugin_test
+      type: alarm
+      action: disarm
+
+  workflow_alarm_plugin_trigger_test:
+    when:
+      entity: actor_entity_alarm_trigger
+      type: actor_type_alarm_trigger
+      action: actor_action_alarm_trigger
+    then:
+      entity: alarm_plugin_test
+      type: alarm
+      action: trigger
+
+  workflow_hass_started_test:
     when:
       entity: hass
       type: system
       action: start
     then:
-      entity: input_boolean_hass_started
+      entity: input_boolean_hass_started_test
       type: input_boolean
       action: toggle
-      
-  # workflow_debug:
-  #   when:
-  #     id: debug
-  #     entity: debug
-  #     type: debug
-  #     action: debug
-  #   then:
-  #     id: tts_message
-  #     entity: sonos_living_room
-  #     type: media_player
-  #     action: speek
-  #       # condition: "{{ is_state('group.group_persons_home', 'home') }}"
-  #     data:
-  #       message: Er is iemand bij de voordeur
-  #       interrupt_service: sonos.snapshot
-  #       resume_service: sonos.restore
-  #       wait: 2
-  #       volume: 0.15
-  #       options:
-  #         gender: female

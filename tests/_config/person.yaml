@@ -1,4 +1,9 @@
-- name: test_person
-  id: test_person
+- name: person_state_test
+  id: person_state_test
   device_trackers:
-    - device_tracker.test_device_tracker
+    - device_tracker.person_state_test
+
+- name: person_group_state_test
+  id: person_group_state_test
+  device_trackers:
+    - device_tracker.person_group_state_test

@@ -7,7 +7,7 @@ from tests.tst_context import TstContext
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["multiple_actor"])
-async def test_react_multiple_actor_1(hass: HomeAssistant, workflow_name, react_component):
+async def test_multiple_actor_1(hass: HomeAssistant, workflow_name, react_component):
     """
     Test for workflow with multiple actors using first actor:
     - No reaction entity should be created
@@ -31,7 +31,7 @@ async def test_react_multiple_actor_1(hass: HomeAssistant, workflow_name, react_
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["multiple_actor"])
-async def test_react_multiple_actor_2(hass: HomeAssistant, workflow_name, react_component):
+async def test_multiple_actor_2(hass: HomeAssistant, workflow_name, react_component):
     """
     Test for workflow with multiple actors using second actor:
     - No reaction entity should be created
@@ -55,7 +55,7 @@ async def test_react_multiple_actor_2(hass: HomeAssistant, workflow_name, react_
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["multiple_reactor"])
-async def test_react_multiple_reactor(hass: HomeAssistant, workflow_name, react_component):
+async def test_multiple_reactor(hass: HomeAssistant, workflow_name, react_component):
     """
     Test for workflow with multiple reactors:
     - No reaction entities should be created
@@ -80,7 +80,7 @@ async def test_react_multiple_reactor(hass: HomeAssistant, workflow_name, react_
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["multiple_entities"])
-async def test_react_multiple_entities_1(hass: HomeAssistant, workflow_name, react_component):
+async def test_multiple_entities_1(hass: HomeAssistant, workflow_name, react_component):
     """
     Test for workflow with an actor containing multiple entities
     - No reaction entity should be created
@@ -104,7 +104,7 @@ async def test_react_multiple_entities_1(hass: HomeAssistant, workflow_name, rea
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["multiple_entities"])
-async def test_react_multiple_entities_2(hass: HomeAssistant, workflow_name, react_component):
+async def test_multiple_entities_2(hass: HomeAssistant, workflow_name, react_component):
     """
     Test for workflow with an actor containing multiple entities
     - No reaction entity should be created

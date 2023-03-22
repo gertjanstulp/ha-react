@@ -11,7 +11,7 @@ from tests.tst_context import TstContext
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["time_clock"])
-async def test_react_time_clock(hass: HomeAssistant, workflow_name, react_component):
+async def test_time_clock(hass: HomeAssistant, workflow_name, react_component):
     def set_time(workflow: dict):
         actor = workflow.get(ATTR_WORKFLOW_WHEN, [])
         if actor:
@@ -34,7 +34,7 @@ async def test_react_time_clock(hass: HomeAssistant, workflow_name, react_compon
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["time_pattern"])
-async def test_react_time_pattern(hass: HomeAssistant, workflow_name, react_component):
+async def test_time_pattern(hass: HomeAssistant, workflow_name, react_component):
     def set_time_pattern(workflow: dict):
         actor = workflow.get(ATTR_WORKFLOW_WHEN, [])
         if actor:
