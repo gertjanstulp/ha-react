@@ -6,10 +6,13 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID, 
+    STATE_OFF,
+    STATE_ON
 )
 from homeassistant.core import Context
 
 from custom_components.react.base import ReactBase
+from custom_components.react.plugin.light.service import Service
 from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData
 
@@ -24,9 +27,10 @@ class ApiConfig(DynamicData):
 
 
 class Api():
-    def __init__(self, react: ReactBase, config: ApiConfig) -> None:
+    def __init__(self, react: ReactBase, config: ApiConfig, service: Service) -> None:
         self.react = react
         self.config = config
+        self.service = service
 
 
     def _debug(self, message: str):
@@ -36,15 +40,14 @@ class Api():
     async def async_light_turn_on(self, context: Context, entity_id: str):
         self._debug(f"Turning on light '{entity_id}'")
         try:
-            light_data = {
-                ATTR_ENTITY_ID: f"light.{entity_id}",
-            }
-            await self.react.hass.services.async_call(
-                LIGHT_DOMAIN,
-                SERVICE_TURN_ON,
-                light_data,
-                context,
-            )
+            full_entity_id = f"light.{entity_id}"
+            if state := self.react.hass.states.get(full_entity_id):
+                value = state.state
+            else:
+                _LOGGER.warn(f"Light plugin: Api - {full_entity_id} not found")
+            
+            if value is not None and value == STATE_OFF:
+                await self.service.async_set_state(context, full_entity_id, STATE_ON)
         except:
             _LOGGER.exception("Turning on light failed")
 
@@ -52,15 +55,14 @@ class Api():
     async def async_light_turn_off(self, context: Context, entity_id: str):
         self._debug(f"Turning off light '{entity_id}'")
         try:
-            light_data = {
-                ATTR_ENTITY_ID: f"light.{entity_id}",
-            }
-            await self.react.hass.services.async_call(
-                LIGHT_DOMAIN,
-                SERVICE_TURN_OFF,
-                light_data,
-                context,
-            )
+            full_entity_id = f"light.{entity_id}"
+            if state := self.react.hass.states.get(full_entity_id):
+                value = state.state
+            else:
+                _LOGGER.warn(f"Light plugin: Api - {full_entity_id} not found")
+            
+            if value is not None and value == STATE_ON:
+                await self.service.async_set_state(context, full_entity_id, STATE_OFF)
         except:
             _LOGGER.exception("Turning off light failed")
 
@@ -68,14 +70,13 @@ class Api():
     async def async_light_toggle(self, context: Context, entity_id: str):
         self._debug(f"Toggling light '{entity_id}'")
         try:
-            light_data = {
-                ATTR_ENTITY_ID: f"light.{entity_id}",
-            }
-            await self.react.hass.services.async_call(
-                LIGHT_DOMAIN,
-                SERVICE_TOGGLE,
-                light_data,
-                context,
-            )
+            full_entity_id = f"light.{entity_id}"
+            if state := self.react.hass.states.get(full_entity_id):
+                value = state.state
+            else:
+                _LOGGER.warn(f"Light plugin: Api - {full_entity_id} not found")
+            
+            if value is not None:
+                await self.service.async_set_state(context, full_entity_id, STATE_ON if value == STATE_OFF else STATE_OFF)
         except:
             _LOGGER.exception("Toggling light failed")

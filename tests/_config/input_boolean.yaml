@@ -26,16 +26,12 @@ input_boolean_state_test:
   name: input_boolean_state_test
   initial: False
 
-input_boolean_turn_on_test:
-  name: input_boolean_turn_on_test
+input_boolean_initial_off_test:
+  name: input_boolean_initial_off_test
   initial: False
 
-input_boolean_turn_off_test:
-  name: input_boolean_turn_off_test
-  initial: True
-
-input_boolean_toggle_test:
-  name: input_boolean_toggle_test
+input_boolean_initial_on_test:
+  name: input_boolean_initial_on_test
   initial: True
 
 input_boolean_hass_started_test:

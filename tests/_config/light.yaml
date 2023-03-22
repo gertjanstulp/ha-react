@@ -2,24 +2,20 @@
   name: '!light_state_test'
   persistent: false
   initial_value: 'off'
+
 - platform: virtual
-  name: '!light_turn_on_test'
+  name: '!light_initial_off_test'
   persistent: false
   initial_value: 'off'
   support_brightness: false
   support_color: false
   support_color_temp: false
   support_white_value: false
+
 - platform: virtual
-  name: '!light_turn_off_test'
+  name: '!light_initial_on_test'
   persistent: false
-  support_brightness: false
-  support_color: false
-  support_color_temp: false
-  support_white_value: false
-- platform: virtual
-  name: '!light_toggle_test'
-  persistent: false
+  initial_value: 'on'
   support_brightness: false
   support_color: false
   support_color_temp: false

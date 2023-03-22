@@ -414,9 +414,57 @@
   action:
     event: ev_react_action
     event_data:
-      entity: actor_entity_input_number_set
-      type: actor_type_input_number_set
-      action: actor_action_input_number_set
+      entity: actor_entity_input_number_set_test
+      type: actor_type_input_number_set_test
+      action: actor_action_input_number_set_test
+
+- id: trigger_input_number_increase
+  alias: Trigger input number set
+  trigger:
+    platform: state
+    entity_id: input_button.button_trigger_input_number_increase
+  action:
+    event: ev_react_action
+    event_data:
+      entity: actor_entity_input_number_increase_test
+      type: actor_type_input_number_increase_test
+      action: actor_action_input_number_increase_test
+
+- id: trigger_input_number_increase_with_max
+  alias: Trigger input number set
+  trigger:
+    platform: state
+    entity_id: input_button.button_trigger_input_number_increase_with_max
+  action:
+    event: ev_react_action
+    event_data:
+      entity: actor_entity_input_number_increase_with_max_test
+      type: actor_type_input_number_increase_with_max_test
+      action: actor_action_input_number_increase_with_max_test
+
+- id: trigger_input_number_decrease
+  alias: Trigger input number set
+  trigger:
+    platform: state
+    entity_id: input_button.button_trigger_input_number_decrease
+  action:
+    event: ev_react_action
+    event_data:
+      entity: actor_entity_input_number_decrease_test
+      type: actor_type_input_number_decrease_test
+      action: actor_action_input_number_decrease_test
+
+- id: trigger_input_number_decrease_with_min
+  alias: Trigger input number set
+  trigger:
+    platform: state
+    entity_id: input_button.button_trigger_input_number_decrease_with_min
+  action:
+    event: ev_react_action
+    event_data:
+      entity: actor_entity_input_number_decrease_with_min_test
+      type: actor_type_input_number_decrease_with_min_test
+      action: actor_action_input_number_decrease_with_min_test
 
 - id: trigger_input_boolean_turn_on
   alias: Trigger input boolean turn on
@@ -426,9 +474,9 @@
   action:
     event: ev_react_action
     event_data:
-      entity: actor_entity_input_boolean_turn_on
-      type: actor_type_input_boolean_turn_on
-      action: actor_action_input_boolean_turn_on
+      entity: actor_entity_input_boolean_turn_on_test
+      type: actor_type_input_boolean_turn_on_test
+      action: actor_action_input_boolean_turn_on_test
 
 - id: trigger_input_boolean_turn_off
   alias: Trigger input boolean turn off
@@ -438,9 +486,9 @@
   action:
     event: ev_react_action
     event_data:
-      entity: actor_entity_input_boolean_turn_off
-      type: actor_type_input_boolean_turn_off
-      action: actor_action_input_boolean_turn_off
+      entity: actor_entity_input_boolean_turn_off_test
+      type: actor_type_input_boolean_turn_off_test
+      action: actor_action_input_boolean_turn_off_test
 
 - id: trigger_input_boolean_toggle
   alias: Trigger input boolean toggle
@@ -450,9 +498,9 @@
   action:
     event: ev_react_action
     event_data:
-      entity: actor_entity_input_boolean_toggle
-      type: actor_type_input_boolean_toggle
-      action: actor_action_input_boolean_toggle
+      entity: actor_entity_input_boolean_toggle_test
+      type: actor_type_input_boolean_toggle_test
+      action: actor_action_input_boolean_toggle_test
 
 - id: trigger_light_turn_on
   alias: Trigger light turn on
@@ -462,9 +510,9 @@
   action:
     event: ev_react_action
     event_data:
-      entity: actor_entity_light_turn_on
-      type: actor_type_light_turn_on
-      action: actor_action_light_turn_on
+      entity: actor_entity_light_turn_on_test
+      type: actor_type_light_turn_on_test
+      action: actor_action_light_turn_on_test
 
 - id: trigger_light_turn_off
   alias: Trigger light turn off
@@ -474,9 +522,9 @@
   action:
     event: ev_react_action
     event_data:
-      entity: actor_entity_light_turn_off
-      type: actor_type_light_turn_off
-      action: actor_action_light_turn_off
+      entity: actor_entity_light_turn_off_test
+      type: actor_type_light_turn_off_test
+      action: actor_action_light_turn_off_test
 
 - id: trigger_light_toggle
   alias: Trigger light toggle
@@ -486,9 +534,45 @@
   action:
     event: ev_react_action
     event_data:
-      entity: actor_entity_light_toggle
-      type: actor_type_light_toggle
-      action: actor_action_light_toggle
+      entity: actor_entity_light_toggle_test
+      type: actor_type_light_toggle_test
+      action: actor_action_light_toggle_test
+
+- id: trigger_switch_turn_on
+  alias: Trigger switch turn on
+  trigger:
+    platform: state
+    entity_id: input_button.button_trigger_switch_turn_on
+  action:
+    event: ev_react_action
+    event_data:
+      entity: actor_entity_switch_turn_on_test
+      type: actor_type_switch_turn_on_test
+      action: actor_action_switch_turn_on_test
+
+- id: trigger_switch_turn_off
+  alias: Trigger switch turn off
+  trigger:
+    platform: state
+    entity_id: input_button.button_trigger_switch_turn_off
+  action:
+    event: ev_react_action
+    event_data:
+      entity: actor_entity_switch_turn_off_test
+      type: actor_type_switch_turn_off_test
+      action: actor_action_switch_turn_off_test
+
+- id: trigger_switch_toggle
+  alias: Trigger switch toggle
+  trigger:
+    platform: state
+    entity_id: input_button.button_trigger_switch_toggle
+  action:
+    event: ev_react_action
+    event_data:
+      entity: actor_entity_switch_toggle_test
+      type: actor_type_switch_toggle_test
+      action: actor_action_switch_toggle_test
 
 - id: trigger_alarm_arm_away
   alias: Trigger alarm arm away

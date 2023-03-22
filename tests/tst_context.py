@@ -3,7 +3,7 @@ from __future__ import annotations
 from asyncio import sleep
 from contextlib import asynccontextmanager
 from deepdiff import DeepDiff
-from typing import Any, Union
+from typing import Any, Callable, Union
 from dateutil.parser import parse as datetime_parse
 
 from homeassistant.components.trace.const import DATA_TRACE
@@ -156,6 +156,13 @@ class TstContext():
         if not workflow_id:
             workflow_id = self.workflow_id
         await self.react.runtime.async_stop_workflow_runtime(workflow_id)
+
+
+    def reset(self):
+        self.event_mock.reset_mock()
+        self.plugin_data_register.clear()
+        self.notify_confirm_feedback_register.clear()
+        self.plugin_task_unloaded_register.clear()
 
 
     def retrieve_workflow_entity(self):
@@ -616,6 +623,10 @@ class TstContext():
         assert got_count == expected_count, f"Expected plugin_data count {expected_count}, got {got_count}"
 
 
+    def verify_plugin_data_not_sent(self):
+        self.verify_plugin_data_sent(expected_count=0)
+
+
     def verify_plugin_data_content(self, expected_data: dict, data_index: int = 0):
         got_data = self.plugin_data_register[data_index]
         assert DeepDiff(got_data, expected_data) == {}, f"Expected plugin data '{expected_data}', got '{got_data}'"
@@ -628,6 +639,13 @@ class TstContext():
     def verify_plugin_task_unload_sent(self, expected_count: int = 1):
         got_count = len(self.plugin_task_unloaded_register)
         assert got_count == expected_count, f"Expected plugin_task_unload count {expected_count}, got {got_count}"
+
+    
+    def verify_state(self, entity_id: str, expected_state: Any, convert: Callable[[str], Any ] = lambda s: s):
+        if state := self.hass.states.get(entity_id):
+            assert convert(state.state) == expected_state, f"Expected '{entity_id}' state '{expected_state}', got '{state.state}'"
+        else:
+            assert False, f"State for entity '{entity_id}' not found"
 
 
     def assert_attribute(self, attr: str, expected: dict, got: dict):    

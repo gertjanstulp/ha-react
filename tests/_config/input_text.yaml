@@ -1,5 +1,5 @@
-input_text_set_test:
-  name: input_text_set_test
+input_text_value_test:
+  name: input_text_value_test
 
 input_text_state_test:
   name: input_text_state_test

@@ -30,16 +30,29 @@ views:
           - entity: input_button.button_trigger_wait
           - entity: input_button.button_trigger_wait_delayed
       - type: entities
+        title: plugins trigger
         entities:
           - entity: input_button.button_trigger_tts_media_player_speek_with_volume
           - entity: input_button.button_trigger_tts_media_player_speek
+          - type: divider
           - entity: input_button.button_trigger_input_number_set
+          - entity: input_button.button_trigger_input_number_increase
+          - entity: input_button.button_trigger_input_number_increase_with_max
+          - entity: input_button.button_trigger_input_number_decrease
+          - entity: input_button.button_trigger_input_number_decrease_with_min
+          - type: divider
           - entity: input_button.button_trigger_input_boolean_turn_on
           - entity: input_button.button_trigger_input_boolean_turn_off
           - entity: input_button.button_trigger_input_boolean_toggle
+          - type: divider
           - entity: input_button.button_trigger_light_turn_on
           - entity: input_button.button_trigger_light_turn_off
           - entity: input_button.button_trigger_light_toggle
+          - type: divider
+          - entity: input_button.button_trigger_switch_turn_on
+          - entity: input_button.button_trigger_switch_turn_off
+          - entity: input_button.button_trigger_switch_toggle
+          - type: divider
           - entity: input_button.button_trigger_alarm_arm_away
           - entity: input_button.button_trigger_alarm_disarm
           - entity: input_button.button_trigger_alarm_trigger
@@ -52,18 +65,22 @@ views:
           - entity: input_boolean.wait_for_state_test
           - entity: input_boolean.wait_for_state_delayed_test
           - entity: input_text.templated_state_test
-          # - entity: input_number.input_number_state_test
       - type: entities
-        title: plugins
+        title: plugins entities
         show_header_toggle: false
         entities:    
-          - entity: input_boolean.input_boolean_turn_on_test
-          - entity: input_boolean.input_boolean_turn_off_test
-          - entity: input_boolean.input_boolean_toggle_test
+          - entity: input_boolean.input_boolean_initial_off_test
+          - entity: input_boolean.input_boolean_initial_on_test
           - entity: input_boolean.input_boolean_hass_started_test
-          - entity: light.light_turn_on_test
-          - entity: light.light_turn_off_test
-          - entity: light.light_toggle_test
+          - type: divider
+          - entity: input_number.input_number_value_test
+          - type: divider
+          - entity: light.light_initial_off_test
+          - entity: light.light_initial_on_test
+          - type: divider
+          - entity: switch.switch_initial_off_test
+          - entity: switch.switch_initial_on_test
+          - type: divider
           - entity: alarm_control_panel.alarm_plugin_test
       - type: entities
         entities:
