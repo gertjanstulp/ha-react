@@ -16,19 +16,20 @@ from tests.tst_context import TstContext
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["light_turn_on"])
-async def test_light_turn_on(hass: HomeAssistant, workflow_name, react_component):
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["light_turn_on_test"])
+async def test_light_turn_on(hass: HomeAssistant, workflow_name, react_component, light_component):
     """
     Test for light plugin
     """
 
-    mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.light_plugin_light_turn_on_mock"}
+    mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.light_plugin_mock"}
+    await light_component
     comp = await react_component
     await comp.async_setup(workflow_name, plugins=[mock_plugin])
     react: ReactBase = hass.data[DOMAIN]
     
     plugin_data = {
-        ATTR_ENTITY_ID: "light_turn_on_test",
+        ATTR_ENTITY_ID: "light.light_turn_on_test",
         ATTR_STATE: STATE_ON
     }
 
@@ -46,19 +47,20 @@ async def test_light_turn_on(hass: HomeAssistant, workflow_name, react_component
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["light_turn_off"])
-async def test_light_turn_off(hass: HomeAssistant, workflow_name, react_component):
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["light_turn_off_test"])
+async def test_light_turn_off(hass: HomeAssistant, workflow_name, react_component, light_component):
     """
     Test for light plugin
     """
 
-    mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.light_plugin_light_turn_off_mock"}
+    mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.light_plugin_mock"}
+    await light_component
     comp = await react_component
     await comp.async_setup(workflow_name, plugins=[mock_plugin])
     react: ReactBase = hass.data[DOMAIN]
     
     plugin_data = {
-        ATTR_ENTITY_ID: "light_turn_off_test",
+        ATTR_ENTITY_ID: "light.light_turn_off_test",
         ATTR_STATE: STATE_OFF
     }
 
@@ -76,20 +78,21 @@ async def test_light_turn_off(hass: HomeAssistant, workflow_name, react_componen
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["light_toggle"])
-async def test_light_toggle(hass: HomeAssistant, workflow_name, react_component):
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["light_toggle_on_test"])
+async def test_light_toggle_on(hass: HomeAssistant, workflow_name, react_component, light_component):
     """
     Test for light plugin
     """
 
-    mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.light_plugin_light_toggle_mock"}
+    mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.light_plugin_mock"}
+    await light_component
     comp = await react_component
     await comp.async_setup(workflow_name, plugins=[mock_plugin])
     react: ReactBase = hass.data[DOMAIN]
     
     plugin_data = {
-        ATTR_ENTITY_ID: "light_toggle_test",
-        ATTR_STATE: STATE_UNKNOWN
+        ATTR_ENTITY_ID: "light.light_toggle_on_test",
+        ATTR_STATE: STATE_ON
     }
 
     tc = TstContext(hass, workflow_name)
@@ -104,3 +107,93 @@ async def test_light_toggle(hass: HomeAssistant, workflow_name, react_component)
         tc.verify_plugin_data_sent()
         tc.verify_plugin_data_content(plugin_data)
 
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["light_toggle_off_test"])
+async def test_light_toggle_off(hass: HomeAssistant, workflow_name, react_component, light_component):
+    """
+    Test for light plugin
+    """
+
+    mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.light_plugin_mock"}
+    await light_component
+    comp = await react_component
+    await comp.async_setup(workflow_name, plugins=[mock_plugin])
+    react: ReactBase = hass.data[DOMAIN]
+    
+    plugin_data = {
+        ATTR_ENTITY_ID: "light.light_toggle_off_test",
+        ATTR_STATE: STATE_OFF
+    }
+
+    tc = TstContext(hass, workflow_name)
+    react.hass.data[TEST_CONTEXT] = tc
+    async with tc.async_listen_reaction_event():
+        tc.verify_reaction_not_found()
+        await tc.async_send_action_event()
+        tc.verify_reaction_not_found()
+        await tc.async_verify_reaction_event_received()
+        tc.verify_trace_record()
+        
+        tc.verify_plugin_data_sent()
+        tc.verify_plugin_data_content(plugin_data)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["light_turn_on_skip_test"])
+async def test_light_turn_on_skip(hass: HomeAssistant, workflow_name, react_component, light_component):
+    """
+    Test for light plugin
+    """
+
+    mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.light_plugin_mock"}
+    await light_component
+    comp = await react_component
+    await comp.async_setup(workflow_name, plugins=[mock_plugin])
+    react: ReactBase = hass.data[DOMAIN]
+    
+    # plugin_data = {
+    #     ATTR_ENTITY_ID: "light.light_toggle_none_test",
+    #     ATTR_STATE: STATE_OFF
+    # }
+
+    tc = TstContext(hass, workflow_name)
+    react.hass.data[TEST_CONTEXT] = tc
+    async with tc.async_listen_reaction_event():
+        tc.verify_reaction_not_found()
+        await tc.async_send_action_event()
+        tc.verify_reaction_not_found()
+        await tc.async_verify_reaction_event_received()
+        tc.verify_trace_record()
+        
+        tc.verify_plugin_data_not_sent()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["light_turn_off_skip_test"])
+async def test_light_turn_off_skip(hass: HomeAssistant, workflow_name, react_component, light_component):
+    """
+    Test for light plugin
+    """
+
+    mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.light_plugin_mock"}
+    await light_component
+    comp = await react_component
+    await comp.async_setup(workflow_name, plugins=[mock_plugin])
+    react: ReactBase = hass.data[DOMAIN]
+    
+    # plugin_data = {
+    #     ATTR_ENTITY_ID: "light.light_toggle_none_test",
+    #     ATTR_STATE: STATE_OFF
+    # }
+
+    tc = TstContext(hass, workflow_name)
+    react.hass.data[TEST_CONTEXT] = tc
+    async with tc.async_listen_reaction_event():
+        tc.verify_reaction_not_found()
+        await tc.async_send_action_event()
+        tc.verify_reaction_not_found()
+        await tc.async_verify_reaction_event_received()
+        tc.verify_trace_record()
+        
+        tc.verify_plugin_data_not_sent()

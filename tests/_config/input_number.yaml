@@ -3,6 +3,18 @@ input_number_set_test:
   min: 0
   max: 100
 
+input_number_increase_test:
+  name: input_number_increase_test
+  initial: 50
+  min: 0
+  max: 100
+
+input_number_decrease_test:
+  name: input_number_decrease_test
+  initial: 50
+  min: 0
+  max: 100
+
 input_number_state_test:
   name: input_number_state_test
   min: 0

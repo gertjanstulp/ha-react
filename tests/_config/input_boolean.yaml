@@ -34,9 +34,21 @@ input_boolean_turn_off_test:
   name: input_boolean_turn_off_test
   initial: True
 
-input_boolean_toggle_test:
-  name: input_boolean_toggle_test
+input_boolean_toggle_on_test:
+  name: input_boolean_toggle_on_test
+  initial: False
+  
+input_boolean_toggle_off_test:
+  name: input_boolean_toggle_off_test
   initial: True
+
+input_boolean_turn_on_skip_test:
+  name: input_boolean_turn_on_skip_test
+  initial: True
+
+input_boolean_turn_off_skip_test:
+  name: input_boolean_turn_off_skip_test
+  initial: False
 
 input_boolean_hass_started_test:
   name: input_boolean_hass_started_test

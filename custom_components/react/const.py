@@ -175,6 +175,8 @@ REACT_ACTION_PLAY_MEDIA = "play_media"
 REACT_ACTION_ARM_AWAY = "arm_away"
 REACT_ACTION_DISARM = "disarm"
 REACT_ACTION_TRIGGER = "trigger"
+REACT_ACTION_INCREASE = "increase"
+REACT_ACTION_DECREASE = "decrease"
 
 # signals
 SIGNAL_ITEM_CREATED = "react_item_created"
