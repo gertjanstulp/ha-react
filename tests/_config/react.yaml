@@ -12,6 +12,7 @@ plugins:
       language: nl
   - module: custom_components.react.plugin.input.plugin
   - module: custom_components.react.plugin.light.plugin
+  - module: custom_components.react.plugin.switch.plugin
   - module: custom_components.react.plugin.media_player.plugin
   - module: custom_components.react.plugin.alarm.plugin
     config:
@@ -895,6 +896,42 @@ workflow:
       id: reactor_light_toggle
       entity: light_toggle_test
       type: light
+      action: toggle
+
+  workflow_switch_turn_on:
+    when:
+      id: actor_switch_turn_on
+      entity: actor_entity_switch_turn_on
+      type: actor_type_switch_turn_on
+      action: actor_action_switch_turn_on
+    then:
+      id: reactor_switch_turn_on
+      entity: switch_turn_on_test
+      type: switch
+      action: 'on'
+
+  workflow_switch_turn_off:
+    when:
+      id: actor_switch_turn_off
+      entity: actor_entity_switch_turn_off
+      type: actor_type_switch_turn_off
+      action: actor_action_switch_turn_off
+    then:
+      id: reactor_switch_turn_off
+      entity: switch_turn_off_test
+      type: switch
+      action: 'off'
+
+  workflow_switch_toggle:
+    when:
+      id: actor_switch_toggle
+      entity: actor_entity_switch_toggle
+      type: actor_type_switch_toggle
+      action: actor_action_switch_toggle
+    then:
+      id: reactor_switch_toggle
+      entity: switch_toggle_test
+      type: switch
       action: toggle
 
   workflow_alarm_plugin_arm_away_test:
