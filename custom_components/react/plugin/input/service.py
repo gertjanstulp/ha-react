@@ -56,7 +56,7 @@ class Service():
             BOOLEAN_DOMAIN,
             SERVICE_TURN_ON if value == STATE_ON else SERVICE_TURN_OFF,
             {
-                ATTR_ENTITY_ID: f"input_boolean.{entity_id}",
+                ATTR_ENTITY_ID: entity_id,
             },
             context,
         )
