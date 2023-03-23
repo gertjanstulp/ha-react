@@ -79,8 +79,8 @@ class ReactTaskManager:
         unloader = self._unloaders.pop(task.id, None)
         if unloader:
             unloader.unload()
-        if task in self.tasks:
-            self.tasks.remove(task)
+        if task.id in self._tasks:
+            self._tasks.pop(task.id)
             task.unload()
 
 
