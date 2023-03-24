@@ -65,6 +65,14 @@ button_trigger_tts_media_player_speek:
   name: TTS Media player speek without volume
 button_trigger_input_number_set:
   name: Input number set
+button_trigger_input_number_increase:
+  name: Input number increase
+button_trigger_input_number_increase_with_max:
+  name: Input number increase with max
+button_trigger_input_number_decrease:
+  name: Input number decrease
+button_trigger_input_number_decrease_with_min:
+  name: Input number decrease with min
 button_trigger_input_boolean_turn_on:
   name: Input boolean turn on
 button_trigger_input_boolean_turn_off:
@@ -77,6 +85,12 @@ button_trigger_light_turn_off:
   name: Light turn off
 button_trigger_light_toggle:
   name: Light toggle
+button_trigger_switch_turn_on:
+  name: Switch turn on
+button_trigger_switch_turn_off:
+  name: Switch turn off
+button_trigger_switch_toggle:
+  name: Switch toggle
 button_trigger_alarm_arm_away:
   name: Alarm arm away
 button_trigger_alarm_disarm:

@@ -1,3 +1,4 @@
+from custom_components.react.plugin.light.service import Service
 from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData
 
@@ -12,7 +13,7 @@ _LOGGER = get_react_logger()
 def load(plugin_api: PluginApi, config: DynamicData):
     _LOGGER.debug(f"Light plugin: Loading")
 
-    api = Api(plugin_api.react, ApiConfig(config))
+    api = Api(plugin_api.react, ApiConfig(config), Service(plugin_api.react))
     plugin_api.register_plugin_task(LightTurnOnTask, api=api)
     plugin_api.register_plugin_task(LightTurnOffTask, api=api)
     plugin_api.register_plugin_task(LightToggleTask, api=api)

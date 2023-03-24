@@ -16,21 +16,19 @@ from tests.tst_context import TstContext
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["switch_turn_on"])
-async def test_switch_turn_on(hass: HomeAssistant, workflow_name, react_component):
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["switch_turn_on_test"])
+async def test_switch_turn_on(hass: HomeAssistant, workflow_name, react_component, switch_component):
     """
     Test for switch plugin
     """
 
-    mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.switch_plugin_switch_turn_on_mock"}
+    mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.switch_plugin_mock"}
+    await switch_component
     comp = await react_component
     await comp.async_setup(workflow_name, plugins=[mock_plugin])
     react: ReactBase = hass.data[DOMAIN]
     
-    plugin_data = {
-        ATTR_ENTITY_ID: "switch_turn_on_test",
-        ATTR_STATE: STATE_ON
-    }
+    entity_id = "switch.switch_initial_off_test"
 
     tc = TstContext(hass, workflow_name)
     react.hass.data[TEST_CONTEXT] = tc
@@ -40,27 +38,24 @@ async def test_switch_turn_on(hass: HomeAssistant, workflow_name, react_componen
         tc.verify_reaction_not_found()
         await tc.async_verify_reaction_event_received()
         tc.verify_trace_record()
-        
+        tc.verify_state(entity_id, STATE_ON)
         tc.verify_plugin_data_sent()
-        tc.verify_plugin_data_content(plugin_data)
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["switch_turn_off"])
-async def test_switch_turn_off(hass: HomeAssistant, workflow_name, react_component):
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["switch_turn_off_test"])
+async def test_switch_turn_off(hass: HomeAssistant, workflow_name, react_component, switch_component):
     """
     Test for switch plugin
     """
 
-    mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.switch_plugin_switch_turn_off_mock"}
+    mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.switch_plugin_mock"}
+    await switch_component
     comp = await react_component
     await comp.async_setup(workflow_name, plugins=[mock_plugin])
     react: ReactBase = hass.data[DOMAIN]
     
-    plugin_data = {
-        ATTR_ENTITY_ID: "switch_turn_off_test",
-        ATTR_STATE: STATE_OFF
-    }
+    entity_id = "switch.switch_initial_on_test"
 
     tc = TstContext(hass, workflow_name)
     react.hass.data[TEST_CONTEXT] = tc
@@ -70,27 +65,59 @@ async def test_switch_turn_off(hass: HomeAssistant, workflow_name, react_compone
         tc.verify_reaction_not_found()
         await tc.async_verify_reaction_event_received()
         tc.verify_trace_record()
-        
+        tc.verify_state(entity_id, STATE_OFF)
         tc.verify_plugin_data_sent()
-        tc.verify_plugin_data_content(plugin_data)
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["switch_toggle"])
-async def test_switch_toggle(hass: HomeAssistant, workflow_name, react_component):
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["switch_toggle_test"])
+async def test_switch_toggle(hass: HomeAssistant, workflow_name, react_component, switch_component):
     """
     Test for switch plugin
     """
 
-    mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.switch_plugin_switch_toggle_mock"}
+    mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.switch_plugin_mock"}
+    await switch_component
     comp = await react_component
     await comp.async_setup(workflow_name, plugins=[mock_plugin])
     react: ReactBase = hass.data[DOMAIN]
     
-    plugin_data = {
-        ATTR_ENTITY_ID: "switch_toggle_test",
-        ATTR_STATE: STATE_UNKNOWN
-    }
+    entity_id = "switch.switch_initial_off_test"
+
+    tc = TstContext(hass, workflow_name)
+    react.hass.data[TEST_CONTEXT] = tc
+    async with tc.async_listen_reaction_event():
+        tc.verify_reaction_not_found()
+
+        await tc.async_send_action_event()
+        tc.verify_reaction_not_found()
+        await tc.async_verify_reaction_event_received()
+        tc.verify_trace_record()
+        tc.verify_state(entity_id, STATE_ON)
+        tc.verify_plugin_data_sent()
+
+        tc.reset()
+
+        await tc.async_send_action_event()
+        tc.verify_reaction_not_found()
+        await tc.async_verify_reaction_event_received()
+        tc.verify_trace_record()
+        tc.verify_state(entity_id, STATE_OFF)
+        tc.verify_plugin_data_sent()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["switch_turn_on_skip_test"])
+async def test_switch_turn_on_skip(hass: HomeAssistant, workflow_name, react_component, switch_component):
+    """
+    Test for switch plugin
+    """
+
+    mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.switch_plugin_mock"}
+    await switch_component
+    comp = await react_component
+    await comp.async_setup(workflow_name, plugins=[mock_plugin])
+    react: ReactBase = hass.data[DOMAIN]
 
     tc = TstContext(hass, workflow_name)
     react.hass.data[TEST_CONTEXT] = tc
@@ -101,6 +128,29 @@ async def test_switch_toggle(hass: HomeAssistant, workflow_name, react_component
         await tc.async_verify_reaction_event_received()
         tc.verify_trace_record()
         
-        tc.verify_plugin_data_sent()
-        tc.verify_plugin_data_content(plugin_data)
+        tc.verify_plugin_data_not_sent()
 
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["switch_turn_off_skip_test"])
+async def test_switch_turn_off_skip(hass: HomeAssistant, workflow_name, react_component, switch_component):
+    """
+    Test for switch plugin
+    """
+
+    mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.switch_plugin_mock"}
+    await switch_component
+    comp = await react_component
+    await comp.async_setup(workflow_name, plugins=[mock_plugin])
+    react: ReactBase = hass.data[DOMAIN]
+
+    tc = TstContext(hass, workflow_name)
+    react.hass.data[TEST_CONTEXT] = tc
+    async with tc.async_listen_reaction_event():
+        tc.verify_reaction_not_found()
+        await tc.async_send_action_event()
+        tc.verify_reaction_not_found()
+        await tc.async_verify_reaction_event_received()
+        tc.verify_trace_record()
+        
+        tc.verify_plugin_data_not_sent()

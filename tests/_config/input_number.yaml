@@ -1,5 +1,6 @@
-input_number_set_test:
-  name: input_number_set_test
+input_number_value_test:
+  name: input_number_value_test
+  initial: 50
   min: 0
   max: 100
 
