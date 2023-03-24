@@ -4,11 +4,18 @@ from asyncio import sleep
 from contextlib import asynccontextmanager
 from deepdiff import DeepDiff
 from typing import Any, Callable, Union
-from dateutil.parser import parse as datetime_parse
 
 from homeassistant.components.trace.const import DATA_TRACE
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_STATE, STATE_ON, ATTR_NAME
-from homeassistant.core import Event, HomeAssistant, State, Context
+from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
+
+from homeassistant.const import (
+    ATTR_CODE,
+    ATTR_ENTITY_ID, 
+    ATTR_STATE, 
+    SERVICE_ALARM_ARM_AWAY,
+    STATE_ON,
+)
+from homeassistant.core import Event, HomeAssistant, State
 
 from unittest.mock import Mock
 
@@ -35,7 +42,6 @@ from custom_components.react.const import (
     ATTR_ID,
     ATTR_INDEX,
     ATTR_REACTOR,
-    ATTR_WORKFLOW_THEN,
     ATTR_REACTOR_ID,
     ATTR_RESET_WORKFLOW,
     ATTR_SCHEDULE,
@@ -48,7 +54,6 @@ from custom_components.react.const import (
     ATTR_VARIABLES,
     ATTR_WAIT,
     ATTR_WAIT_CONDITION,
-    ATTR_WORKFLOW_WHEN,
     DOMAIN, 
     EVENT_REACT_ACTION,
     EVENT_REACT_REACTION,
@@ -65,7 +70,6 @@ from custom_components.react.const import (
 )
 
 from tests.common import (
-    DOMAIN_SENSOR, 
     EVENT_TEST_CALLBACK,
 )
 
@@ -654,6 +658,17 @@ class TstContext():
             value_expected = value_expected.first
         value_got = got.get(attr, None)
         assert value_got == value_expected, f"Expected notification value '{value_expected}', got '{value_got}'"
+
+
+    async def async_arm_alarm(self, entity_id: str, code: str):
+        await self.hass.services.async_call(
+            ALARM_DOMAIN,
+            SERVICE_ALARM_ARM_AWAY,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_CODE: code,
+            }
+        )
 
 
 class TracePath():

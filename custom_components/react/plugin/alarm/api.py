@@ -1,24 +1,22 @@
 from homeassistant.const import (
-    ATTR_ENTITY_ID, 
-)
-
-from homeassistant.components.alarm_control_panel.const import (
-    DOMAIN as ALARM_DOMAIN
-)
-from homeassistant.const import (
-    ATTR_CODE,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_DISARM,
-    SERVICE_ALARM_TRIGGER,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
+    STATE_ALARM_DISARMED
 )
 from homeassistant.core import Context
 
 from custom_components.react.base import ReactBase
+from custom_components.react.plugin.alarm.const import ArmMode
+from custom_components.react.plugin.alarm.service import Service
 from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData
 
 
 _LOGGER = get_react_logger()
+
+ARMED_STATES = [STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_NIGHT, STATE_ALARM_ARMED_VACATION]
 
 
 class ApiConfig(DynamicData):
@@ -29,9 +27,10 @@ class ApiConfig(DynamicData):
 
 
 class Api():
-    def __init__(self, react: ReactBase, config: ApiConfig) -> None:
+    def __init__(self, react: ReactBase, config: ApiConfig, service: Service) -> None:
         self.react = react
         self.config = config
+        self.service = service
 
 
     def _debug(self, message: str):
@@ -45,36 +44,47 @@ class Api():
         return True
 
 
-    async def async_alarm_arm_away(self, context: Context, entity_id: str):
-        self._debug(f"Arming away '{entity_id}'")
+    async def _async_alarm_arm(self, context: Context, entity_id: str, mode: ArmMode):
+        self._debug(f"Arming {mode} '{entity_id}'")
         try:
-            arm_data = {
-                ATTR_ENTITY_ID: f"alarm_control_panel.{entity_id}",
-                ATTR_CODE: self.config.code,
-            }
-            await self.react.hass.services.async_call(
-                ALARM_DOMAIN,
-                SERVICE_ALARM_ARM_AWAY,
-                arm_data,
-                context,
-            )
+            full_entity_id = f"alarm_control_panel.{entity_id}"
+            if state := self.react.hass.states.get(full_entity_id):
+                value = state.state
+            else:
+                _LOGGER.warn(f"Alarm plugin: Api - {full_entity_id} not found")
+
+            if value is not None and value == STATE_ALARM_DISARMED:
+                await self.service.async_arm(context, full_entity_id, self.config.code, mode)
         except:
-            _LOGGER.exception("Arming away failed")
+            _LOGGER.exception(f"Arming {mode} failed")
+
+    async def async_alarm_arm_home(self, context: Context, entity_id: str):
+        await self._async_alarm_arm(context, entity_id, ArmMode.HOME)
+
+
+    async def async_alarm_arm_away(self, context: Context, entity_id: str):
+        await self._async_alarm_arm(context, entity_id, ArmMode.AWAY)
+
+
+    async def async_alarm_arm_night(self, context: Context, entity_id: str):
+        await self._async_alarm_arm(context, entity_id, ArmMode.NIGHT)
+
+
+    async def async_alarm_arm_vacation(self, context: Context, entity_id: str):
+        await self._async_alarm_arm(context, entity_id, ArmMode.VACATION)
 
 
     async def async_alarm_disarm(self, context: Context, entity_id: str):
         self._debug(f"Disarming '{entity_id}'")
         try:
-            arm_data = {
-                ATTR_ENTITY_ID: f"alarm_control_panel.{entity_id}",
-                ATTR_CODE: self.config.code,
-            }
-            await self.react.hass.services.async_call(
-                ALARM_DOMAIN,
-                SERVICE_ALARM_DISARM,
-                arm_data,
-                context,
-            )
+            full_entity_id = f"alarm_control_panel.{entity_id}"
+            if state := self.react.hass.states.get(full_entity_id):
+                value = state.state
+            else:
+                _LOGGER.warn(f"Alarm plugin: Api - {full_entity_id} not found")
+
+            if value is not None and value in ARMED_STATES:
+                await self.service.async_disarm(context, full_entity_id, self.config.code)
         except:
             _LOGGER.exception("Disarming failed")
 
@@ -82,14 +92,13 @@ class Api():
     async def async_alarm_trigger(self, context: Context, entity_id: str):
         self._debug(f"Triggering '{entity_id}'")
         try:
-            arm_data = {
-                ATTR_ENTITY_ID: f"alarm_control_panel.{entity_id}",
-            }
-            await self.react.hass.services.async_call(
-                ALARM_DOMAIN,
-                SERVICE_ALARM_TRIGGER,
-                arm_data,
-                context,
-            )
+            full_entity_id = f"alarm_control_panel.{entity_id}"
+            if state := self.react.hass.states.get(full_entity_id):
+                value = state.state
+            else:
+                _LOGGER.warn(f"Alarm plugin: Api - {full_entity_id} not found")
+
+            if value is not None and value in ARMED_STATES:
+                await self.service.async_trigger(context, full_entity_id)
         except:
             _LOGGER.exception("Triggering failed")

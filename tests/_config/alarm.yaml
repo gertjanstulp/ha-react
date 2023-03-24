@@ -5,7 +5,8 @@
   arming_time: 1
   delay_time: 1
   trigger_time: 1
-  disarm_after_trigger: false
+  disarm_after_trigger: true
+  
 - platform: manual
   name: alarm_state_test
   code: '1234'
