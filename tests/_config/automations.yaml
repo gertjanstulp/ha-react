@@ -582,9 +582,9 @@
   action:
     event: ev_react_action
     event_data:
-      entity: actor_entity_alarm_arm_away
-      type: actor_type_alarm_arm_away
-      action: actor_action_alarm_arm_away
+      entity: actor_entity_alarm_arm_away_test
+      type: actor_type_alarm_arm_away_test
+      action: actor_action_alarm_arm_away_test
 
 - id: trigger_alarm_disarm
   alias: Trigger alarm disarm
@@ -594,9 +594,9 @@
   action:
     event: ev_react_action
     event_data:
-      entity: actor_entity_alarm_disarm
-      type: actor_type_alarm_disarm
-      action: actor_action_alarm_disarm
+      entity: actor_entity_alarm_disarm_test
+      type: actor_type_alarm_disarm_test
+      action: actor_action_alarm_disarm_test
 
 - id: trigger_alarm_trigger
   alias: Trigger alarm trigger
@@ -606,6 +606,6 @@
   action:
     event: ev_react_action
     event_data:
-      entity: actor_entity_alarm_trigger
-      type: actor_type_alarm_trigger
-      action: actor_action_alarm_trigger
+      entity: actor_entity_alarm_trigger_test
+      type: actor_type_alarm_trigger_test
+      action: actor_action_alarm_trigger_test

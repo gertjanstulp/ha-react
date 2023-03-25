@@ -1066,9 +1066,9 @@ workflow:
 
   workflow_alarm_plugin_disarm_test:
     when:
-      entity: actor_entity_alarm_disarm
-      type: actor_type_alarm_disarm
-      action: actor_action_alarm_disarm
+      entity: actor_entity_alarm_disarm_test
+      type: actor_type_alarm_disarm_test
+      action: actor_action_alarm_disarm_test
     then:
       entity: alarm_plugin_test
       type: alarm
@@ -1076,9 +1076,9 @@ workflow:
 
   workflow_alarm_plugin_trigger_test:
     when:
-      entity: actor_entity_alarm_trigger
-      type: actor_type_alarm_trigger
-      action: actor_action_alarm_trigger
+      entity: actor_entity_alarm_trigger_test
+      type: actor_type_alarm_trigger_test
+      action: actor_action_alarm_trigger_test
     then:
       entity: alarm_plugin_test
       type: alarm
