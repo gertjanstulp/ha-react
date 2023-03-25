@@ -1,14 +1,6 @@
 from __future__ import annotations
 
-from telegram.utils.helpers import escape_markdown
-
 from homeassistant.core import Event as HassEvent
-from homeassistant.components.telegram_bot import (
-    ATTR_CHAT_ID,
-    ATTR_KEYBOARD_INLINE,
-    ATTR_MESSAGE,
-    ATTR_MESSAGEID,
-)
 
 from custom_components.react.base import ReactBase
 from custom_components.react.tasks.plugin.base import PluginReactionTask
@@ -21,32 +13,38 @@ from custom_components.react.const import (
     REACT_TYPE_NOTIFY
 )
 
-from custom_components.react.plugin.telegram.const import PLUGIN_NAME
-from custom_components.react.plugin.telegram.api import Api
+from custom_components.react.plugin.notify.const import PLUGIN_NAME
+from custom_components.react.plugin.notify.api import NotifyApi
 
 _LOGGER = get_react_logger()
 
 
 class NotifyConfirmFeedbackTask(PluginReactionTask):
-    def __init__(self, react: ReactBase, api: Api) -> None:
+    def __init__(self, react: ReactBase, api: NotifyApi) -> None:
         super().__init__(react, NotifyConfirmFeedbackReactionEvent)
         self.api = api
 
 
     def _debug(self, message: str):
-        _LOGGER.debug(f"Telegram plugin: NotifyConfirmFeedbackTask - {message}")
+        _LOGGER.debug(f"Notify plugin: NotifyConfirmFeedbackTask - {message}")
 
 
     async def async_execute_plugin(self, event: NotifyConfirmFeedbackReactionEvent):
         self._debug("Confirming feedback")
-        await self.api.async_confirm_feedback(event.context, event.create_feedback_data())
+        await self.api.async_confirm_feedback(
+            event.context, 
+            event.payload.data.service_type,
+            event.payload.data.plugin_payload.conversation_id,
+            event.payload.data.plugin_payload.message_id,
+            event.payload.data.plugin_payload.text,
+            event.payload.data.acknowledgement)
 
 
 class NotifyConfirmFeedbackReactionEventPluginPayload(DynamicData):
     def __init__(self, source: dict = None) -> None:
         super().__init__()
 
-        self.chat_id: str = None
+        self.conversation_id: str = None
         self.message_id: str = None
         self.text: str = None
 
@@ -60,6 +58,7 @@ class NotifyConfirmFeedbackReactionEventData(DynamicData):
         super().__init__()
 
         self.plugin: str = None
+        self.service_type: str = None
         self.feedback: str = None
         self.acknowledgement: str = None
         self.plugin_payload: NotifyConfirmFeedbackReactionEventPluginPayload = None
@@ -81,12 +80,3 @@ class NotifyConfirmFeedbackReactionEvent(ReactionEvent[NotifyConfirmFeedbackReac
             self.payload.data and
             (not self.payload.data.plugin or self.payload.data.plugin == PLUGIN_NAME)
         )
-
-
-    def create_feedback_data(self) -> dict:
-        return {
-            ATTR_MESSAGEID: self.payload.data.plugin_payload.message_id,
-            ATTR_CHAT_ID: self.payload.data.plugin_payload.chat_id,
-            ATTR_MESSAGE: escape_markdown(f"{self.payload.data.plugin_payload.text} - {self.payload.data.acknowledgement}"),
-            ATTR_KEYBOARD_INLINE: None
-        }

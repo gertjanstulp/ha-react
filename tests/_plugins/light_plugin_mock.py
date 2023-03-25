@@ -5,8 +5,8 @@ from homeassistant.const import(
 from homeassistant.core import Context
 
 from custom_components.react.base import ReactBase
-from custom_components.react.plugin.light.api import Api, ApiConfig
-from custom_components.react.plugin.light.service import Service
+from custom_components.react.plugin.light.api import LightApi, LightApiConfig
+from custom_components.react.plugin.light.service import LightService
 from custom_components.react.plugin.light.tasks.light_toggle_task import LightToggleTask
 from custom_components.react.plugin.light.tasks.light_turn_off_task import LightTurnOffTask
 from custom_components.react.plugin.light.tasks.light_turn_on_task import LightTurnOnTask
@@ -17,18 +17,18 @@ from tests.tst_context import TstContext
 
 
 def load(plugin_api: PluginApi, config: DynamicData):
-    api = LightApiMock(plugin_api.react, ApiConfig(config))
+    api = LightApiMock(plugin_api.react, LightApiConfig(config))
     plugin_api.register_plugin_task(LightTurnOnTask, api=api)
     plugin_api.register_plugin_task(LightTurnOffTask, api=api)
     plugin_api.register_plugin_task(LightToggleTask, api=api)
 
 
-class LightApiMock(Api):
-    def __init__(self, react: ReactBase, config: ApiConfig) -> None:
+class LightApiMock(LightApi):
+    def __init__(self, react: ReactBase, config: LightApiConfig) -> None:
         super().__init__(react, config, LightServiceMock(react))
 
 
-class LightServiceMock(Service):
+class LightServiceMock(LightService):
     def __init__(self, react: ReactBase) -> None:
         self.react = react
 

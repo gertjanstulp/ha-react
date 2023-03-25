@@ -23,7 +23,7 @@ from homeassistant.core import Context
 from custom_components.react.base import ReactBase
 
 
-class Service():
+class InputService():
     def __init__(self, react: ReactBase) -> None:
         self.react = react
 

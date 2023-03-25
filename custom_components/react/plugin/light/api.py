@@ -12,7 +12,7 @@ from homeassistant.const import (
 from homeassistant.core import Context
 
 from custom_components.react.base import ReactBase
-from custom_components.react.plugin.light.service import Service
+from custom_components.react.plugin.light.service import LightService
 from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData
 
@@ -20,14 +20,14 @@ from custom_components.react.utils.struct import DynamicData
 _LOGGER = get_react_logger()
 
 
-class ApiConfig(DynamicData):
+class LightApiConfig(DynamicData):
     def __init__(self, source: DynamicData = None) -> None:
         super().__init__()
         self.load(source)
 
 
-class Api():
-    def __init__(self, react: ReactBase, config: ApiConfig, service: Service) -> None:
+class LightApi():
+    def __init__(self, react: ReactBase, config: LightApiConfig, service: LightService) -> None:
         self.react = react
         self.config = config
         self.service = service

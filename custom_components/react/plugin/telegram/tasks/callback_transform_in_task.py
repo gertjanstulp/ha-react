@@ -2,12 +2,10 @@ from __future__ import annotations
 
 from homeassistant.core import Event as HassEvent
 from homeassistant.components.telegram_bot import (
-    ATTR_CHAT_ID, 
     ATTR_MESSAGE, 
-    ATTR_MESSAGEID, 
     EVENT_TELEGRAM_CALLBACK, 
-    ATTR_TEXT
 )
+from custom_components.react.plugin.notify.const import PLUGIN_NAME
 
 from custom_components.react.utils.events import Event
 from custom_components.react.base import ReactBase
@@ -19,7 +17,10 @@ from custom_components.react.const import (
     ATTR_DATA, 
     ATTR_ENTITY, 
     ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT,
-    ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK, 
+    ATTR_EVENT_FEEDBACK_ITEM_CONVERSIONATION_ID,
+    ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK,
+    ATTR_EVENT_FEEDBACK_ITEM_MESSAGE_ID,
+    ATTR_EVENT_FEEDBACK_ITEM_TEXT, 
     ATTR_EVENT_PLUGIN, 
     ATTR_TYPE, 
     EVENTPAYLOAD_COMMAND_REACT, 
@@ -28,7 +29,6 @@ from custom_components.react.const import (
     REACT_TYPE_NOTIFY
 )
 
-from custom_components.react.plugin.telegram.const import PLUGIN_NAME
 
 _LOGGER = get_react_logger()
 
@@ -36,6 +36,7 @@ _LOGGER = get_react_logger()
 class CallbackTransformInTask(PluginTransformTask):
     def __init__(self, react: ReactBase) -> None:
         super().__init__(react, EVENT_TELEGRAM_CALLBACK, CallbackTransformEvent)
+        self.entity_maps = self.react.configuration.workflow_config.entity_maps_config
 
 
     def _debug(self, message: str):
@@ -44,9 +45,8 @@ class CallbackTransformInTask(PluginTransformTask):
 
     def create_action_event_payload(self, source_event: CallbackTransformEvent) -> dict:
         self._debug("Transforming callback event from telegram")
-        entity_maps = self.react.configuration.workflow_config.entity_maps_config
         return {
-            ATTR_ENTITY: entity_maps.get(source_event.payload.entity_source, None),
+            ATTR_ENTITY: self.entity_maps.get(source_event.payload.entity_source, source_event.payload.entity_source),
             ATTR_TYPE: REACT_TYPE_NOTIFY,
             ATTR_ACTION: REACT_ACTION_FEEDBACK_RETRIEVED,
             ATTR_DATA: {
@@ -54,15 +54,15 @@ class CallbackTransformInTask(PluginTransformTask):
                 ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT: source_event.payload.acknowledgement,
                 ATTR_EVENT_PLUGIN: PLUGIN_NAME,
                 ATTR_EVENT_PLUGIN_PAYLOAD: {
-                    ATTR_CHAT_ID: source_event.payload.chat_id,
-                    ATTR_MESSAGEID: source_event.payload.message.message_id,
-                    ATTR_TEXT: source_event.payload.message.text,
+                    ATTR_EVENT_FEEDBACK_ITEM_CONVERSIONATION_ID: source_event.payload.chat_id,
+                    ATTR_EVENT_FEEDBACK_ITEM_MESSAGE_ID: source_event.payload.message.message_id,
+                    ATTR_EVENT_FEEDBACK_ITEM_TEXT: source_event.payload.message.text,
                 }
             }
         }
 
 
-class TCallbackTransformEventPayloadMessage(DynamicData):
+class CallbackTransformEventPayloadMessage(DynamicData):
     def __init__(self, source: dict = None) -> None:
         super().__init__()
 
@@ -73,14 +73,14 @@ class TCallbackTransformEventPayloadMessage(DynamicData):
 
     
 class CallbackTransformEventPayload(DynamicData):
-    type_hints: dict = { ATTR_MESSAGE: TCallbackTransformEventPayloadMessage }
+    type_hints: dict = { ATTR_MESSAGE: CallbackTransformEventPayloadMessage }
 
     def __init__(self) -> None:
         super().__init__()
         
         self.feedback: str = None
         self.acknowledgement: str = None
-        self.message: TCallbackTransformEventPayloadMessage = None
+        self.message: CallbackTransformEventPayloadMessage = None
         
         self.entity_source: str = None
         self.args: list = None

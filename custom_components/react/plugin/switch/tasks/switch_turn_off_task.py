@@ -5,7 +5,7 @@ from homeassistant.const import STATE_OFF
 
 from custom_components.react.base import ReactBase
 from custom_components.react.const import REACT_TYPE_SWITCH
-from custom_components.react.plugin.switch.api import Api
+from custom_components.react.plugin.switch.api import SwitchApi
 from custom_components.react.plugin.switch.const import PLUGIN_NAME
 from custom_components.react.tasks.plugin.base import PluginReactionTask
 from custom_components.react.utils.events import ReactionEvent
@@ -17,7 +17,7 @@ _LOGGER = get_react_logger()
 
 class SwitchTurnOffTask(PluginReactionTask):
 
-    def __init__(self, react: ReactBase, api: Api) -> None:
+    def __init__(self, react: ReactBase, api: SwitchApi) -> None:
         super().__init__(react, SwitchTurnOffReactionEvent)
         self.api = api
 

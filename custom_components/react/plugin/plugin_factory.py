@@ -2,21 +2,43 @@ from __future__ import annotations
 
 from importlib import import_module
 from types import ModuleType
+from typing import Any
 
 from custom_components.react.base import ReactBase
 from custom_components.react.tasks.plugin.base import PluginTask
 
+SERVICE_TYPE_DEFAULT = "default"
 
 class PluginApi():
     def __init__(self, react: ReactBase) -> None:
         self.react = react
         self.tasks: list[PluginTask] = []
+        self.services: dict[str, dict[str, Any]] = {}
 
 
     def register_plugin_task(self, task_type: type[PluginTask], **kwargs):
         task = task_type(self.react, **kwargs)
         self.react.task_manager.register_task(task)
         self.tasks.append(task)
+
+
+    def register_plugin_service(self, plugin_name: str, service_type: str, service: Any):
+        plugin_dict = self.services.get(plugin_name, None)
+        if not plugin_dict:
+            plugin_dict = {}
+            self.services[plugin_name] = plugin_dict
+        plugin_dict[service_type] = service
+
+
+    def get_service(self, plugin_name: str, service_type: str = None, entity_id: str = None) -> Any:
+        result = None
+        plugin_dict = self.services.get(plugin_name)
+        if plugin_dict:
+            if service_type:
+                result = plugin_dict.get(service_type, None)
+            if not result and entity_id:
+                result = plugin_dict.get(entity_id, None)
+        return result        
 
 
     def unload_tasks(self):

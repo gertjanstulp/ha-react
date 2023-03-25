@@ -3,9 +3,15 @@
 entity_maps:
   2095689255: mobile_user
   -719737734: mobile_group
+  7237746fa7daec45: mobile_user
 
 plugins:
+  - module: custom_components.react.plugin.notify.plugin
+    config:
+      default_service_type: telegram
   - module: custom_components.react.plugin.telegram.plugin
+  - module: custom_components.react.plugin.persistent_notification.plugin
+  - module: custom_components.react.plugin.mobile_app.plugin
   - module: custom_components.react.plugin.tts.plugin
     config:
       say_service: google_say
@@ -743,14 +749,12 @@ workflow:
         resume_service: sonos.restore
         wait: 2
 
-  workflow_telegram_notify_send_message:
+  workflow_notify_send_message_test:
     when:
-      id: actor_telegram_notify_send_message
-      entity: actor_entity_telegram_notify_send_message
-      type: actor_type_telegram_notify_send_message
-      action: actor_action_telegram_notify_send_message
+      entity: actor_entity_notify_send_message_test
+      type: actor_type_notify_send_message_test
+      action: actor_action_notify_send_message_test
     then:
-      id: reactor_telegram_notify_send_message
       entity: mobile_group
       type: notify
       action: send_message
@@ -764,23 +768,18 @@ workflow:
             feedback: deny
             acknowledgement: denied
 
-  workflow_telegram_notify_confirm_feedback:
+  workflow_notify_confirm_feedback_test:
     when:
-      id: actor_telegram_notify_confirm_feedback
       entity: mobile_user
       type: notify
       action: feedback_retrieved
-      data:
-        plugin: telegram
     then:
-      - id: reactor_telegram_notify_confirm_feedback
-        entity: reactor_entity_telegram_notify_confirm_feedback
-        type: reactor_type_telegram_notify_confirm_feedback
-        action: reactor_action_telegram_notify_confirm_feedback
+      - entity: reactor_entity_notify_confirm_feedback_test
+        type: reactor_type_notify_confirm_feedback_test
+        action: reactor_action_notify_confirm_feedback_test
         data:
           feedback: "{{ event.data.feedback }}"
-      - id: reactor_telegram_confirm_feedback
-        entity: mobile_user
+      - entity: mobile_user
         type: notify
         action: confirm_feedback
         forward_data: True

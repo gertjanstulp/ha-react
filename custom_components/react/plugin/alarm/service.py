@@ -17,7 +17,7 @@ from custom_components.react.base import ReactBase
 from custom_components.react.plugin.alarm.const import ArmMode
 
 
-class Service():
+class AlarmService():
     def __init__(self, react: ReactBase) -> None:
         self.react = react
 

@@ -1,14 +1,19 @@
 - platform: telegram
   name: telegram_user
   chat_id: !secret telegram_chat_id_user
+
 - platform: telegram
   name: telegram_group
   chat_id: !secret telegram_chat_id_group
+
 - platform: group
   name: "mobile_user"
   services:
     - service: telegram_user
+    # - service: mobile_app_hd1903
+    
 - platform: group
   name: "mobile_group"
   services:
     - service: telegram_group
+    # - service: mobile_app_hd1903

@@ -4,7 +4,7 @@ from homeassistant.core import Event
 
 from custom_components.react.base import ReactBase
 from custom_components.react.const import REACT_ACTION_ARM_NIGHT, REACT_TYPE_ALARM
-from custom_components.react.plugin.alarm.api import Api
+from custom_components.react.plugin.alarm.api import AlarmApi
 from custom_components.react.plugin.alarm.const import PLUGIN_NAME
 from custom_components.react.tasks.plugin.base import PluginReactionTask
 from custom_components.react.utils.events import ReactionEvent
@@ -17,7 +17,7 @@ _LOGGER = get_react_logger()
 
 class AlarmArmNightTask(PluginReactionTask):
 
-    def __init__(self, react: ReactBase, api: Api) -> None:
+    def __init__(self, react: ReactBase, api: AlarmApi) -> None:
         super().__init__(react, AlarmArmNightReactionEvent)
         self.api = api
 

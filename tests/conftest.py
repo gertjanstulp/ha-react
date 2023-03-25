@@ -7,13 +7,14 @@ import yaml
 from unittest.mock import Mock, patch
 from yaml import SafeLoader
 
-from homeassistant.components import template, input_boolean, input_button, input_number, input_text, light, switch, group, binary_sensor, sensor, device_tracker, person, alarm_control_panel
+from homeassistant.components import template, input_boolean, input_button, input_number, input_text, light, notify, persistent_notification, switch, group, binary_sensor, sensor, device_tracker, person, alarm_control_panel
 from homeassistant.components.input_number import SERVICE_SET_VALUE, ATTR_VALUE
 from homeassistant.components.trace import DATA_TRACE
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM
+
 from custom_components.virtual import SERVICE_AVAILABILE
 from custom_components.virtual.binary_sensor import SERVICE_ON
 
@@ -135,6 +136,14 @@ async def virtual_component(hass_setup):
     result.async_set_available = async_set_available
     result.async_set_unavailable = async_set_unavailable
     return result
+
+
+@pytest.fixture
+async def notify_component(hass_setup):
+    hass: HomeAssistant = hass_setup.hass
+
+    assert await async_setup_component(hass, notify.DOMAIN, { notify.DOMAIN: {}} )
+    await hass.async_block_till_done()
 
 
 @pytest.fixture

@@ -21,7 +21,7 @@ from custom_components.react.plugin.tts.const import ATTR_EVENT_LANGUAGE, ATTR_E
 _LOGGER = get_react_logger()
 
 
-class ApiConfig(DynamicData):
+class TtsApiConfig(DynamicData):
     def __init__(self, source: DynamicData = None) -> None:
         super().__init__()
         self.say_service: str = None
@@ -30,8 +30,8 @@ class ApiConfig(DynamicData):
         self.load(source)
 
 
-class Api():
-    def __init__(self, react: ReactBase, config: ApiConfig) -> None:
+class TtsApi():
+    def __init__(self, react: ReactBase, config: TtsApiConfig) -> None:
         self.react = react
         self.config = config
 

@@ -4,7 +4,7 @@ from homeassistant.core import Event
 
 from custom_components.react.base import ReactBase
 from custom_components.react.const import REACT_ACTION_PLAY_MEDIA, REACT_TYPE_MEDIA_PLAYER
-from custom_components.react.plugin.media_player.api import Api
+from custom_components.react.plugin.media_player.api import MediaPlayerApi
 from custom_components.react.plugin.media_player.const import PLUGIN_NAME
 from custom_components.react.tasks.plugin.base import PluginReactionTask
 from custom_components.react.utils.events import ReactionEvent
@@ -16,7 +16,7 @@ _LOGGER = get_react_logger()
 
 class MediaPlayerPlayMediaTask(PluginReactionTask):
 
-    def __init__(self, react: ReactBase, api: Api) -> None:
+    def __init__(self, react: ReactBase, api: MediaPlayerApi) -> None:
         super().__init__(react, MediaPlayerPlayMediaReactionEvent)
         self.api = api
 

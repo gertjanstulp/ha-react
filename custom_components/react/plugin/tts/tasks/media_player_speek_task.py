@@ -14,7 +14,7 @@ from custom_components.react.const import (
     REACT_TYPE_MEDIA_PLAYER
 )
 
-from custom_components.react.plugin.tts.api import Api
+from custom_components.react.plugin.tts.api import TtsApi
 from custom_components.react.plugin.tts.const import PLUGIN_NAME
 
 _LOGGER = get_react_logger()
@@ -22,7 +22,7 @@ _LOGGER = get_react_logger()
 
 class MediaPlayerSpeekTask(PluginReactionTask):
 
-    def __init__(self, react: ReactBase, api: Api) -> None:
+    def __init__(self, react: ReactBase, api: TtsApi) -> None:
         super().__init__(react, MediaPlayerSpeekReactionEvent)
         self.api = api
 
