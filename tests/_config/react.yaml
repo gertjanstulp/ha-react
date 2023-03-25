@@ -1024,21 +1024,51 @@ workflow:
       type: switch
       action: 'off'
 
+  workflow_alarm_plugin_arm_home_test:
+    when:
+      entity: actor_entity_alarm_arm_home_test
+      type: actor_type_alarm_arm_home_test
+      action: actor_action_alarm_arm_home_test
+    then:
+      entity: alarm_plugin_test
+      type: alarm
+      action: arm_home
+
   workflow_alarm_plugin_arm_away_test:
     when:
-      entity: actor_entity_alarm_arm_away
-      type: actor_type_alarm_arm_away
-      action: actor_action_alarm_arm_away
+      entity: actor_entity_alarm_arm_away_test
+      type: actor_type_alarm_arm_away_test
+      action: actor_action_alarm_arm_away_test
     then:
       entity: alarm_plugin_test
       type: alarm
       action: arm_away
 
+  workflow_alarm_plugin_arm_night_test:
+    when:
+      entity: actor_entity_alarm_arm_night_test
+      type: actor_type_alarm_arm_night_test
+      action: actor_action_alarm_arm_night_test
+    then:
+      entity: alarm_plugin_test
+      type: alarm
+      action: arm_night
+
+  workflow_alarm_plugin_arm_vacation_test:
+    when:
+      entity: actor_entity_alarm_arm_vacation_test
+      type: actor_type_alarm_arm_vacation_test
+      action: actor_action_alarm_arm_vacation_test
+    then:
+      entity: alarm_plugin_test
+      type: alarm
+      action: arm_vacation
+
   workflow_alarm_plugin_disarm_test:
     when:
-      entity: actor_entity_alarm_disarm
-      type: actor_type_alarm_disarm
-      action: actor_action_alarm_disarm
+      entity: actor_entity_alarm_disarm_test
+      type: actor_type_alarm_disarm_test
+      action: actor_action_alarm_disarm_test
     then:
       entity: alarm_plugin_test
       type: alarm
@@ -1046,9 +1076,9 @@ workflow:
 
   workflow_alarm_plugin_trigger_test:
     when:
-      entity: actor_entity_alarm_trigger
-      type: actor_type_alarm_trigger
-      action: actor_action_alarm_trigger
+      entity: actor_entity_alarm_trigger_test
+      type: actor_type_alarm_trigger_test
+      action: actor_action_alarm_trigger_test
     then:
       entity: alarm_plugin_test
       type: alarm

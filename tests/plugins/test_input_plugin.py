@@ -212,7 +212,7 @@ async def test_input_boolean_turn_on(hass: HomeAssistant, workflow_name, react_c
         tc.verify_reaction_not_found()
         await tc.async_verify_reaction_event_received()
         tc.verify_trace_record()
-        tc.verify_state(entity_id, STATE_ON)        
+        tc.verify_state(entity_id, STATE_ON)
         tc.verify_plugin_data_sent()
 
 
