@@ -5,8 +5,8 @@ from homeassistant.const import(
 from homeassistant.core import Context
 
 from custom_components.react.base import ReactBase
-from custom_components.react.plugin.switch.api import Api, ApiConfig
-from custom_components.react.plugin.switch.service import Service
+from custom_components.react.plugin.switch.api import SwitchApi, SwitchApiConfig
+from custom_components.react.plugin.switch.service import SwitchService
 from custom_components.react.plugin.switch.tasks.switch_toggle_task import SwitchToggleTask
 from custom_components.react.plugin.switch.tasks.switch_turn_off_task import SwitchTurnOffTask
 from custom_components.react.plugin.switch.tasks.switch_turn_on_task import SwitchTurnOnTask
@@ -17,18 +17,18 @@ from tests.tst_context import TstContext
 
 
 def load(plugin_api: PluginApi, config: DynamicData):
-    api = SwitchApiMock(plugin_api.react, ApiConfig(config))
+    api = SwitchApiMock(plugin_api.react, SwitchApiConfig(config))
     plugin_api.register_plugin_task(SwitchTurnOnTask, api=api)
     plugin_api.register_plugin_task(SwitchTurnOffTask, api=api)
     plugin_api.register_plugin_task(SwitchToggleTask, api=api)
 
 
-class SwitchApiMock(Api):
-    def __init__(self, react: ReactBase, config: ApiConfig) -> None:
+class SwitchApiMock(SwitchApi):
+    def __init__(self, react: ReactBase, config: SwitchApiConfig) -> None:
         super().__init__(react, config, SwitchServiceMock(react))
 
 
-class SwitchServiceMock(Service):
+class SwitchServiceMock(SwitchService):
     def __init__(self, react: ReactBase) -> None:
         self.react = react
 

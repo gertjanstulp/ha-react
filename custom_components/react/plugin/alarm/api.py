@@ -9,7 +9,7 @@ from homeassistant.core import Context
 
 from custom_components.react.base import ReactBase
 from custom_components.react.plugin.alarm.const import ArmMode
-from custom_components.react.plugin.alarm.service import Service
+from custom_components.react.plugin.alarm.service import AlarmService
 from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData
 
@@ -19,15 +19,15 @@ _LOGGER = get_react_logger()
 ARMED_STATES = [STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_NIGHT, STATE_ALARM_ARMED_VACATION]
 
 
-class ApiConfig(DynamicData):
+class AlarmApiConfig(DynamicData):
     def __init__(self, source: DynamicData = None) -> None:
         super().__init__()
         self.code: str = None
         self.load(source)
 
 
-class Api():
-    def __init__(self, react: ReactBase, config: ApiConfig, service: Service) -> None:
+class AlarmApi():
+    def __init__(self, react: ReactBase, config: AlarmApiConfig, service: AlarmService) -> None:
         self.react = react
         self.config = config
         self.service = service

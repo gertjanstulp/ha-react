@@ -5,7 +5,7 @@ from homeassistant.const import (
 from homeassistant.core import Context
 
 from custom_components.react.base import ReactBase
-from custom_components.react.plugin.switch.service import Service
+from custom_components.react.plugin.switch.service import SwitchService
 from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData
 
@@ -13,14 +13,14 @@ from custom_components.react.utils.struct import DynamicData
 _LOGGER = get_react_logger()
 
 
-class ApiConfig(DynamicData):
+class SwitchApiConfig(DynamicData):
     def __init__(self, source: DynamicData = None) -> None:
         super().__init__()
         self.load(source)
 
 
-class Api():
-    def __init__(self, react: ReactBase, config: ApiConfig, service: Service) -> None:
+class SwitchApi():
+    def __init__(self, react: ReactBase, config: SwitchApiConfig, service: SwitchService) -> None:
         self.react = react
         self.config = config
         self.service = service

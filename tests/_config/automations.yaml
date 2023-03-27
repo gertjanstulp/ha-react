@@ -327,17 +327,17 @@
       location_name: not_home
       source_type: router
 
-- id: trigger_telegram_notify_send_message
-  alias: Trigger telegram_notify_send_message
+- id: trigger_notify_send_message
+  alias: Trigger notify_send_message
   trigger:
     platform: state
-    entity_id: input_button.button_trigger_telegram_notify_send_message
+    entity_id: input_button.button_trigger_notify_send_message
   action:
     event: ev_react_action
     event_data:
-      entity: actor_entity_telegram_notify_send_message
-      type: actor_type_telegram_notify_send_message
-      action: actor_action_telegram_notify_send_message
+      entity: actor_entity_notify_send_message_test
+      type: actor_type_notify_send_message_test
+      action: actor_action_notify_send_message_test
 
 - id: trigger_wait
   alias: Trigger wait

@@ -1,10 +1,12 @@
 import pytest
 
+from homeassistant.const import (
+    ATTR_COMMAND
+)
 from homeassistant.core import HomeAssistant
 
 from homeassistant.components.telegram_bot import (
     ATTR_CHAT_ID, 
-    ATTR_KEYBOARD_INLINE,
     ATTR_MESSAGE, 
     ATTR_MESSAGEID, 
     ATTR_TEXT,
@@ -16,8 +18,10 @@ from custom_components.react.const import (
     ATTR_DATA,
     ATTR_ENTITY,
     ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT,
+    ATTR_EVENT_FEEDBACK_ITEM_CONVERSIONATION_ID,
     ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK,
-    ATTR_EVENT_MESSAGE,
+    ATTR_EVENT_FEEDBACK_ITEM_MESSAGE_ID,
+    ATTR_EVENT_FEEDBACK_ITEM_TEXT,
     ATTR_EVENT_PLUGIN,
     ATTR_EVENT_PLUGIN_PAYLOAD,
     ATTR_PLUGIN_MODULE,
@@ -27,93 +31,18 @@ from custom_components.react.const import (
     REACT_ACTION_FEEDBACK_RETRIEVED,
     REACT_TYPE_NOTIFY
 )
-from custom_components.react.lib.config import Plugin
-from custom_components.react.plugin.telegram.const import ATTR_COMMAND, ATTR_ENTITY_SOURCE, ATTR_MESSAGE_DATA, ATTR_SERVICE_DATA_INLINE_KEYBOARD, PLUGIN_NAME
+from custom_components.react.plugin.notify.const import PLUGIN_NAME
+from custom_components.react.plugin.telegram.const import (
+    ATTR_ENTITY_SOURCE, 
+)
 
 from tests.tst_context import TstContext
-from tests.common import FIXTURE_WORKFLOW_NAME, TEST_CONTEXT
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["telegram_notify_send_message"])
-async def test_telegram_notify_send_message(hass: HomeAssistant, workflow_name, react_component):
-    """
-    Test for telegram plugin
-    """
-
-    mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.telegram_plugin_notify_send_message_mock"}
-    comp = await react_component
-    await comp.async_setup(workflow_name, plugins=[mock_plugin])
-    react: ReactBase = hass.data[DOMAIN]
-    
-    plugin_data = {
-        ATTR_ENTITY: "mobile_group",
-        ATTR_MESSAGE_DATA: {
-            ATTR_EVENT_MESSAGE: "Approve something",
-            ATTR_DATA: {
-                ATTR_SERVICE_DATA_INLINE_KEYBOARD: "Approve:/react approve approved, Deny:/react deny denied"
-            }
-        } 
-    }
-
-    tc = TstContext(hass, workflow_name)
-    react.hass.data[TEST_CONTEXT] = tc
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
-        await tc.async_send_action_event()
-        tc.verify_reaction_not_found()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_trace_record()
-        
-        tc.verify_plugin_data_sent()
-        tc.verify_plugin_data_content(plugin_data)
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["telegram_notify_confirm_feedback"])
-async def test_telegram_notify_confirm_feedback(hass: HomeAssistant, workflow_name, react_component):
-    """
-    Test for telegram plugin
-    """
-
-    mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.telegram_plugin_notify_confirm_feedback_mock"}
-    comp = await react_component
-    await comp.async_setup(workflow_name, plugins=[mock_plugin])
-    react: ReactBase = hass.data[DOMAIN]
-
-    data_in = {
-        ATTR_EVENT_PLUGIN: PLUGIN_NAME,
-        ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT: "",
-        ATTR_EVENT_PLUGIN_PAYLOAD: {
-            ATTR_MESSAGEID: "",
-            ATTR_CHAT_ID: "",
-            ATTR_TEXT: ""
-        }
-    }
-    expected_data = {'feedback': ''}
-    feedback_data = {
-        ATTR_MESSAGEID: "",
-        ATTR_CHAT_ID: "",
-        ATTR_MESSAGE: " - ",
-        ATTR_KEYBOARD_INLINE: None
-    }
-
-    tc = TstContext(hass, workflow_name)
-    react.hass.data[TEST_CONTEXT] = tc
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
-        await tc.async_send_action_event(data=data_in)
-        tc.verify_reaction_not_found()
-        await tc.async_verify_reaction_event_received(expected_count=2)
-        tc.verify_trace_record(expected_runtime_actor_data=data_in, expected_runtime_reactor_data=[expected_data, data_in])
-        
-        tc.verify_plugin_data_sent()
-        tc.verify_plugin_data_content(feedback_data)
+from tests.common import TEST_CONTEXT
 
 
 @pytest.mark.asyncio
 async def test_telegram_callback_transform_in(hass: HomeAssistant, react_component):
-    mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.telegram_plugin_callback_transform_in_mock"}
+    mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.telegram_plugin_mock"}
     comp = await react_component
     await comp.async_setup(None, plugins=[mock_plugin])
     react: ReactBase = hass.data[DOMAIN]
@@ -134,7 +63,7 @@ async def test_telegram_callback_transform_in(hass: HomeAssistant, react_compone
     }
 
     data_out = {
-        ATTR_ENTITY: None,
+        ATTR_ENTITY: "entity_source",
         ATTR_TYPE: REACT_TYPE_NOTIFY,
         ATTR_ACTION: REACT_ACTION_FEEDBACK_RETRIEVED,
         ATTR_DATA: {
@@ -142,9 +71,9 @@ async def test_telegram_callback_transform_in(hass: HomeAssistant, react_compone
             ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT: "acknowledgement",
             ATTR_EVENT_PLUGIN: PLUGIN_NAME,
             ATTR_EVENT_PLUGIN_PAYLOAD: {
-                ATTR_CHAT_ID: "chat_id",
-                ATTR_MESSAGEID: "messageid",
-                ATTR_TEXT: "text",
+                ATTR_EVENT_FEEDBACK_ITEM_CONVERSIONATION_ID: "chat_id",
+                ATTR_EVENT_FEEDBACK_ITEM_MESSAGE_ID: "messageid",
+                ATTR_EVENT_FEEDBACK_ITEM_TEXT: "text",
             }
         }
     }
@@ -153,4 +82,3 @@ async def test_telegram_callback_transform_in(hass: HomeAssistant, react_compone
         await tc.async_send_event(EVENT_TELEGRAM_CALLBACK, data_in)
         await tc.async_verify_action_event_received()
         tc.verify_action_event_data(expected_data=data_out)
-        test = 1

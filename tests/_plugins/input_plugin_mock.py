@@ -11,8 +11,8 @@ from homeassistant.const import (
 
 from custom_components.react.base import ReactBase
 from custom_components.react.const import ATTR_STATE
-from custom_components.react.plugin.input.api import Api, ApiConfig
-from custom_components.react.plugin.input.service import Service
+from custom_components.react.plugin.input.api import InputApi, InputApiConfig
+from custom_components.react.plugin.input.service import InputService
 from custom_components.react.plugin.input.tasks.input_boolean_toggle_task import InputBooleanToggleTask
 from custom_components.react.plugin.input.tasks.input_boolean_turn_off_task import InputBooleanTurnOffTask
 from custom_components.react.plugin.input.tasks.input_boolean_turn_on_task import InputBooleanTurnOnTask
@@ -28,7 +28,7 @@ from tests.tst_context import TstContext
 
 
 def load(plugin_api: PluginApi, config: DynamicData):
-    api = InputApiMock(plugin_api.react, ApiConfig(config))
+    api = InputApiMock(plugin_api.react, InputApiConfig(config))
     plugin_api.register_plugin_task(InputNumberSetTask, api=api)
     plugin_api.register_plugin_task(InputNumberIncreaseTask, api=api)
     plugin_api.register_plugin_task(InputNumberDecreaseTask, api=api)
@@ -38,12 +38,12 @@ def load(plugin_api: PluginApi, config: DynamicData):
     plugin_api.register_plugin_task(InputBooleanToggleTask, api=api)
 
 
-class InputApiMock(Api):
-    def __init__(self, react: ReactBase, config: ApiConfig) -> None:
+class InputApiMock(InputApi):
+    def __init__(self, react: ReactBase, config: InputApiConfig) -> None:
         super().__init__(react, config, InputServiceMock(react))
 
 
-class InputServiceMock(Service):
+class InputServiceMock(InputService):
     def __init__(self, react: ReactBase) -> None:
         self.react = react
 

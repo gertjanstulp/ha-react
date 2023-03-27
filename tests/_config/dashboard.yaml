@@ -88,4 +88,4 @@ views:
           - entity: input_button.button_trigger_device_tracker_not_home
       - type: entities
         entities:
-          - entity: input_button.button_trigger_telegram_notify_send_message
+          - entity: input_button.button_trigger_notify_send_message

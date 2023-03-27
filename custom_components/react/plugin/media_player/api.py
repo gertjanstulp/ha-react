@@ -14,11 +14,11 @@ from custom_components.react.utils.struct import DynamicData
 
 _LOGGER = get_react_logger()
 
-class ApiConfig(DynamicData):
+class MediaPlayerApiConfig(DynamicData):
     """ api config """
 
-class Api():
-    def __init__(self, react: ReactBase, config: ApiConfig) -> None:
+class MediaPlayerApi():
+    def __init__(self, react: ReactBase, config: MediaPlayerApiConfig) -> None:
         self.react = react
         self.config = config
 

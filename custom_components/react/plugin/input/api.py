@@ -1,18 +1,11 @@
-import numbers
-from homeassistant.components.input_number import (
-    DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE as NUMBER_SERVICE_SET_VALUE,
-    ATTR_VALUE as NUMBER_ATTR_VALUE,
-)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, 
     STATE_OFF,
     STATE_ON
 )
 from homeassistant.core import Context
 
 from custom_components.react.base import ReactBase
-from custom_components.react.plugin.input.service import Service
+from custom_components.react.plugin.input.service import InputService
 from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData
 
@@ -20,14 +13,14 @@ from custom_components.react.utils.struct import DynamicData
 _LOGGER = get_react_logger()
 
 
-class ApiConfig(DynamicData):
+class InputApiConfig(DynamicData):
     def __init__(self, source: DynamicData = None) -> None:
         super().__init__()
         self.load(source)
 
 
-class Api():
-    def __init__(self, react: ReactBase, config: ApiConfig, service: Service) -> None:
+class InputApi():
+    def __init__(self, react: ReactBase, config: InputApiConfig, service: InputService) -> None:
         self.react = react
         self.config = config
         self.service = service

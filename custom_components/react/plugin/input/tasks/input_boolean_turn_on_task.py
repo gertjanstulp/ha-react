@@ -5,7 +5,7 @@ from homeassistant.const import STATE_ON
 
 from custom_components.react.base import ReactBase
 from custom_components.react.const import REACT_TYPE_INPUT_BOOLEAN
-from custom_components.react.plugin.input.api import Api
+from custom_components.react.plugin.input.api import InputApi
 from custom_components.react.plugin.input.const import PLUGIN_NAME
 from custom_components.react.tasks.plugin.base import PluginReactionTask
 from custom_components.react.utils.events import ReactionEvent
@@ -17,7 +17,7 @@ _LOGGER = get_react_logger()
 
 class InputBooleanTurnOnTask(PluginReactionTask):
 
-    def __init__(self, react: ReactBase, api: Api) -> None:
+    def __init__(self, react: ReactBase, api: InputApi) -> None:
         super().__init__(react, InputBooleanTurnOnReactionEvent)
         self.api = api
 

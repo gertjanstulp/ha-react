@@ -18,7 +18,7 @@ from tests.tst_context import TstContext
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["media_player_play_media"])
-async def test_media_player_play_media(hass: HomeAssistant, workflow_name, react_component: Mock):
+async def test_media_player_play_media(hass: HomeAssistant, workflow_name, react_component):
     
     mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.media_player_plugin_play_media_mock"}
     comp = await react_component

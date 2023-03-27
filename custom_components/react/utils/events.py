@@ -33,6 +33,11 @@ class ReactEventPayload(DynamicData, Generic[T_data]):
         
         self.type_hints: dict = {ATTR_DATA: t_dd_type}
 
+        self.entity: str = None
+        self.type: str = None
+        self.action: str = None
+        self.data: T_data = None
+
         self.ensure(ATTR_ENTITY, None)
         self.ensure(ATTR_TYPE, None)
         self.ensure(ATTR_ACTION, None)

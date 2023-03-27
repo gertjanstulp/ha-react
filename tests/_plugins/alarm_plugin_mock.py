@@ -5,9 +5,9 @@ from homeassistant.core import Context
 
 from custom_components.react.base import ReactBase
 from custom_components.react.const import ATTR_MODE
-from custom_components.react.plugin.alarm.api import Api, ApiConfig
+from custom_components.react.plugin.alarm.api import AlarmApi, AlarmApiConfig
 from custom_components.react.plugin.alarm.const import ArmMode
-from custom_components.react.plugin.alarm.service import Service
+from custom_components.react.plugin.alarm.service import AlarmService
 from custom_components.react.plugin.alarm.tasks.alarm_arm_away_task import AlarmArmAwayTask
 from custom_components.react.plugin.alarm.tasks.alarm_arm_home_task import AlarmArmHomeTask
 from custom_components.react.plugin.alarm.tasks.alarm_arm_night_task import AlarmArmNightTask
@@ -21,7 +21,7 @@ from tests.tst_context import TstContext
 
 
 def load(plugin_api: PluginApi, config: DynamicData):
-    api = AlarmApiMock(plugin_api.react, ApiConfig(config))
+    api = AlarmApiMock(plugin_api.react, AlarmApiConfig(config))
     plugin_api.register_plugin_task(AlarmArmHomeTask, api=api)
     plugin_api.register_plugin_task(AlarmArmAwayTask, api=api)
     plugin_api.register_plugin_task(AlarmArmNightTask, api=api)
@@ -30,8 +30,8 @@ def load(plugin_api: PluginApi, config: DynamicData):
     plugin_api.register_plugin_task(AlarmTriggerTask, api=api)
 
 
-class AlarmApiMock(Api):
-    def __init__(self, react: ReactBase, config: ApiConfig) -> None:
+class AlarmApiMock(AlarmApi):
+    def __init__(self, react: ReactBase, config: AlarmApiConfig) -> None:
         super().__init__(react, config, AlarmServiceMock(react))
 
 
@@ -39,7 +39,7 @@ class AlarmApiMock(Api):
         return self.react.hass.data.get(TEST_FLAG_VERIFY_CONFIG, True)
     
 
-class AlarmServiceMock(Service):
+class AlarmServiceMock(AlarmService):
     def __init__(self, react: ReactBase) -> None:
         self.react = react
 

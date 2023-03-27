@@ -5,7 +5,7 @@ from homeassistant.const import STATE_ON
 
 from custom_components.react.base import ReactBase
 from custom_components.react.const import REACT_TYPE_LIGHT
-from custom_components.react.plugin.light.api import Api
+from custom_components.react.plugin.light.api import LightApi
 from custom_components.react.plugin.light.const import PLUGIN_NAME
 from custom_components.react.tasks.plugin.base import PluginReactionTask
 from custom_components.react.utils.events import ReactionEvent
@@ -17,7 +17,7 @@ _LOGGER = get_react_logger()
 
 class LightTurnOnTask(PluginReactionTask):
 
-    def __init__(self, react: ReactBase, api: Api) -> None:
+    def __init__(self, react: ReactBase, api: LightApi) -> None:
         super().__init__(react, LightTurnOnReactionEvent)
         self.api = api
 
