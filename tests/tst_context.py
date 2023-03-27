@@ -22,6 +22,7 @@ from unittest.mock import Mock
 from custom_components.react.base import ReactBase
 from custom_components.react.lib.config import Workflow
 from custom_components.react.runtime.runtime import Reaction, WorkflowRun
+from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData, MultiItem
 from custom_components.react.utils.trace import ReactTrace
 from custom_components.react.const import (
@@ -68,6 +69,7 @@ from custom_components.react.const import (
     TRACE_PATH_SCHEDULE,
     TRACE_PATH_STATE,
 )
+from tests._mocks.mock_log_handler import MockLogHandler
 
 from tests.common import (
     EVENT_TEST_CALLBACK,
@@ -108,6 +110,14 @@ class TstContext():
         self.plugin_data_register: list[dict] = []
         self.notify_confirm_feedback_register: list[dict] = []
         self.plugin_task_unloaded_register: list[str] = []
+
+        react_logger = get_react_logger()
+        self.mock_log_handler = MockLogHandler()
+        react_logger.addHandler(self.mock_log_handler)
+
+
+    def verify_has_log_record(self, level_name: str, message: str):
+        assert self.mock_log_handler.has_record(level_name, message), f"Could not find {level_name} record with message '{message}'"
 
     
     async def async_send_action_event(self, 

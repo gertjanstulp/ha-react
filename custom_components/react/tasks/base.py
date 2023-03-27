@@ -7,7 +7,12 @@ import uuid
 
 from homeassistant.core import Event as HassEvent
 
+from custom_components.react.utils.logger import get_react_logger
+
 from ..base import ReactBase
+
+
+_LOGGER = get_react_logger()
 
 
 class ReactTaskType(str, Enum):
@@ -46,7 +51,7 @@ class ReactTask:
 
     async def execute_task(self, *args, **kwargs) -> None:
         """Execute the task defined in subclass."""
-        self.task_logger(self.react.log.debug, "Executing task")
+        self.task_logger(_LOGGER.debug, "Executing task")
         start_time = monotonic()
 
         try:
@@ -56,10 +61,10 @@ class ReactTask:
                 await self.react.hass.async_add_executor_job(task)
 
         except BaseException as exception:  # lgtm [py/catch-base-exception] pylint: disable=broad-except
-            self.task_logger(self.react.log.exception, f"failed:")
+            self.task_logger(_LOGGER.exception, f"failed:")
 
         else:
-            self.react.log.debug(
+            _LOGGER.debug(
                 "ReactTask<%s> took %.3f seconds to complete", self.slug, monotonic() - start_time
             )
 

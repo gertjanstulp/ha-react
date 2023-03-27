@@ -11,9 +11,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_time_interval
 
 from custom_components.react.tasks.base import ReactTask, ReactTaskType
+from custom_components.react.utils.logger import get_react_logger
 
 if TYPE_CHECKING:
     from custom_components.react.base import ReactBase
+
+
+_LOGGER = get_react_logger()
 
 
 class ReactTaskManager:
@@ -50,7 +54,7 @@ class ReactTaskManager:
                 self._tasks[task.id] = task
 
         await asyncio.gather(*[_load_module(task) for task in task_modules])
-        self.react.log.debug("Loaded %s tasks", len(self.tasks))
+        _LOGGER.debug("Loaded %s tasks", len(self.tasks))
 
 
     def register_task(self, task: ReactTask):

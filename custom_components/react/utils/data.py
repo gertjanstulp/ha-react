@@ -2,6 +2,8 @@ from datetime import datetime
 from homeassistant.components.input_datetime import ATTR_DATETIME
 from homeassistant.core import callback
 
+from custom_components.react.utils.logger import get_react_logger
+
 from .store import async_load_from_store, async_save_to_store
 from ..base import ReactBase
 
@@ -23,6 +25,9 @@ DEFAULT_REACTION_DATA = (
 )
 
 
+_LOGGER = get_react_logger()
+
+
 class ReactData:
     """ReactData class."""
 
@@ -37,7 +42,7 @@ class ReactData:
         if not force and self.react.system.disabled:
             return
 
-        self.react.log.debug("<ReactData async_write> Saving data")
+        _LOGGER.debug("<ReactData async_write> Saving data")
 
         # React
         await async_save_to_store(
@@ -81,10 +86,10 @@ class ReactData:
         if not react and not reactions:
             # Assume new install
             self.react.status.new = True
-            self.react.log.debug("<ReactData restore> Loading base reaction information")
+            _LOGGER.debug("<ReactData restore> Loading base reaction information")
             reactions = {}
 
-        self.react.log.debug("<ReactData restore> Restore started")
+        _LOGGER.debug("<ReactData restore> Restore started")
 
         # React
         self.react.configuration.frontend_mode = react.get("view", "Grid")
@@ -94,12 +99,12 @@ class ReactData:
             for entry, reaction_data in reactions.items():
                 if entry == "0":
                     # Ignore repositories with ID 0
-                    self.react.log.debug("<ReactData restore> Found reaction with ID %s - %s", entry, reaction_data)
+                    _LOGGER.debug("<ReactData restore> Found reaction with ID %s - %s", entry, reaction_data)
                     continue
                 # self.async_restore_reaction(entry, reaction_data)
-            self.react.log.debug("<ReactData restore> Restore done")
+            _LOGGER.debug("<ReactData restore> Restore done")
         except BaseException as exception:
-            self.react.log.critical("<ReactData restore> [%s] Restore Failed!", exception, exc_info=exception)
+            _LOGGER.critical("<ReactData restore> [%s] Restore Failed!", exception, exc_info=exception)
             return False
 
         return True

@@ -2,7 +2,6 @@ from custom_components.react.utils.struct import DynamicData
 
 PLUGIN_NAME = "notify"
 ATTR_MESSAGE_DATA = "message_data"
-CONFIG_DEFAULT_SERVICE_TYPE = "default_service_type"
 
 
 class FeedbackItem(DynamicData):

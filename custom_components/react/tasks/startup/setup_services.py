@@ -13,6 +13,10 @@ from custom_components.react.const import (
     SERVICE_REACT_NOW, 
     SERVICE_RUN_NOW
 )
+from custom_components.react.utils.logger import get_react_logger
+
+
+_LOGGER = get_react_logger()
 
 
 async def async_setup_task(react: ReactBase) -> Task:
@@ -46,7 +50,7 @@ class Task(ReactTask):
             run_id = service_call.data.get(ATTR_RUN_ID)
             self.react.runtime.run_now(run_id)
         except Exception as ex:
-            self.react.log.exception(ex)
+            _LOGGER.exception(ex)
 
 
     def react_now(self, service_call: ServiceCall):
@@ -54,7 +58,7 @@ class Task(ReactTask):
             reaction_id = service_call.data.get(ATTR_REACTION_ID)
             self.react.runtime.react_now(reaction_id)
         except Exception as ex:
-            self.react.log.exception(ex)
+            _LOGGER.exception(ex)
 
 
     async def async_delete_run(self, service_call: ServiceCall):
@@ -62,7 +66,7 @@ class Task(ReactTask):
             run_id = service_call.data.get(ATTR_RUN_ID)
             await self.react.runtime.async_delete_run(run_id)
         except Exception as ex:
-            self.react.log.exception(ex)
+            _LOGGER.exception(ex)
 
 
     def delete_reaction(self, service_call: ServiceCall):
@@ -70,4 +74,4 @@ class Task(ReactTask):
             reaction_id = service_call.data.get(ATTR_REACTION_ID)
             self.react.runtime.delete_reaction(reaction_id)
         except Exception as ex:
-            self.react.log.exception(ex)
+            _LOGGER.exception(ex)

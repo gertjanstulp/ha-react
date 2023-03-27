@@ -6,7 +6,10 @@ from custom_components.react.base import ReactBase
 from custom_components.react.const import EVENT_REACT_ACTION, EVENT_REACT_REACTION
 from custom_components.react.tasks.base import ReactTask, ReactTaskType
 from custom_components.react.utils.events import Event
-from custom_components.react.utils.logger import format_data
+from custom_components.react.utils.logger import format_data, get_react_logger
+
+
+_LOGGER = get_react_logger()
 
 
 class PluginTask(ReactTask):
@@ -63,7 +66,7 @@ class PluginTransformTask(PluginTask):
 
     async def async_execute_plugin(self, source_event: Event):
         action_event_payload = self.create_action_event_payload(source_event)
-        self.react.log.debug(f"TransformTask: sending action event: {format_data(**action_event_payload)}")
+        _LOGGER.debug(f"TransformTask: sending action event: {format_data(**action_event_payload)}")
         self.react.hass.bus.async_fire(EVENT_REACT_ACTION, action_event_payload)
         
 

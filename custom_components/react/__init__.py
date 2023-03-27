@@ -95,7 +95,7 @@ async def async_initialize_integration(
 
     integration = await async_get_integration(hass, DOMAIN)
 
-    react.log.info(STARTUP, integration.version)
+    _LOGGER.info(STARTUP, integration.version)
 
     clientsession = async_get_clientsession(hass)
 
@@ -124,7 +124,7 @@ async def async_initialize_integration(
         if react.system.disabled:
             return False
 
-        react.log.debug("Setup complete")
+        _LOGGER.debug("Setup complete")
 
         return True
 
