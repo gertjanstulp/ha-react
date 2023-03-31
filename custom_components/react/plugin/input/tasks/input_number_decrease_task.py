@@ -27,7 +27,7 @@ class InputNumberDecreaseTask(PluginReactionTask):
 
 
     async def async_execute_plugin(self, event: InputNumberDecreaseReactionEvent):
-        self._debug(f"Increasing input_number '{event.payload.entity}'")
+        self._debug(f"Decreasing input_number '{event.payload.entity}'")
         await self.api.async_input_number_decrease(event.context, event.payload.entity, event.payload.data.value, event.payload.data.min)
         
 
