@@ -1,20 +1,28 @@
 from homeassistant.core import Context
-from custom_components.react.plugin.notify.service import NotifyService
 
-from custom_components.react.plugin.plugin_factory import SERVICE_TYPE_DEFAULT, PluginApi
-from custom_components.react.plugin.notify.const import CONFIG_DEFAULT_SERVICE_TYPE, PLUGIN_NAME, FeedbackItem
+from custom_components.react.plugin.const import (
+    CONFIG_DEFAULT_SERVICE_TYPE, 
+    SERVICE_TYPE_DEFAULT
+)
+from custom_components.react.plugin.notify.const import PLUGIN_NAME, FeedbackItem
+from custom_components.react.plugin.notify.service import NotifyService
+from custom_components.react.plugin.plugin_factory import PluginApi
 from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData
 
 _LOGGER = get_react_logger()
 
 class NotifyApiConfig(DynamicData):
-    """ api config """
+    def __init__(self, source: dict = None) -> None:
+        super().__init__()
+        self.default_service_type: str = SERVICE_TYPE_DEFAULT
+        self.load(source)
+
 
 class NotifyApi():
     def __init__(self, plugin_api: PluginApi, config: NotifyApiConfig) -> None:
         self.plugin_api = plugin_api
-        self.default_service_type = config.get(CONFIG_DEFAULT_SERVICE_TYPE, SERVICE_TYPE_DEFAULT)
+        self.default_service_type = config.default_service_type
 
 
     def _debug(self, message: str):
@@ -40,7 +48,7 @@ class NotifyApi():
             if service:
                 await service.async_notify(context, entity_id, message, feedback_items)
             else:
-                _LOGGER.warn(f"Notify plugin: Api - Service for '{service_type}' not found")
+                _LOGGER.error(f"Notify plugin: Api - Service for '{service_type}' not found")
         except:
             _LOGGER.exception("Notify plugin: Api - Sending message failed")
 
@@ -61,6 +69,6 @@ class NotifyApi():
             if service:
                 await service.async_confirm_feedback(context, conversation_id, message_id, text, acknowledgement)
             else:
-                _LOGGER.warn(f"Notify plugin: Api - Service for '{service_type}' not found")
+                _LOGGER.error(f"Notify plugin: Api - Service for '{service_type}' not found")
         except:
             _LOGGER.exception("Notify plugin: Api - Confirming notify feedback failed")

@@ -20,6 +20,9 @@ plugins:
   - module: custom_components.react.plugin.light.plugin
   - module: custom_components.react.plugin.switch.plugin
   - module: custom_components.react.plugin.media_player.plugin
+    config:
+      default_service_type: sonos
+  - module: custom_components.react.plugin.sonos.plugin
   - module: custom_components.react.plugin.alarm.plugin
     config:
       code: '1234'
@@ -908,20 +911,17 @@ workflow:
       type: input_boolean
       action: 'off'
 
-  workflow_media_player_play_media:
+  workflow_media_player_play_favorite_test:
     when:
-      id: actor_media_player_play_media
-      entity: actor_entity_media_player_play_media
-      type: actor_type_media_player_play_media
-      action: actor_action_media_player_play_media
+      entity: actor_entity_media_player_play_favorite_test
+      type: actor_type_media_player_play_favorite_test
+      action: actor_action_media_player_play_favorite_test
     then:
-      id: reactor_media_player_play_media
-      entity: media_player_play_media_test
+      entity: media_player_play_favorite_test
       type: media_player
-      action: play_media
+      action: play_favorite
       data:
-        media_content_type: test_type
-        media_content_id: test_id
+        favorite_id: test_id
 
   workflow_light_turn_on_test:
     when:

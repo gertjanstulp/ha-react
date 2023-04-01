@@ -6,8 +6,9 @@ from typing import Any
 
 from custom_components.react.base import ReactBase
 from custom_components.react.tasks.plugin.base import PluginTask
+from custom_components.react.utils.logger import get_react_logger
 
-SERVICE_TYPE_DEFAULT = "default"
+_LOGGER = get_react_logger()
 
 class PluginApi():
     def __init__(self, react: ReactBase) -> None:
@@ -60,9 +61,9 @@ class PluginFactory:
                 if hasattr(plugin_module, "load"):
                     plugin_module.load(plugin_api=self.plugin_api, config=plugin.config)
                 else:
-                    self.react.log.error(f"PluginFactory - Invalid plugin configuration: load method missing in '{plugin_module}'")
+                    _LOGGER.error(f"PluginFactory - Invalid plugin configuration: load method missing in '{plugin_module}'")
             except:
-                self.react.log.exception(f"PluginFactory - Could not load plugin '{plugin.module}'")
+                _LOGGER.exception(f"PluginFactory - Could not load plugin '{plugin.module}'")
         self.react.task_manager.execute_plugin_tasks()
 
 

@@ -5,12 +5,13 @@ from homeassistant.core import Context
 
 from custom_components.react.base import ReactBase
 from custom_components.react.const import ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT, ATTR_EVENT_FEEDBACK_ITEM_CONVERSIONATION_ID, ATTR_EVENT_FEEDBACK_ITEM_MESSAGE_ID, ATTR_EVENT_FEEDBACK_ITEM_TEXT, ATTR_EVENT_FEEDBACK_ITEMS, ATTR_EVENT_MESSAGE
+from custom_components.react.plugin.const import SERVICE_TYPE_DEFAULT
 from custom_components.react.plugin.notify.api import NotifyApi, NotifyApiConfig
 from custom_components.react.plugin.notify.const import PLUGIN_NAME, FeedbackItem
 from custom_components.react.plugin.notify.service import NotifyService
 from custom_components.react.plugin.notify.tasks.notify_confirm_feedback_task import NotifyConfirmFeedbackTask
 from custom_components.react.plugin.notify.tasks.notify_send_message_task import NotifySendMessageTask
-from custom_components.react.plugin.plugin_factory import SERVICE_TYPE_DEFAULT, PluginApi
+from custom_components.react.plugin.plugin_factory import PluginApi
 from custom_components.react.utils.struct import DynamicData
 
 from tests.common import TEST_CONTEXT
