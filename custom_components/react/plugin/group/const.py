@@ -1,0 +1,1 @@
+NOTIFY_PROVIDER_GROUP = "group"

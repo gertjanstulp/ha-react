@@ -3,39 +3,47 @@ from homeassistant.const import(
     ATTR_STATE
 )
 from homeassistant.core import Context
+from custom_components.react.plugin.const import PROVIDER_TYPE_SWITCH
 
-from custom_components.react.base import ReactBase
-from custom_components.react.plugin.switch.api import SwitchApi, SwitchApiConfig
-from custom_components.react.plugin.switch.service import SwitchService
-from custom_components.react.plugin.switch.tasks.switch_toggle_task import SwitchToggleTask
-from custom_components.react.plugin.switch.tasks.switch_turn_off_task import SwitchTurnOffTask
-from custom_components.react.plugin.switch.tasks.switch_turn_on_task import SwitchTurnOnTask
-from custom_components.react.plugin.plugin_factory import PluginApi
+from custom_components.react.plugin.switch.plugin import load as load_plugin
+from custom_components.react.plugin.switch.provider import SwitchProvider
+from custom_components.react.plugin.plugin_factory import HassApi, PluginApi
 from custom_components.react.utils.struct import DynamicData
+
+from tests._plugins.common import HassApiMock
 from tests.common import TEST_CONTEXT
+from tests.const import ATTR_ENTITY_STATE, ATTR_SWITCH_PROVIDER
 from tests.tst_context import TstContext
 
 
-def load(plugin_api: PluginApi, config: DynamicData):
-    api = SwitchApiMock(plugin_api.react, SwitchApiConfig(config))
-    plugin_api.register_plugin_task(SwitchTurnOnTask, api=api)
-    plugin_api.register_plugin_task(SwitchTurnOffTask, api=api)
-    plugin_api.register_plugin_task(SwitchToggleTask, api=api)
+SWITCH_MOCK_PROVIDER = "switch_mock"
 
 
-class SwitchApiMock(SwitchApi):
-    def __init__(self, react: ReactBase, config: SwitchApiConfig) -> None:
-        super().__init__(react, config, SwitchServiceMock(react))
+def load(plugin_api: PluginApi, hass_api: HassApi, config: DynamicData):
+    hass_api_mock = HassApiMock(hass_api.hass)
+    load_plugin(plugin_api, hass_api_mock, config)
+    if switch_provider := config.get(ATTR_SWITCH_PROVIDER, None):
+        setup_mock_provider(plugin_api, hass_api, switch_provider)
+    switch_entity_id = config.get(ATTR_ENTITY_ID)
+    switch_state = config.get(ATTR_ENTITY_STATE, None)
+    if switch_entity_id and switch_state != None:
+        hass_api_mock.hass_register_state(switch_entity_id, switch_state)
 
 
-class SwitchServiceMock(SwitchService):
-    def __init__(self, react: ReactBase) -> None:
-        self.react = react
+def setup_mock_provider(plugin_api: PluginApi, hass_api: HassApi, switch_provider: str):
+    plugin_api.register_plugin_provider(
+        PROVIDER_TYPE_SWITCH, 
+        switch_provider,
+        SwitchProviderMock(plugin_api, hass_api))
+    
+
+class SwitchProviderMock(SwitchProvider):
+    def __init__(self, plugin_api: PluginApi, hass_api: HassApi) -> None:
+        super().__init__(plugin_api, hass_api)
 
 
     async def async_set_state(self, context: Context, entity_id: str, state: str):
-        await super().async_set_state(context, entity_id, state)
-        tc: TstContext = self.react.hass.data[TEST_CONTEXT]
+        tc: TstContext = self.hass_api.hass_get_data(TEST_CONTEXT)
         data = {
             ATTR_ENTITY_ID: entity_id,
             ATTR_STATE: state,

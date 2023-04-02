@@ -6,7 +6,6 @@ from homeassistant.core import Event
 from custom_components.react.base import ReactBase
 from custom_components.react.const import REACT_TYPE_SWITCH
 from custom_components.react.plugin.switch.api import SwitchApi
-from custom_components.react.plugin.switch.const import PLUGIN_NAME
 from custom_components.react.tasks.plugin.base import PluginReactionTask
 from custom_components.react.utils.events import ReactionEvent
 from custom_components.react.utils.logger import get_react_logger
@@ -28,7 +27,7 @@ class SwitchToggleTask(PluginReactionTask):
 
     async def async_execute_plugin(self, event: SwitchToggleReactionEvent):
         self._debug(f"Toggling switch '{event.payload.entity}'")
-        await self.api.async_switch_toggle(event.context, event.payload.entity)
+        await self.api.async_switch_toggle(event.context, event.payload.entity, event.payload.data.switch_provider_name if event.payload.data else None)
         
 
 class SwitchToggleReactionEventData(DynamicData):
@@ -36,7 +35,7 @@ class SwitchToggleReactionEventData(DynamicData):
     def __init__(self, source: dict) -> None:
         super().__init__()
         
-        self.plugin: str = None
+        self.switch_provider_name: str = None
 
         self.load(source)
 
@@ -51,9 +50,5 @@ class SwitchToggleReactionEvent(ReactionEvent[SwitchToggleReactionEventData]):
     def applies(self) -> bool:
         return (
             self.payload.type == REACT_TYPE_SWITCH and
-            self.payload.action == SERVICE_TOGGLE and 
-            (not self.payload.data or
-             (self.payload.data and (
-              (not self.payload.data.plugin or 
-               self.payload.data.plugin == PLUGIN_NAME))))
+            self.payload.action == SERVICE_TOGGLE
         )

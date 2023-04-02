@@ -1,7 +1,7 @@
 
 
 from custom_components.react.base import ReactBase
-from custom_components.react.plugin.plugin_factory import PluginApi
+from custom_components.react.plugin.plugin_factory import HassApi, PluginApi
 from custom_components.react.tasks.plugin.base import PluginReactionTask
 from custom_components.react.utils.events import Event
 from custom_components.react.utils.struct import DynamicData
@@ -9,7 +9,7 @@ from tests.common import TEST_CONTEXT
 from tests.tst_context import TstContext
 
 
-def load(plugin_api: PluginApi, config: DynamicData):
+def load(plugin_api: PluginApi, hass_api: HassApi, config: DynamicData):
     plugin_api.register_plugin_task(DummyTask)
 
 

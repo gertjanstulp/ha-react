@@ -1,5 +1,10 @@
-CONFIG_DEFAULT_SERVICE_TYPE = "default_service_type"
-SERVICE_TYPE_DEFAULT = "default"
-
 ATTR_CONFIG = "config"
-ATTR_DEFAULT_SERVICE_TYPE = "default_service_type"
+ATTR_ENTITIES = "entities"
+
+PROVIDER_TYPE_TTS = "tts"
+PROVIDER_TYPE_MEDIA_PLAYER = "media_player"
+PROVIDER_TYPE_NOTIFY = "notify"
+PROVIDER_TYPE_ALARM = "alarm"
+PROVIDER_TYPE_INPUT = "input"
+PROVIDER_TYPE_LIGHT = "light"
+PROVIDER_TYPE_SWITCH = "switch"

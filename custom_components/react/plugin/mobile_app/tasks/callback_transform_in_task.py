@@ -10,7 +10,7 @@ from custom_components.react.const import (
     ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK,
     ATTR_EVENT_FEEDBACK_ITEM_MESSAGE_ID,
     ATTR_EVENT_FEEDBACK_ITEM_TEXT,
-    ATTR_EVENT_PLUGIN_PAYLOAD, 
+    ATTR_EVENT_NOTIFY_PROVIDER_PAYLOAD, 
     ATTR_TYPE,
     REACT_ACTION_FEEDBACK_RETRIEVED,
     REACT_TYPE_NOTIFY
@@ -45,7 +45,7 @@ class CallbackTransformInTask(PluginTransformTask):
             ATTR_ACTION: REACT_ACTION_FEEDBACK_RETRIEVED,
             ATTR_DATA: {
                 ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK: source_event.payload.action,
-                ATTR_EVENT_PLUGIN_PAYLOAD: {
+                ATTR_EVENT_NOTIFY_PROVIDER_PAYLOAD: {
                     ATTR_EVENT_FEEDBACK_ITEM_CONVERSIONATION_ID: source_event.payload.tag,
                     ATTR_EVENT_FEEDBACK_ITEM_MESSAGE_ID: entity_id,
                     ATTR_EVENT_FEEDBACK_ITEM_TEXT: source_event.payload.message,

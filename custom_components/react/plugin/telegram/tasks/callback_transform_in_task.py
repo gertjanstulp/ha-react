@@ -5,7 +5,7 @@ from homeassistant.components.telegram_bot import (
     ATTR_MESSAGE, 
     EVENT_TELEGRAM_CALLBACK, 
 )
-from custom_components.react.plugin.notify.const import PLUGIN_NAME
+from custom_components.react.plugin.telegram.const import NOTIFY_PROVIDER_TELEGRAM
 
 from custom_components.react.utils.events import Event
 from custom_components.react.base import ReactBase
@@ -21,10 +21,10 @@ from custom_components.react.const import (
     ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK,
     ATTR_EVENT_FEEDBACK_ITEM_MESSAGE_ID,
     ATTR_EVENT_FEEDBACK_ITEM_TEXT, 
-    ATTR_EVENT_PLUGIN, 
+    ATTR_EVENT_NOTIFY_PROVIDER, 
     ATTR_TYPE, 
     EVENTPAYLOAD_COMMAND_REACT, 
-    ATTR_EVENT_PLUGIN_PAYLOAD, 
+    ATTR_EVENT_NOTIFY_PROVIDER_PAYLOAD, 
     REACT_ACTION_FEEDBACK_RETRIEVED, 
     REACT_TYPE_NOTIFY
 )
@@ -52,8 +52,8 @@ class CallbackTransformInTask(PluginTransformTask):
             ATTR_DATA: {
                 ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK: source_event.payload.feedback,
                 ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT: source_event.payload.acknowledgement,
-                ATTR_EVENT_PLUGIN: PLUGIN_NAME,
-                ATTR_EVENT_PLUGIN_PAYLOAD: {
+                ATTR_EVENT_NOTIFY_PROVIDER: NOTIFY_PROVIDER_TELEGRAM,
+                ATTR_EVENT_NOTIFY_PROVIDER_PAYLOAD: {
                     ATTR_EVENT_FEEDBACK_ITEM_CONVERSIONATION_ID: source_event.payload.chat_id,
                     ATTR_EVENT_FEEDBACK_ITEM_MESSAGE_ID: source_event.payload.message.message_id,
                     ATTR_EVENT_FEEDBACK_ITEM_TEXT: source_event.payload.message.text,

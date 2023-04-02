@@ -13,3 +13,8 @@ class MockLogHandler(Handler):
     def has_record(self, level_name: str, message: str):
         matches = [ item for item in self.records if item.levelname == level_name and item.msg == message ]
         return len(matches) > 0
+    
+
+    def has_no_issues(self):
+        matches = [item for item in self.records if item.levelname == "WARNING" or item.levelname == "ERROR"]
+        return len(matches) == 0

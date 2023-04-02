@@ -1,4 +1,5 @@
-SERVICE_TYPE = "persistent_notification"
+NOTIFY_PROVIDER_PERSISTENT_NOTIFICATION = "persistent_notification"
+
 SERVICE_CREATE = "create"
 
 ATTR_OLD_STATE = "old_state"

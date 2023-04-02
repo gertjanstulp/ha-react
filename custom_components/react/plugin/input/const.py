@@ -1,1 +1,1 @@
-PLUGIN_NAME = "input"
+INPUT_GENERIC_PROVIDER = "generic"

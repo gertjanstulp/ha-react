@@ -3,6 +3,7 @@ from __future__ import annotations
 from homeassistant.core import Event as HassEvent
 
 from custom_components.react.base import ReactBase
+from custom_components.react.plugin.const import PROVIDER_TYPE_NOTIFY
 from custom_components.react.tasks.plugin.base import PluginReactionTask
 from custom_components.react.utils.events import ReactionEvent
 from custom_components.react.utils.logger import get_react_logger
@@ -14,10 +15,7 @@ from custom_components.react.const import (
 )
 
 from custom_components.react.plugin.notify.api import NotifyApi
-from custom_components.react.plugin.notify.const import (
-    PLUGIN_NAME,
-    FeedbackItem
-)
+from custom_components.react.plugin.notify.const import FeedbackItem
 
 _LOGGER = get_react_logger()
 
@@ -36,10 +34,10 @@ class NotifySendMessageTask(PluginReactionTask):
         self._debug("Sending message")
         await self.api.async_send_message(
             event.context,
-            event.payload.data.service_type,
             event.payload.entity,
-            event.payload.data.message,
-            event.payload.data.feedback_items
+            event.payload.data.message if event.payload.data else None,
+            event.payload.data.feedback_items if event.payload.data else None,
+            event.payload.data.notify_provider_name if event.payload.data else None,
         )
 
 
@@ -49,10 +47,9 @@ class NotifySendMessageReactionEventData(DynamicData):
     def __init__(self, source: dict) -> None:
         super().__init__()
         
-        self.plugin: str = None
         self.message: str = None
-        self.service_type: str = None
         self.feedback_items: list[FeedbackItem] = None
+        self.notify_provider_name: str = None
 
         self.load(source)
 
@@ -68,6 +65,5 @@ class NotifySendMessageReactionEvent(ReactionEvent[NotifySendMessageReactionEven
         return (
             self.payload.type == REACT_TYPE_NOTIFY and
             self.payload.action == REACT_ACTION_SEND_MESSAGE and
-            self.payload.data and
-            (not self.payload.data.plugin or self.payload.data.plugin == PLUGIN_NAME)
+            self.payload.data
         )

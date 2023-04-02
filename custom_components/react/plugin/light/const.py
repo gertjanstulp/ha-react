@@ -1,1 +1,1 @@
-PLUGIN_NAME = "light"
+LIGHT_GENERIC_PROVIDER = "generic"

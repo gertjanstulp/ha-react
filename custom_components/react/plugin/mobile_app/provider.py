@@ -5,16 +5,26 @@ from homeassistant.components.notify.const import (
 )
 from homeassistant.core import Context
 
-from custom_components.react.base import ReactBase
-from custom_components.react.const import ATTR_ACTION, ATTR_DATA, ATTR_EVENT_MESSAGE
-from custom_components.react.plugin.mobile_app.const import ATTR_ACTIONS, ATTR_PERSISTENT, ATTR_STICKY, ATTR_TAG, MESSAGE_CLEAR_NOTIFICATION
+from custom_components.react.const import (
+    ATTR_ACTION, 
+    ATTR_DATA, 
+    ATTR_EVENT_MESSAGE
+)
+from custom_components.react.plugin.mobile_app.const import (
+    ATTR_ACTIONS, 
+    ATTR_PERSISTENT, 
+    ATTR_STICKY, 
+    ATTR_TAG, 
+    MESSAGE_CLEAR_NOTIFICATION
+)
 from custom_components.react.plugin.notify.const import FeedbackItem
-from custom_components.react.plugin.notify.service import NotifyService
+from custom_components.react.plugin.notify.provider import NotifyProvider
+from custom_components.react.plugin.plugin_factory import HassApi, PluginApi
 
 
-class MobileAppService(NotifyService):
-    def __init__(self, react: ReactBase) -> None:
-        super().__init__(react)
+class MobileAppProvider(NotifyProvider):
+    def __init__(self, plugin_api: PluginApi, hass_api: HassApi) -> None:
+        super().__init__(plugin_api, hass_api)
 
 
     async def async_notify(self, context: Context, entity_id: str, message: str, feedback_items: list[FeedbackItem]):
@@ -28,11 +38,11 @@ class MobileAppService(NotifyService):
                     ATTR_TITLE : item.title
                 } for item in feedback_items ],
                 ATTR_PERSISTENT: "true",
-                ATTR_TAG: uuid4().hex,
+                ATTR_TAG: self.hass_api.hass_get_uid_str(),
                 ATTR_STICKY: "true"
             }
 
-        await self.react.hass.services.async_call(
+        await self.hass_api.async_hass_call_service(
             NOTIFY_DOMAIN, 
             entity_id,
             data, 
@@ -47,7 +57,7 @@ class MobileAppService(NotifyService):
                 ATTR_TAG: conversation_id
             }
         }
-        await self.react.hass.services.async_call(
+        await self.hass_api.async_hass_call_service(
             NOTIFY_DOMAIN, 
             message_id,
             data, 

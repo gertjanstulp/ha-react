@@ -11,14 +11,14 @@ button_trigger_reset:
   name: Reset
 button_trigger_forward_action:
   name: Forward action
-button_trigger_trace_1:
-  name: Trace 1
-button_trigger_trace_2:
-  name: Trace 2
-button_trigger_trace2_1:
-  name: Trace2 1
-button_trigger_trace2_2:
-  name: Trace2 2
+button_trigger_trace_basic_1:
+  name: Trace basic 1
+button_trigger_trace_basic_2:
+  name: Trace basic 2
+button_trigger_trace_advanced_1:
+  name: Trace advanced 1
+button_trigger_trace_advanced_2:
+  name: Trace advanced 2
 button_trigger_multiple_actor_1:
   name: Multiple actor 1
 button_trigger_multiple_actor_2:
@@ -59,10 +59,10 @@ button_trigger_wait:
   name: Wait
 button_trigger_wait_delayed:
   name: Wait delayed
-button_trigger_tts_media_player_speek_with_volume:
-  name: TTS Media player speek with volume
-button_trigger_tts_media_player_speek:
-  name: TTS Media player speek without volume
+button_trigger_media_player_speek_with_volume:
+  name: Media player speek with volume
+button_trigger_media_player_speek:
+  name: Media player speek without volume
 button_trigger_input_number_set:
   name: Input number set
 button_trigger_input_number_increase:

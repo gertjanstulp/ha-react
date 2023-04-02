@@ -8,10 +8,10 @@ views:
           - entity: input_button.button_trigger_scheduled
           - entity: input_button.button_trigger_reset
           - entity: input_button.button_trigger_forward_action
-          - entity: input_button.button_trigger_trace_1
-          - entity: input_button.button_trigger_trace_2
-          - entity: input_button.button_trigger_trace2_1
-          - entity: input_button.button_trigger_trace2_2
+          - entity: input_button.button_trigger_trace_basic_1
+          - entity: input_button.button_trigger_trace_basic_2
+          - entity: input_button.button_trigger_trace_advanced_1
+          - entity: input_button.button_trigger_trace_advanced_2
           - entity: input_button.button_trigger_multiple_actor_1
           - entity: input_button.button_trigger_multiple_actor_2
           - entity: input_button.button_trigger_multiple_reactor
@@ -32,8 +32,8 @@ views:
       - type: entities
         title: plugins trigger
         entities:
-          - entity: input_button.button_trigger_tts_media_player_speek_with_volume
-          - entity: input_button.button_trigger_tts_media_player_speek
+          - entity: input_button.button_trigger_media_player_speek_with_volume
+          - entity: input_button.button_trigger_media_player_speek
           - type: divider
           - entity: input_button.button_trigger_input_number_set
           - entity: input_button.button_trigger_input_number_increase

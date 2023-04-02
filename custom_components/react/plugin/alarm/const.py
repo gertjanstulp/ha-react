@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-PLUGIN_NAME = "alarm"
+ALARM_GENERIC_PROVIDER = "generic"
 
 class ArmMode(str, Enum):
     HOME = "home"
