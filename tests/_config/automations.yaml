@@ -69,53 +69,53 @@
       type: actor_type_forward_action
       action: actor_action_forward_action
 
-- id: trigger_trace_1
-  alias: Trigger trace 1
+- id: trigger_trace_basic_1
+  alias: Trigger trace basic 1
   trigger:
     platform: state
-    entity_id: input_button.button_trigger_trace_1
+    entity_id: input_button.button_trigger_trace_basic_1
   action:
     event: ev_react_action
     event_data:
-      entity: actor_entity_trace_1
-      type: actor_type_trace_1
-      action: actor_action_trace_1
+      entity: actor_entity_trace_basic_test_1
+      type: actor_type_trace_basic_test_1
+      action: actor_action_trace_basic_test_1
 
-- id: trigger_trace_2
-  alias: Trigger trace 2
+- id: trigger_trace_basic_2
+  alias: Trigger trace basic 2
   trigger:
     platform: state
-    entity_id: input_button.button_trigger_trace_2
+    entity_id: input_button.button_trigger_trace_basic_2
   action:
     event: ev_react_action
     event_data:
-      entity: actor_entity_trace_2
-      type: actor_type_trace_2
-      action: actor_action_trace_2
+      entity: actor_entity_trace_basic_test_2
+      type: actor_type_trace_basic_test_2
+      action: actor_action_trace_basic_test_2
 
-- id: trigger_trace2_1
-  alias: Trigger trace2 1
+- id: trigger_trace_advanced_1
+  alias: Trigger trace advanced 1
   trigger:
     platform: state
-    entity_id: input_button.button_trigger_trace2_1
+    entity_id: input_button.button_trigger_trace_advanced_1
   action:
     event: ev_react_action
     event_data:
-      entity: actor_entity_trace2_1
-      type: actor_type_trace2_1
-      action: actor_action_trace2_1
+      entity: actor_entity_trace_advanced_test_1
+      type: actor_type_trace_advanced_test_1
+      action: actor_action_trace_advanced_test_1
 
-- id: trigger_trace2_2
-  alias: Trigger trace2 2
+- id: trigger_trace_advanced_2
+  alias: Trigger trace advanced 2
   trigger:
     platform: state
-    entity_id: input_button.button_trigger_trace2_2
+    entity_id: input_button.button_trigger_trace_advanced_2
   action:
     event: ev_react_action
     event_data:
-      entity: actor_entity_trace2_2
-      type: actor_type_trace2_2
-      action: actor_action_trace2_2
+      entity: actor_entity_trace_advanced_test_2
+      type: actor_type_trace_advanced_test_2
+      action: actor_action_trace_advanced_test_2
 
 - id: trigger_multiple_actor_1
   alias: Trigger multiple_actor 1
@@ -382,29 +382,29 @@
           type: actor_type_immediate2
           action: actor_action_immediate2
 
-- id: trigger_tts_media_player_speek_with_volume
+- id: trigger_media_player_speek_with_volume
   alias: Trigger tts speek
   trigger:
     platform: state
-    entity_id: input_button.button_trigger_tts_media_player_speek_with_volume
+    entity_id: input_button.button_trigger_media_player_speek_with_volume
   action:
     event: ev_react_action
     event_data:
-      entity: actor_entity_tts_media_player_speek_with_volume
-      type: actor_type_tts_media_player_speek_with_volume
-      action: actor_action_tts_media_player_speek_with_volume
+      entity: actor_entity_media_player_speek_with_volume_test
+      type: actor_type_media_player_speek_with_volume_test
+      action: actor_action_media_player_speek_with_volume_test
 
-- id: trigger_tts_media_player_speek
+- id: trigger_media_player_speek
   alias: Trigger tts speek
   trigger:
     platform: state
-    entity_id: input_button.button_trigger_tts_media_player_speek
+    entity_id: input_button.button_trigger_media_player_speek
   action:
     event: ev_react_action
     event_data:
-      entity: actor_entity_tts_media_player_speek
-      type: actor_type_tts_media_player_speek
-      action: actor_action_tts_media_player_speek
+      entity: actor_entity_media_player_speek_test
+      type: actor_type_media_player_speek_test
+      action: actor_action_media_player_speek_test
 
 - id: trigger_input_number_set
   alias: Trigger input number set

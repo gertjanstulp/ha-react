@@ -7,22 +7,24 @@ entity_maps:
 
 plugins:
   - module: custom_components.react.plugin.notify.plugin
-    config:
-      default_service_type: telegram
   - module: custom_components.react.plugin.telegram.plugin
   - module: custom_components.react.plugin.persistent_notification.plugin
   - module: custom_components.react.plugin.mobile_app.plugin
-  - module: custom_components.react.plugin.tts.plugin
-    config:
-      say_service: google_say
-      language: nl
+
   - module: custom_components.react.plugin.input.plugin
   - module: custom_components.react.plugin.light.plugin
   - module: custom_components.react.plugin.switch.plugin
+
+  - module: custom_components.react.plugin.group.plugin
+
   - module: custom_components.react.plugin.media_player.plugin
     config:
-      default_service_type: sonos
+      tts_provider_name: google_translate
+      language: nl
   - module: custom_components.react.plugin.sonos.plugin
+  - module: custom_components.react.plugin.browser_mod.plugin
+  - module: custom_components.react.plugin.google_translate.plugin
+
   - module: custom_components.react.plugin.alarm.plugin
     config:
       code: '1234'
@@ -654,14 +656,12 @@ workflow:
           at: "00:00:00"
           restart_mode: force
 
-  workflow_tts_media_player_speek:
+  workflow_media_player_speek_test:
     when:
-      id: actor_tts_media_player_speek
-      entity: actor_entity_tts_media_player_speek
-      type: actor_type_tts_media_player_speek
-      action: actor_action_tts_media_player_speek
+      entity: actor_entity_media_player_speek_test
+      type: actor_type_media_player_speek_test
+      action: actor_action_media_player_speek_test
     then:
-      id: reactor_tts_media_player_speek
       entity: browser
       type: media_player
       action: speek
@@ -669,14 +669,12 @@ workflow:
         message: This is a test without volume
         language: en
 
-  workflow_tts_media_player_speek_with_volume:
+  workflow_media_player_speek_with_volume_test:
     when:
-      id: actor_tts_media_player_speek_with_volume
-      entity: actor_entity_tts_media_player_speek_with_volume
-      type: actor_type_tts_media_player_speek_with_volume
-      action: actor_action_tts_media_player_speek_with_volume
+      entity: actor_entity_media_player_speek_with_volume_test
+      type: actor_type_media_player_speek_with_volume_test
+      action: actor_action_media_player_speek_with_volume_test
     then:
-      id: reactor_tts_media_player_speek_with_volume
       entity: browser
       type: media_player
       action: speek
@@ -685,72 +683,68 @@ workflow:
         language: en
         volume: 0.1
 
-  workflow_tts_media_player_speek_with_interrupt:
+  workflow_media_player_speek_with_announce_test:
     when:
-      id: actor_tts_media_player_speek_with_interrupt
-      entity: actor_entity_tts_media_player_speek_with_interrupt
-      type: actor_type_tts_media_player_speek_with_interrupt
-      action: actor_action_tts_media_player_speek_with_interrupt
+      entity: actor_entity_media_player_speek_with_announce_test
+      type: actor_type_media_player_speek_with_announce_test
+      action: actor_action_media_player_speek_with_announce_test
     then:
-      id: reactor_tts_media_player_speek_with_interrupt
       entity: browser
       type: media_player
       action: speek
       data:
-        message: This is a test with interrupt service
+        message: This is a test with announce
         language: en
-        interrupt_service: sonos.snapshot
+        announce: True
 
-  workflow_tts_media_player_speek_with_resume:
+  # workflow_media_player_speek_with_resume:
+  #   when:
+  #     id: actor_media_player_speek_with_resume
+  #     entity: actor_entity_media_player_speek_with_resume
+  #     type: actor_type_media_player_speek_with_resume
+  #     action: actor_action_media_player_speek_with_resume
+  #   then:
+  #     id: reactor_media_player_speek_with_resume
+  #     entity: browser
+  #     type: media_player
+  #     action: speek
+  #     data:
+  #       message: This is a test with resume service
+  #       language: en
+  #       resume_service: sonos.restore
+
+  workflow_media_player_speek_with_wait_test:
     when:
-      id: actor_tts_media_player_speek_with_resume
-      entity: actor_entity_tts_media_player_speek_with_resume
-      type: actor_type_tts_media_player_speek_with_resume
-      action: actor_action_tts_media_player_speek_with_resume
+      entity: actor_entity_media_player_speek_with_wait_test
+      type: actor_type_media_player_speek_with_wait_test
+      action: actor_action_media_player_speek_with_wait_test
     then:
-      id: reactor_tts_media_player_speek_with_resume
       entity: browser
       type: media_player
       action: speek
       data:
-        message: This is a test with resume service
-        language: en
-        resume_service: sonos.restore
-
-  workflow_tts_media_player_speek_with_wait:
-    when:
-      id: actor_tts_media_player_speek_with_wait
-      entity: actor_entity_tts_media_player_speek_with_wait
-      type: actor_type_tts_media_player_speek_with_wait
-      action: actor_action_tts_media_player_speek_with_wait
-    then:
-      id: reactor_tts_media_player_speek_with_wait
-      entity: browser
-      type: media_player
-      action: speek
-      data:
-        message: This is a test with resume service
+        message: This is a test with wait
         language: en
         wait: 3
 
-  workflow_tts_media_player_speek_with_all:
-    when:
-      id: actor_tts_media_player_speek_with_all
-      entity: actor_entity_tts_media_player_speek_with_all
-      type: actor_type_tts_media_player_speek_with_all
-      action: actor_action_tts_media_player_speek_with_all
-    then:
-      id: reactor_tts_media_player_speek_with_all
-      entity: browser
-      type: media_player
-      action: speek
-      data:
-        message: This is a test with resume service
-        language: en
-        volume: 0.1
-        interrupt_service: sonos.snapshot
-        resume_service: sonos.restore
-        wait: 2
+  # workflow_media_player_speek_with_all:
+  #   when:
+  #     id: actor_media_player_speek_with_all
+  #     entity: actor_entity_media_player_speek_with_all
+  #     type: actor_type_media_player_speek_with_all
+  #     action: actor_action_media_player_speek_with_all
+  #   then:
+  #     id: reactor_media_player_speek_with_all
+  #     entity: browser
+  #     type: media_player
+  #     action: speek
+  #     data:
+  #       message: This is a test with resume service
+  #       language: en
+  #       volume: 0.1
+  #       interrupt_service: sonos.snapshot
+  #       resume_service: sonos.restore
+  #       wait: 2
 
   workflow_notify_send_message_test:
     when:
@@ -1009,7 +1003,7 @@ workflow:
       type: actor_type_switch_turn_on_skip_test
       action: actor_action_switch_turn_on_skip_test
     then:
-      entity: switch_turn_on_skip_test
+      entity: switch_initial_on_test
       type: switch
       action: 'on'
 
@@ -1019,7 +1013,7 @@ workflow:
       type: actor_type_switch_turn_off_skip_test
       action: actor_action_switch_turn_off_skip_test
     then:
-      entity: switch_turn_off_skip_test
+      entity: switch_initial_off_test
       type: switch
       action: 'off'
 

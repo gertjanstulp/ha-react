@@ -1,15 +1,24 @@
-from custom_components.react.plugin.notify.const import (
-    PLUGIN_NAME as NOTIFY_PLUGIN_NAME
-)
-from custom_components.react.plugin.persistent_notification.const import SERVICE_TYPE
-from custom_components.react.plugin.persistent_notification.service import PersistentNotificationService
+from custom_components.react.plugin.const import PROVIDER_TYPE_NOTIFY
+from custom_components.react.plugin.persistent_notification.const import NOTIFY_PROVIDER_PERSISTENT_NOTIFICATION
+from custom_components.react.plugin.persistent_notification.provider import PersistentNotificationProvider
 from custom_components.react.plugin.persistent_notification.tasks.dismiss_transform_in_task import DismissTransformInTask
-from custom_components.react.plugin.plugin_factory import PluginApi
+from custom_components.react.plugin.plugin_factory import HassApi, PluginApi
 from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData
 
 
-def load(plugin_api: PluginApi, config: DynamicData):
-    get_react_logger().debug(f"Telegram plugin: Loading")
-    plugin_api.register_plugin_task(DismissTransformInTask)
-    plugin_api.register_plugin_service(NOTIFY_PLUGIN_NAME, SERVICE_TYPE, PersistentNotificationService(plugin_api.react))
+def load(plugin_api: PluginApi, hass_api: HassApi, config: DynamicData):
+    loader = PersistentNotificationPluginLoader()
+    loader.load(plugin_api, hass_api, config)
+
+
+class PersistentNotificationPluginLoader:
+    def load(self, plugin_api: PluginApi, hass_api: HassApi, config: DynamicData):
+        get_react_logger().debug(f"Persistent notification plugin: Loading")
+        
+        plugin_api.register_plugin_provider(
+            PROVIDER_TYPE_NOTIFY, 
+            NOTIFY_PROVIDER_PERSISTENT_NOTIFICATION, 
+            PersistentNotificationProvider(plugin_api, hass_api))
+        
+        plugin_api.register_plugin_task(DismissTransformInTask)

@@ -7,7 +7,23 @@ import yaml
 from unittest.mock import Mock, patch
 from yaml import SafeLoader
 
-from homeassistant.components import template, input_boolean, input_button, input_number, input_text, light, notify, persistent_notification, switch, group, binary_sensor, sensor, device_tracker, person, alarm_control_panel
+from homeassistant.components import (
+    alarm_control_panel,
+    binary_sensor, 
+    device_tracker, 
+    group, 
+    input_boolean, 
+    input_button, 
+    input_number, 
+    input_text, 
+    light, 
+    media_player,
+    notify, 
+    person, 
+    sensor, 
+    switch, 
+    template, 
+)
 from homeassistant.components.input_number import SERVICE_SET_VALUE, ATTR_VALUE
 from homeassistant.components.trace import DATA_TRACE
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_RELOAD
@@ -48,6 +64,7 @@ from tests.common import (
     INPUT_NUMBER_CONFIG,
     INPUT_TEXT_CONFIG,
     LIGHT_CONFIG,
+    MEDIA_PLAYER_CONFIG,
     PERSON_CONFIG,
     REACT_CONFIG,
     SENSOR_CONFIG,
@@ -486,3 +503,12 @@ async def alarm_component(hass_setup):
     result = Mock()
     result.async_arm_away = async_arm_away
     return result
+
+
+@pytest.fixture
+async def media_player_component(hass_setup):
+    hass: HomeAssistant = hass_setup.hass
+    with open(get_test_config_dir(MEDIA_PLAYER_CONFIG)) as f:
+        data = yaml.load(f, Loader=SafeLoader) or {}
+    assert await async_setup_component(hass, media_player.DOMAIN, { media_player.DOMAIN: data })
+    await hass.async_block_till_done()

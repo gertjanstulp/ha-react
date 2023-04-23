@@ -39,3 +39,4 @@ tts: !include config/tts.yaml
 light: !include config/light.yaml
 switch: !include config/switch.yaml
 alarm_control_panel: !include config/alarm.yaml
+# media_player: !include config/media_player.yaml

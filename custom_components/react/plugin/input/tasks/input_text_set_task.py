@@ -6,7 +6,6 @@ from homeassistant.core import Event
 from custom_components.react.base import ReactBase
 from custom_components.react.const import REACT_TYPE_INPUT_TEXT
 from custom_components.react.plugin.input.api import InputApi
-from custom_components.react.plugin.input.const import PLUGIN_NAME
 from custom_components.react.tasks.plugin.base import PluginReactionTask
 from custom_components.react.utils.events import ReactionEvent
 from custom_components.react.utils.logger import get_react_logger
@@ -28,7 +27,11 @@ class InputTextSetTask(PluginReactionTask):
 
     async def async_execute_plugin(self, event: InputTextSetReactionEvent):
         self._debug(f"Setting input_text '{event.payload.entity}'")
-        await self.api.async_input_text_set(event.context, event.payload.entity, event.payload.data.value)
+        await self.api.async_input_text_set(
+            event.context, 
+            event.payload.entity, 
+            event.payload.data.value, 
+            event.payload.data.input_provider_name)
         
 
 class InputTextSetReactionEventData(DynamicData):
@@ -36,7 +39,7 @@ class InputTextSetReactionEventData(DynamicData):
     def __init__(self, source: dict) -> None:
         super().__init__()
         
-        self.plugin: str = None
+        self.input_provider_name: str = None
         self.value: float = None
 
         self.load(source)
@@ -52,7 +55,6 @@ class InputTextSetReactionEvent(ReactionEvent[InputTextSetReactionEventData]):
     def applies(self) -> bool:
         return (
             self.payload.type == REACT_TYPE_INPUT_TEXT and
-            self.payload.action == SERVICE_SET_VALUE and 
-            self.payload.data and 
-            (not self.payload.data.plugin or self.payload.data.plugin == PLUGIN_NAME)
+            self.payload.action == SERVICE_SET_VALUE and
+            self.payload.data
         )

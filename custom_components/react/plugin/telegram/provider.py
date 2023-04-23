@@ -1,5 +1,6 @@
 from telegram.utils.helpers import escape_markdown
 
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.telegram.notify import (
     ATTR_INLINE_KEYBOARD
 )
@@ -11,18 +12,17 @@ from homeassistant.components.telegram_bot import (
     DOMAIN, 
     SERVICE_EDIT_MESSAGE,
 )
-from homeassistant.const import Platform
 from homeassistant.core import Context
 
-from custom_components.react.base import ReactBase
 from custom_components.react.const import ATTR_DATA, ATTR_EVENT_MESSAGE
 from custom_components.react.plugin.notify.const import FeedbackItem
-from custom_components.react.plugin.notify.service import NotifyService
+from custom_components.react.plugin.notify.provider import NotifyProvider
+from custom_components.react.plugin.plugin_factory import HassApi, PluginApi
 
 
-class TelegramService(NotifyService):
-    def __init__(self, react: ReactBase) -> None:
-        super().__init__(react)
+class TelegramProvider(NotifyProvider):
+    def __init__(self, plugin_api: PluginApi, hass_api: HassApi) -> None:
+        super().__init__(plugin_api, hass_api)
 
 
     async def async_notify(self, context: Context, entity_id: str, message: str, feedback_items: list[FeedbackItem]):
@@ -38,8 +38,8 @@ class TelegramService(NotifyService):
                 )
             }
 
-        await self.react.hass.services.async_call(
-            Platform.NOTIFY, 
+        await self.hass_api.async_hass_call_service(
+            NOTIFY_DOMAIN, 
             entity_id,
             data, 
             context
@@ -53,7 +53,7 @@ class TelegramService(NotifyService):
             ATTR_MESSAGE: escape_markdown(f"{text} - {acknowledgement}"),
             ATTR_KEYBOARD_INLINE: None
         }
-        await self.react.hass.services.async_call(
+        await self.hass_api.async_hass_call_service(
             DOMAIN,
             SERVICE_EDIT_MESSAGE,
             service_data=data, 

@@ -13,17 +13,18 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context
 
-from custom_components.react.base import ReactBase
 from custom_components.react.plugin.alarm.const import ArmMode
+from custom_components.react.plugin.plugin_factory import HassApi, PluginApi
+from custom_components.react.plugin.providers import PluginProvider
 
 
-class AlarmService():
-    def __init__(self, react: ReactBase) -> None:
-        self.react = react
+class AlarmProvider(PluginProvider):
+    def __init__(self, plugin_api: PluginApi, hass_api: HassApi) -> None:
+        super().__init__(plugin_api, hass_api)
 
 
     async def async_arm(self, context: Context, entity_id: str, code: str, arm_mode: ArmMode):
-        await self.react.hass.services.async_call(
+        await self.hass_api.async_hass_call_service(
             ALARM_DOMAIN,
             SERVICE_ALARM_ARM_HOME if arm_mode == ArmMode.HOME else 
             SERVICE_ALARM_ARM_AWAY if arm_mode == ArmMode.AWAY else 
@@ -38,7 +39,7 @@ class AlarmService():
         )
 
     async def async_disarm(self, context: Context, entity_id: str, code: str):
-        await self.react.hass.services.async_call(
+        await self.hass_api.async_hass_call_service(
             ALARM_DOMAIN,
             SERVICE_ALARM_DISARM,
             {
@@ -50,7 +51,7 @@ class AlarmService():
 
     
     async def async_trigger(self, context: Context, entity_id: str):
-        await self.react.hass.services.async_call(
+        await self.hass_api.async_hass_call_service(
             ALARM_DOMAIN,
             SERVICE_ALARM_TRIGGER,
             {

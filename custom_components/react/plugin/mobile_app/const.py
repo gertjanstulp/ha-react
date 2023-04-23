@@ -1,4 +1,4 @@
-SERVICE_TYPE = "mobile_app"
+NOTIFY_PROVIDER_MOBILE_APP = "mobile_app"
 
 ATTR_ACTIONS = "actions"
 ATTR_PERSISTENT = "persistent"

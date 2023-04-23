@@ -5,22 +5,21 @@ from homeassistant.components.persistent_notification import (
     DOMAIN as PERSISTENT_NOTIFICATION_DOMAIN,
     ATTR_NOTIFICATION_ID
 )
-from homeassistant.const import Platform
 from homeassistant.core import Context
 
-from custom_components.react.base import ReactBase
 from custom_components.react.plugin.notify.const import FeedbackItem
-from custom_components.react.plugin.notify.service import NotifyService
+from custom_components.react.plugin.notify.provider import NotifyProvider
 from custom_components.react.plugin.persistent_notification.const import SERVICE_CREATE
+from custom_components.react.plugin.plugin_factory import HassApi, PluginApi
 
 
-class PersistentNotificationService(NotifyService):
-    def __init__(self, react: ReactBase) -> None:
-        super().__init__(react)
+class PersistentNotificationProvider(NotifyProvider):
+    def __init__(self, plugin_api: PluginApi, hass_api: HassApi) -> None:
+        super().__init__(plugin_api, hass_api)
 
 
     async def async_notify(self, context: Context, entity_id: str, message: str, feedback_items: list[FeedbackItem]):
-        await self.react.hass.services.async_call(
+        await self.hass_api.async_hass_call_service(
             PERSISTENT_NOTIFICATION_DOMAIN, 
             SERVICE_CREATE,
             {

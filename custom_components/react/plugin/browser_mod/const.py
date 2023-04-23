@@ -1,0 +1,1 @@
+MEDIA_PLAYER_BROWSER_MOD_PROVIDER = "browser_mod"

@@ -1,69 +1,68 @@
-from homeassistant.const import(
-    ATTR_ENTITY_ID,
+from homeassistant.const import (
+    ATTR_CODE, 
+    ATTR_ENTITY_ID
 )
 from homeassistant.core import Context
 
-from custom_components.react.base import ReactBase
 from custom_components.react.const import ATTR_MODE
-from custom_components.react.plugin.alarm.api import AlarmApi, AlarmApiConfig
 from custom_components.react.plugin.alarm.const import ArmMode
-from custom_components.react.plugin.alarm.service import AlarmService
-from custom_components.react.plugin.alarm.tasks.alarm_arm_away_task import AlarmArmAwayTask
-from custom_components.react.plugin.alarm.tasks.alarm_arm_home_task import AlarmArmHomeTask
-from custom_components.react.plugin.alarm.tasks.alarm_arm_night_task import AlarmArmNightTask
-from custom_components.react.plugin.alarm.tasks.alarm_arm_vacation_task import AlarmArmVacationTask
-from custom_components.react.plugin.alarm.tasks.alarm_disarm_task import AlarmDisarmTask
-from custom_components.react.plugin.alarm.tasks.alarm_trigger_task import AlarmTriggerTask
-from custom_components.react.plugin.plugin_factory import PluginApi
+from custom_components.react.plugin.alarm.plugin import load as load_plugin
+from custom_components.react.plugin.alarm.provider import AlarmProvider
+from custom_components.react.plugin.const import PROVIDER_TYPE_ALARM
+from custom_components.react.plugin.plugin_factory import HassApi, PluginApi
 from custom_components.react.utils.struct import DynamicData
-from tests.common import TEST_CONTEXT, TEST_FLAG_VERIFY_CONFIG
+
+from tests._plugins.common import HassApiMock
+from tests.common import TEST_CONTEXT
+from tests.const import ATTR_ALARM_PROVIDER
 from tests.tst_context import TstContext
 
-
-def load(plugin_api: PluginApi, config: DynamicData):
-    api = AlarmApiMock(plugin_api.react, AlarmApiConfig(config))
-    plugin_api.register_plugin_task(AlarmArmHomeTask, api=api)
-    plugin_api.register_plugin_task(AlarmArmAwayTask, api=api)
-    plugin_api.register_plugin_task(AlarmArmNightTask, api=api)
-    plugin_api.register_plugin_task(AlarmArmVacationTask, api=api)
-    plugin_api.register_plugin_task(AlarmDisarmTask, api=api)
-    plugin_api.register_plugin_task(AlarmTriggerTask, api=api)
+ALARM_MOCK_PROVIDER = "alarm_mock"
+ATTR_ALARM_STATE = "alarm_state"
 
 
-class AlarmApiMock(AlarmApi):
-    def __init__(self, react: ReactBase, config: AlarmApiConfig) -> None:
-        super().__init__(react, config, AlarmServiceMock(react))
+def load(plugin_api: PluginApi, hass_api: HassApi, config: DynamicData):
+    hass_api_mock = HassApiMock(hass_api.hass)
+    load_plugin(plugin_api, hass_api_mock, config)
+    if alarm_provider := config.get(ATTR_ALARM_PROVIDER, None):
+        setup_mock_provider(plugin_api, hass_api, alarm_provider)
+    alarm_entity_id = config.get(ATTR_ENTITY_ID)
+    alarm_state = config.get(ATTR_ALARM_STATE, None)
+    if alarm_entity_id and alarm_state:
+        hass_api_mock.hass_register_state(alarm_entity_id, alarm_state)
 
 
-    def verify_config(self):
-        return self.react.hass.data.get(TEST_FLAG_VERIFY_CONFIG, True)
-    
+def setup_mock_provider(plugin_api: PluginApi, hass_api: HassApi, alarm_provider: str):
+    plugin_api.register_plugin_provider(
+        PROVIDER_TYPE_ALARM, 
+        alarm_provider,
+        AlarmProvidereMock(plugin_api, hass_api))
 
-class AlarmServiceMock(AlarmService):
-    def __init__(self, react: ReactBase) -> None:
-        self.react = react
+
+class AlarmProvidereMock(AlarmProvider):
+    def __init__(self, plugin_api: PluginApi, hass_api: HassApi) -> None:
+        super().__init__(plugin_api, hass_api)
 
 
     async def async_arm(self, context: Context, entity_id: str, code: str, arm_mode: ArmMode):
-        await super().async_arm(context, entity_id, code, arm_mode)
-        tc: TstContext = self.react.hass.data[TEST_CONTEXT]
+        tc: TstContext = self.hass_api.hass_get_data(TEST_CONTEXT)
         tc.register_plugin_data({
             ATTR_ENTITY_ID: entity_id,
+            ATTR_CODE: code,
             ATTR_MODE: arm_mode,
         })
 
     
     async def async_disarm(self, context: Context, entity_id: str, code: str):
-        await super().async_disarm(context, entity_id, code)
-        tc: TstContext = self.react.hass.data[TEST_CONTEXT]
+        tc: TstContext = self.hass_api.hass_get_data(TEST_CONTEXT)
         tc.register_plugin_data({
             ATTR_ENTITY_ID: entity_id,
+            ATTR_CODE: code
         })
 
 
     async def async_trigger(self, context: Context, entity_id: str):
-        await super().async_trigger(context, entity_id)
-        tc: TstContext = self.react.hass.data[TEST_CONTEXT]
+        tc: TstContext = self.hass_api.hass_get_data(TEST_CONTEXT)
         tc.register_plugin_data({
             ATTR_ENTITY_ID: entity_id,
         })

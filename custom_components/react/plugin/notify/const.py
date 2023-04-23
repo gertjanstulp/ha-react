@@ -1,7 +1,8 @@
 from custom_components.react.utils.struct import DynamicData
 
-PLUGIN_NAME = "notify"
 ATTR_MESSAGE_DATA = "message_data"
+
+NOTIFY_RESOLVER_KEY = "react_notify_resolver"
 
 
 class FeedbackItem(DynamicData):

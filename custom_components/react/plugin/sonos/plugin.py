@@ -1,13 +1,21 @@
-from custom_components.react.plugin.media_player.const import (
-    PLUGIN_NAME as MEDIA_PLAYER_PLUGIN_NAME
-)
-from custom_components.react.plugin.plugin_factory import PluginApi
-from custom_components.react.plugin.sonos.const import SERVICE_TYPE
-from custom_components.react.plugin.sonos.service import SonosService
+from custom_components.react.plugin.const import PROVIDER_TYPE_MEDIA_PLAYER
+from custom_components.react.plugin.plugin_factory import HassApi, PluginApi
+from custom_components.react.plugin.sonos.const import MEDIA_PLAYER_SONOS_PROVIDER
+from custom_components.react.plugin.sonos.provider import SonosProvider
 from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData
 
 
-def load(plugin_api: PluginApi, config: DynamicData):
-    get_react_logger().debug(f"Telegram plugin: Loading")
-    plugin_api.register_plugin_service(MEDIA_PLAYER_PLUGIN_NAME, SERVICE_TYPE, SonosService(plugin_api.react))
+def load(plugin_api: PluginApi, hass_api: HassApi, config: DynamicData):
+    loader = SonosPluginLoader()
+    loader.load(plugin_api, hass_api, config)
+
+
+class SonosPluginLoader:
+    def load(self, plugin_api: PluginApi, hass_api: HassApi, config: DynamicData):
+        get_react_logger().debug(f"Sonos plugin: Loading")
+
+        plugin_api.register_plugin_provider(
+            PROVIDER_TYPE_MEDIA_PLAYER, 
+            MEDIA_PLAYER_SONOS_PROVIDER, 
+            SonosProvider(plugin_api, hass_api))

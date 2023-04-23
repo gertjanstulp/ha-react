@@ -1,1 +1,1 @@
-PLUGIN_NAME = "switch"
+SWITCH_GENERIC_PROVIDER = "generic"

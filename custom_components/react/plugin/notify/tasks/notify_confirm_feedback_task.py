@@ -8,12 +8,11 @@ from custom_components.react.utils.events import ReactionEvent
 from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData
 from custom_components.react.const import (
-    ATTR_EVENT_PLUGIN_PAYLOAD, 
+    ATTR_EVENT_NOTIFY_PROVIDER_PAYLOAD, 
     REACT_ACTION_CONFIRM_FEEDBACK, 
     REACT_TYPE_NOTIFY
 )
 
-from custom_components.react.plugin.notify.const import PLUGIN_NAME
 from custom_components.react.plugin.notify.api import NotifyApi
 
 _LOGGER = get_react_logger()
@@ -33,14 +32,15 @@ class NotifyConfirmFeedbackTask(PluginReactionTask):
         self._debug("Confirming feedback")
         await self.api.async_confirm_feedback(
             event.context, 
-            event.payload.data.service_type,
-            event.payload.data.plugin_payload.conversation_id,
-            event.payload.data.plugin_payload.message_id,
-            event.payload.data.plugin_payload.text,
-            event.payload.data.acknowledgement)
+            event.payload.data.provider_payload.conversation_id if event.payload.data.provider_payload else None,
+            event.payload.data.provider_payload.message_id if event.payload.data.provider_payload else None,
+            event.payload.data.provider_payload.text if event.payload.data.provider_payload else None,
+            event.payload.data.acknowledgement,
+            event.payload.data.notify_provider_name,
+        )
 
 
-class NotifyConfirmFeedbackReactionEventPluginPayload(DynamicData):
+class NotifyConfirmFeedbackReactionEventProviderPayload(DynamicData):
     def __init__(self, source: dict = None) -> None:
         super().__init__()
 
@@ -52,16 +52,15 @@ class NotifyConfirmFeedbackReactionEventPluginPayload(DynamicData):
 
 
 class NotifyConfirmFeedbackReactionEventData(DynamicData):
-    type_hints: dict = { ATTR_EVENT_PLUGIN_PAYLOAD: NotifyConfirmFeedbackReactionEventPluginPayload }
+    type_hints: dict = { ATTR_EVENT_NOTIFY_PROVIDER_PAYLOAD: NotifyConfirmFeedbackReactionEventProviderPayload }
 
     def __init__(self, source: dict = None) -> None:
         super().__init__()
 
-        self.plugin: str = None
-        self.service_type: str = None
         self.feedback: str = None
         self.acknowledgement: str = None
-        self.plugin_payload: NotifyConfirmFeedbackReactionEventPluginPayload = None
+        self.provider_payload: NotifyConfirmFeedbackReactionEventProviderPayload = None
+        self.notify_provider_name: str = None
 
         self.load(source)
         
@@ -76,7 +75,6 @@ class NotifyConfirmFeedbackReactionEvent(ReactionEvent[NotifyConfirmFeedbackReac
     def applies(self) -> bool:
         return (
             self.payload.type == REACT_TYPE_NOTIFY and
-            self.payload.action == REACT_ACTION_CONFIRM_FEEDBACK and 
-            self.payload.data and
-            (not self.payload.data.plugin or self.payload.data.plugin == PLUGIN_NAME)
+            self.payload.action == REACT_ACTION_CONFIRM_FEEDBACK and
+            self.payload.data
         )

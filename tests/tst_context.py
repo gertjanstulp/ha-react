@@ -74,6 +74,7 @@ from tests._mocks.mock_log_handler import MockLogHandler
 from tests.common import (
     EVENT_TEST_CALLBACK,
 )
+from tests.const import ATTR_DOMAIN, ATTR_SERVICE_NAME
 
 ACTOR_ID_PREFIX = "actor_"
 ACTOR_ENTITY_PREFIX = "actor_entity_"
@@ -108,6 +109,7 @@ class TstContext():
         self.workflow_config = self.react.configuration.workflow_config.workflows.get(self.workflow_id)
 
         self.plugin_data_register: list[dict] = []
+        self.service_call_register: list[dict] = []
         self.notify_confirm_feedback_register: list[dict] = []
         self.plugin_task_unloaded_register: list[str] = []
 
@@ -119,7 +121,19 @@ class TstContext():
     def verify_has_log_record(self, level_name: str, message: str):
         assert self.mock_log_handler.has_record(level_name, message), f"Could not find {level_name} record with message '{message}'"
 
+
+    def verify_has_log_warning(self, message: str):
+        self.verify_has_log_record("WARNING", message)
+
+
+    def verify_has_log_error(self, message: str):
+        self.verify_has_log_record("ERROR", message)
+
+
+    def verify_has_no_log_issues(self):
+        assert self.mock_log_handler.has_no_issues(), "One or more warnings and/or errors occured"        
     
+
     async def async_send_action_event(self, 
         entity: str = None, 
         type: str = None, 
@@ -644,6 +658,33 @@ class TstContext():
     def verify_plugin_data_content(self, expected_data: dict, data_index: int = 0):
         got_data = self.plugin_data_register[data_index]
         assert DeepDiff(got_data, expected_data) == {}, f"Expected plugin data '{expected_data}', got '{got_data}'"
+
+
+    def register_service_call(self, domain: str, service_name: str, data: dict):
+        self.service_call_register.append({
+            ATTR_DOMAIN: domain,
+            ATTR_SERVICE_NAME: service_name,
+            ATTR_DATA: data
+        })
+
+
+    def verify_service_call_sent(self, expected_count: int = 1):
+        got_count = len(self.service_call_register)
+        assert got_count == expected_count, f"Expected service_call count {expected_count}, got {got_count}"
+
+
+    def verify_service_call_not_sent(self):
+        self.verify_service_call_sent(expected_count=0)
+
+
+    def verify_service_call_content(self, domain: str, service_name: str, data: dict, data_index: int = 0):
+        expected_data = {
+            ATTR_DOMAIN: domain,
+            ATTR_SERVICE_NAME: service_name,
+            ATTR_DATA: data
+        }
+        got_data = self.service_call_register[data_index]
+        assert DeepDiff(got_data, expected_data) == {}, f"Expected service_call '{expected_data}', got '{got_data}'"
 
 
     def register_plugin_task_unload(self, id: str):

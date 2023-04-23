@@ -11,15 +11,17 @@ from homeassistant.const import (
 from homeassistant.core import Context
 
 from custom_components.react.base import ReactBase
+from custom_components.react.plugin.plugin_factory import HassApi, PluginApi
+from custom_components.react.plugin.providers import PluginProvider
 
 
-class LightService():
-    def __init__(self, react: ReactBase) -> None:
-        self.react = react
+class LightProvider(PluginProvider):
+    def __init__(self, plugin_api: PluginApi, hass_api: HassApi) -> None:
+        super().__init__(plugin_api, hass_api)
 
 
     async def async_set_state(self, context: Context, entity_id: str, state: str):
-        await self.react.hass.services.async_call(
+        await self.hass_api.async_hass_call_service(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON if state == STATE_ON else SERVICE_TURN_OFF,
             {
