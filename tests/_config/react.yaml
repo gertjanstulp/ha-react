@@ -24,6 +24,7 @@ plugins:
   - module: custom_components.react.plugin.sonos.plugin
   - module: custom_components.react.plugin.browser_mod.plugin
   - module: custom_components.react.plugin.google_translate.plugin
+  - module: custom_components.react.plugin.cloud.plugin
 
   - module: custom_components.react.plugin.alarm.plugin
     config:

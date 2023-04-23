@@ -16,6 +16,7 @@ from custom_components.react.plugin.const import (
     PROVIDER_TYPE_TTS
 )
 from custom_components.react.plugin.media_player.api import MediaPlayerConfig
+from custom_components.react.plugin.media_player.config import TtsConfig
 from custom_components.react.plugin.media_player.plugin import load as load_plugin
 from custom_components.react.plugin.media_player.provider import MediaPlayerProvider, TtsProvider
 from custom_components.react.plugin.plugin_factory import HassApi, PluginApi
@@ -117,7 +118,7 @@ class MediaPlayerProviderMock(MediaPlayerProvider):
 
 class TtsProviderMock(TtsProvider):
     def __init__(self, plugin_api: PluginApi, hass_api: HassApi) -> None:
-        super().__init__(plugin_api, hass_api)
+        super().__init__(plugin_api, hass_api, TtsConfig({}), TTS_PROVIDER_MOCK)
 
 
     async def async_speek(self, context: Context, entity_id: str, message: str, language: str, cache: bool, options: DynamicData):
