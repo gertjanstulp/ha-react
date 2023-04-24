@@ -30,7 +30,7 @@ class InputBooleanTurnOnTask(PluginReactionTask):
         await self.api.async_input_boolean_turn_on(
             event.context, 
             event.payload.entity, 
-            event.payload.data.input_provider_name if event.payload.data else None)
+            event.payload.data.input_provider if event.payload.data else None)
         
 
 class InputBooleanTurnOnReactionEventData(DynamicData):
@@ -38,7 +38,7 @@ class InputBooleanTurnOnReactionEventData(DynamicData):
     def __init__(self, source: dict) -> None:
         super().__init__()
         
-        self.input_provider_name: str = None
+        self.input_provider: str = None
 
         self.load(source)
 

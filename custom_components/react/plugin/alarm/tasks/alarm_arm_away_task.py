@@ -30,14 +30,10 @@ class AlarmArmAwayTask(PluginReactionTask):
 
     async def async_execute_plugin(self, event: AlarmArmAwayReactionEvent):
         self._debug(f"Arming away '{event.payload.entity}'")
-        
-        if not self.api.verify_config():
-            return
-        
         await self.api.async_alarm_arm_away(
             event.context, 
             event.payload.entity, 
-            event.payload.data.alarm_provider_name if event.payload.data else None)
+            event.payload.data.alarm_provider if event.payload.data else None)
         
 
 class AlarmArmAwayReactionEventData(DynamicData):
@@ -45,7 +41,7 @@ class AlarmArmAwayReactionEventData(DynamicData):
     def __init__(self, source: dict) -> None:
         super().__init__()
         
-        self.alarm_provider_name: str = None
+        self.alarm_provider: str = None
 
         self.load(source)
 

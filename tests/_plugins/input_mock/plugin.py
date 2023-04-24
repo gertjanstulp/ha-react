@@ -8,30 +8,34 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context
 from custom_components.react.const import ATTR_STATE
 from custom_components.react.plugin.const import PROVIDER_TYPE_INPUT
+from custom_components.react.plugin.input.const import ATTR_INPUT_PROVIDER
 
-from custom_components.react.plugin.input.plugin import load as load_plugin
+from custom_components.react.plugin.input.plugin import Plugin as InputPlugin
 from custom_components.react.plugin.input.provider import InputProvider
-from custom_components.react.plugin.plugin_factory import HassApi, PluginApi
+from custom_components.react.plugin.api import HassApi, PluginApi
 from custom_components.react.utils.struct import DynamicData
 
 from tests._plugins.common import HassApiMock
 from tests.common import TEST_CONTEXT
-from tests.const import ATTR_ENTITY_STATE, ATTR_INPUT_PROVIDER
+from tests.const import ATTR_ENTITY_STATE, TEST_CONFIG
 from tests.tst_context import TstContext
 
 
 INPUT_MOCK_PROVIDER = "input_mock"
 
 
-def load(plugin_api: PluginApi, hass_api: HassApi, config: DynamicData):
-    hass_api_mock = HassApiMock(hass_api.hass)
-    load_plugin(plugin_api, hass_api_mock, config)
-    if input_provider := config.get(ATTR_INPUT_PROVIDER, None):
-        setup_mock_provider(plugin_api, hass_api, input_provider)
-    input_entity_id = config.get(ATTR_ENTITY_ID)
-    input_state = config.get(ATTR_ENTITY_STATE, None)
-    if input_entity_id and input_state != None:
-        hass_api_mock.hass_register_state(input_entity_id, input_state)
+class Plugin(InputPlugin):
+    def load(self, plugin_api: PluginApi, hass_api: HassApi, config: DynamicData):
+        hass_api_mock = HassApiMock(hass_api.hass)
+        super().load(plugin_api, hass_api_mock, config)
+        if input_provider := config.get(ATTR_INPUT_PROVIDER, None):
+            setup_mock_provider(plugin_api, hass_api, input_provider)
+        
+        test_config: dict = hass_api.hass_get_data(TEST_CONFIG, {})
+        input_entity_id = test_config.get(ATTR_ENTITY_ID)
+        input_state = test_config.get(ATTR_ENTITY_STATE, None)
+        if input_entity_id and input_state != None:
+            hass_api_mock.hass_register_state(input_entity_id, input_state)
 
 
 def setup_mock_provider(plugin_api: PluginApi, hass_api: HassApi, input_provider: str):
@@ -47,27 +51,27 @@ class InputProviderMock(InputProvider):
 
         
     async def async_input_number_set_value(self, context: Context, entity_id: str, value: float):
-        tc: TstContext = self.hass_api.hass_get_data(TEST_CONTEXT)
+        test_context: TstContext = self.hass_api.hass_get_data(TEST_CONTEXT)
         data = {
             ATTR_ENTITY_ID: entity_id,
             NUMBER_ATTR_VALUE: value,
         }
-        tc.register_plugin_data(data)
+        test_context.register_plugin_data(data)
 
 
     async def async_input_text_set_value(self, context: Context, entity_id: str, value: str):
-        tc: TstContext = self.hass_api.hass_get_data(TEST_CONTEXT)
+        test_context: TstContext = self.hass_api.hass_get_data(TEST_CONTEXT)
         data = {
             ATTR_ENTITY_ID: entity_id,
             TEXT_ATTR_VALUE: value,
         }
-        tc.register_plugin_data(data)
+        test_context.register_plugin_data(data)
 
 
     async def async_input_boolean_set_value(self, context: Context, entity_id: str, value: bool):
-        tc: TstContext = self.hass_api.hass_get_data(TEST_CONTEXT)
+        test_context: TstContext = self.hass_api.hass_get_data(TEST_CONTEXT)
         data = {
             ATTR_ENTITY_ID: entity_id,
             ATTR_STATE: value,
         }
-        tc.register_plugin_data(data)
+        test_context.register_plugin_data(data)

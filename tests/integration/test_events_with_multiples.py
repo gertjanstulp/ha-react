@@ -5,9 +5,8 @@ from homeassistant.core import HomeAssistant
 from tests.common import FIXTURE_WORKFLOW_NAME
 from tests.tst_context import TstContext
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["multiple_actor"])
-async def test_multiple_actor_1(hass: HomeAssistant, workflow_name, react_component):
+async def test_multiple_actor_1(test_context: TstContext, workflow_name: str):
     """
     Test for workflow with multiple actors using first actor:
     - No reaction entity should be created
@@ -16,22 +15,19 @@ async def test_multiple_actor_1(hass: HomeAssistant, workflow_name, react_compon
     - Trace data should match configuration
     """
 
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
-        await tc.async_send_action_event()
-        tc.verify_reaction_not_found()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data()
-        tc.verify_trace_record()
+    await test_context.async_start_react()
+    
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
+        await test_context.async_send_action_event()
+        test_context.verify_reaction_not_found()
+        await test_context.async_verify_reaction_event_received()
+        test_context.verify_reaction_event_data()
+        test_context.verify_trace_record()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["multiple_actor"])
-async def test_multiple_actor_2(hass: HomeAssistant, workflow_name, react_component):
+async def test_multiple_actor_2(test_context: TstContext, workflow_name: str):
     """
     Test for workflow with multiple actors using second actor:
     - No reaction entity should be created
@@ -40,22 +36,19 @@ async def test_multiple_actor_2(hass: HomeAssistant, workflow_name, react_compon
     - Trace data should match configuration
     """
 
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
-        await tc.async_send_action_event(actor_index=1)
-        tc.verify_reaction_not_found()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data()
-        tc.verify_trace_record(actor_index=1)
+    await test_context.async_start_react()
+    
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
+        await test_context.async_send_action_event(actor_index=1)
+        test_context.verify_reaction_not_found()
+        await test_context.async_verify_reaction_event_received()
+        test_context.verify_reaction_event_data()
+        test_context.verify_trace_record(actor_index=1)
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["multiple_reactor"])
-async def test_multiple_reactor(hass: HomeAssistant, workflow_name, react_component):
+async def test_multiple_reactor(test_context: TstContext, workflow_name: str):
     """
     Test for workflow with multiple reactors:
     - No reaction entities should be created
@@ -64,23 +57,20 @@ async def test_multiple_reactor(hass: HomeAssistant, workflow_name, react_compon
     - Trace data should match configuration
     """
 
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
-        await tc.async_send_action_event()
-        tc.verify_reaction_not_found()
-        await tc.async_verify_reaction_event_received(expected_count=2)
-        tc.verify_reaction_event_data(event_index=0, reactor_index=0)
-        tc.verify_reaction_event_data(event_index=1, reactor_index=1)
-        tc.verify_trace_record()
+    await test_context.async_start_react()
+    
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
+        await test_context.async_send_action_event()
+        test_context.verify_reaction_not_found()
+        await test_context.async_verify_reaction_event_received(expected_count=2)
+        test_context.verify_reaction_event_data(event_index=0, reactor_index=0)
+        test_context.verify_reaction_event_data(event_index=1, reactor_index=1)
+        test_context.verify_trace_record()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["multiple_entities"])
-async def test_multiple_entities_1(hass: HomeAssistant, workflow_name, react_component):
+async def test_multiple_entities_1(test_context: TstContext, workflow_name: str):
     """
     Test for workflow with an actor containing multiple entities
     - No reaction entity should be created
@@ -89,22 +79,19 @@ async def test_multiple_entities_1(hass: HomeAssistant, workflow_name, react_com
     - Trace data should match configuration
     """
     
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
-        await tc.async_send_action_event()
-        tc.verify_reaction_not_found()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data()
-        tc.verify_trace_record()
+    await test_context.async_start_react()
+    
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
+        await test_context.async_send_action_event()
+        test_context.verify_reaction_not_found()
+        await test_context.async_verify_reaction_event_received()
+        test_context.verify_reaction_event_data()
+        test_context.verify_trace_record()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["multiple_entities"])
-async def test_multiple_entities_2(hass: HomeAssistant, workflow_name, react_component):
+async def test_multiple_entities_2(test_context: TstContext, workflow_name: str):
     """
     Test for workflow with an actor containing multiple entities
     - No reaction entity should be created
@@ -113,14 +100,12 @@ async def test_multiple_entities_2(hass: HomeAssistant, workflow_name, react_com
     - Trace data should match configuration
     """
     
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
-        await tc.async_send_action_event(entity_index=1)
-        tc.verify_reaction_not_found()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data()
-        tc.verify_trace_record(actor_entity_index=1)
+    await test_context.async_start_react()
+    
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
+        await test_context.async_send_action_event(entity_index=1)
+        test_context.verify_reaction_not_found()
+        await test_context.async_verify_reaction_event_received()
+        test_context.verify_reaction_event_data()
+        test_context.verify_trace_record(actor_entity_index=1)

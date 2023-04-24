@@ -34,6 +34,8 @@ class DynamicData():
         if source:
             self.load(source)
 
+        self.source = source
+
 
     def __contains__(self, key):
         return key in self._keys

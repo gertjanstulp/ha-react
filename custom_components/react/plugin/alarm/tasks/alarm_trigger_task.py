@@ -30,11 +30,11 @@ class AlarmTriggerTask(PluginReactionTask):
 
     async def async_execute_plugin(self, event: AlarmTriggerReactionEvent):
         self._debug(f"Triggering '{event.payload.entity}'")
-        
-        if not self.api.verify_config():
-            return
-        
-        await self.api.async_alarm_trigger(event.context, event.payload.entity, event.payload.data.alarm_provider_name if event.payload.data else None)
+        await self.api.async_alarm_trigger(
+            event.context, 
+            event.payload.entity, 
+            event.payload.data.alarm_provider if event.payload.data else None
+        )
         
 
 class AlarmTriggerReactionEventData(DynamicData):
@@ -42,7 +42,7 @@ class AlarmTriggerReactionEventData(DynamicData):
     def __init__(self, source: dict) -> None:
         super().__init__()
         
-        self.alarm_provider_name: str = None
+        self.alarm_provider: str = None
 
         self.load(source)
 

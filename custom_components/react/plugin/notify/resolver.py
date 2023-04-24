@@ -3,7 +3,7 @@ from typing import Any
 
 from homeassistant.components.notify.legacy import NOTIFY_SERVICES
 
-from custom_components.react.plugin.plugin_factory import HassApi, PluginApi
+from custom_components.react.plugin.api import HassApi, PluginApi
 
 
 class NotifyPluginResolver():
@@ -25,7 +25,11 @@ class NotifyPluginResolver():
                     
                     for domain,domain_services in notify_services_dict.items():
                         for domain_service in domain_services:
-                            self._notify_entity_reverse_lookup[domain_service._service_name] = domain
+                            if hasattr(domain_service, "registered_targets") and domain_service.registered_targets:
+                                for registered_target in domain_service.registered_targets:
+                                    self._notify_entity_reverse_lookup[registered_target] = domain
+                            else:
+                                self._notify_entity_reverse_lookup[domain_service._service_name] = domain
                         self._notification_platforms[domain] = { item._service_name: item for item in domain_services }
 
                     self._resolved = True

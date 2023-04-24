@@ -13,4 +13,6 @@ log_date_format = "%Y-%m-%d %H:%M:%S"
 filterwarnings = [
     "ignore::DeprecationWarning"
 ]
+asyncio_mode = "auto"
+
 [tool.pyright]

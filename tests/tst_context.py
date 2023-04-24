@@ -1,13 +1,30 @@
 from __future__ import annotations
 
+import yaml
+
 from asyncio import sleep
 from contextlib import asynccontextmanager
 from deepdiff import DeepDiff
 from typing import Any, Callable, Union
+from yaml import SafeLoader
 
-from homeassistant.components.trace.const import DATA_TRACE
+from homeassistant.components import (
+    alarm_control_panel, 
+    binary_sensor, 
+    device_tracker,
+    group, 
+    input_boolean, 
+    input_button, 
+    input_number, 
+    input_text, 
+    light, 
+    person, 
+    sensor,
+    switch,
+    template,
+)
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
-
+from homeassistant.components.trace.const import DATA_TRACE
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID, 
@@ -16,6 +33,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import Event, HomeAssistant, State
+from homeassistant.setup import async_setup_component
 
 from unittest.mock import Mock
 
@@ -69,10 +87,30 @@ from custom_components.react.const import (
     TRACE_PATH_SCHEDULE,
     TRACE_PATH_STATE,
 )
-from tests._mocks.mock_log_handler import MockLogHandler
+from custom_components.virtual import SERVICE_AVAILABILE
+from custom_components.virtual.binary_sensor import SERVICE_ON
+from custom_components.virtual.const import COMPONENT_DOMAIN as VIRTUAL_DOMAIN
+from custom_components.virtual.sensor import SERVICE_SET
 
+
+from tests._mocks.mock_log_handler import MockLogHandler
 from tests.common import (
+    ALARM_CONFIG,
+    BINARY_SENSOR_CONFIG,
+    DEVICE_TRACKER_CONFIG,
     EVENT_TEST_CALLBACK,
+    GROUP_CONFIG,
+    INPUT_BOOLEAN_CONFIG,
+    INPUT_BUTTON_CONFIG,
+    INPUT_NUMBER_CONFIG,
+    INPUT_TEXT_CONFIG,
+    LIGHT_CONFIG,
+    PERSON_CONFIG,
+    SENSOR_CONFIG,
+    SWITCH_CONFIG,
+    TEMPLATE_CONFIG,
+    TEST_CONTEXT,
+    get_test_config_dir,
 )
 from tests.const import ATTR_DOMAIN, ATTR_SERVICE_NAME
 
@@ -98,15 +136,18 @@ TRACE_DOMAIN = "domain"
 TRACE_ITEM_ID = "item_id"
 TRACE_MESSAGE = "message"
 
+
 class TstContext():
     
-    def __init__(self, hass: HomeAssistant, workflow_name: str) -> None:
+    def __init__(self, hass: HomeAssistant, react_component, workflow_name: str) -> None:
         self.hass = hass
-        self.react: ReactBase = self.hass.data[DOMAIN]
+        self.workflow_name = workflow_name
+        self.react_component = react_component
+
         self.event_mock = Mock()
 
-        self.workflow_id = f"workflow_{workflow_name}"
-        self.workflow_config = self.react.configuration.workflow_config.workflows.get(self.workflow_id)
+        if workflow_name != None:
+            self.workflow_id = f"workflow_{workflow_name}"
 
         self.plugin_data_register: list[dict] = []
         self.service_call_register: list[dict] = []
@@ -116,6 +157,319 @@ class TstContext():
         react_logger = get_react_logger()
         self.mock_log_handler = MockLogHandler()
         react_logger.addHandler(self.mock_log_handler)
+
+        hass.data[TEST_CONTEXT] = self
+
+
+    async def async_start_react(self, mock_plugin: dict = None, additional_workflows: list[str] = [], process_workflow: callable(dict) = None, skip_setup: bool = False):
+        if not skip_setup:
+            await self.react_component.async_setup(
+                workflow_name=self.workflow_name,
+                additional_workflows=additional_workflows, 
+                plugins=[mock_plugin] if mock_plugin else [],
+                process_workflow=process_workflow,
+            )
+        self.react: ReactBase = self.hass.data.get(DOMAIN, None)
+        self.workflow_config = self.react.configuration.workflow_config.workflows.get(self.workflow_id)
+        return self
+
+
+    async def async_start_binary_sensor(self):
+        hass: HomeAssistant = self.hass
+        with open(get_test_config_dir(BINARY_SENSOR_CONFIG)) as f:
+            data = yaml.load(f, Loader=SafeLoader) or {}
+        assert await async_setup_component(hass, binary_sensor.DOMAIN, { binary_sensor.DOMAIN: data })
+        await hass.async_block_till_done()
+
+
+    async def async_start_virtual(self):
+        assert await async_setup_component(self.hass, VIRTUAL_DOMAIN, { VIRTUAL_DOMAIN: {}} )
+        await self.hass.async_block_till_done()
+
+        async def async_turn_on(domain: str, name: str):
+            await self.hass.services.async_call(
+                VIRTUAL_DOMAIN,
+                SERVICE_ON,
+                {
+                    ATTR_ENTITY_ID: f"{domain}.{name}"
+                }
+            )
+            await self.hass.async_block_till_done()
+
+        async def async_set(domain: str, name: str, value: Any):
+            await self.hass.services.async_call(
+                VIRTUAL_DOMAIN,
+                SERVICE_SET,
+                {
+                    ATTR_ENTITY_ID: f"{domain}.{name}",
+                    input_number.ATTR_VALUE: value
+                }
+            )
+            await self.hass.async_block_till_done()
+
+        async def async_set_available(domain: str, name: str):
+            await self.hass.services.async_call(
+                VIRTUAL_DOMAIN,
+                SERVICE_AVAILABILE,
+                {
+                    ATTR_ENTITY_ID: f"{domain}.{name}",
+                    input_number.ATTR_VALUE: True
+                }
+            )
+            await self.hass.async_block_till_done()
+
+        async def async_set_unavailable(domain: str, name: str):
+            await self.hass.services.async_call(
+                VIRTUAL_DOMAIN,
+                SERVICE_AVAILABILE,
+                {
+                    ATTR_ENTITY_ID: f"{domain}.{name}",
+                    input_number.ATTR_VALUE: False
+                }
+            )
+            await self.hass.async_block_till_done()
+    
+
+        result = Mock()
+        result.async_turn_on = async_turn_on
+        result.async_set = async_set
+        result.async_set_available = async_set_available
+        result.async_set_unavailable = async_set_unavailable
+        return result
+
+
+    async def async_start_group(self):
+        with open(get_test_config_dir(GROUP_CONFIG)) as f:
+            data = yaml.load(f, Loader=SafeLoader) or {}
+        assert await async_setup_component(self.hass, group.DOMAIN, { group.DOMAIN: data })
+        await self.hass.async_block_till_done()
+
+
+    async def async_start_person(self):
+        with open(get_test_config_dir(PERSON_CONFIG)) as f:
+            data = yaml.load(f, Loader=SafeLoader) or {}
+        assert await async_setup_component(self.hass, person.DOMAIN, { person.DOMAIN: data })
+        await self.hass.async_block_till_done()
+
+
+    async def async_start_device_tracker(self):
+        with open(get_test_config_dir(DEVICE_TRACKER_CONFIG)) as f:
+            data = yaml.load(f, Loader=SafeLoader) or {}
+        assert await async_setup_component(self.hass, device_tracker.DOMAIN, { device_tracker.DOMAIN: data })
+        await self.hass.async_block_till_done()
+        
+        async def async_see(dev_id: str, location: str):
+            await self.hass.services.async_call(
+                device_tracker.DOMAIN,
+                device_tracker.SERVICE_SEE,
+                {
+                    device_tracker.ATTR_DEV_ID: dev_id,
+                    device_tracker.ATTR_LOCATION_NAME: location,
+                    device_tracker.ATTR_SOURCE_TYPE: device_tracker.SOURCE_TYPE_ROUTER
+                }
+            )
+            await self.hass.async_block_till_done()
+
+        result = Mock()
+        result.async_see = async_see
+        return result
+    
+
+    async def async_start_input_number(self):
+        with open(get_test_config_dir(INPUT_NUMBER_CONFIG)) as f:
+            data = yaml.load(f, Loader=SafeLoader) or {}
+        assert await async_setup_component(self.hass, input_number.DOMAIN, { input_number.DOMAIN: data })
+        await self.hass.async_block_till_done()
+
+        async def async_set_value(name: str, value: float):
+            await self.hass.services.async_call(
+                input_number.DOMAIN,
+                input_number.SERVICE_SET_VALUE,
+                {
+                    ATTR_ENTITY_ID: f"input_number.{name}",
+                    input_number.ATTR_VALUE: value
+                }
+            )
+            await self.hass.async_block_till_done()
+
+        result = Mock()
+        result.async_set_value = async_set_value
+        return result
+    
+
+    async def async_start_input_test(self):
+        with open(get_test_config_dir(INPUT_TEXT_CONFIG)) as f:
+            data = yaml.load(f, Loader=SafeLoader) or {}
+        assert await async_setup_component(self.hass, input_text.DOMAIN, { input_text.DOMAIN: data })
+        await self.hass.async_block_till_done()
+
+        async def async_set_value(name: str, value: str):
+            await self.hass.services.async_call(
+                input_text.DOMAIN,
+                input_text.SERVICE_SET_VALUE,
+                {
+                    ATTR_ENTITY_ID: f"input_text.{name}",
+                    input_text.ATTR_VALUE: value,
+                }
+            )
+            await self.hass.async_block_till_done()
+
+        result = Mock()
+        result.async_set_value = async_set_value
+        return result
+    
+
+    async def async_start_input_boolean(self):
+        with open(get_test_config_dir(INPUT_BOOLEAN_CONFIG)) as f:
+            data = yaml.load(f, Loader=SafeLoader) or {}
+        assert await async_setup_component(self.hass, input_boolean.DOMAIN, { input_boolean.DOMAIN: data })
+        await self.hass.async_block_till_done()
+
+        async def async_turn_on(name: str):
+            await self.hass.services.async_call(
+                input_boolean.DOMAIN,
+                input_boolean.SERVICE_TURN_ON,
+                {
+                    ATTR_ENTITY_ID: f"input_boolean.{name}"
+                }
+            )
+            await self.hass.async_block_till_done()
+
+        async def async_turn_off(name: str):
+            await self.hass.services.async_call(
+                input_boolean.DOMAIN,
+                input_boolean.SERVICE_TURN_OFF,
+                {
+                    ATTR_ENTITY_ID: f"input_boolean.{name}"
+                }
+            )
+            await self.hass.async_block_till_done()
+
+        result = Mock()
+        result.async_turn_on = async_turn_on
+        result.async_turn_off = async_turn_off
+        return result
+    
+
+    async def async_start_input_button(self):
+        with open(get_test_config_dir(INPUT_BUTTON_CONFIG)) as f:
+            data = yaml.load(f, Loader=SafeLoader) or {}
+        assert await async_setup_component(self.hass, input_button.DOMAIN, { input_button.DOMAIN: data })
+        await self.hass.async_block_till_done()
+
+        async def async_press(name: str):
+            await self.hass.services.async_call(
+                input_button.DOMAIN,
+                input_button.SERVICE_PRESS,
+                {
+                    ATTR_ENTITY_ID: f"input_button.{name}"
+                }
+            )
+            await self.hass.async_block_till_done()
+
+        result = Mock()
+        result.async_press = async_press
+        return result
+    
+
+    async def async_start_light(self):
+        with open(get_test_config_dir(LIGHT_CONFIG)) as f:
+            data = yaml.load(f, Loader=SafeLoader) or {}
+        assert await async_setup_component(self.hass, light.DOMAIN, { light.DOMAIN: data })
+        await self.hass.async_block_till_done()
+
+        async def async_turn_on(name: str):
+            await self.hass.services.async_call(
+                light.DOMAIN,
+                light.SERVICE_TURN_ON,
+                {
+                    ATTR_ENTITY_ID: f"light.{name}"
+                }
+            )
+            await self.hass.async_block_till_done()
+
+        async def async_turn_off(name: str):
+            await self.hass.services.async_call(
+                light.DOMAIN,
+                light.SERVICE_TURN_OFF,
+                {
+                    ATTR_ENTITY_ID: f"light.{name}"
+                }
+            )
+            await self.hass.async_block_till_done()
+
+        result = Mock()
+        result.async_turn_on = async_turn_on
+        result.async_turn_off = async_turn_off
+        return result
+    
+
+    async def async_start_alarm(self):
+        with open(get_test_config_dir(ALARM_CONFIG)) as f:
+            data = yaml.load(f, Loader=SafeLoader) or {}
+        assert await async_setup_component(self.hass, alarm_control_panel.DOMAIN, { alarm_control_panel.DOMAIN: data })
+        await self.hass.async_block_till_done()
+
+        async def async_arm_away(name: str):
+            await self.hass.services.async_call(
+                alarm_control_panel.DOMAIN,
+                alarm_control_panel.SERVICE_ALARM_ARM_AWAY,
+                {
+                    ATTR_ENTITY_ID: f"alarm_control_panel.{name}",
+                    alarm_control_panel.ATTR_CODE: '1234',
+                }
+            )
+            await self.hass.async_block_till_done()
+
+        result = Mock()
+        result.async_arm_away = async_arm_away
+        return result
+    
+
+    async def async_start_switch(self):
+        with open(get_test_config_dir(SWITCH_CONFIG)) as f:
+            data = yaml.load(f, Loader=SafeLoader) or {}
+        assert await async_setup_component(self.hass, switch.DOMAIN, { switch.DOMAIN: data })
+        await self.hass.async_block_till_done()
+
+        async def async_turn_on(name: str):
+            await self.hass.services.async_call(
+                switch.DOMAIN,
+                switch.SERVICE_TURN_ON,
+                {
+                    ATTR_ENTITY_ID: f"switch.{name}"
+                }
+            )
+            await self.hass.async_block_till_done()
+
+        async def async_turn_off(name: str):
+            await self.hass.services.async_call(
+                switch.DOMAIN,
+                switch.SERVICE_TURN_OFF,
+                {
+                    ATTR_ENTITY_ID: f"switch.{name}"
+                }
+            )
+            await self.hass.async_block_till_done()
+
+        result = Mock()
+        result.async_turn_on = async_turn_on
+        result.async_turn_off = async_turn_off
+        return result
+
+
+    async def async_start_sensor(self):
+        with open(get_test_config_dir(SENSOR_CONFIG)) as f:
+            data = yaml.load(f, Loader=SafeLoader) or {}
+        assert await async_setup_component(self.hass, sensor.DOMAIN, { sensor.DOMAIN: data })
+        await self.hass.async_block_till_done()
+
+
+    async def async_start_template(self):
+        with open(get_test_config_dir(TEMPLATE_CONFIG)) as f:
+            data = yaml.load(f, Loader=SafeLoader) or {}
+        assert await async_setup_component(self.hass, template.DOMAIN, { template.DOMAIN: data })
+        await self.hass.async_block_till_done()
 
 
     def verify_has_log_record(self, level_name: str, message: str):

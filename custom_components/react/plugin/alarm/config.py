@@ -5,5 +5,5 @@ class AlarmConfig(DynamicData):
     def __init__(self, source: DynamicData = None) -> None:
         super().__init__()
         self.code: str = None
-        self.alarm_provider_name: str = None
+        self.alarm_provider: str = None
         self.load(source)

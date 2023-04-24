@@ -8,9 +8,8 @@ from tests.common import FIXTURE_WORKFLOW_NAME
 
 FIXTURE_ADDITIONAL_TESTS = "additional_tests"
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["immediate"])
-async def test_immediate(hass: HomeAssistant, workflow_name, react_component):
+async def test_immediate(test_context: TstContext, workflow_name: str):
     """
     Test for workflow with immediate reactor:
     - No reaction entity should be created
@@ -19,22 +18,19 @@ async def test_immediate(hass: HomeAssistant, workflow_name, react_component):
     - Trace data should match configuration
     """
 
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
-        await tc.async_send_action_event()
-        tc.verify_reaction_not_found()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data()
-        tc.verify_trace_record()
+    await test_context.async_start_react()
+    
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
+        await test_context.async_send_action_event()
+        test_context.verify_reaction_not_found()
+        await test_context.async_verify_reaction_event_received()
+        test_context.verify_reaction_event_data()
+        test_context.verify_trace_record()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["delayed"])
-async def test_delayed(hass: HomeAssistant, workflow_name, react_component):
+async def test_delayed(test_context: TstContext, workflow_name: str):
     """
     Test for workflow with delayed reactor:
     - An event should not be sent immediately
@@ -45,25 +41,22 @@ async def test_delayed(hass: HomeAssistant, workflow_name, react_component):
     - Trace data should match configuration
     """
 
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
-        await tc.async_send_action_event()
-        await tc.async_verify_reaction_event_not_received()
-        tc.verify_reaction_found()
-        # tc.verify_reaction_entity_data()
-        await tc.async_verify_reaction_event_received(delay=6)
-        tc.verify_reaction_event_data()
-        tc.verify_trace_record()
-        tc.verify_reaction_not_found()
+    await test_context.async_start_react()
+    
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
+        await test_context.async_send_action_event()
+        await test_context.async_verify_reaction_event_not_received()
+        test_context.verify_reaction_found()
+        # test_context.verify_reaction_entity_data()
+        await test_context.async_verify_reaction_event_received(delay=6)
+        test_context.verify_reaction_event_data()
+        test_context.verify_trace_record()
+        test_context.verify_reaction_not_found()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["scheduled"])
-async def test_scheduled(hass: HomeAssistant, workflow_name, react_component):
+async def test_scheduled(test_context: TstContext, workflow_name: str):
     """ 
     Test for workflow with scheduled reactor:
     - An event should not be sent immediately
@@ -72,23 +65,20 @@ async def test_scheduled(hass: HomeAssistant, workflow_name, react_component):
     - Trace data should match configuration
     """
 
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
-        await tc.async_send_action_event()
-        await tc.async_verify_reaction_event_not_received()
-        tc.verify_reaction_found()
-        # tc.verify_reaction_entity_data()
-        tc.verify_trace_record(expected_event_trace=False)
-        await tc.async_stop_all_runs()
+    await test_context.async_start_react()
+    
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
+        await test_context.async_send_action_event()
+        await test_context.async_verify_reaction_event_not_received()
+        test_context.verify_reaction_found()
+        # test_context.verify_reaction_entity_data()
+        test_context.verify_trace_record(expected_event_trace=False)
+        await test_context.async_stop_all_runs()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["reset"])
-async def test_reset(hass: HomeAssistant, workflow_name, react_component):
+async def test_reset(test_context: TstContext, workflow_name: str):
     """
     Test for workflow with reset reactor:
     - Reactions should be found before sending reset event
@@ -96,31 +86,28 @@ async def test_reset(hass: HomeAssistant, workflow_name, react_component):
     - Trace data should match configuration
     """
     
-    comp = await react_component
-    await comp.async_setup(workflow_name, ["delayed", "scheduled"])
+    await test_context.async_start_react(additional_workflows=["delayed", "scheduled"])
 
-    tc = TstContext(hass, workflow_name)
-    tc_delayed = TstContext(hass, "delayed")
-    tc_scheduled = TstContext(hass, "scheduled")
+    tc_delayed = await TstContext(test_context.hass, test_context.react_component, "delayed").async_start_react(skip_setup=True)
+    tc_scheduled = await TstContext(test_context.hass, test_context.react_component, "scheduled").async_start_react(skip_setup=True)
 
     async with tc_delayed.async_listen_reaction_event():
         await tc_delayed.async_send_action_event()
     async with tc_scheduled.async_listen_reaction_event():
         await tc_scheduled.async_send_action_event()
 
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_found(2)
-        await tc.async_send_action_event()
-        tc.verify_reaction_not_found()
-        tc.verify_trace_record()
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_found(2)
+        await test_context.async_send_action_event()
+        test_context.verify_reaction_not_found()
+        test_context.verify_trace_record()
 
     await tc_delayed.async_stop_all_runs()
     await tc_scheduled.async_stop_all_runs()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["forward_action"])
-async def test_forward_action_no_toggle(hass: HomeAssistant, workflow_name, react_component):
+async def test_forward_action_no_toggle(test_context: TstContext, workflow_name: str):
     """ 
     Test for workflow with reactor with forwardaction and not event action 'toggle':
     - No reaction entity should be created
@@ -129,22 +116,19 @@ async def test_forward_action_no_toggle(hass: HomeAssistant, workflow_name, reac
     - Trace data should match configuration
     """
 
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
-        await tc.async_send_action_event(action="test")
-        tc.verify_reaction_not_found()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data(expected_action="test")
-        tc.verify_trace_record(expected_runtime_actor_action="test")
+    await test_context.async_start_react()
+    
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
+        await test_context.async_send_action_event(action="test")
+        test_context.verify_reaction_not_found()
+        await test_context.async_verify_reaction_event_received()
+        test_context.verify_reaction_event_data(expected_action="test")
+        test_context.verify_trace_record(expected_runtime_actor_action="test")
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["forward_action"])
-async def test_forward_action_toggle(hass: HomeAssistant, workflow_name, react_component):
+async def test_forward_action_toggle(test_context: TstContext, workflow_name: str):
     """ 
     Test for workflow with reactor with forwardaction and event action 'toggle':
     - No reaction entity should be created
@@ -152,21 +136,18 @@ async def test_forward_action_toggle(hass: HomeAssistant, workflow_name, react_c
     - Trace data should match configuration
     """
 
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
-        await tc.async_send_action_event(action="toggle")
-        tc.verify_reaction_not_found()
-        await tc.async_verify_reaction_event_not_received()
-        tc.verify_trace_record(expected_result_message="Skipped, toggle with forward-action")
+    await test_context.async_start_react()
+    
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
+        await test_context.async_send_action_event(action="toggle")
+        test_context.verify_reaction_not_found()
+        await test_context.async_verify_reaction_event_not_received()
+        test_context.verify_trace_record(expected_result_message="Skipped, toggle with forward-action")
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["forward_data"])
-async def test_forward_data(hass: HomeAssistant, workflow_name, react_component):
+async def test_forward_data(test_context: TstContext, workflow_name: str):
     """ 
     Test for workflow with reactor with forwarddata :
     - No reaction entity should be created
@@ -175,27 +156,24 @@ async def test_forward_data(hass: HomeAssistant, workflow_name, react_component)
     - Trace data should match configuration
     """
 
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
+    await test_context.async_start_react()
+    
     data_in: dict = {
         "data1" : 37,
         "data2": ["asdf", "qwer"],
     }
 
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
-        await tc.async_send_action_event(data=data_in)
-        tc.verify_reaction_not_found()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data(expected_data=data_in)
-        tc.verify_trace_record(expected_runtime_reactor_data=[data_in])
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
+        await test_context.async_send_action_event(data=data_in)
+        test_context.verify_reaction_not_found()
+        await test_context.async_verify_reaction_event_received()
+        test_context.verify_reaction_event_data(expected_data=data_in)
+        test_context.verify_trace_record(expected_runtime_reactor_data=[data_in])
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["full_stencil"])
-async def test_full_stencil(hass: HomeAssistant, workflow_name, react_component):
+async def test_full_stencil(test_context: TstContext, workflow_name: str):
     """
     Test for workflow with full stencil:
     - No reaction entity should be created
@@ -204,25 +182,22 @@ async def test_full_stencil(hass: HomeAssistant, workflow_name, react_component)
     - Trace data should match configuration
     """
 
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    tc = TstContext(hass, workflow_name)
+    await test_context.async_start_react()
+    
     data_out: dict = {
         "test": 37
     }
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
-        await tc.async_send_action_event()
-        tc.verify_reaction_not_found()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data(expected_data=data_out)
-        tc.verify_trace_record()
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
+        await test_context.async_send_action_event()
+        test_context.verify_reaction_not_found()
+        await test_context.async_verify_reaction_event_received()
+        test_context.verify_reaction_event_data(expected_data=data_out)
+        test_context.verify_trace_record()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["partial_stencil"])
-async def test_partial_stencil(hass: HomeAssistant, workflow_name, react_component):
+async def test_partial_stencil(test_context: TstContext, workflow_name: str):
     """
     Test for workflow with partial stencil:
     - No reaction entity should be created
@@ -231,46 +206,41 @@ async def test_partial_stencil(hass: HomeAssistant, workflow_name, react_compone
     - Trace data should match configuration
     """
 
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
-        await tc.async_send_action_event()
-        tc.verify_reaction_not_found()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data()
-        tc.verify_trace_record()
+    await test_context.async_start_react()
+    
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
+        await test_context.async_send_action_event()
+        test_context.verify_reaction_not_found()
+        await test_context.async_verify_reaction_event_received()
+        test_context.verify_reaction_event_data()
+        test_context.verify_trace_record()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["overwrite"])
-async def test_overwrite(hass: HomeAssistant, workflow_name, react_component):
+async def test_overwrite(test_context: TstContext, workflow_name: str):
     """
     Test for workflow with overwrite reactor:
     """
 
-    comp = await react_component
-    await comp.async_setup(workflow_name)
+    await test_context.async_start_react()
+    
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
+        
+        await test_context.async_send_action_event()
+        await test_context.async_verify_reaction_event_not_received()
+        test_context.verify_reaction_found()
+        
+        await test_context.async_send_action_event()
+        await test_context.async_verify_reaction_event_not_received()
+        test_context.verify_reaction_found()
+        # test_context.verify_reaction_entity_data()
+        
+        # await test_context.async_verify_reaction_event_received(delay=6)
+        # test_context.verify_reaction_event_data()
+        # test_context.verify_trace_record()
+        # test_context.verify_reaction_not_found()
 
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
-        
-        await tc.async_send_action_event()
-        await tc.async_verify_reaction_event_not_received()
-        tc.verify_reaction_found()
-        
-        await tc.async_send_action_event()
-        await tc.async_verify_reaction_event_not_received()
-        tc.verify_reaction_found()
-        # tc.verify_reaction_entity_data()
-        
-        # await tc.async_verify_reaction_event_received(delay=6)
-        # tc.verify_reaction_event_data()
-        # tc.verify_trace_record()
-        # tc.verify_reaction_not_found()
-
-        await tc.async_stop_all_runs()
-        tc.verify_reaction_not_found()
+        await test_context.async_stop_all_runs()
+        test_context.verify_reaction_not_found()

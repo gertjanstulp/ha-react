@@ -16,39 +16,44 @@ from custom_components.react.plugin.const import (
     PROVIDER_TYPE_TTS
 )
 from custom_components.react.plugin.media_player.api import MediaPlayerConfig
-from custom_components.react.plugin.media_player.plugin import load as load_plugin
+from custom_components.react.plugin.media_player.const import (
+    ATTR_MEDIA_PLAYER_PROVIDER, 
+    ATTR_TTS_PROVIDER
+)
+from custom_components.react.plugin.media_player.plugin import Plugin as MediaPlayerPlugin
 from custom_components.react.plugin.media_player.provider import MediaPlayerProvider, TtsProvider
-from custom_components.react.plugin.plugin_factory import HassApi, PluginApi
+from custom_components.react.plugin.api import HassApi, PluginApi
 from custom_components.react.utils.struct import DynamicData
-from tests._plugins.common import HassApiMock
 
+from tests._plugins.common import HassApiMock
 from tests.common import TEST_CONTEXT
 from tests.const import (
     ATTR_ENTITY_STATE,
     ATTR_MEDIA_PLAYER_FAVORITE_ID,
-    ATTR_MEDIA_PLAYER_PROVIDER,
     ATTR_TTS_EVENT_LANGUAGE, 
     ATTR_TTS_EVENT_OPTIONS,
-    ATTR_TTS_PROVIDER
+    TEST_CONFIG
 )
 from tests.tst_context import TstContext
-
 
 MEDIA_PLAYER_PROVIDER_MOCK = "media_player_mock"
 TTS_PROVIDER_MOCK = "tts_mock"
 
 
-def load(plugin_api: PluginApi, hass_api: HassApi, config: DynamicData):
-    hass_api_mock = HassApiMock(hass_api.hass)
-    load_plugin(plugin_api, hass_api_mock, config)
-    if media_player_provider := config.get(ATTR_MEDIA_PLAYER_PROVIDER, None):
-        setup_mock_media_player_provider(plugin_api, hass_api, media_player_provider)
-    if tts_provider := config.get(ATTR_TTS_PROVIDER, None):
-        setup_mock_tts_provider(plugin_api, hass_api, tts_provider)
-    media_player_entity_id = config.get(ATTR_ENTITY_ID)
-    media_player_state = config.get(ATTR_ENTITY_STATE, None)
-    if media_player_entity_id and media_player_state != None:
-        hass_api_mock.hass_register_state(media_player_entity_id, media_player_state)
+class Plugin(MediaPlayerPlugin):
+    def load(self, plugin_api: PluginApi, hass_api: HassApi, config: DynamicData):
+        hass_api_mock = HassApiMock(hass_api.hass)
+        super().load(plugin_api, hass_api_mock, config)
+        if media_player_provider := config.get(ATTR_MEDIA_PLAYER_PROVIDER, None):
+            setup_mock_media_player_provider(plugin_api, hass_api, media_player_provider)
+        if tts_provider := config.get(ATTR_TTS_PROVIDER, None):
+            setup_mock_tts_provider(plugin_api, hass_api, tts_provider)
+        
+        test_config: dict = hass_api.hass_get_data(TEST_CONFIG, {})
+        media_player_entity_id = test_config.get(ATTR_ENTITY_ID, None)
+        media_player_state = test_config.get(ATTR_ENTITY_STATE, None)
+        if media_player_entity_id and media_player_state != None:
+            hass_api_mock.hass_register_state(media_player_entity_id, media_player_state)
 
 
 def setup_mock_media_player_provider(plugin_api: PluginApi, hass_api: HassApi, media_player_provider: str):
@@ -84,32 +89,32 @@ class MediaPlayerProviderMock(MediaPlayerProvider):
 
 
     async def async_play_favorite(self, context: Context, entity_id: str, favorite_id: str):
-        tc: TstContext = self.hass_api.hass_get_data(TEST_CONTEXT)
-        tc.register_plugin_data({
+        test_context: TstContext = self.hass_api.hass_get_data(TEST_CONTEXT)
+        test_context.register_plugin_data({
             ATTR_ENTITY_ID: entity_id,
             ATTR_MEDIA_PLAYER_FAVORITE_ID: favorite_id,
         })
 
 
     async def async_suspend(self, context: Context, entity_id: str):
-        tc: TstContext = self.hass_api.hass_get_data(TEST_CONTEXT)
-        tc.register_plugin_data({
+        test_context: TstContext = self.hass_api.hass_get_data(TEST_CONTEXT)
+        test_context.register_plugin_data({
             ATTR_ENTITY_ID: entity_id,
             ATTR_MODE: "suspend",
         })
 
 
     async def async_resume(self, context: Context, entity_id: str):
-        tc: TstContext = self.hass_api.hass_get_data(TEST_CONTEXT)
-        tc.register_plugin_data({
+        test_context: TstContext = self.hass_api.hass_get_data(TEST_CONTEXT)
+        test_context.register_plugin_data({
             ATTR_ENTITY_ID: entity_id,
             ATTR_MODE: "resume",
         })
 
     
     async def async_set_volume(self, context: Context, entity_id: str, volume: float):
-        tc: TstContext = self.hass_api.hass_get_data(TEST_CONTEXT)
-        tc.register_plugin_data({
+        test_context: TstContext = self.hass_api.hass_get_data(TEST_CONTEXT)
+        test_context.register_plugin_data({
             ATTR_ENTITY_ID: entity_id,
             ATTR_MEDIA_VOLUME_LEVEL: volume
         })

@@ -31,7 +31,7 @@ class MediaPlayerPlayFavoriteTask(PluginReactionTask):
             event.context, 
             event.payload.entity, 
             event.payload.data.favorite_id,
-            event.payload.data.media_player_provider_name)
+            event.payload.data.media_player_provider)
         
 
 class MediaPlayerPlayFavoriteReactionEventData(DynamicData):
@@ -39,7 +39,7 @@ class MediaPlayerPlayFavoriteReactionEventData(DynamicData):
     def __init__(self, source: dict) -> None:
         super().__init__()
         
-        self.media_player_provider_name: str = None
+        self.media_player_provider: str = None
         self.favorite_id: str = None
 
         self.load(source)

@@ -10,10 +10,10 @@
   name: "mobile_user"
   services:
     - service: telegram_user
-    # - service: mobile_app_hd1903
+    - service: mobile_app_hd1903
     
 - platform: group
   name: "mobile_group"
   services:
     - service: telegram_group
-    # - service: mobile_app_hd1903
+    - service: mobile_app_hd1903

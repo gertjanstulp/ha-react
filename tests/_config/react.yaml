@@ -1,31 +1,39 @@
 # frontend_repo_url: http://localhost:5000
 
-entity_maps:
-  2095689255: mobile_user
-  -719737734: mobile_group
-  7237746fa7daec45: mobile_user
+# entity_maps:
+  # 2095689255: mobile_user
+  # -719737734: mobile_group
+  # 7237746fa7daec45: mobile_user
 
 plugins:
-  - module: custom_components.react.plugin.notify.plugin
-  - module: custom_components.react.plugin.telegram.plugin
-  - module: custom_components.react.plugin.persistent_notification.plugin
-  - module: custom_components.react.plugin.mobile_app.plugin
-
-  - module: custom_components.react.plugin.input.plugin
-  - module: custom_components.react.plugin.light.plugin
-  - module: custom_components.react.plugin.switch.plugin
-
-  - module: custom_components.react.plugin.group.plugin
-
-  - module: custom_components.react.plugin.media_player.plugin
+  - module: custom_components.react.plugin.notify
+  - module: custom_components.react.plugin.telegram
     config:
-      tts_provider_name: google_translate
-      language: nl
-  - module: custom_components.react.plugin.sonos.plugin
-  - module: custom_components.react.plugin.browser_mod.plugin
-  - module: custom_components.react.plugin.google_translate.plugin
+      entity_maps:
+        "2095689255": telegram_user
+        "-719737734": telegram_group
+  - module: custom_components.react.plugin.persistent_notification
+  - module: custom_components.react.plugin.mobile_app
+    config:
+      entity_maps:
+        "7237746fa7daec45": mobile_app_hd1903
+        
+  - module: custom_components.react.plugin.input
+  - module: custom_components.react.plugin.light
+  - module: custom_components.react.plugin.switch
 
-  - module: custom_components.react.plugin.alarm.plugin
+  - module: custom_components.react.plugin.group
+
+  - module: custom_components.react.plugin.media_player
+    config:
+      tts_provider: google_translate
+  - module: custom_components.react.plugin.sonos
+  - module: custom_components.react.plugin.browser_mod
+  - module: custom_components.react.plugin.google_translate
+    config:
+      language: nl
+
+  - module: custom_components.react.plugin.alarm
     config:
       code: '1234'
 
@@ -767,7 +775,9 @@ workflow:
 
   workflow_notify_confirm_feedback_test:
     when:
-      entity: mobile_user
+      entity: 
+        - telegram_user
+        - mobile_app_hd1903
       type: notify
       action: feedback_retrieved
     then:
@@ -776,7 +786,7 @@ workflow:
         action: reactor_action_notify_confirm_feedback_test
         data:
           feedback: "{{ event.data.feedback }}"
-      - entity: mobile_user
+      - entity: "{{ event.entity }}"
         type: notify
         action: confirm_feedback
         forward_data: True

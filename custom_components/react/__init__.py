@@ -1,39 +1,34 @@
 from datetime import datetime
-from typing import Any, Awaitable, Callable, Union
+from typing import Any, Awaitable, Union
 import voluptuous as vol
 from awesomeversion import AwesomeVersion
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, STATE_ON, __version__ as HAVERSION
-from homeassistant.core import Context, CoreState, HomeAssistant, callback, CALLBACK_TYPE, Event as HassEvent
+from homeassistant.const import STATE_ON, __version__ as HAVERSION
+from homeassistant.core import Context, HomeAssistant, callback, CALLBACK_TYPE, Event as HassEvent
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.trace import trace_get
 from homeassistant.loader import async_get_integration
 from homeassistant.util.dt import parse_datetime, utcnow
 
-from custom_components.react.runtime.runtime import ReactRuntime, WorkflowRuntime
+from custom_components.react.base import ReactBase
+from custom_components.react.lib.config import Actor, Reactor, Workflow
+from custom_components.react.plugin.factory import PluginFactory
+from custom_components.react.runtime.runtime import ReactRuntime
 from custom_components.react.runtime.snapshots import create_snapshot
+from custom_components.react.tasks.manager import ReactTaskManager
 from custom_components.react.utils.context import TemplateContext, VariableContextDataProvider
-from custom_components.react.utils.destroyable import Destroyable
+from custom_components.react.utils.data import ReactData
 from custom_components.react.utils.events import ActionEvent
 from custom_components.react.utils.jit import ObjectJitter
-from custom_components.react.utils.struct import ActorRuntime, ReactorRuntime, StateRuntime
+from custom_components.react.utils.logger import format_data, get_react_logger
+from custom_components.react.utils.struct import ActorRuntime, ReactorRuntime
 from custom_components.react.utils.track import ObjectTracker
 
-
-from .base import ReactBase
-from .plugin.plugin_factory import PluginFactory
-from .lib.config import Actor, Reactor, Workflow
-from .tasks.manager import ReactTaskManager
-from .utils.data import ReactData
-from .utils.logger import format_data, get_react_logger
-
-from .const import (
+from custom_components.react.const import (
     ATTR_ACTION,
     ATTR_DATA,
     ATTR_ENTITY,
@@ -41,7 +36,6 @@ from .const import (
     ATTR_TRIGGER,
     ATTR_TYPE,
     ATTR_WORKFLOW_ID,
-    CONF_ENTITY_MAPS,
     CONF_PLUGINS,
     CONF_FRONTEND_REPO_URL,
     CONF_STENCIL,
@@ -52,17 +46,16 @@ from .const import (
     PLUGIN_SCHEMA,
     SIGNAL_ACTION_HANDLER_CREATED,
     SIGNAL_ACTION_HANDLER_DESTROYED,
-    SIGNAL_WAIT_FINISHED,
     STARTUP,
     STENCIL_SCHEMA, 
     WORKFLOW_SCHEMA,
 )
 
+
 CONFIG_SCHEMA = vol.Schema({
     vol.Optional(DOMAIN, default={}): vol.Schema({
         vol.Optional(CONF_FRONTEND_REPO_URL): cv.string,
         vol.Optional(CONF_PLUGINS): vol.All(cv.ensure_list, [PLUGIN_SCHEMA]),
-        vol.Optional(CONF_ENTITY_MAPS): vol.Any(dict, None),
         vol.Optional(CONF_WORKFLOW): vol.Any(WORKFLOW_SCHEMA, None),
         vol.Optional(CONF_STENCIL): vol.Any(STENCIL_SCHEMA, None),
     })
@@ -71,6 +64,7 @@ CONFIG_SCHEMA = vol.Schema({
 _LOGGER = get_react_logger()
 
 AWAITABLE_TYPE = Awaitable[Any]
+
 
 async def async_initialize_integration(
     hass: HomeAssistant,
@@ -298,7 +292,7 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
     async def async_enable(self):
         if not self.is_enabled:
             self.is_enabled = True
-            await self.async_update_ha_state()
+            self.async_write_ha_state()
             _LOGGER.debug(f"Registry: Entity {self.entity_id} - enabled")
 
         self.runtime.start_workflow_runtime(self.workflow.id)
@@ -307,7 +301,7 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
     async def async_disable(self):
         if self.is_enabled:
             self.is_enabled = False
-            await self.async_update_ha_state()
+            self.async_write_ha_state()
             _LOGGER.debug(f"Registry: Entity {self.entity_id} - disabled")
 
         await self.runtime.async_stop_workflow_runtime(self.workflow.id)

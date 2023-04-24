@@ -37,7 +37,7 @@ class NotifySendMessageTask(PluginReactionTask):
             event.payload.entity,
             event.payload.data.message if event.payload.data else None,
             event.payload.data.feedback_items if event.payload.data else None,
-            event.payload.data.notify_provider_name if event.payload.data else None,
+            event.payload.data.notify_provider if event.payload.data else None,
         )
 
 
@@ -49,7 +49,7 @@ class NotifySendMessageReactionEventData(DynamicData):
         
         self.message: str = None
         self.feedback_items: list[FeedbackItem] = None
-        self.notify_provider_name: str = None
+        self.notify_provider: str = None
 
         self.load(source)
 

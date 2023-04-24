@@ -14,10 +14,16 @@ from homeassistant.components.telegram_bot import (
 )
 from homeassistant.core import Context
 
-from custom_components.react.const import ATTR_DATA, ATTR_EVENT_MESSAGE
+from custom_components.react.const import (
+    ATTR_DATA, 
+    ATTR_EVENT_MESSAGE
+)
 from custom_components.react.plugin.notify.const import FeedbackItem
 from custom_components.react.plugin.notify.provider import NotifyProvider
-from custom_components.react.plugin.plugin_factory import HassApi, PluginApi
+from custom_components.react.plugin.api import HassApi, PluginApi
+from custom_components.react.utils.logger import get_react_logger
+
+_LOGGER = get_react_logger()
 
 
 class TelegramProvider(NotifyProvider):
@@ -25,7 +31,12 @@ class TelegramProvider(NotifyProvider):
         super().__init__(plugin_api, hass_api)
 
 
+    def _debug(self, message: str):
+        _LOGGER.debug(f"Telegram app plugin: TelegramProvider - {message}")
+
+
     async def async_notify(self, context: Context, entity_id: str, message: str, feedback_items: list[FeedbackItem]):
+        self._debug(f"Sending message to {entity_id}")
         data: dict = {
             ATTR_EVENT_MESSAGE: escape_markdown(message),
         }
@@ -46,7 +57,15 @@ class TelegramProvider(NotifyProvider):
         )
 
 
-    async def async_confirm_feedback(self, context: Context, conversation_id: str, message_id: str, text: str, acknowledgement: str):
+    async def async_confirm_feedback(self, 
+        context: Context, 
+        conversation_id: str, 
+        message_id: str, 
+        text: str, 
+        feedback: str,
+        acknowledgement: str,
+    ):
+        self._debug(f"Confirming feedback '{feedback}' with acknowledgement '{acknowledgement}'")
         data = {
             ATTR_MESSAGEID: message_id,
             ATTR_CHAT_ID: conversation_id,

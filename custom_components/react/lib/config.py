@@ -41,7 +41,6 @@ from custom_components.react.const import (
     ATTR_WAIT,
     ATTR_WORKFLOW_THEN,
     ATTR_WORKFLOW_WHEN,
-    CONF_ENTITY_MAPS,
     CONF_PLUGINS,
     CONF_STENCIL,
     CONF_TRACE,
@@ -295,7 +294,7 @@ class Plugin(DynamicData):
     def __init__(self, source: dict = None) -> None:
         super().__init__()
         self.module: str = None
-        self.config: dict = None
+        self.config: DynamicData = None
         self.load(source)
 
 
@@ -319,7 +318,6 @@ class WorkflowConfiguration:
         if react_config:
             _LOGGER.debug("Config: found react configuration, processing")
 
-            self.entity_maps_config = react_config.get(CONF_ENTITY_MAPS, {}) or {}
             self.stencil_config = react_config.get(CONF_STENCIL, {}) or {}
             self.workflow_config = react_config.get(CONF_WORKFLOW, {}) or {}
 

@@ -24,7 +24,7 @@ from .const import (
 if TYPE_CHECKING:
     from custom_components.react.tasks.manager import ReactTaskManager
     from custom_components.react.utils.data import ReactData
-    from custom_components.react.plugin.plugin_factory import PluginFactory
+    from custom_components.react.plugin.factory import PluginFactory
 
 
 @dataclass

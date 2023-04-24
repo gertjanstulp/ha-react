@@ -27,7 +27,11 @@ class LightTurnOnTask(PluginReactionTask):
 
     async def async_execute_plugin(self, event: LightTurnOnReactionEvent):
         self._debug(f"Turning on light '{event.payload.entity}'")
-        await self.api.async_light_turn_on(event.context, event.payload.entity, event.payload.data.light_provider_name if event.payload.data else None)
+        await self.api.async_light_turn_on(
+            event.context, 
+            event.payload.entity, 
+            event.payload.data.light_provider if event.payload.data else None
+        )
         
 
 class LightTurnOnReactionEventData(DynamicData):
@@ -35,7 +39,7 @@ class LightTurnOnReactionEventData(DynamicData):
     def __init__(self, source: dict) -> None:
         super().__init__()
         
-        self.light_provider_name: str = None
+        self.light_provider: str = None
 
         self.load(source)
 

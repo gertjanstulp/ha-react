@@ -41,8 +41,8 @@ class MediaPlayerSpeekTask(PluginReactionTask):
             event.payload.data.wait,
             event.payload.data.cache,
             event.payload.data.options,
-            event.payload.data.media_player_provider_name,
-            event.payload.data.tts_provider_name,
+            event.payload.data.media_player_provider,
+            event.payload.data.tts_provider,
         )
 
 
@@ -59,8 +59,8 @@ class MediaPlayerSpeekReactionEventData(DynamicData):
         self.wait: int = None
         self.cache: bool = None
         self.options: DynamicData = None
-        self.media_player_provider_name: str = None
-        self.tts_provider_name: str = None
+        self.media_player_provider: str = None
+        self.tts_provider: str = None
 
         self.load(source)
 

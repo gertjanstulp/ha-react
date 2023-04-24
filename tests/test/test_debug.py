@@ -10,7 +10,7 @@
 
 
 # @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["debug"])
-# async def test_immediate(hass: HomeAssistant, workflow_name, react_component):
+# async def test_immediate(test_context: TstContext, workflow_name: str):
 #     await react_component.async_setup(workflow_name)
 
 #     # tc = TstContext(hass, workflow_name)
