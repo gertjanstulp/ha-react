@@ -36,7 +36,7 @@ class NotifyConfirmFeedbackTask(PluginReactionTask):
             event.payload.data.provider_payload.message_id if event.payload.data.provider_payload else None,
             event.payload.data.provider_payload.text if event.payload.data.provider_payload else None,
             event.payload.data.acknowledgement,
-            event.payload.data.notify_provider_name,
+            event.payload.data.notify_provider,
         )
 
 
@@ -60,7 +60,7 @@ class NotifyConfirmFeedbackReactionEventData(DynamicData):
         self.feedback: str = None
         self.acknowledgement: str = None
         self.provider_payload: NotifyConfirmFeedbackReactionEventProviderPayload = None
-        self.notify_provider_name: str = None
+        self.notify_provider: str = None
 
         self.load(source)
         
