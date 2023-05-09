@@ -4,6 +4,7 @@ ATTR_MESSAGE_DATA = "message_data"
 
 NOTIFY_RESOLVER_KEY = "react_notify_resolver"
 
+ATTR_NOTIFY_PROVIDER = "notify_provider"
 
 class FeedbackItem(DynamicData):
     def __init__(self, source: dict = None) -> None:

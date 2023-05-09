@@ -8,41 +8,29 @@ from tests.common import FIXTURE_WORKFLOW_NAME
 from tests.tst_context import TstContext
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["scheduled_restart_abort"])
-async def test_runtime_restart_mode_abort(hass: HomeAssistant, workflow_name, react_component):
-    
-    comp = await react_component
-    await comp.async_setup(workflow_name)
+async def test_runtime_restart_mode_abort(test_context: TstContext, workflow_name: str):
+    await test_context.async_start_react()
 
-    react: ReactBase = hass.data[DOMAIN]
-
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        await tc.async_send_action_event()
-        tc.verify_run_found()
-        await tc.async_verify_reaction_event_not_received()
-        await react.runtime.async_shutdown(is_hass_shutdown=True)
-        await react.hass.async_block_till_done()
-        await tc.async_verify_reaction_event_not_received()
-        tc.verify_run_not_found()
+    async with test_context.async_listen_reaction_event():
+        await test_context.async_send_action_event()
+        test_context.verify_run_found()
+        await test_context.async_verify_reaction_event_not_received()
+        await test_context.react.runtime.async_shutdown(is_hass_shutdown=True)
+        await test_context.hass.async_block_till_done()
+        await test_context.async_verify_reaction_event_not_received()
+        test_context.verify_run_not_found()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["scheduled_restart_force"])
-async def test_runtime_restart_mode_force(hass: HomeAssistant, workflow_name, react_component):
-    
-    comp = await react_component
-    await comp.async_setup(workflow_name)
+async def test_runtime_restart_mode_force(test_context: TstContext, workflow_name: str):
+    await test_context.async_start_react()
 
-    react: ReactBase = hass.data[DOMAIN]
-
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        await tc.async_send_action_event()
-        tc.verify_run_found()
-        await tc.async_verify_reaction_event_not_received()
-        await react.runtime.async_shutdown(is_hass_shutdown=True)
-        await react.hass.async_block_till_done()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_run_not_found()
+    async with test_context.async_listen_reaction_event():
+        await test_context.async_send_action_event()
+        test_context.verify_run_found()
+        await test_context.async_verify_reaction_event_not_received()
+        await test_context.react.runtime.async_shutdown(is_hass_shutdown=True)
+        await test_context.hass.async_block_till_done()
+        await test_context.async_verify_reaction_event_received()
+        test_context.verify_run_not_found()

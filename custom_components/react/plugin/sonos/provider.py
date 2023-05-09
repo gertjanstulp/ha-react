@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import Context
 
 from custom_components.react.plugin.media_player.provider import MediaPlayerProvider
-from custom_components.react.plugin.plugin_factory import HassApi, PluginApi
+from custom_components.react.plugin.api import HassApi, PluginApi
 from custom_components.react.plugin.sonos.const import CONTENT_TYPE_FAVORITE_ITEM_ID
 from custom_components.react.utils.logger import get_react_logger
 

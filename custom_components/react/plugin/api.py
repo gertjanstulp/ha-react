@@ -1,7 +1,6 @@
 from __future__ import annotations
-from asyncio import sleep
 
-from importlib import import_module
+from asyncio import sleep
 from typing import Any
 from uuid import uuid4
 
@@ -12,9 +11,6 @@ from homeassistant.helpers.entity_registry import RegistryEntry
 
 from custom_components.react.base import ReactBase
 from custom_components.react.tasks.plugin.base import PluginTask
-from custom_components.react.utils.logger import get_react_logger
-
-_LOGGER = get_react_logger()
 
 
 class ApiBase():
@@ -119,28 +115,3 @@ class HassApi:
     
     def hass_generate_media_source_id(self, message: str, engine: str | None = None, language: str | None = None, options: dict | None = None, cache: bool | None = None) -> str:
         return generate_media_source_id(self.hass, message, engine, language, options, cache)
-
-
-class PluginFactory:
-    def __init__(self, react: ReactBase) -> None:
-        self._react = react
-        self.plugin_api = PluginApi(react)
-        self.hass_api = HassApi(react.hass)
-
-
-    def load_plugins(self):
-        for plugin in self._react.configuration.plugin_config.plugins:
-            try:
-                plugin_module = import_module(plugin.module)
-                if hasattr(plugin_module, "load"):
-                    plugin_module.load(plugin_api=self.plugin_api, hass_api=self.hass_api, config=plugin.config)
-                else:
-                    _LOGGER.error(f"PluginFactory - Invalid plugin configuration: load method missing in '{plugin_module}'")
-            except:
-                _LOGGER.exception(f"PluginFactory - Could not load plugin '{plugin.module}'")
-        self._react.task_manager.execute_plugin_tasks()
-
-
-    def reload(self):
-        self.plugin_api.unload_tasks()
-        self.load_plugins()

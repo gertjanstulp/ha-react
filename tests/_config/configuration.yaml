@@ -19,8 +19,6 @@ lovelace:
       title: React test
       icon: mdi:view-dashboard
 
-device_tracker:
-
 binary_sensor: !include config/binary_sensor.yaml
 sensor: !include config/sensor.yaml
 device_tracker: !include config/device_tracker.yaml

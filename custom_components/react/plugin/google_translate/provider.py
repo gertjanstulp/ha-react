@@ -15,7 +15,7 @@ from custom_components.react.plugin.google_translate.config import GoogleTransla
 from custom_components.react.plugin.google_translate.const import TTS_GOOGLE_TRANSLATE_PROVIDER
 from custom_components.react.plugin.media_player.const import TTS_DEFAULT_LANGUAGE
 from custom_components.react.plugin.media_player.provider import TtsProvider
-from custom_components.react.plugin.plugin_factory import HassApi, PluginApi
+from custom_components.react.plugin.api import HassApi, PluginApi
 from custom_components.react.utils.struct import DynamicData
 
 

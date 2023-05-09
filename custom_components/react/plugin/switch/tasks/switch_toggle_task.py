@@ -27,7 +27,11 @@ class SwitchToggleTask(PluginReactionTask):
 
     async def async_execute_plugin(self, event: SwitchToggleReactionEvent):
         self._debug(f"Toggling switch '{event.payload.entity}'")
-        await self.api.async_switch_toggle(event.context, event.payload.entity, event.payload.data.switch_provider_name if event.payload.data else None)
+        await self.api.async_switch_toggle(
+            event.context, 
+            event.payload.entity, 
+            event.payload.data.switch_provider if event.payload.data else None
+        )
         
 
 class SwitchToggleReactionEventData(DynamicData):
@@ -35,7 +39,7 @@ class SwitchToggleReactionEventData(DynamicData):
     def __init__(self, source: dict) -> None:
         super().__init__()
         
-        self.switch_provider_name: str = None
+        self.switch_provider: str = None
 
         self.load(source)
 

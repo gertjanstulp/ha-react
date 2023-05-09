@@ -10,13 +10,18 @@ from custom_components.react.const import (
     ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK,
     ATTR_EVENT_FEEDBACK_ITEM_MESSAGE_ID,
     ATTR_EVENT_FEEDBACK_ITEM_TEXT,
+    ATTR_EVENT_NOTIFY_PROVIDER,
     ATTR_EVENT_NOTIFY_PROVIDER_PAYLOAD, 
     ATTR_TYPE,
     REACT_ACTION_FEEDBACK_RETRIEVED,
     REACT_TYPE_NOTIFY
 )
 from custom_components.react.base import ReactBase
-from custom_components.react.plugin.mobile_app.const import EVENT_MOBILE_APP_CALLBACK
+from custom_components.react.plugin.mobile_app.config import MobileAppConfig
+from custom_components.react.plugin.mobile_app.const import (
+    EVENT_MOBILE_APP_CALLBACK, 
+    NOTIFY_PROVIDER_MOBILE_APP
+)
 from custom_components.react.tasks.plugin.base import PluginTransformTask
 from custom_components.react.utils.events import Event
 from custom_components.react.utils.logger import get_react_logger
@@ -27,9 +32,9 @@ _LOGGER = get_react_logger()
 
 
 class CallbackTransformInTask(PluginTransformTask):
-    def __init__(self, react: ReactBase) -> None:
+    def __init__(self, react: ReactBase, config: MobileAppConfig) -> None:
         super().__init__(react, EVENT_MOBILE_APP_CALLBACK, CallbackTransformEvent)
-        self.entity_maps = self.react.configuration.workflow_config.entity_maps_config
+        self.entity_maps = config.entity_maps if config.entity_maps else DynamicData()
 
 
     def _debug(self, message: str):
@@ -45,6 +50,7 @@ class CallbackTransformInTask(PluginTransformTask):
             ATTR_ACTION: REACT_ACTION_FEEDBACK_RETRIEVED,
             ATTR_DATA: {
                 ATTR_EVENT_FEEDBACK_ITEM_FEEDBACK: source_event.payload.action,
+                ATTR_EVENT_NOTIFY_PROVIDER: NOTIFY_PROVIDER_MOBILE_APP,
                 ATTR_EVENT_NOTIFY_PROVIDER_PAYLOAD: {
                     ATTR_EVENT_FEEDBACK_ITEM_CONVERSIONATION_ID: source_event.payload.tag,
                     ATTR_EVENT_FEEDBACK_ITEM_MESSAGE_ID: entity_id,

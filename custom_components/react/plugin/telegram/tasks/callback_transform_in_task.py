@@ -5,6 +5,7 @@ from homeassistant.components.telegram_bot import (
     ATTR_MESSAGE, 
     EVENT_TELEGRAM_CALLBACK, 
 )
+from custom_components.react.plugin.telegram.config import TelegramConfig
 from custom_components.react.plugin.telegram.const import NOTIFY_PROVIDER_TELEGRAM
 
 from custom_components.react.utils.events import Event
@@ -34,9 +35,9 @@ _LOGGER = get_react_logger()
 
 
 class CallbackTransformInTask(PluginTransformTask):
-    def __init__(self, react: ReactBase) -> None:
+    def __init__(self, react: ReactBase, config: TelegramConfig) -> None:
         super().__init__(react, EVENT_TELEGRAM_CALLBACK, CallbackTransformEvent)
-        self.entity_maps = self.react.configuration.workflow_config.entity_maps_config
+        self.entity_maps = config.entity_maps if config.entity_maps else DynamicData()
 
 
     def _debug(self, message: str):
@@ -46,7 +47,7 @@ class CallbackTransformInTask(PluginTransformTask):
     def create_action_event_payload(self, source_event: CallbackTransformEvent) -> dict:
         self._debug("Transforming callback event from telegram")
         return {
-            ATTR_ENTITY: self.entity_maps.get(source_event.payload.entity_source, source_event.payload.entity_source),
+            ATTR_ENTITY: self.entity_maps.get(f"{source_event.payload.entity_source}", source_event.payload.entity_source),
             ATTR_TYPE: REACT_TYPE_NOTIFY,
             ATTR_ACTION: REACT_ACTION_FEEDBACK_RETRIEVED,
             ATTR_DATA: {

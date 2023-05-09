@@ -31,7 +31,7 @@ class InputTextSetTask(PluginReactionTask):
             event.context, 
             event.payload.entity, 
             event.payload.data.value, 
-            event.payload.data.input_provider_name)
+            event.payload.data.input_provider)
         
 
 class InputTextSetReactionEventData(DynamicData):
@@ -39,7 +39,7 @@ class InputTextSetReactionEventData(DynamicData):
     def __init__(self, source: dict) -> None:
         super().__init__()
         
-        self.input_provider_name: str = None
+        self.input_provider: str = None
         self.value: float = None
 
         self.load(source)

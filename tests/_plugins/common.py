@@ -2,7 +2,7 @@ from typing import Any
 from homeassistant.core import Context, HomeAssistant, SERVICE_CALL_LIMIT, State
 from custom_components.react.const import ATTR_WAIT
 
-from custom_components.react.plugin.plugin_factory import HassApi
+from custom_components.react.plugin.api import HassApi
 from tests.common import TEST_CONTEXT
 from tests.tst_context import TstContext
 
@@ -24,8 +24,8 @@ class HassApiMock(HassApi):
         limit: float | None = SERVICE_CALL_LIMIT,
         target: dict[str, Any] | None = None,
     ) -> bool | None:
-        tc: TstContext = self.hass_get_data(TEST_CONTEXT)
-        tc.register_service_call(domain, service, service_data)
+        test_context: TstContext = self.hass_get_data(TEST_CONTEXT)
+        test_context.register_service_call(domain, service, service_data)
         return None
     
 

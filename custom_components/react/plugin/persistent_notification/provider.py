@@ -10,7 +10,7 @@ from homeassistant.core import Context
 from custom_components.react.plugin.notify.const import FeedbackItem
 from custom_components.react.plugin.notify.provider import NotifyProvider
 from custom_components.react.plugin.persistent_notification.const import SERVICE_CREATE
-from custom_components.react.plugin.plugin_factory import HassApi, PluginApi
+from custom_components.react.plugin.api import HassApi, PluginApi
 
 
 class PersistentNotificationProvider(NotifyProvider):

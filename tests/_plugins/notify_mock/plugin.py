@@ -1,7 +1,6 @@
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context
-
-from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 
 from custom_components.react.const import (
     ATTR_EVENT_FEEDBACK_ITEM_ACKNOWLEDGEMENT, 
@@ -9,32 +8,38 @@ from custom_components.react.const import (
     ATTR_EVENT_FEEDBACK_ITEM_MESSAGE_ID, 
     ATTR_EVENT_FEEDBACK_ITEM_TEXT, 
     ATTR_EVENT_FEEDBACK_ITEMS, 
-    ATTR_EVENT_MESSAGE
+    ATTR_EVENT_MESSAGE,
 )
 from custom_components.react.plugin.const import PROVIDER_TYPE_NOTIFY
-from custom_components.react.plugin.notify.const import FeedbackItem
-from custom_components.react.plugin.notify.plugin import load as load_plugin
+from custom_components.react.plugin.notify.const import ATTR_NOTIFY_PROVIDER, FeedbackItem
+from custom_components.react.plugin.notify.plugin import Plugin as NotifyPlugin
 from custom_components.react.plugin.notify.provider import NotifyProvider
-from custom_components.react.plugin.plugin_factory import HassApi, PluginApi
+from custom_components.react.plugin.api import HassApi, PluginApi
 from custom_components.react.utils.struct import DynamicData
 from tests._plugins.common import HassApiMock
 
 from tests.common import TEST_CONTEXT
-from tests.const import ATTR_ENTITY_STATE, ATTR_NOTIFY_PROVIDER, ATTR_SERVICE_NAME
+from tests.const import (
+    ATTR_SERVICE_NAME, 
+    TEST_CONFIG,
+)
 from tests.tst_context import TstContext
 
 
 NOTIFY_PROVIDER_MOCK = "notify_mock"
 
 
-def load(plugin_api: PluginApi, hass_api: HassApi, config: DynamicData):
-    hass_api_mock = HassApiMock(hass_api.hass)
-    load_plugin(plugin_api, hass_api_mock, config)
-    if notify_provider := config.get(ATTR_NOTIFY_PROVIDER, None):
-        setup_mock_notify_provider(plugin_api, hass_api, notify_provider)
-    notify_service = config.get(ATTR_SERVICE_NAME)
-    if notify_service:
-        hass_api_mock.hass_register_service(NOTIFY_DOMAIN, notify_service)
+class Plugin(NotifyPlugin):
+    def load(self, plugin_api: PluginApi, hass_api: HassApi, config: DynamicData):
+        hass_api_mock = HassApiMock(hass_api.hass)
+        super().load(plugin_api, hass_api_mock, config)
+        if notify_provider := config.get(ATTR_NOTIFY_PROVIDER, None):
+            setup_mock_notify_provider(plugin_api, hass_api, notify_provider)
+
+        test_config: dict = hass_api.hass_get_data(TEST_CONFIG, {})
+        notify_service = test_config.get(ATTR_SERVICE_NAME)
+        if notify_service:
+            hass_api_mock.hass_register_service(NOTIFY_DOMAIN, notify_service)
 
 
 def setup_mock_notify_provider(plugin_api: PluginApi, hass_api: HassApi, notify_provider: str):
@@ -60,7 +65,14 @@ class NotifyProviderMock(NotifyProvider):
         })
 
 
-    async def async_confirm_feedback(self, context: Context, conversation_id: str, message_id: str, text: str, acknowledgement: str):
+    async def async_confirm_feedback(self,
+        context: Context, 
+        conversation_id: str, 
+        message_id: str, 
+        text: str, 
+        feedback: str,
+        acknowledgement: str
+    ):
         context: TstContext = self.hass_api.hass_get_data(TEST_CONTEXT)
         context.register_plugin_data({
             ATTR_EVENT_FEEDBACK_ITEM_CONVERSIONATION_ID: conversation_id,

@@ -9,7 +9,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context
 
-from custom_components.react.plugin.plugin_factory import HassApi, PluginApi
+from custom_components.react.plugin.api import HassApi, PluginApi
 from custom_components.react.plugin.providers import PluginProvider
 
 

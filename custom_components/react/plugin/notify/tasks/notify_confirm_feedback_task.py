@@ -35,6 +35,7 @@ class NotifyConfirmFeedbackTask(PluginReactionTask):
             event.payload.data.provider_payload.conversation_id if event.payload.data.provider_payload else None,
             event.payload.data.provider_payload.message_id if event.payload.data.provider_payload else None,
             event.payload.data.provider_payload.text if event.payload.data.provider_payload else None,
+            event.payload.data.feedback,
             event.payload.data.acknowledgement,
             event.payload.data.notify_provider,
         )

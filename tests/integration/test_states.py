@@ -1,276 +1,228 @@
 import pytest
 
-from homeassistant.core import HomeAssistant
-
 from tests.common import FIXTURE_WORKFLOW_NAME
 from tests.tst_context import TstContext
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["binary_sensor_state_test"])
-async def test_binary_sensor_state(hass: HomeAssistant, workflow_name, react_component, virtual_component, binary_sensor_component):
+async def test_binary_sensor_state(test_context: TstContext, workflow_name: str):
     
-    vc = await virtual_component
-    await binary_sensor_component
-    rc = await react_component
-    await rc.async_setup(workflow_name)
+    await test_context.async_start_binary_sensor()
+    vc = await test_context.async_start_virtual()
+    await test_context.async_start_react()
 
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
         await vc.async_turn_on("binary_sensor", "binary_sensor_state_test")
-        await hass.async_block_till_done()
-        tc.verify_reaction_not_found()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data()
-        tc.verify_trace_record()
+        await test_context.hass.async_block_till_done()
+        test_context.verify_reaction_not_found()
+        await test_context.async_verify_reaction_event_received()
+        test_context.verify_reaction_event_data()
+        test_context.verify_trace_record()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["group_state_test"])
-async def test_group_state(hass: HomeAssistant, workflow_name, react_component, virtual_component, binary_sensor_component, group_component):
-    """
-    Test for workflow for a group:
-    - No reaction entity should be created
-    - An event should be sent
-    - Event data should match configuration
-    - Trace data should match configuration
-    """
+async def test_group_state(test_context: TstContext, workflow_name: str):
 
-    vc = await virtual_component
-    await binary_sensor_component
-    await group_component
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
+    await test_context.async_start_binary_sensor()
+    vc = await test_context.async_start_virtual()
+    await test_context.async_start_group()
+    await test_context.async_start_react()
+    
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
         await vc.async_turn_on("binary_sensor", "group_state_test")
-        tc.verify_reaction_not_found()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data()
-        tc.verify_trace_record()
-    await hass.async_block_till_done()
+        test_context.verify_reaction_not_found()
+        await test_context.async_verify_reaction_event_received()
+        test_context.verify_reaction_event_data()
+        test_context.verify_trace_record()
+    await test_context.hass.async_block_till_done()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["person_group_state_test"])
-async def test_person_group_state(hass: HomeAssistant, workflow_name, react_component, virtual_component, group_component, person_component, device_tracker_component):
+async def test_person_group_state(test_context: TstContext, workflow_name: str):
     
-    await virtual_component
-    await group_component
-    await person_component
-    dtc = await device_tracker_component
-    comp = await react_component
-    await comp.async_setup(workflow_name)
+    await test_context.async_start_virtual()
+    await test_context.async_start_group()
+    await test_context.async_start_person()
+    dtc = await test_context.async_start_device_tracker()
+    await test_context.async_start_react()
 
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
         await dtc.async_see("person_group_state_test", "home")
-        await hass.async_block_till_done()
-        tc.verify_reaction_not_found()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data()
-        tc.verify_trace_record()
-    await hass.async_block_till_done()
+        await test_context.hass.async_block_till_done()
+        test_context.verify_reaction_not_found()
+        await test_context.async_verify_reaction_event_received()
+        test_context.verify_reaction_event_data()
+        test_context.verify_trace_record()
+    await test_context.hass.async_block_till_done()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["device_tracker_state_test"])
-async def test_device_tracker_state(hass: HomeAssistant, workflow_name, react_component, virtual_component, device_tracker_component):
+async def test_device_tracker_state(test_context: TstContext, workflow_name: str):
     
-    await virtual_component
-    dtc = await device_tracker_component
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
+    await test_context.async_start_virtual()
+    dtc = await test_context.async_start_device_tracker()
+    await test_context.async_start_react()
+    
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
         await dtc.async_see("device_tracker_state_test", "home")
-        tc.verify_reaction_not_found()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data()
-        tc.verify_trace_record()
+        test_context.verify_reaction_not_found()
+        await test_context.async_verify_reaction_event_received()
+        test_context.verify_reaction_event_data()
+        test_context.verify_trace_record()
 
-    await hass.async_block_till_done()
+    await test_context.hass.async_block_till_done()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["person_state_test"])
-async def test_person_state(hass: HomeAssistant, workflow_name, react_component, virtual_component, device_tracker_component, person_component):
+async def test_person_state(test_context: TstContext, workflow_name: str):
     
-    await virtual_component
-    dtc = await device_tracker_component
-    await person_component
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
+    await test_context.async_start_virtual()
+    dtc = await test_context.async_start_device_tracker()
+    await test_context.async_start_person()
+    await test_context.async_start_react()
+    
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
         await dtc.async_see("person_state_test", "not_home")
-        await hass.async_block_till_done()
-        tc.verify_reaction_not_found()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data()
-        tc.verify_trace_record()
+        await test_context.hass.async_block_till_done()
+        test_context.verify_reaction_not_found()
+        await test_context.async_verify_reaction_event_received()
+        test_context.verify_reaction_event_data()
+        test_context.verify_trace_record()
 
-    await hass.async_block_till_done()
+    await test_context.hass.async_block_till_done()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["input_number_state_test"])
-async def test_input_number_state(hass: HomeAssistant, workflow_name, react_component, input_number_component):
+async def test_input_number_state(test_context: TstContext, workflow_name: str):
     
-    inc = await input_number_component
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
+    inc = await test_context.async_start_input_number()
+    await test_context.async_start_react()
+    
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
         await inc.async_set_value("input_number_state_test", 123.45)
-        tc.verify_reaction_not_found()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data()
-        tc.verify_trace_record()
-    await hass.async_block_till_done()
+        test_context.verify_reaction_not_found()
+        await test_context.async_verify_reaction_event_received()
+        test_context.verify_reaction_event_data()
+        test_context.verify_trace_record()
+    await test_context.hass.async_block_till_done()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["input_text_state_test"])
-async def test_input_text_state(hass: HomeAssistant, workflow_name, react_component, input_text_component):
+async def test_input_text_state(test_context: TstContext, workflow_name: str):
     
-    inc = await input_text_component
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
+    inc = await test_context.async_start_input_test()
+    await test_context.async_start_react()
+    
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
         await inc.async_set_value("input_text_state_test", "test_value")
-        tc.verify_reaction_not_found()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data()
-        tc.verify_trace_record()
-    await hass.async_block_till_done()
+        test_context.verify_reaction_not_found()
+        await test_context.async_verify_reaction_event_received()
+        test_context.verify_reaction_event_data()
+        test_context.verify_trace_record()
+    await test_context.hass.async_block_till_done()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["input_boolean_state_test"])
-async def test_input_boolean_state(hass: HomeAssistant, workflow_name, react_component, input_boolean_component):
+async def test_input_boolean_state(test_context: TstContext, workflow_name: str):
     
-    ibc = await input_boolean_component
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
+    ibc = await test_context.async_start_input_boolean()
+    await test_context.async_start_react()
+    
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
         await ibc.async_turn_on("input_boolean_state_test")
-        tc.verify_reaction_not_found()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data()
-        tc.verify_trace_record()
-    await hass.async_block_till_done()
+        test_context.verify_reaction_not_found()
+        await test_context.async_verify_reaction_event_received()
+        test_context.verify_reaction_event_data()
+        test_context.verify_trace_record()
+    await test_context.hass.async_block_till_done()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["input_button_state_test"])
-async def test_input_button_state(hass: HomeAssistant, workflow_name, react_component, input_button_component):
+async def test_input_button_state(test_context: TstContext, workflow_name: str):
     
-    ibc = await input_button_component
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
+    ibc = await test_context.async_start_input_button()
+    await test_context.async_start_react()
+    
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
         await ibc.async_press("input_button_state_test")
-        tc.verify_reaction_not_found()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data()
-        tc.verify_trace_record()
-    await hass.async_block_till_done()
+        test_context.verify_reaction_not_found()
+        await test_context.async_verify_reaction_event_received()
+        test_context.verify_reaction_event_data()
+        test_context.verify_trace_record()
+    await test_context.hass.async_block_till_done()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["light_state_test"])
-async def test_light_state(hass: HomeAssistant, workflow_name, virtual_component, react_component, light_component):
+async def test_light_state(test_context: TstContext):
     
-    vc = await virtual_component
-    lc = await light_component
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
+    await test_context.async_start_virtual()
+    lc = await test_context.async_start_light()
+    await test_context.async_start_react()
+    
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
         await lc.async_turn_on("light_state_test")
-        tc.verify_reaction_not_found()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data()
-        tc.verify_trace_record()
-    await hass.async_block_till_done()
+        test_context.verify_reaction_not_found()
+        await test_context.async_verify_reaction_event_received()
+        test_context.verify_reaction_event_data()
+        test_context.verify_trace_record()
+    await test_context.hass.async_block_till_done()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["alarm_state_test"])
-async def test_alarm_state(hass: HomeAssistant, workflow_name, react_component, alarm_component):
+async def test_alarm_state(test_context: TstContext, workflow_name: str):
     
-    ac = await alarm_component
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
+    ac = await test_context.async_start_alarm()
+    await test_context.async_start_react()
+    
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
         await ac.async_arm_away("alarm_state_test")
-        tc.verify_reaction_not_found()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data()
-        tc.verify_trace_record()
-    await hass.async_block_till_done()
+        test_context.verify_reaction_not_found()
+        await test_context.async_verify_reaction_event_received()
+        test_context.verify_reaction_event_data()
+        test_context.verify_trace_record()
+    await test_context.hass.async_block_till_done()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["switch_state_test"])
-async def test_switch_state(hass: HomeAssistant, workflow_name, virtual_component, react_component, switch_component):
+async def test_switch_state(test_context: TstContext):
     
-    await virtual_component
-    sc = await switch_component
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
+    await test_context.async_start_virtual()
+    sc = await test_context.async_start_switch()
+    await test_context.async_start_react()
+    
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
         await sc.async_turn_on("switch_state_test")
-        tc.verify_reaction_not_found()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data()
-        tc.verify_trace_record()
-    await hass.async_block_till_done()
+        test_context.verify_reaction_not_found()
+        await test_context.async_verify_reaction_event_received()
+        test_context.verify_reaction_event_data()
+        test_context.verify_trace_record()
+    await test_context.hass.async_block_till_done()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["sensor_state_test"])
-async def test_sensor_state(hass: HomeAssistant, workflow_name, virtual_component, react_component, sensor_component):
+async def test_sensor_state(test_context: TstContext):
     
-    vc = await virtual_component
-    await sensor_component
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        tc.verify_reaction_not_found()
+    vc = await test_context.async_start_virtual()
+    await test_context.async_start_sensor()
+    await test_context.async_start_react()
+    
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
         await vc.async_set("sensor", "sensor_state_test", 10)
-        tc.verify_reaction_not_found()
-        await tc.async_verify_reaction_event_received()
-        tc.verify_reaction_event_data()
-        tc.verify_trace_record()
-    await hass.async_block_till_done()
+        test_context.verify_reaction_not_found()
+        await test_context.async_verify_reaction_event_received()
+        test_context.verify_reaction_event_data()
+        test_context.verify_trace_record()
+    await test_context.hass.async_block_till_done()

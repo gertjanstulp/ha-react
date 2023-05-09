@@ -10,21 +10,12 @@ from tests.common import FIXTURE_WORKFLOW_NAME
 from tests.tst_context import TstContext
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["delayed_long_single"])
-async def test_runtime_workflow_mode_abort(hass: HomeAssistant, workflow_name, react_component):
-
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    react: ReactBase = hass.data[DOMAIN]
-    workflow_id = f"workflow_{workflow_name}"
-    runtime = react.runtime.get_workflow_runtime(workflow_id)
-    
+async def test_runtime_workflow_mode_abort(test_context: TstContext, workflow_name: str):
+    await test_context.async_start_react()
+    runtime = test_context.react.runtime.get_workflow_runtime(test_context.workflow_id)
     try:
-        tc = TstContext(hass, workflow_name)
-        await tc.async_send_action_event()
-
+        await test_context.async_send_action_event()
         assert_run_count(runtime, 1)
         await runtime.async_stop_all_runs()
         assert_run_count(runtime, 0)
@@ -32,105 +23,72 @@ async def test_runtime_workflow_mode_abort(hass: HomeAssistant, workflow_name, r
         await runtime.async_stop_all_runs()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["delayed_long_single"])
-async def test_runtime_workflow_mode_single(hass: HomeAssistant, workflow_name, react_component):
-    
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    react: ReactBase = hass.data[DOMAIN]
-    workflow_id = f"workflow_{workflow_name}"
-    runtime = react.runtime.get_workflow_runtime(workflow_id)
-    
-
+async def test_runtime_workflow_mode_single(test_context: TstContext, workflow_name: str):
+    await test_context.async_start_react()
+    runtime = test_context.react.runtime.get_workflow_runtime(test_context.workflow_id)
     try:
-        tc = TstContext(hass, workflow_name)
-        await tc.async_send_action_event()
+        await test_context.async_send_action_event()
         assert_run_count(runtime, 1)
-        top_run1 = react.runtime.run_registry.get_runs(workflow_id)[-1]
-        await tc.async_send_action_event()
+        top_run1 = test_context.react.runtime.run_registry.get_runs(test_context.workflow_id)[-1]
+        await test_context.async_send_action_event()
         assert_run_count(runtime, 1)
-        top_run2 = react.runtime.run_registry.get_runs(workflow_id)[-1]
+        top_run2 = test_context.react.runtime.run_registry.get_runs(test_context.workflow_id)[-1]
         assert top_run1.id == top_run2.id, "Expected first job to remain, but got replaced"
     finally:
         await runtime.async_stop_all_runs()
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["delayed_long_restart"])
-async def test_runtime_workflow_mode_restart(hass: HomeAssistant, workflow_name, react_component):
-    
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    react: ReactBase = hass.data[DOMAIN]
-    workflow_id = f"workflow_{workflow_name}"
-    runtime = react.runtime.get_workflow_runtime(workflow_id)
-
+async def test_runtime_workflow_mode_restart(test_context: TstContext, workflow_name: str):
+    await test_context.async_start_react()
+    runtime = test_context.react.runtime.get_workflow_runtime(test_context.workflow_id)
     try:
-        tc = TstContext(hass, workflow_name)
-        await tc.async_send_action_event()
+        await test_context.async_send_action_event()
         assert_run_count(runtime, 1)
-        top_run1 = react.runtime.run_registry.get_runs(workflow_id)[-1]
-        await tc.async_send_action_event()
+        top_run1 = test_context.react.runtime.run_registry.get_runs(test_context.workflow_id)[-1]
+        await test_context.async_send_action_event()
         assert_run_count(runtime, 1)
-        top_run2 = react.runtime.run_registry.get_runs(workflow_id)[-1]
+        top_run2 = test_context.react.runtime.run_registry.get_runs(test_context.workflow_id)[-1]
         assert top_run1.id != top_run2.id, "Expected second job to replace first, but first was found"
     finally:
         await runtime.async_stop_all_runs()
  
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["delayed_long_queued"])
-async def test_runtime_workflow_mode_queued(hass: HomeAssistant, workflow_name, react_component):
-    
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    react: ReactBase = hass.data[DOMAIN]
-    workflow_id = f"workflow_{workflow_name}"
-    runtime = react.runtime.get_workflow_runtime(workflow_id)
-
+async def test_runtime_workflow_mode_queued(test_context: TstContext, workflow_name: str):
+    await test_context.async_start_react()
+    runtime = test_context.react.runtime.get_workflow_runtime(test_context.workflow_id)
     try:
-        tc = TstContext(hass, workflow_name)
-        async with tc.async_listen_reaction_event():
-            await tc.async_send_action_event()
+        async with test_context.async_listen_reaction_event():
+            await test_context.async_send_action_event()
             assert_run_count(runtime, 1)
-            await tc.async_send_action_event()
+            await test_context.async_send_action_event()
             assert_run_count(runtime, 2)
-            tc.verify_reaction_event_count(0)
+            test_context.verify_reaction_event_count(0)
             await sleep(4)
             assert_run_count(runtime, 1)
-            tc.verify_reaction_event_count(1)
+            test_context.verify_reaction_event_count(1)
             await sleep(4)
             assert_run_count(runtime, 0)
-            tc.verify_reaction_event_count(2)
+            test_context.verify_reaction_event_count(2)
     finally:
         await runtime.async_stop_all_runs()
     
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["delayed_long_parallel"])
-async def test_runtime_workflow_mode_parallel(hass: HomeAssistant, workflow_name, react_component):
-    
-    comp = await react_component
-    await comp.async_setup(workflow_name)
-
-    react: ReactBase = hass.data[DOMAIN]
-    workflow_id = f"workflow_{workflow_name}"
-    runtime = react.runtime.get_workflow_runtime(workflow_id)
-
-    tc = TstContext(hass, workflow_name)
-    async with tc.async_listen_reaction_event():
-        await tc.async_send_action_event()
+async def test_runtime_workflow_mode_parallel(test_context: TstContext, workflow_name: str):
+    await test_context.async_start_react()
+    runtime = test_context.react.runtime.get_workflow_runtime(test_context.workflow_id)
+    async with test_context.async_listen_reaction_event():
+        await test_context.async_send_action_event()
         assert_run_count(runtime, 1)
-        await tc.async_send_action_event()
+        await test_context.async_send_action_event()
         assert_run_count(runtime, 2)
-        tc.verify_reaction_event_count(0)
+        test_context.verify_reaction_event_count(0)
         await sleep(4)
         assert_run_count(runtime, 0)
-        tc.verify_reaction_event_count(2)
+        test_context.verify_reaction_event_count(2)
 
 
 def assert_run_count(runtime: WorkflowRuntime, expected_count: int):

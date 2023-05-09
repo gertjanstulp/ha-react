@@ -27,7 +27,11 @@ class LightToggleTask(PluginReactionTask):
 
     async def async_execute_plugin(self, event: LightToggleReactionEvent):
         self._debug(f"Toggling light '{event.payload.entity}'")
-        await self.api.async_light_toggle(event.context, event.payload.entity, event.payload.data.light_provider_name if event.payload.data else None)
+        await self.api.async_light_toggle(
+            event.context, 
+            event.payload.entity, 
+            event.payload.data.light_provider if event.payload.data else None
+        )
         
 
 class LightToggleReactionEventData(DynamicData):
@@ -35,7 +39,7 @@ class LightToggleReactionEventData(DynamicData):
     def __init__(self, source: dict) -> None:
         super().__init__()
         
-        self.light_provider_name: str = None
+        self.light_provider: str = None
 
         self.load(source)
 
