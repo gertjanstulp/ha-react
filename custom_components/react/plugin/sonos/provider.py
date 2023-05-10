@@ -17,17 +17,14 @@ from homeassistant.const import (
 from homeassistant.core import Context
 
 from custom_components.react.plugin.media_player.provider import MediaPlayerProvider
-from custom_components.react.plugin.api import HassApi, PluginApi
 from custom_components.react.plugin.sonos.const import CONTENT_TYPE_FAVORITE_ITEM_ID
 from custom_components.react.utils.logger import get_react_logger
+from custom_components.react.utils.struct import DynamicData
 
 _LOGGER = get_react_logger()
 
 
-class SonosProvider(MediaPlayerProvider):
-    def __init__(self, plugin_api: PluginApi, hass_api: HassApi) -> None:
-        super().__init__(plugin_api, hass_api)
-
+class SonosProvider(MediaPlayerProvider[DynamicData]):
 
     def _debug(self, message: str):
         _LOGGER.debug(f"Sonos plugin: Provider - {message}")
@@ -41,7 +38,7 @@ class SonosProvider(MediaPlayerProvider):
     async def async_suspend(self, context: Context, entity_id: str):
         self._debug(f"Suspending '{entity_id}'")
         try:
-            await self.hass_api.async_hass_call_service(
+            await self.plugin.hass_api.async_hass_call_service(
                 SONOS_DOMAIN,
                 SERVICE_SNAPSHOT,
                 {
@@ -56,7 +53,7 @@ class SonosProvider(MediaPlayerProvider):
     async def async_resume(self, context: Context, entity_id: str):
         self._debug(f"Resuming '{entity_id}'")
         try:
-            await self.hass_api.async_hass_call_service(
+            await self.plugin.hass_api.async_hass_call_service(
                 SONOS_DOMAIN,
                 SERVICE_RESTORE,
                 {
@@ -75,7 +72,7 @@ class SonosProvider(MediaPlayerProvider):
             ATTR_MEDIA_CONTENT_ID: favorite_id
         }
 
-        await self.hass_api.async_hass_call_service(
+        await self.plugin.hass_api.async_hass_call_service(
             Platform.MEDIA_PLAYER, 
             SERVICE_PLAY_MEDIA,
             data, 

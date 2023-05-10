@@ -146,6 +146,12 @@ ATTR_CREATED = "created"
 ATTR_WHEN = "when"
 ATTR_WAIT_TYPE = "wait_type"
 
+# state attributes
+ATTR_OLD_STATE = "old_state"
+ATTR_NEW_STATE = "new_state"
+ATTR_LAST_CHANGED = "last_changed"
+ATTR_OBJECT_ID = "object_id"
+
 # events
 EVENT_REACT_ACTION = "ev_react_action"
 EVENT_REACT_REACTION = "ev_react_reaction"
@@ -166,7 +172,9 @@ REACT_TYPE_INPUT_BOOLEAN = "input_boolean"
 REACT_TYPE_LIGHT = "light"
 REACT_TYPE_SWITCH = "switch"
 REACT_TYPE_MEDIA_PLAYER = "media_player"
-REACT_TYPE_ALARM = "alarm"
+REACT_TYPE_ALARM_CONTROL_PANEL = "alarm_control_panel"
+REACT_TYPE_STATE = "state"
+
 
 # React actions
 REACT_ACTION_SEND_MESSAGE = "send_message"
@@ -185,6 +193,8 @@ REACT_ACTION_TRIGGER = "trigger"
 REACT_ACTION_INCREASE = "increase"
 REACT_ACTION_DECREASE = "decrease"
 REACT_ACTION_DISMISSED = "dismissed"
+REACT_ACTION_LOG = "log"
+REACT_ACTION_CHANGE = "change"
 
 # signals
 SIGNAL_ITEM_CREATED = "react_item_created"
@@ -199,37 +209,10 @@ SIGNAL_WAIT_FINISHED = "wait_finished"
 SIGNAL_JOB_RESUMED = "job_resumed"
 SIGNAL_WORKFLOW_RESET = "workflow_reset"
 
-# transformer types
-BINARY_SENSOR = "binary_sensor"
-BINARY_SENSOR_PREFIX = f"{BINARY_SENSOR}."
-SENSOR = "sensor"
-SENSOR_PREFIX = f"{SENSOR}."
-GROUP = "group"
-GROUP_PREFIX = f"{GROUP}."
-SWITCH = "switch"
-SWITCH_PREFIX = f"{SWITCH}."
-MEDIAPLAYER = "media_player"
-MEDIAPLAYER_PREFIX = f"{MEDIAPLAYER}."
-PERSON = "person"
-PERSON_PREFIX = f"{PERSON}."
-DEVICE_TRACKER = "device_tracker"
-DEVICE_TRACKER_PREFIX = f"{DEVICE_TRACKER}."
-ALARM = "alarm"
-ALARM_PREFIX = "alarm_control_panel."
-INPUT_BUTTON = "input_button"
-INPUT_BUTTON_PREFIX = f"{INPUT_BUTTON}."
-INPUT_BOOLEAN = "input_boolean"
-INPUT_BOOLEAN_PREFIX = f"{INPUT_BOOLEAN}."
-INPUT_NUMBER = "input_number"
-INPUT_NUMBER_PREFIX = f"{INPUT_NUMBER}."
-INPUT_TEXT = "input_text"
-INPUT_TEXT_PREFIX = f"{INPUT_TEXT}."
-LIGHT = "light"
-LIGHT_PREFIX = f"{LIGHT}."
-# transformer states
+# state change states
 OLD_STATE = "old_state"
 NEW_STATE = "new_state"
-# transformer actions
+# state change actions
 ACTION_TOGGLE = "toggle"
 ACTION_CHANGE = "change"
 ACTION_PRESS = "press"
@@ -282,7 +265,6 @@ ACTOR_ENTITY_TIME = "time"
 ACTOR_TYPE_CLOCK = "clock"
 ACTOR_TYPE_PATTERN = "pattern"
 
-# transforms
 ENTITY_HASS = "hass"
 TYPE_SYSTEM = "system"
 ACTION_SHUTDOWN = "shutdown"

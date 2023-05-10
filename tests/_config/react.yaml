@@ -1,10 +1,5 @@
 # frontend_repo_url: http://localhost:5000
 
-# entity_maps:
-  # 2095689255: mobile_user
-  # -719737734: mobile_group
-  # 7237746fa7daec45: mobile_user
-
 plugins:
   - module: custom_components.react.plugin.notify
   - module: custom_components.react.plugin.telegram
@@ -18,7 +13,10 @@ plugins:
       entity_maps:
         "7237746fa7daec45": mobile_app_hd1903
         
-  - module: custom_components.react.plugin.input
+  - module: custom_components.react.plugin.input_boolean
+  - module: custom_components.react.plugin.input_button
+  - module: custom_components.react.plugin.input_number
+  - module: custom_components.react.plugin.input_text
   - module: custom_components.react.plugin.light
   - module: custom_components.react.plugin.switch
 
@@ -33,9 +31,18 @@ plugins:
     config:
       language: nl
 
-  - module: custom_components.react.plugin.alarm
+  - module: custom_components.react.plugin.alarm_control_panel
     config:
       code: '1234'
+
+  - module: custom_components.react.plugin.binary_sensor
+  - module: custom_components.react.plugin.device_tracker
+  - module: custom_components.react.plugin.person
+  - module: custom_components.react.plugin.sensor
+
+  - module: custom_components.react.plugin.time
+  - module: custom_components.react.plugin.hass
+  - module: custom_components.react.plugin.state
 
 stencil:
   full_stencil:
@@ -370,7 +377,7 @@ workflow:
     when:
       entity: binary_sensor_state_test
       type: binary_sensor
-      action: 'on'
+      action: 'off'
     then:
       entity: reactor_entity_binary_sensor_state_test
       type: reactor_type_binary_sensor_state_test
@@ -479,8 +486,8 @@ workflow:
   workflow_alarm_state_test:
     when:
       entity: alarm_state_test
-      type: alarm
-      action: armed_away
+      action: armed_home
+      type: alarm_control_panel
     then:
       entity: reactor_entity_alarm_state_test
       type: reactor_type_alarm_state_test
@@ -496,26 +503,73 @@ workflow:
       type: reactor_type_sensor_state_test
       action: reactor_action_sensor_state_test
 
+  workflow_media_player_state_test:
+    when:
+      entity: media_player_state_test
+      type: media_player
+      action: playing
+    then:
+      entity: reactor_entity_media_player_state_test
+      type: reactor_type_media_player_state_test
+      action: reactor_action_media_player_state_test
+
+  workflow_state_track_test:
+    when:
+      entity: input_number.input_number_value_test
+      type: state
+      action: change
+    then:
+      entity: "{{ event.entity }}"
+      type: state
+      action: log
+      forward_data: True
+
+  workflow_hass_event_start_test:
+    when:
+      entity: hass
+      type: system
+      action: start
+    then:
+      entity: reactor_entity_hass_event_start_test
+      type: reactor_type_hass_event_start_test
+      action: reactor_action_hass_event_start_test
+
+  workflow_hass_event_started_test:
+    when:
+      entity: hass
+      type: system
+      action: started
+    then:
+      entity: reactor_entity_hass_event_started_test
+      type: reactor_type_hass_event_started_test
+      action: reactor_action_hass_event_started_test
+
+  workflow_hass_event_shutdown_test:
+    when:
+      entity: hass
+      type: system
+      action: shutdown
+    then:
+      entity: reactor_entity_hass_event_shutdown_test
+      type: reactor_type_hass_event_shutdown_test
+      action: reactor_action_hass_event_shutdown_test
+
   workflow_time_clock:
     when:
-      id: actor_time_clock
       entity: time
       type: clock
-      action: '12:34:56'
+      action: "23:59:59"
     then:
-      id: reactor_time_clock
       entity: reactor_entity_time_clock
       type: reactor_type_time_clock
       action: reactor_action_time_clock
 
   workflow_time_pattern:
     when:
-      id: actor_time_pattern
       entity: time
       type: pattern
-      action: 59s
+      action: "23:59:59"
     then:
-      id: reactor_time_pattern
       entity: reactor_entity_time_pattern
       type: reactor_type_time_pattern
       action: reactor_action_time_pattern
@@ -539,6 +593,26 @@ workflow:
       entity: actor_entity_binary_sensor_unavailable_test
       type: actor_type_binary_sensor_unavailable_test
       action: actor_action_binary_sensor_unavailable_test
+
+  workflow_device_tracker_available_test:
+    when:
+      entity: device_tracker_available_test
+      type: device_tracker
+      action: available
+    then:
+      entity: actor_entity_device_tracker_available_test
+      type: actor_type_device_tracker_available_test
+      action: actor_action_device_tracker_available_test
+
+  workflow_device_tracker_unavailable_test:
+    when:
+      entity: device_tracker_unavailable_test
+      type: device_tracker
+      action: unavailable
+    then:
+      entity: actor_entity_device_tracker_unavailable_test
+      type: actor_type_device_tracker_unavailable_test
+      action: actor_action_device_tracker_unavailable_test
 
   workflow_wait_for_state_test:
     when:
@@ -1034,7 +1108,7 @@ workflow:
       action: actor_action_alarm_arm_home_test
     then:
       entity: alarm_plugin_test
-      type: alarm
+      type: alarm_control_panel
       action: arm_home
 
   workflow_alarm_plugin_arm_away_test:
@@ -1044,7 +1118,7 @@ workflow:
       action: actor_action_alarm_arm_away_test
     then:
       entity: alarm_plugin_test
-      type: alarm
+      type: alarm_control_panel
       action: arm_away
 
   workflow_alarm_plugin_arm_night_test:
@@ -1054,7 +1128,7 @@ workflow:
       action: actor_action_alarm_arm_night_test
     then:
       entity: alarm_plugin_test
-      type: alarm
+      type: alarm_control_panel
       action: arm_night
 
   workflow_alarm_plugin_arm_vacation_test:
@@ -1064,7 +1138,7 @@ workflow:
       action: actor_action_alarm_arm_vacation_test
     then:
       entity: alarm_plugin_test
-      type: alarm
+      type: alarm_control_panel
       action: arm_vacation
 
   workflow_alarm_plugin_disarm_test:
@@ -1074,7 +1148,7 @@ workflow:
       action: actor_action_alarm_disarm_test
     then:
       entity: alarm_plugin_test
-      type: alarm
+      type: alarm_control_panel
       action: disarm
 
   workflow_alarm_plugin_trigger_test:
@@ -1084,7 +1158,7 @@ workflow:
       action: actor_action_alarm_trigger_test
     then:
       entity: alarm_plugin_test
-      type: alarm
+      type: alarm_control_panel
       action: trigger
 
   workflow_hass_started_test:

@@ -11,7 +11,7 @@ from tests.tst_context import TstContext
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["immediate"])
 async def test_call_service_reload(test_context: TstContext, workflow_name: str):
     mock_plugin = {ATTR_PLUGIN_MODULE: "tests._plugins.reload_service_mock"}
-    await test_context.async_start_react(mock_plugin)
+    await test_context.async_start_react([mock_plugin])
     
     await test_context.react_component.async_call_service_reload()
     await test_context.react.hass.async_block_till_done()

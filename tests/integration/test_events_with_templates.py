@@ -45,7 +45,7 @@ async def test_templated_state(test_context: TstContext, workflow_name):
     """
     
     await test_context.async_start_react()
-    itc = await test_context.async_start_input_test()
+    itc = await test_context.async_start_input_text()
     await itc.async_set_value("templated_state_test", "templated_state_test")
     await test_context.async_start_template()
 

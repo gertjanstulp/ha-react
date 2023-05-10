@@ -1,25 +1,20 @@
-from homeassistant.components.media_player import (
-    SERVICE_VOLUME_SET
-)
+from typing import Generic, TypeVar
+
+from homeassistant.components.media_player import SERVICE_VOLUME_SET
 from homeassistant.components.media_player.const import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     ATTR_MEDIA_VOLUME_LEVEL
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID
-)
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context
 
-from custom_components.react.base import ReactBase
-from custom_components.react.plugin.api import HassApi, PluginApi
-from custom_components.react.plugin.providers import PluginProvider
+from custom_components.react.plugin.base import PluginProviderBase
 from custom_components.react.utils.struct import DynamicData
 
+T_config = TypeVar("T_config", bound=DynamicData)
 
-class MediaPlayerProvider(PluginProvider):
-    def __init__(self, plugin_api: PluginApi, hass_api: HassApi) -> None:
-        super().__init__(plugin_api, hass_api)
 
+class MediaPlayerProvider(Generic[T_config], PluginProviderBase[T_config]):
 
     @property
     def support_announce(self) -> bool:
@@ -44,7 +39,7 @@ class MediaPlayerProvider(PluginProvider):
             ATTR_MEDIA_VOLUME_LEVEL: volume
         }
 
-        await self.hass_api.async_hass_call_service(
+        await self.plugin.hass_api.async_hass_call_service(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_VOLUME_SET,
             data, 
@@ -52,10 +47,8 @@ class MediaPlayerProvider(PluginProvider):
         )
 
 
-class TtsProvider(PluginProvider):
-    def __init__(self, plugin_api: PluginApi, hass_api: HassApi) -> None:
-        super().__init__(plugin_api, hass_api)
 
+class TtsProvider(Generic[T_config], PluginProviderBase[T_config]):
 
     async def async_speek(self, context: Context, entity_id: str, message: str, language: str, cache: bool, options: DynamicData):
         raise NotImplementedError()

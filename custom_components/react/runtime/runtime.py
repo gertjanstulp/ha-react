@@ -369,7 +369,7 @@ class WorkflowRuntime:
 
     async def async_run_now(self, run: WorkflowRun):
         try:
-            self._debug(f"startig run '{run.id}'")
+            self._debug(f"starting run '{run.id}'")
             await run.async_run()
         except asyncio.CancelledError:
             await run.async_stop()

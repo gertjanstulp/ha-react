@@ -28,6 +28,7 @@ from custom_components.react.const import (
     SERVICE_RUN_NOW,
     SERVICE_TRIGGER_WORKFLOW
 )
+from tests._plugins.common import HassApiMock
 
 from tests.common import (
     REACT_CONFIG,
@@ -36,6 +37,8 @@ from tests.common import (
 from tests.tst_context import TstContext
 
 WORKFLOW_ID_PREFIX = "workflow_"
+
+
 
 
 @pytest.fixture()
@@ -57,13 +60,25 @@ def verify_cleanup() -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def hass_setup(hass: HomeAssistant):
+def hass_setup(hass: HomeAssistant, hass_api_mock):
     hass.data[DATA_TRACE] = {}
+    hass.data[HASS_API_MOCK] = HassApiMock(hass)
     hass.config.set_time_zone("Europe/Amsterdam")
     hass.config.units = METRIC_SYSTEM
     result = Mock()
     result.hass = hass
     return result
+
+
+HASS_API_MOCK = "hass_api_mock"
+def set_hass_api(self, hass: HomeAssistant):
+    self.hass_api = hass.data[HASS_API_MOCK]
+
+
+@pytest.fixture
+def hass_api_mock(hass: HomeAssistant):
+    with patch("custom_components.react.plugin.factory.PluginFactory.set_hass_api", set_hass_api):
+        yield
 
 
 @pytest.fixture

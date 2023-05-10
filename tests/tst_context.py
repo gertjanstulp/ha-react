@@ -18,6 +18,7 @@ from homeassistant.components import (
     input_number, 
     input_text, 
     light, 
+    media_player,
     person, 
     sensor,
     switch,
@@ -32,7 +33,7 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_AWAY,
     STATE_ON,
 )
-from homeassistant.core import Event, HomeAssistant, State
+from homeassistant.core import Event as HaEvent, HomeAssistant, State
 from homeassistant.setup import async_setup_component
 
 from unittest.mock import Mock
@@ -105,6 +106,7 @@ from tests.common import (
     INPUT_NUMBER_CONFIG,
     INPUT_TEXT_CONFIG,
     LIGHT_CONFIG,
+    MEDIA_PLAYER_CONFIG,
     PERSON_CONFIG,
     SENSOR_CONFIG,
     SWITCH_CONFIG,
@@ -112,7 +114,7 @@ from tests.common import (
     TEST_CONTEXT,
     get_test_config_dir,
 )
-from tests.const import ATTR_DOMAIN, ATTR_SERVICE_NAME
+from tests.const import ALARM_CODE, ATTR_DOMAIN, ATTR_SERVICE_NAME
 
 ACTOR_ID_PREFIX = "actor_"
 ACTOR_ENTITY_PREFIX = "actor_entity_"
@@ -144,7 +146,8 @@ class TstContext():
         self.workflow_name = workflow_name
         self.react_component = react_component
 
-        self.event_mock = Mock()
+        self.action_event_mock = Mock()
+        self.reaction_event_mock = Mock()
 
         if workflow_name != None:
             self.workflow_id = f"workflow_{workflow_name}"
@@ -161,12 +164,12 @@ class TstContext():
         hass.data[TEST_CONTEXT] = self
 
 
-    async def async_start_react(self, mock_plugin: dict = None, additional_workflows: list[str] = [], process_workflow: callable(dict) = None, skip_setup: bool = False):
+    async def async_start_react(self, mock_plugins: list[dict] = [], additional_workflows: list[str] = [], process_workflow: callable(dict) = None, skip_setup: bool = False):
         if not skip_setup:
             await self.react_component.async_setup(
                 workflow_name=self.workflow_name,
                 additional_workflows=additional_workflows, 
-                plugins=[mock_plugin] if mock_plugin else [],
+                plugins=mock_plugins,
                 process_workflow=process_workflow,
             )
         self.react: ReactBase = self.hass.data.get(DOMAIN, None)
@@ -297,7 +300,7 @@ class TstContext():
         return result
     
 
-    async def async_start_input_test(self):
+    async def async_start_input_text(self):
         with open(get_test_config_dir(INPUT_TEXT_CONFIG)) as f:
             data = yaml.load(f, Loader=SafeLoader) or {}
         assert await async_setup_component(self.hass, input_text.DOMAIN, { input_text.DOMAIN: data })
@@ -410,18 +413,30 @@ class TstContext():
         assert await async_setup_component(self.hass, alarm_control_panel.DOMAIN, { alarm_control_panel.DOMAIN: data })
         await self.hass.async_block_till_done()
 
+        async def async_arm_home(name: str):
+            await self.hass.services.async_call(
+                alarm_control_panel.DOMAIN,
+                alarm_control_panel.SERVICE_ALARM_ARM_HOME,
+                {
+                    ATTR_ENTITY_ID: f"{alarm_control_panel.DOMAIN}.{name}",
+                    alarm_control_panel.ATTR_CODE: ALARM_CODE,
+                }
+            )
+            await self.hass.async_block_till_done()
+
         async def async_arm_away(name: str):
             await self.hass.services.async_call(
                 alarm_control_panel.DOMAIN,
                 alarm_control_panel.SERVICE_ALARM_ARM_AWAY,
                 {
-                    ATTR_ENTITY_ID: f"alarm_control_panel.{name}",
-                    alarm_control_panel.ATTR_CODE: '1234',
+                    ATTR_ENTITY_ID: f"{alarm_control_panel.DOMAIN}.{name}",
+                    alarm_control_panel.ATTR_CODE: ALARM_CODE,
                 }
             )
             await self.hass.async_block_till_done()
 
         result = Mock()
+        result.async_arm_home = async_arm_home
         result.async_arm_away = async_arm_away
         return result
     
@@ -472,10 +487,36 @@ class TstContext():
         await self.hass.async_block_till_done()
 
 
+    async def async_start_media_player(self):
+        with open(get_test_config_dir(MEDIA_PLAYER_CONFIG)) as f:
+            data = yaml.load(f, Loader=SafeLoader) or {}
+        assert await async_setup_component(self.hass, media_player.DOMAIN, { media_player.DOMAIN: data })
+        await self.hass.async_block_till_done()
+
+        async def async_play_media(name: str, media_content_id: str, media_content_type: str):
+            await self.hass.services.async_call(
+                media_player.DOMAIN,
+                media_player.SERVICE_PLAY_MEDIA,
+                {
+                    ATTR_ENTITY_ID: f"media_player.{name}",
+                    media_player.ATTR_MEDIA_CONTENT_ID: media_content_id,
+                    media_player.ATTR_MEDIA_CONTENT_TYPE: media_content_type,
+                }
+            )
+
+        result = Mock()
+        result.async_play_media = async_play_media
+        return result
+
+
     def verify_has_log_record(self, level_name: str, message: str):
         assert self.mock_log_handler.has_record(level_name, message), f"Could not find {level_name} record with message '{message}'"
 
+    
+    def verify_has_log_info(self, message: str):
+        self.verify_has_log_record("INFO", message)
 
+        
     def verify_has_log_warning(self, message: str):
         self.verify_has_log_record("WARNING", message)
 
@@ -509,6 +550,27 @@ class TstContext():
         await self.hass.async_block_till_done()
 
 
+    async def async_send_reaction_event(self,
+        entity: str = None, 
+        type: str = None, 
+        action: str = None, 
+        data: dict = None, 
+        reactor_index: int = 0,
+        entity_index: int = 0,
+        type_index: int = 0,
+        action_index: int = 0,
+    ):
+        workflow_config_reactor = self.workflow_config.reactors[reactor_index]
+        event_data = {
+            ATTR_ENTITY: entity or workflow_config_reactor.entity[entity_index],
+            ATTR_TYPE: type or workflow_config_reactor.type[type_index],
+            ATTR_ACTION: action or workflow_config_reactor.action[action_index],
+            ATTR_DATA: data
+        }
+        self.hass.bus.async_fire(EVENT_REACT_REACTION, event_data)
+        await self.hass.async_block_till_done()
+
+
     async def async_send_event(self, event_type: str, event_data: dict):
         self.hass.bus.async_fire(event_type, event_data)
         await self.hass.async_block_till_done()
@@ -517,7 +579,7 @@ class TstContext():
     @asynccontextmanager
     async def async_listen_reaction_event(self):
         try:
-            self.cancel_listen = self.hass.bus.async_listen(EVENT_REACT_REACTION, self.event_mock)
+            self.cancel_listen = self.hass.bus.async_listen(EVENT_REACT_REACTION, self.reaction_event_mock)
             yield
         finally:
             if self.cancel_listen:
@@ -527,7 +589,7 @@ class TstContext():
     @asynccontextmanager
     async def async_listen_action_event(self):
         try:
-            self.cancel_listen = self.hass.bus.async_listen(EVENT_REACT_ACTION, self.event_mock)
+            self.cancel_listen = self.hass.bus.async_listen(EVENT_REACT_ACTION, self.action_event_mock)
             yield
         finally:
             if self.cancel_listen:
@@ -541,7 +603,8 @@ class TstContext():
 
 
     def reset(self):
-        self.event_mock.reset_mock()
+        self.action_event_mock.reset_mock()
+        self.reaction_event_mock.reset_mock()
         self.plugin_data_register.clear()
         self.notify_confirm_feedback_register.clear()
         self.plugin_task_unloaded_register.clear()
@@ -649,7 +712,7 @@ class TstContext():
 
 
     def verify_action_event_count(self, expected_count: int = 1):
-        got_count = self.event_mock.call_count
+        got_count = self.action_event_mock.call_count
         assert got_count == expected_count, f"Expected event count {expected_count}, got {got_count}"
 
 
@@ -663,21 +726,38 @@ class TstContext():
         if delay > 0:
             await sleep(delay)
         self.verify_action_event_count(expected_count)
-        for i,call in enumerate(self.event_mock.mock_calls):
+        for i,call in enumerate(self.action_event_mock.mock_calls):
             assert len(call.args) > 0, f"Expected args for call {i}, got none"
 
 
-    def verify_action_event_data(self, event_index: int = 0, expected_data: dict = None):
-        event: Event = self.event_mock.mock_calls[event_index].args[0]
-        event_type_got = event.event_type
-        event_type_expected = EVENT_REACT_ACTION
-        data_got = event.data
-        assert event_type_got == event_type_expected, f"Expected eventtype '{event_type_expected}', got '{event_type_got}'"
-        assert DeepDiff(data_got, expected_data) == {}, f"Expected event entity '{expected_data}', got '{data_got}'"
+    def verify_action_event_data(self, 
+        expected_entity: str = None,
+        expected_type: str = None,
+        expected_action: str = None,
+        expected_data: dict = None,
+        event_index: int = 0, 
+        entity_index: int = 0,
+        type_index: int = 0,
+        action_index: int = 0,
+    ):
+        ha_event: HaEvent = self.action_event_mock.mock_calls[event_index].args[0]
+        
+        self.verify_event_data_item(ATTR_ENTITY, ha_event, None, expected_entity, entity_index)
+        self.verify_event_data_item(ATTR_TYPE, ha_event, [EVENT_REACT_ACTION], expected_type, type_index)
+        self.verify_event_data_item(ATTR_ACTION, ha_event, None, expected_action, action_index)
+        self.verify_event_data_item(ATTR_DATA, ha_event, None, expected_data, -1)
+
+
+        # event_type_got = ha_event.event_type
+        # event_type_expected = expected_type or EVENT_REACT_ACTION
+        # assert event_type_got == event_type_expected, f"Expected eventtype '{event_type_expected}', got '{event_type_got}'"
+        
+        # data_got = ha_event.data
+        # assert DeepDiff(data_got, expected_data) == {}, f"Expected event entity '{expected_data}', got '{data_got}'"
 
 
     def verify_reaction_event_count(self, expected_count: int = 1, at_least_count: bool = False):
-        got_count = self.event_mock.call_count
+        got_count = self.reaction_event_mock.call_count
         if at_least_count:
             assert got_count >= expected_count, f"Expected event count {expected_count}, got {got_count}"
         else:
@@ -694,7 +774,7 @@ class TstContext():
         if delay > 0:
             await sleep(delay)
         self.verify_reaction_event_count(expected_count, at_least_count)
-        for i,call in enumerate(self.event_mock.mock_calls):
+        for i,call in enumerate(self.reaction_event_mock.mock_calls):
             assert len(call.args) > 0, f"Expected args for call {i}, got none"
 
 
@@ -709,23 +789,23 @@ class TstContext():
         type_index: int = 0,
         action_index: int = 0,
     ):
-        event: Event = self.event_mock.mock_calls[event_index].args[0]
-        event_type_got = event.event_type
+        ha_event: HaEvent = self.reaction_event_mock.mock_calls[event_index].args[0]
+        event_type_got = ha_event.event_type
         event_type_expected = EVENT_REACT_REACTION
         assert event_type_got == event_type_expected, f"Expected eventtype '{event_type_expected}', got '{event_type_got}'"
 
         workflow_config_reactor = self.workflow_config.reactors[reactor_index]
 
-        self.verify_reaction_event_data_item(ATTR_ENTITY, event, workflow_config_reactor.entity, expected_entity, entity_index)
-        self.verify_reaction_event_data_item(ATTR_TYPE, event, workflow_config_reactor.type, expected_type, type_index)
-        self.verify_reaction_event_data_item(ATTR_ACTION, event, workflow_config_reactor.action, expected_action, action_index)
-        self.verify_reaction_event_data_item(ATTR_DATA, event, workflow_config_reactor.data, expected_data, -1)
+        self.verify_event_data_item(ATTR_ENTITY, ha_event, workflow_config_reactor.entity, expected_entity, entity_index)
+        self.verify_event_data_item(ATTR_TYPE, ha_event, workflow_config_reactor.type, expected_type, type_index)
+        self.verify_event_data_item(ATTR_ACTION, ha_event, workflow_config_reactor.action, expected_action, action_index)
+        self.verify_event_data_item(ATTR_DATA, ha_event, workflow_config_reactor.data, expected_data, -1)
 
 
-    def verify_reaction_event_data_item(self, attr: str, event: Event, multi_item_or_list: Union[MultiItem, list], expected_value: Any = None, item_index: int = 0):
-        got_value = event.data.get(attr, None)
+    def verify_event_data_item(self, attr: str, ha_event: HaEvent, multi_item_or_list: Union[MultiItem, list], expected_value: Any = None, item_index: int = 0):
+        got_value = ha_event.data.get(attr, None)
         expected_value = expected_value or (multi_item_or_list[item_index] if multi_item_or_list else None)
-        assert DeepDiff(got_value, expected_value) == {}, f"Expected event entity '{expected_value}', got '{got_value}'"
+        assert DeepDiff(got_value, expected_value) == {}, f"Expected event {attr} '{expected_value}', got '{got_value}'"
 
 
     def verify_trace_record(self, 

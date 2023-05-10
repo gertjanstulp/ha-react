@@ -2,14 +2,15 @@ from datetime import timedelta
 from enum import Enum
 from logging import Handler
 from time import monotonic
-from typing import Callable, Union
+from typing import TYPE_CHECKING, Callable, Union
 import uuid
 
-from homeassistant.core import Event as HassEvent
-
+from custom_components.react.base import ReactBase
+from custom_components.react.tasks.filters import EventFilter
 from custom_components.react.utils.logger import get_react_logger
 
-from ..base import ReactBase
+if TYPE_CHECKING:
+    from custom_components.react.tasks.manager import ReactTaskManager
 
 
 _LOGGER = get_react_logger()
@@ -18,7 +19,7 @@ _LOGGER = get_react_logger()
 class ReactTaskType(str, Enum):
     STARTUP = "startup"
     RUNTIME = "runtime"
-    PLUGIN = "plugin"
+    BLOCK = "block"
 
 
 class ReactTask:
@@ -28,9 +29,13 @@ class ReactTask:
         self.react = react
         self.id = uuid.uuid4().hex
     
-        self.event_types: Union[list[str], None] = None
-        self.events_with_filters: Union[list[tuple[str, Callable[[HassEvent], bool]]], None] = None
-        self.signals: Union[list[str], None] = None
+        self.track_event_filters: list[EventFilter] | None = None
+        self.track_state_change_filters: list[EventFilter] | None = None
+        self.track_reaction_filters: list[EventFilter] | None = None
+
+        self.block_filter: Callable[..., bool] = None
+
+        self.manager: ReactTaskManager = None
 
 
     @property
@@ -55,10 +60,15 @@ class ReactTask:
         start_time = monotonic()
 
         try:
-            if task := getattr(self, "async_execute", None):
-                await task(*args)  # pylint: disable=not-callable
-            elif task := getattr(self, "execute", None):
-                await self.react.hass.async_add_executor_job(task)
+            proceed = True
+            if self.block_filter:
+                proceed = self.block_filter(*args, **kwargs)
+
+            if proceed:
+                if task := getattr(self, "async_execute", None):
+                    await task(*args, **kwargs)  # pylint: disable=not-callable
+                elif task := getattr(self, "execute", None):
+                    await self.react.hass.async_add_executor_job(task, *args)
 
         except BaseException as exception:  # lgtm [py/catch-base-exception] pylint: disable=broad-except
             self.task_logger(_LOGGER.exception, f"failed:")
@@ -68,5 +78,10 @@ class ReactTask:
                 "ReactTask<%s> took %.3f seconds to complete", self.slug, monotonic() - start_time
             )
 
+
     def unload(self):
+        self.react.task_manager.unload_task(self)
+        
+
+    def on_unload(self):
         pass

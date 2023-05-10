@@ -6,18 +6,14 @@ from custom_components.react.plugin.const import (
 )
 from custom_components.react.plugin.media_player.config import MediaPlayerConfig
 from custom_components.react.plugin.media_player.provider import MediaPlayerProvider, TtsProvider
-from custom_components.react.plugin.api import ApiBase, HassApi, PluginApi
+from custom_components.react.plugin.base import PluginApiBase
 from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData
 
 _LOGGER = get_react_logger()
 
 
-class MediaPlayerApi(ApiBase):
-    def __init__(self, plugin_api: PluginApi, hass_api: HassApi, config: MediaPlayerConfig) -> None:
-        super().__init__(plugin_api, hass_api)
-        self.config = config
-
+class MediaPlayerApi(PluginApiBase[MediaPlayerConfig]):
 
     def _debug(self, message: str):
         _LOGGER.debug(f"Mediaplayer plugin: Api - {message}")
@@ -32,7 +28,7 @@ class MediaPlayerApi(ApiBase):
         self._debug(f"Playing favorite '{favorite_id}' on '{entity_id}'")
         try:
             full_entity_id = f"media_player.{entity_id}"
-            if state := self.hass_api.hass_get_state(full_entity_id):
+            if state := self.plugin.hass_api.hass_get_state(full_entity_id):
                 value = state.state
             else:
                 _LOGGER.warn(f"Mediaplayer plugin: Api - {full_entity_id} not found")
@@ -61,7 +57,7 @@ class MediaPlayerApi(ApiBase):
         self._debug(f"Speeking '{message}' on mediaplayer")
         try:
             full_entity_id = f"media_player.{entity_id}"
-            if state := self.hass_api.hass_get_state(full_entity_id):
+            if state := self.plugin.hass_api.hass_get_state(full_entity_id):
                 value = state.state
             else:
                 _LOGGER.warn(f"Mediaplayer plugin: Api - {full_entity_id} not found")
@@ -83,7 +79,7 @@ class MediaPlayerApi(ApiBase):
             await t_provider.async_speek(context, full_entity_id, message, language, cache, options)
 
             if wait:
-                await self.hass_api.async_hass_wait(wait)
+                await self.plugin.hass_api.async_hass_wait(wait)
 
             # If the mediaplayer doesn't support 'announce' it has to be resumed after sending tts messages
             if announce and not mp_provider.support_announce:
@@ -93,24 +89,28 @@ class MediaPlayerApi(ApiBase):
 
 
     def get_tts_provider(self, tts_provider: str) -> TtsProvider:
-        tts_provider = tts_provider or self.config.tts_provider
-        result = self.plugin_api.get_provider(PROVIDER_TYPE_TTS, tts_provider)
+        tts_provider = tts_provider or self.plugin.config.tts_provider
+        result = self.plugin.get_provider(PROVIDER_TYPE_TTS, tts_provider)
         if not result:
-            _LOGGER.error(f"Mediaplayer plugin: Api - Tts provider for '{tts_provider}' not found")
+            if tts_provider:
+                _LOGGER.error(f"Mediaplayer plugin: Api - Tts provider for '{tts_provider}' not found")
+            else:
+                _LOGGER.error(f"Mediaplayer plugin: Api - Tts provider not provided")
             return None
         return result
+    
         
     def get_media_player_provider(self, entity_id: str, media_player_provider: str) -> MediaPlayerProvider:
         result = None
     
-        entity = self.hass_api.hass_get_entity(entity_id)
+        entity = self.plugin.hass_api.hass_get_entity(entity_id)
         if entity:
-            result = self.plugin_api.get_provider(PROVIDER_TYPE_MEDIA_PLAYER, entity.platform)
+            result = self.plugin.get_provider(PROVIDER_TYPE_MEDIA_PLAYER, entity.platform)
         
         if not result:
-            media_player_provider = media_player_provider or self.config.media_player_provider
+            media_player_provider = media_player_provider or self.plugin.config.media_player_provider
             if media_player_provider:
-                result = self.plugin_api.get_provider(PROVIDER_TYPE_MEDIA_PLAYER, media_player_provider)
+                result = self.plugin.get_provider(PROVIDER_TYPE_MEDIA_PLAYER, media_player_provider)
     
         if not result:
             target = entity_id

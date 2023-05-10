@@ -1,11 +1,8 @@
 from custom_components.react.plugin.media_player.provider import MediaPlayerProvider
-from custom_components.react.plugin.api import HassApi, PluginApi
+from custom_components.react.utils.struct import DynamicData
 
 
-class BrowserModProvider(MediaPlayerProvider):
-    def __init__(self, plugin_api: PluginApi, hass_api: HassApi) -> None:
-        super().__init__(plugin_api, hass_api)
-
+class BrowserModProvider(MediaPlayerProvider[DynamicData]):
 
     @property
     def support_announce(self) -> bool:

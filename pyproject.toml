@@ -14,5 +14,6 @@ filterwarnings = [
     "ignore::DeprecationWarning"
 ]
 asyncio_mode = "auto"
+#addopts="-n 6"
 
 [tool.pyright]

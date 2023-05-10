@@ -2,7 +2,7 @@ from typing import Generic, Type, TypeVar, Union
 
 from anyio import Any
 from homeassistant.const import ATTR_ID
-from homeassistant.core import Event as HassEvent, callback, HomeAssistant
+from homeassistant.core import Event as HaEvent, callback, HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import TrackTemplate, TrackTemplateResult, async_track_template_result
@@ -177,7 +177,7 @@ class TemplatePropertyTracker(BaseTracker, Destroyable):
 
 
     @callback
-    def async_update_template(self, hass_event: Union[HassEvent, None], updates: list[TrackTemplateResult]):
+    def async_update_template(self, ha_event: Union[HaEvent, None], updates: list[TrackTemplateResult]):
         if updates and len(updates) > 0:
             result = updates.pop().result
             if isinstance(result, TemplateError):

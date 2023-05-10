@@ -9,17 +9,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context
 
-from custom_components.react.plugin.api import HassApi, PluginApi
-from custom_components.react.plugin.providers import PluginProvider
+from custom_components.react.plugin.base import PluginProviderBase
+from custom_components.react.plugin.switch.config import SwitchConfig
 
 
-class SwitchProvider(PluginProvider):
-    def __init__(self, plugin_api: PluginApi, hass_api: HassApi) -> None:
-        super().__init__(plugin_api, hass_api)
-
+class SwitchProvider(PluginProviderBase[SwitchConfig]):
 
     async def async_set_state(self, context: Context, entity_id: str, state: str):
-        await self.hass_api.async_hass_call_service(
+        await self.plugin.hass_api.async_hass_call_service(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON if state == STATE_ON else SERVICE_TURN_OFF,
             {
