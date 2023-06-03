@@ -124,10 +124,16 @@ class StateChangeInputBlock(Generic[T_config], EventInputBlock[T_config]):
         super().__init__(react, StateChangedEvent)
 
         self.type = type
+        self.entity_track_keys: list[str] = []
 
         async_dispatcher_connect(self.react.hass, SIGNAL_ACTION_HANDLER_CREATED, self.async_track_entity)
         async_dispatcher_connect(self.react.hass, SIGNAL_ACTION_HANDLER_DESTROYED, self.async_untrack_entity)
 
+
+    @property
+    def slug(self) -> str:
+        return f"{self.type.lower() if self.type else ''}_{super().slug}"
+    
 
     def read_state_data(self, react_event: StateChangedEvent) -> StateChangeData: 
         raise NotImplementedError()
@@ -141,24 +147,25 @@ class StateChangeInputBlock(Generic[T_config], EventInputBlock[T_config]):
 
     @callback
     def async_track_entity(self, workflow_id: str, actor: ActorRuntime):
-        if not self.type or self.type in actor.type:
-            for entity in actor.entity:
-                self.manager.track_state_change(
-                    ENTITY_ID_STATE_CHANGE_FILTER_STRATEGY.get_filter(
-                        f"{self.type}.{entity}",
-                        track_key(workflow_id, actor.id, entity)
-                    ),
-                    self
-                )
-                
+        self.update_tracker(True, actor)
 
     
     @callback
     def async_untrack_entity(self, workflow_id: str, actor: ActorRuntime):
+        self.update_tracker(False, actor)
+
+
+    def update_tracker(self, track: bool, actor: ActorRuntime):
         if not self.type or self.type in actor.type:
             for entity in actor.entity:
-                self.manager.untrack_entity(self, track_key(workflow_id, actor.id, entity))
-    
+                entity_track_key = track_key(self.__class__.__name__, self.type, entity)
+                if track and entity_track_key not in self.entity_track_keys:
+                    self.manager.track_state_change(ENTITY_ID_STATE_CHANGE_FILTER_STRATEGY.get_filter(f"{self.type}.{entity}", entity_track_key), self)
+                    self.entity_track_keys.append(entity_track_key)
+                if not track and entity_track_key in self.entity_track_keys:
+                    self.manager.untrack_entity(self, entity_track_key)
+                    self.entity_track_keys.remove(entity_track_key)
+
 
 class TimeInputBlock(Generic[T_config], BlockBase[T_config], InputBlock):
 
@@ -169,7 +176,12 @@ class TimeInputBlock(Generic[T_config], BlockBase[T_config], InputBlock):
 class OutputBlock(Generic[T_config], EventBlock[T_config]):
     def __init__(self, react: ReactBase, e_type: type[ReactEvent]):
         super().__init__(react, e_type)
+    
 
+    @property
+    def slug(self) -> str:
+        return super().slug
+        # return f"{self.type.lower() if self.type else ''}_{super().slug}"
 
 
 
