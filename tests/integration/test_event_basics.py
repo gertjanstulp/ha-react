@@ -27,6 +27,8 @@ async def test_immediate(test_context: TstContext, workflow_name: str):
         await test_context.async_verify_reaction_event_received()
         test_context.verify_reaction_event_data()
         test_context.verify_trace_record()
+        test_context.verify_has_no_log_issues()
+
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["delayed"])
@@ -53,6 +55,7 @@ async def test_delayed(test_context: TstContext, workflow_name: str):
         test_context.verify_reaction_event_data()
         test_context.verify_trace_record()
         test_context.verify_reaction_not_found()
+        test_context.verify_has_no_log_issues()
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["scheduled"])
@@ -75,6 +78,7 @@ async def test_scheduled(test_context: TstContext, workflow_name: str):
         # test_context.verify_reaction_entity_data()
         test_context.verify_trace_record(expected_event_trace=False)
         await test_context.async_stop_all_runs()
+        test_context.verify_has_no_log_issues()
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["reset"])
@@ -104,6 +108,8 @@ async def test_reset(test_context: TstContext, workflow_name: str):
 
     await tc_delayed.async_stop_all_runs()
     await tc_scheduled.async_stop_all_runs()
+    
+    test_context.verify_has_no_log_issues()
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["forward_action"])
@@ -125,6 +131,7 @@ async def test_forward_action_no_toggle(test_context: TstContext, workflow_name:
         await test_context.async_verify_reaction_event_received()
         test_context.verify_reaction_event_data(expected_action="test")
         test_context.verify_trace_record(expected_runtime_actor_action="test")
+        test_context.verify_has_no_log_issues()
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["forward_action"])
@@ -144,6 +151,7 @@ async def test_forward_action_toggle(test_context: TstContext, workflow_name: st
         test_context.verify_reaction_not_found()
         await test_context.async_verify_reaction_event_not_received()
         test_context.verify_trace_record(expected_result_message="Skipped, toggle with forward-action")
+        test_context.verify_has_no_log_issues()
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["forward_data"])
@@ -170,6 +178,7 @@ async def test_forward_data(test_context: TstContext, workflow_name: str):
         await test_context.async_verify_reaction_event_received()
         test_context.verify_reaction_event_data(expected_data=data_in)
         test_context.verify_trace_record(expected_runtime_reactor_data=[data_in])
+        test_context.verify_has_no_log_issues()
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["full_stencil"])
@@ -194,6 +203,7 @@ async def test_full_stencil(test_context: TstContext, workflow_name: str):
         await test_context.async_verify_reaction_event_received()
         test_context.verify_reaction_event_data(expected_data=data_out)
         test_context.verify_trace_record()
+        test_context.verify_has_no_log_issues()
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["partial_stencil"])
@@ -215,6 +225,7 @@ async def test_partial_stencil(test_context: TstContext, workflow_name: str):
         await test_context.async_verify_reaction_event_received()
         test_context.verify_reaction_event_data()
         test_context.verify_trace_record()
+        test_context.verify_has_no_log_issues()
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["overwrite"])
@@ -244,3 +255,4 @@ async def test_overwrite(test_context: TstContext, workflow_name: str):
 
         await test_context.async_stop_all_runs()
         test_context.verify_reaction_not_found()
+        test_context.verify_has_no_log_issues()

@@ -2,7 +2,6 @@ from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TURN_ON,
     SERVICE_TURN_OFF,
-    SERVICE_TOGGLE,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -10,18 +9,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context
 
-from custom_components.react.base import ReactBase
-from custom_components.react.plugin.api import HassApi, PluginApi
-from custom_components.react.plugin.providers import PluginProvider
+from custom_components.react.plugin.light.config import LightConfig
+from custom_components.react.plugin.base import PluginProviderBase
 
 
-class LightProvider(PluginProvider):
-    def __init__(self, plugin_api: PluginApi, hass_api: HassApi) -> None:
-        super().__init__(plugin_api, hass_api)
-
+class LightProvider(PluginProviderBase[LightConfig]):
 
     async def async_set_state(self, context: Context, entity_id: str, state: str):
-        await self.hass_api.async_hass_call_service(
+        await self.plugin.hass_api.async_hass_call_service(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON if state == STATE_ON else SERVICE_TURN_OFF,
             {

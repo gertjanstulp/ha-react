@@ -1,0 +1,3 @@
+INPUT_BOOLEAN_GENERIC_PROVIDER = "generic"
+
+ATTR_INPUT_BOOLEAN_PROVIDER = "input_boolean_provider"

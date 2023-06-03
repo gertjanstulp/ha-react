@@ -10,6 +10,7 @@ class MockLogHandler(Handler):
     def emit(self, record) -> None:
         self.records.append(record)
 
+
     def has_record(self, level_name: str, message: str):
         matches = [ item for item in self.records if item.levelname == level_name and item.msg == message ]
         return len(matches) > 0

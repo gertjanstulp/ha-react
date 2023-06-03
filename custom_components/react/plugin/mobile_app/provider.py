@@ -1,4 +1,3 @@
-from uuid import uuid4
 from homeassistant.components.notify.const import (
     ATTR_TITLE,
     DOMAIN as NOTIFY_DOMAIN
@@ -10,8 +9,9 @@ from custom_components.react.const import (
     ATTR_DATA, 
     ATTR_EVENT_MESSAGE
 )
+from custom_components.react.plugin.const import ATTR_ACTIONS
+from custom_components.react.plugin.mobile_app.config import MobileAppConfig
 from custom_components.react.plugin.mobile_app.const import (
-    ATTR_ACTIONS, 
     ATTR_PERSISTENT, 
     ATTR_STICKY, 
     ATTR_TAG, 
@@ -19,17 +19,16 @@ from custom_components.react.plugin.mobile_app.const import (
 )
 from custom_components.react.plugin.notify.const import FeedbackItem
 from custom_components.react.plugin.notify.provider import NotifyProvider
-from custom_components.react.plugin.api import HassApi, PluginApi
 from custom_components.react.utils.logger import get_react_logger
 
 _LOGGER = get_react_logger()
 
 
-class MobileAppProvider(NotifyProvider):
-    def __init__(self, plugin_api: PluginApi, hass_api: HassApi) -> None:
-        super().__init__(plugin_api, hass_api)
+class MobileAppProvider(NotifyProvider[MobileAppConfig]):
 
-
+    def __init__(self) -> None:
+        super().__init__()
+        
     def _debug(self, message: str):
         _LOGGER.debug(f"Mobile app plugin: MobileAppProvider - {message}")
 
@@ -46,11 +45,11 @@ class MobileAppProvider(NotifyProvider):
                     ATTR_TITLE : item.title
                 } for item in feedback_items ],
                 ATTR_PERSISTENT: "true",
-                ATTR_TAG: self.hass_api.hass_get_uid_str(),
+                ATTR_TAG: self.plugin.hass_api.hass_get_uid_str(),
                 ATTR_STICKY: "true"
             }
 
-        await self.hass_api.async_hass_call_service(
+        await self.plugin.hass_api.async_hass_call_service(
             NOTIFY_DOMAIN, 
             entity_id,
             data, 
@@ -73,7 +72,7 @@ class MobileAppProvider(NotifyProvider):
                 ATTR_TAG: conversation_id
             }
         }
-        await self.hass_api.async_hass_call_service(
+        await self.plugin.hass_api.async_hass_call_service(
             NOTIFY_DOMAIN, 
             message_id,
             data, 

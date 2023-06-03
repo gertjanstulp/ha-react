@@ -6,7 +6,7 @@ DOMAIN_SENSOR = "sensor"
 FIXTURE_WORKFLOW_NAME = "workflow_name"
 EVENT_TEST_CALLBACK = "test_callback"
 
-ALARM_CONFIG = "alarm.yaml"
+ALARM_CONFIG = "alarm_control_panel.yaml"
 BINARY_SENSOR_CONFIG = "binary_sensor.yaml"
 DEVICE_TRACKER_CONFIG = "device_tracker.yaml"
 GROUP_CONFIG = "group.yaml"

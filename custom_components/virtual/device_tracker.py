@@ -6,7 +6,7 @@ This component provides support for a virtual device tracker.
 import logging
 import json
 
-from homeassistant.const import CONF_DEVICES, STATE_HOME
+from homeassistant.const import CONF_DEVICES
 from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.helpers.event import async_track_state_change_event
 from .const import (

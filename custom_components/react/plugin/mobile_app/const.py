@@ -1,6 +1,5 @@
 NOTIFY_PROVIDER_MOBILE_APP = "mobile_app"
 
-ATTR_ACTIONS = "actions"
 ATTR_PERSISTENT = "persistent"
 ATTR_TAG = "tag"
 ATTR_MESSAGE = "message"

@@ -1,9 +1,7 @@
 from telegram.utils.helpers import escape_markdown
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
-from homeassistant.components.telegram.notify import (
-    ATTR_INLINE_KEYBOARD
-)
+from homeassistant.components.telegram.notify import ATTR_INLINE_KEYBOARD
 from homeassistant.components.telegram_bot import (
     ATTR_CHAT_ID,
     ATTR_KEYBOARD_INLINE,
@@ -20,16 +18,13 @@ from custom_components.react.const import (
 )
 from custom_components.react.plugin.notify.const import FeedbackItem
 from custom_components.react.plugin.notify.provider import NotifyProvider
-from custom_components.react.plugin.api import HassApi, PluginApi
+from custom_components.react.plugin.telegram.config import TelegramConfig
 from custom_components.react.utils.logger import get_react_logger
 
 _LOGGER = get_react_logger()
 
 
-class TelegramProvider(NotifyProvider):
-    def __init__(self, plugin_api: PluginApi, hass_api: HassApi) -> None:
-        super().__init__(plugin_api, hass_api)
-
+class TelegramProvider(NotifyProvider[TelegramConfig]):
 
     def _debug(self, message: str):
         _LOGGER.debug(f"Telegram app plugin: TelegramProvider - {message}")
@@ -49,7 +44,7 @@ class TelegramProvider(NotifyProvider):
                 )
             }
 
-        await self.hass_api.async_hass_call_service(
+        await self.plugin.hass_api.async_hass_call_service(
             NOTIFY_DOMAIN, 
             entity_id,
             data, 
@@ -72,7 +67,7 @@ class TelegramProvider(NotifyProvider):
             ATTR_MESSAGE: escape_markdown(f"{text} - {acknowledgement}"),
             ATTR_KEYBOARD_INLINE: None
         }
-        await self.hass_api.async_hass_call_service(
+        await self.plugin.hass_api.async_hass_call_service(
             DOMAIN,
             SERVICE_EDIT_MESSAGE,
             service_data=data, 

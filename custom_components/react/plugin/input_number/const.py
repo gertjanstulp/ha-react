@@ -1,0 +1,3 @@
+INPUT_NUMBER_GENERIC_PROVIDER = "generic"
+
+ATTR_INPUT_NUMBER_PROVIDER = "input_number_provider"

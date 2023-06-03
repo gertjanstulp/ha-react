@@ -1,10 +1,18 @@
+from __future__ import annotations
+
 from typing import Any
 from homeassistant.core import Context, HomeAssistant, SERVICE_CALL_LIMIT, State
 from custom_components.react.const import ATTR_WAIT
 
-from custom_components.react.plugin.api import HassApi
+from custom_components.react.plugin.hass_api import HassApi
 from tests.common import TEST_CONTEXT
 from tests.tst_context import TstContext
+
+
+class HassApiMockExtend():
+    @property
+    def hass_api_mock(self) -> HassApiMock:
+        return self.plugin.hass_api
 
 
 class HassApiMock(HassApi):
@@ -60,5 +68,15 @@ class HassApiMock(HassApi):
         return "0123456789"
     
 
-    def hass_generate_media_source_id(self, message: str, engine: str | None = None, language: str | None = None, options: dict | None = None, cache: bool | None = None) -> str:
-        return f"{message}|{engine}|{language}"
+    def hass_generate_media_source_id(self, 
+        message: str, 
+        engine: str | None = None, 
+        language: str | None = None, 
+        options: dict | None = None, 
+        cache: bool | None = None
+    ) -> str:
+        result = f"{message}|{engine}|{language}"
+        if options:
+            result = f"{result}|{str(options)}"
+        return result
+

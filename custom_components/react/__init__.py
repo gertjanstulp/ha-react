@@ -5,7 +5,7 @@ from awesomeversion import AwesomeVersion
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, __version__ as HAVERSION
-from homeassistant.core import Context, HomeAssistant, callback, CALLBACK_TYPE, Event as HassEvent
+from homeassistant.core import Context, HomeAssistant, callback, CALLBACK_TYPE, Event as HaEvent
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -308,13 +308,16 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
 
 
     @callback
-    async def async_handle(self, hass_event: HassEvent):
-        action_event = ActionEvent(hass_event)
+    async def async_handle(self, ha_event: HaEvent):
+        action_event = ActionEvent(ha_event)
         
         for actor_tracker in self.actor_trackers:
             run = False
             actor_runtime = actor_tracker.value_container
-            if (action_event.payload.entity in actor_runtime.entity and action_event.payload.type in actor_runtime.type):
+            if ((actor_runtime.entity == "*" or 
+                 action_event.payload.entity in actor_runtime.entity) and 
+                action_event.payload.type in actor_runtime.type
+            ):
                 config_action = actor_runtime.action
                 if config_action is None:
                     run = True   
@@ -343,7 +346,7 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
                     self._last_triggered = utcnow()
                     self.async_write_ha_state()
 
-                    parent_id = None if hass_event.context is None else hass_event.context.id
+                    parent_id = None if ha_event.context is None else ha_event.context.id
                     hass_run_context = Context(parent_id=parent_id)
                     
                     entity_vars = None
@@ -365,4 +368,4 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
             ATTR_ACTION: actor_runtime.action.first_or_none if actor_runtime.action else ATTR_TRIGGER,
             ATTR_DATA: actor_runtime.data[0].as_dict() if actor_runtime.data and len(actor_runtime.data) > 0 else None,
         }
-        await self.async_handle(HassEvent(EVENT_REACT_ACTION, data, context=context))
+        await self.async_handle(HaEvent(EVENT_REACT_ACTION, data, context=context))

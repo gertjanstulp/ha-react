@@ -2,25 +2,23 @@ from threading import Lock
 from typing import Any
 
 from homeassistant.components.notify.legacy import NOTIFY_SERVICES
-
-from custom_components.react.plugin.api import HassApi, PluginApi
+from custom_components.react.plugin.hass_api import HassApi
 
 
 class NotifyPluginResolver():
-    def __init__(self, plugin_api: PluginApi, hass_api: HassApi) -> None:
-        self.plugin_api = plugin_api
-        self.hass_api = hass_api
+    def __init__(self) -> None:
         self._notify_entity_reverse_lookup: dict[str, str] = {}
         self._notification_platforms: dict[str, dict[str, list]] = {}
 
         self._lock = Lock()
         self._resolved: bool = False
 
-    def load(self):
+
+    def load(self, hass_api: HassApi):
         if not self._resolved:
             with self._lock:
                 if not self._resolved:
-                    notify_services_dict: dict = self.hass_api.hass_get_data(NOTIFY_SERVICES)
+                    notify_services_dict: dict = hass_api.hass_get_data(NOTIFY_SERVICES)
                     if not notify_services_dict: return
                     
                     for domain,domain_services in notify_services_dict.items():

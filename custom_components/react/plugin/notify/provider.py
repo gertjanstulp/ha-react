@@ -1,14 +1,14 @@
+from typing import Generic, TypeVar
 from homeassistant.core import Context
 
 from custom_components.react.plugin.notify.const import FeedbackItem
-from custom_components.react.plugin.api import HassApi, PluginApi
-from custom_components.react.plugin.providers import PluginProvider
+from custom_components.react.plugin.base import PluginProviderBase
+from custom_components.react.utils.struct import DynamicData
+
+T_config = TypeVar("T_config", bound=DynamicData)
 
 
-class NotifyProvider(PluginProvider):
-    def __init__(self, plugin_api: PluginApi, hass_api: HassApi) -> None:
-        super().__init__(plugin_api, hass_api)
-
+class NotifyProvider(Generic[T_config], PluginProviderBase[T_config]):
 
     async def async_notify(self, 
         context: Context, 

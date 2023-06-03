@@ -7,16 +7,13 @@ from custom_components.react.plugin.const import PROVIDER_TYPE_NOTIFY
 from custom_components.react.plugin.notify.const import NOTIFY_RESOLVER_KEY, FeedbackItem
 from custom_components.react.plugin.notify.resolver import NotifyPluginResolver
 from custom_components.react.plugin.notify.provider import NotifyProvider
-from custom_components.react.plugin.api import HassApi, PluginApi
 from custom_components.react.utils.logger import get_react_logger
+from custom_components.react.utils.struct import DynamicData
 
 _LOGGER = get_react_logger()
 
 
-class GroupProvider(NotifyProvider):
-    def __init__(self, plugin_api: PluginApi, hass_api: HassApi) -> None:
-        super().__init__(plugin_api, hass_api)
-
+class GroupProvider(NotifyProvider[DynamicData]):
 
     def _debug(self, message: str):
         _LOGGER.debug(f"Group plugin: GroupProvider - {message}")
@@ -24,7 +21,7 @@ class GroupProvider(NotifyProvider):
 
     async def async_notify(self, context: Context, entity_id: str, message: str, feedback_items: list[FeedbackItem]):
         self._debug(f"Sending message to {entity_id}")
-        resolver: NotifyPluginResolver = self.hass_api.hass_get_data(NOTIFY_RESOLVER_KEY)
+        resolver: NotifyPluginResolver = self.plugin.hass_api.hass_get_data(NOTIFY_RESOLVER_KEY)
         if not resolver:
             _LOGGER.error(f"Group plugin: Provider - Notify resolver not found, notify plugin is not configured")
             return
@@ -37,7 +34,7 @@ class GroupProvider(NotifyProvider):
         for child_entity in group_notify_platform.entities:
             if child_entity_id := child_entity.get(ATTR_SERVICE, None):
                 if notify_provider := resolver.reverse_lookup_entity(child_entity_id):
-                    if result:= self.plugin_api.get_provider(PROVIDER_TYPE_NOTIFY, notify_provider):
+                    if result:= self.plugin.get_provider(PROVIDER_TYPE_NOTIFY, notify_provider):
                         await result.async_notify(context, child_entity_id, message, feedback_items)
                     else:
                         _LOGGER.warn(f"Group plugin: Provider - Could not find notify provider for child entity '{child_entity_id}'")
