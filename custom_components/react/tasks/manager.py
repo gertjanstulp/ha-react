@@ -101,12 +101,12 @@ class ReactTaskManager:
 
     def untrack_entity(self, task: ReactTask, track_key: str):
         if unloader := self._unloaders.get(task.id, {}).pop(track_key, None):
-            unloader()
+            unloader.unload()
         
     
     def untrack_time(self, task: ReactTask, track_key: str):
         if unloader := self._unloaders.get(task.id, {}).pop(track_key, None):
-            unloader()
+            unloader.unload()
 
 
     def wrap_unloader(self, callback: CALLBACK_TYPE, task_id: str, key: str):
