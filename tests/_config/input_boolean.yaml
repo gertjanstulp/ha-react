@@ -37,3 +37,7 @@ input_boolean_initial_on_test:
 input_boolean_hass_started_test:
   name: input_boolean_hass_started_test
   initial: False
+
+input_boolean_binary_sensor_test:
+  name: input_boolean_binary_sensor_test
+  initial: False

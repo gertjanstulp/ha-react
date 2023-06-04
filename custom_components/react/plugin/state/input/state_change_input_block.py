@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-import itertools
-
-from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -20,7 +17,7 @@ from custom_components.react.const import (
     SIGNAL_ACTION_HANDLER_CREATED,
     SIGNAL_ACTION_HANDLER_DESTROYED, 
 )
-from custom_components.react.tasks.filters import ENTITY_ID_STATE_CHANGE_FILTER_STRATEGY, EVENT_TYPE_FILTER_STRATEGY, track_key
+from custom_components.react.tasks.filters import ENTITY_ID_STATE_CHANGE_FILTER_STRATEGY, track_key
 from custom_components.react.tasks.plugin.base import EventInputBlock
 from custom_components.react.utils.events import StateChangedEvent
 from custom_components.react.utils.logger import get_react_logger
@@ -35,6 +32,8 @@ class StateChangeInputBlock(EventInputBlock[StateConfig]):
 
         async_dispatcher_connect(self.react.hass, SIGNAL_ACTION_HANDLER_CREATED, self.async_track_entity)
         async_dispatcher_connect(self.react.hass, SIGNAL_ACTION_HANDLER_DESTROYED, self.async_untrack_entity)
+
+        self.state_track_keys: list[str] = []
         
 
     def _debug(self, message: str):
@@ -60,20 +59,21 @@ class StateChangeInputBlock(EventInputBlock[StateConfig]):
 
     @callback
     def async_track_entity(self, workflow_id: str, actor: ActorRuntime):
-        if REACT_TYPE_STATE in actor.type:
-            for entity in actor.entity:
-                self.manager.track_state_change(
-                    ENTITY_ID_STATE_CHANGE_FILTER_STRATEGY.get_filter(
-                        entity,
-                        track_key(workflow_id, actor.id, entity)
-                    ),
-                    self
-                )
+        self.update_tracker(True, actor)
                 
-
     
     @callback
     def async_untrack_entity(self, workflow_id: str, actor: ActorRuntime):
+        self.update_tracker(False, actor)
+
+
+    def update_tracker(self, track: bool, actor: ActorRuntime):
         if REACT_TYPE_STATE in actor.type:
             for entity in actor.entity:
-                self.manager.untrack_entity(self, track_key(workflow_id, actor.id, entity))
+                state_track_key = track_key(self.__class__.__name__, entity)
+                if track and state_track_key not in self.state_track_keys:
+                    self.manager.track_state_change(ENTITY_ID_STATE_CHANGE_FILTER_STRATEGY.get_filter(entity, state_track_key), self)
+                    self.state_track_keys.append(state_track_key)
+                if not track and state_track_key in self.state_track_keys:
+                    self.manager.untrack_entity(self, state_track_key)
+                    self.state_track_keys.remove(state_track_key)
