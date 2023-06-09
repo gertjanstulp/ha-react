@@ -72,7 +72,7 @@ async def test_input_number_plugin_api_set_invalid_entity(test_context: TstConte
         
     await test_context.async_send_reaction_event(data={})
     test_context.verify_plugin_data_not_sent()
-    test_context.verify_has_log_record("WARNING", f"Input number plugin: Api - input_number.input_number_value_test not found")
+    test_context.verify_has_log_warning(f"1 - input_number.input_number_value_test not found")
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, [
@@ -97,7 +97,7 @@ async def test_input_number_plugin_api_invalid_provider(test_context: TstContext
     await test_context.async_start_react([mock_plugin])
     await test_context.async_send_reaction_event(data=data)
     test_context.verify_plugin_data_not_sent()
-    test_context.verify_has_log_error(f"Input number plugin: Api - Input number provider for '{invalid_provider}' not found")
+    test_context.verify_has_log_error(f"1 - Input_number provider for '{invalid_provider}' not found")
 
 
 @pytest.mark.parametrize(f"{FIXTURE_WORKFLOW_NAME},{FIXTURE_EXPECTED_VALUE},{FIXTURE_VALUE},{FIXTURE_MIN},{FIXTURE_MAX}", [

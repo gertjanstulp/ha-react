@@ -12,14 +12,13 @@ from homeassistant.const import (
     STATE_OFF, STATE_ON,
 )
 
-from .utils.logger import get_react_logger
-from .const import (
-    DOMAIN,
-)
+from custom_components.react.const import DOMAIN
+from custom_components.react.utils.logger import get_react_logger
 
 VALID_STATES = {STATE_ON, STATE_OFF}
 
 _LOGGER = get_react_logger()
+
 
 async def _async_reproduce_state(
     hass: HomeAssistant,

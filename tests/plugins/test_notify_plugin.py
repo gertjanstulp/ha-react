@@ -65,7 +65,7 @@ async def test_notify_plugin_api_send_message_no_service(test_context: TstContex
 
     await test_context.async_start_react([mock_plugin])
     await test_context.async_send_reaction_event(data={})
-    test_context.verify_has_log_warning(f"Notify plugin: Api - {NOTIFY_DOMAIN}.{entity_id} not found")
+    test_context.verify_has_log_warning(f"1 - {NOTIFY_DOMAIN}.{entity_id} not found")
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["notify_send_message_test"])
@@ -81,7 +81,7 @@ async def test_notify_plugin_api_send_message_no_provider_provided(test_context:
     await test_context.async_start_react([mock_plugin])
     await test_context.async_send_reaction_event(data={})
     test_context.verify_plugin_data_not_sent()
-    test_context.verify_has_log_error(f"Notify plugin: Api - Notify provider for '{entity_id}' not found")
+    test_context.verify_has_log_error(f"1 - Notify provider for '{entity_id}' not found")
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["notify_send_message_test"])
@@ -97,7 +97,7 @@ async def test_notify_plugin_api_send_message_no_provider_set_up(test_context: T
     await test_context.async_start_react([mock_plugin])
     await test_context.async_send_reaction_event(data={})
     test_context.verify_plugin_data_not_sent()
-    test_context.verify_has_log_error(f"Notify plugin: Api - Notify provider for '{entity_id}/{NOTIFY_PROVIDER_MOCK}' not found")
+    test_context.verify_has_log_error(f"1 - Notify provider for '{entity_id}/{NOTIFY_PROVIDER_MOCK}' not found")
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["notify_send_message_test"])
@@ -173,7 +173,7 @@ async def test_notify_plugin_api_confirm_feedback_no_provider_set_up(test_contex
 
     await test_context.async_send_reaction_event(reactor_index=1, data=data_in)
     test_context.verify_plugin_data_not_sent()
-    test_context.verify_has_log_error(f"Notify plugin: Api - Notify provider for '{NOTIFY_PROVIDER_MOCK}' not found")
+    test_context.verify_has_log_error(f"1 - Notify provider for '{NOTIFY_PROVIDER_MOCK}' not found")
         
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["notify_confirm_feedback_test"])
@@ -198,7 +198,7 @@ async def test_notify_plugin_api_confirm_feedback_no_provider_provided(test_cont
 
     await test_context.async_send_reaction_event(reactor_index=1, data=data_in)
     test_context.verify_plugin_data_not_sent()
-    test_context.verify_has_log_error(f"Notify plugin: Api - Notify provider not found")
+    test_context.verify_has_log_error(f"1 - Notify provider not found")
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["notify_confirm_feedback_test"])

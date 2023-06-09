@@ -7,14 +7,11 @@ from importlib import import_module
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
 
-from homeassistant.const import (
-    EVENT_STATE_CHANGED, 
-    ATTR_ENTITY_ID,
-)
-from homeassistant.core import CALLBACK_TYPE, Event as HaEvent, HassJob, callback, split_entity_id
-from homeassistant.helpers.event import async_track_state_change_event, async_track_time_change
+from homeassistant.const import EVENT_STATE_CHANGED
+from homeassistant.core import CALLBACK_TYPE, Event as HaEvent, HassJob, callback
+from homeassistant.helpers.event import async_track_time_change
 
-from custom_components.react.const import EVENT_REACT_REACTION
+from custom_components.react.const import ATTR_TYPE, EVENT_REACT_REACTION
 from custom_components.react.tasks.base import ReactTask, ReactTaskType
 from custom_components.react.tasks.filters import (
     ALL_REACTION_FILTER_STRATEGIES, 
@@ -39,14 +36,14 @@ TRACK_STATE_CHANGE_LISTENER = "react_track_state_change_listener"
 TRACK_TIME_CALLBACKS = "react_track_time_callbacks"
 TRACK_TIME_LISTENERS = "react_track_time_listeners"
 
+ATTR_TIME_KEY = "time_key"
+
 _LOGGER = get_react_logger()
 
 
 class ReactTaskManager:
-    """React task manager."""
 
     def __init__(self, react: ReactBase) -> None:
-        """Initialize the setup manager class."""
         self.react = react
         self._tasks: dict[str, ReactTask] = {}
         self._unloaders: dict[str, dict[str, TaskUnloader]] = {}
@@ -54,12 +51,10 @@ class ReactTaskManager:
 
     @property
     def tasks(self) -> list[ReactTask]:
-        """Return all list of all tasks."""
         return list(self._tasks.values())
 
 
     async def async_load(self) -> None:
-        """Load all tasks."""
         task_files_root = Path(__file__).parent
         task_modules = (
             {
@@ -76,7 +71,11 @@ class ReactTaskManager:
                 self.register_task(task)
 
         await asyncio.gather(*[_load_module(task) for task in task_modules])
-        _LOGGER.debug("Loaded %s tasks", len(self.tasks))
+
+
+    def unload(self):
+        for task in list(self._tasks.values()):
+            self.unload_task(task)
 
 
     def register_task(self, task: ReactTask):
@@ -86,6 +85,7 @@ class ReactTaskManager:
 
 
     def start_task(self, task: ReactTask):
+        task.on_start()
         if task.track_event_filters is not None:
             for filter in task.track_event_filters:
                 self.track_event(filter, task)
@@ -116,10 +116,9 @@ class ReactTaskManager:
         if key in self._unloaders[task_id]:
             _LOGGER.error(f"task {task_id} already contains key {key}")
         else:
-            self._unloaders[task_id][key] = TaskUnloader(callback)
-            _LOGGER.debug(f"Wrapped {task_id} - {key}")
+            self._unloaders[task_id][key] = TaskUnloader(callback, task_id, key)
 
-    
+
     def unload_task(self, task: ReactTask):
         unloaders = self._unloaders.pop(task.id, {})
         for unloader in unloaders.values():
@@ -164,11 +163,12 @@ class ReactTaskManager:
         if filter.filter_key not in event_listeners:
             @callback
             def _async_reaction_dispatcher(ha_event: HaEvent) -> None:
-                for job in event_callbacks[ha_event.event_type][:]:
-                    try:
-                        self.react.hass.async_run_hass_job(job, ha_event)
-                    except Exception:  # pylint: disable=broad-except
-                        _LOGGER.exception(f"Error while processing event for {ha_event.event_type}")
+                if ha_event.event_type in event_callbacks:
+                    for job in event_callbacks[ha_event.event_type][:]:
+                        try:
+                            self.react.hass.async_run_hass_job(job, ha_event)
+                        except Exception:  # pylint: disable=broad-except
+                            _LOGGER.exception(f"Error while processing event for {ha_event.event_type}")
 
             event_listeners[filter.filter_key] = self.react.hass.bus.async_listen(
                 filter.filter_key,
@@ -313,15 +313,12 @@ class ReactTaskManager:
 
             @callback
             def _async_time_dispatcher(time: datetime) -> None:
-
-                if time_key not in time_callbacks:
-                    return
-
-                for job in time_callbacks[time_key][:]:
-                    try:
-                        self.react.hass.async_run_hass_job(job, time_key, *args)
-                    except Exception:  # pylint: disable=broad-except
-                        _LOGGER.exception("Error while processing time change for %s", time_key)
+                if time_key in time_callbacks:
+                    for job in time_callbacks[time_key][:]:
+                        try:
+                            self.react.hass.async_run_hass_job(job, HaEvent("time", data = {ATTR_TIME_KEY: time_key, ATTR_TYPE: args[0]}))
+                        except Exception:  # pylint: disable=broad-except
+                            _LOGGER.exception("Error while processing time change for %s", time_key)
 
             time_listeners[time_key] = async_track_time_change(
                 self.react.hass,
@@ -351,8 +348,10 @@ class ReactTaskManager:
 
 
 class TaskUnloader():
-    def __init__(self, cancel_event: Callable[[], None] ) -> None:
+    def __init__(self, cancel_event: Callable[[], None], task_id: str, key: str ) -> None:
         self.cancel_event = cancel_event
+        self.task_id = task_id
+        self.key = key
 
 
     def unload(self):

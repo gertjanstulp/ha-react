@@ -102,7 +102,7 @@ async def test_media_player_plugin_api_entity_not_found(test_context: TstContext
     await test_context.async_start_react([mock_plugin])
     await test_context.async_send_reaction_event(data=data_in)
     test_context.verify_plugin_data_not_sent()
-    test_context.verify_has_log_warning(f"Mediaplayer plugin: Api - {entity_id} not found")
+    test_context.verify_has_log_warning(f"1 - {entity_id} not found")
 
 
 @pytest.mark.parametrize(f"{FIXTURE_WORKFLOW_NAME},{FIXTURE_MEDIA_PLAYER_ENTITY_ID}", [
@@ -123,7 +123,7 @@ async def test_media_player_plugin_api_no_media_player_provider_set_up(test_cont
     await test_context.async_start_react([mock_plugin])
     await test_context.async_send_reaction_event(data={})
     test_context.verify_plugin_data_not_sent()
-    test_context.verify_has_log_error(f"Mediaplayer plugin: Api - Mediaplayer provider for '{entity_id}/{MEDIA_PLAYER_PROVIDER_MOCK}' not found")
+    test_context.verify_has_log_error(f"1 - Mediaplayer provider for '{entity_id}/{MEDIA_PLAYER_PROVIDER_MOCK}' not found")
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["media_player_speek_test"])
@@ -143,7 +143,7 @@ async def test_media_player_plugin_api_no_tts_provider_set_up(test_context: TstC
     await test_context.async_start_react([mock_plugin])
     await test_context.async_send_reaction_event(data={})
     test_context.verify_plugin_data_not_sent()
-    test_context.verify_has_log_error(f"Mediaplayer plugin: Api - Tts provider for '{TTS_PROVIDER_MOCK}' not found")
+    test_context.verify_has_log_error(f"1 - Tts provider for '{TTS_PROVIDER_MOCK}' not found")
 
 
 @pytest.mark.parametrize(f"{FIXTURE_WORKFLOW_NAME},{FIXTURE_MEDIA_PLAYER_ENTITY_ID}", [
@@ -162,7 +162,7 @@ async def test_media_player_plugin_api_no_media_player_provider_provided(test_co
     await test_context.async_start_react([mock_plugin])
     await test_context.async_send_reaction_event(data={})
     test_context.verify_plugin_data_not_sent()
-    test_context.verify_has_log_error(f"Mediaplayer plugin: Api - Mediaplayer provider for '{entity_id}' not found")
+    test_context.verify_has_log_error(f"1 - Mediaplayer provider for '{entity_id}' not found")
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["media_player_speek_test"])
@@ -181,7 +181,7 @@ async def test_media_player_plugin_api_no_tts_provider_provided(test_context: Ts
     await test_context.async_start_react([mock_plugin])
     await test_context.async_send_reaction_event(data={})
     test_context.verify_plugin_data_not_sent()
-    test_context.verify_has_log_error(f"Mediaplayer plugin: Api - Tts provider not provided")
+    test_context.verify_has_log_error(f"1 - Tts provider not provided")
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["media_player_play_favorite_test"])

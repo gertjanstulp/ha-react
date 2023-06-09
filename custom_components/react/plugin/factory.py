@@ -8,14 +8,18 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant
 
 from custom_components.react.base import ReactBase
-from custom_components.react.lib.config import Plugin as PluginConfig
+from custom_components.react.const import (
+    PACKAGE_NAME, 
+    REACT_LOGGER_PLUGIN,
+)
+from custom_components.react.config.config import Plugin as PluginConfig
 from custom_components.react.plugin.base import PluginApiBase, HassApi, Plugin
 from custom_components.react.plugin.base import PluginProviderBase
 from custom_components.react.tasks.plugin.base import InputBlock, OutputBlock
 from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData
 
-_LOGGER = get_react_logger()
+_LOGGER = get_react_logger(REACT_LOGGER_PLUGIN)
 
 T_config = TypeVar("T_config", bound=DynamicData)
 
@@ -36,7 +40,7 @@ class PluginFactory:
             try:
                 plugin_module = import_module(f"{plugin_config.module}.setup")
                 if not hasattr(plugin_module, "Setup"):
-                    _LOGGER.error(f"PluginFactory - Invalid plugin configuration: Setup class not found in '{plugin_module}'")
+                    _LOGGER.error(f"Invalid plugin configuration: Setup class not found in '{plugin_module}'")
                     continue
                 
                 try:
@@ -45,7 +49,7 @@ class PluginFactory:
                 except:
                     _LOGGER.exception("PluginFactory error")
                     if not setup:
-                        _LOGGER.error(f"PluginFactory - Invalid plugin configuration: Setup class in '{plugin_module}' is not a valid class")
+                        _LOGGER.error(f"Invalid plugin configuration: Setup class in '{plugin_module}' is not a valid class")
                     continue
 
                 def register_plugin_api(api_type: type[PluginApiBase], **kwargs):
@@ -74,14 +78,13 @@ class PluginFactory:
  
 
             except:
-                _LOGGER.exception(f"PluginFactory - Could not load plugin '{plugin_config.module}'")
+                _LOGGER.exception(f"Could not load plugin '{plugin_config.module}'")
         self._react.task_manager.execute_plugin_tasks()
 
 
-    def reload(self):
+    def unload_plugins(self):
         self.plugin_register.unload_plugins()
-        self.load_plugins()
-    
+
 
 class PluginRegister():
     def __init__(self) -> None:
@@ -118,10 +121,14 @@ class PluginRegister():
 class PluginSetup(Generic[T_config]):
     def __init__(self, schema: vol.Schema = None) -> None:
         self.schema = schema
-    
+        
+        self.module_name = self.__module__.rsplit(".")[-2]
+        self._root_logger = get_react_logger(REACT_LOGGER_PLUGIN)
+        self.plugin_logger = get_react_logger(f"{REACT_LOGGER_PLUGIN}.{self.module_name}")
+
 
     def create_plugin(self, plugin_register: PluginRegister, hass_api: HassApi, plugin_config: PluginConfig) -> Plugin[T_config]:
-        _LOGGER.debug(f"{self.__module__} plugin: Loading")
+        self._root_logger.debug(f"Loading {self.module_name} plugin")
         
         try:
             config_raw = plugin_config.config.source if plugin_config.config else {}
@@ -130,13 +137,13 @@ class PluginSetup(Generic[T_config]):
             config = self.setup_config(config_raw)
         except vol.MultipleInvalid as mex:
             for error in mex.errors:
-                _LOGGER.error(f"Configuration for {plugin_config.module} is invalid - {error.error_message}: {error.path[0] if error.path else ''}")
+                self._root_logger.error(f"Configuration for {plugin_config.module} is invalid - {error.error_message}: {error.path[0] if error.path else ''}")
             raise vol.SchemaError()
         except vol.Invalid as ex:
-            _LOGGER.exception(f"Configuration for {plugin_config.module} is invalid")
+            self._root_logger.exception(f"Configuration for {plugin_config.module} is invalid")
             raise vol.SchemaError()
             
-        self.plugin = Plugin[T_config](hass_api, config)
+        self.plugin = Plugin[T_config](self.module_name, hass_api, config, self.plugin_logger)
         plugin_register.register_plugin(self.plugin)
         return self.plugin
             

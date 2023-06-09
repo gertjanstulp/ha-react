@@ -18,7 +18,8 @@ class ReactionData:
     type: str
     action: str
     data: dict
-
+    session_id: int
+    
     def to_trace_result(self):
         result = {
             ATTR_REACTOR_ID: self.reactor_id,

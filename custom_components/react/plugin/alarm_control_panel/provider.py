@@ -12,15 +12,16 @@ from homeassistant.const import (
     SERVICE_ALARM_TRIGGER,
 )
 from homeassistant.core import Context
-from custom_components.react.plugin.alarm_control_panel.config import AlarmConfig
 
+from custom_components.react.plugin.alarm_control_panel.config import AlarmConfig
 from custom_components.react.plugin.alarm_control_panel.const import ArmMode
 from custom_components.react.plugin.base import PluginProviderBase
+from custom_components.react.utils.session import Session
 
 
 class AlarmProvider(PluginProviderBase[AlarmConfig]):
 
-    async def async_arm(self, context: Context, entity_id: str, code: str, arm_mode: ArmMode):
+    async def async_arm(self, session: Session, context: Context, entity_id: str, code: str, arm_mode: ArmMode):
         await self.plugin.hass_api.async_hass_call_service(
             ALARM_DOMAIN,
             SERVICE_ALARM_ARM_HOME if arm_mode == ArmMode.HOME else 
@@ -35,7 +36,7 @@ class AlarmProvider(PluginProviderBase[AlarmConfig]):
             context,
         )
 
-    async def async_disarm(self, context: Context, entity_id: str, code: str):
+    async def async_disarm(self, session: Session, context: Context, entity_id: str, code: str):
         await self.plugin.hass_api.async_hass_call_service(
             ALARM_DOMAIN,
             SERVICE_ALARM_DISARM,
@@ -47,7 +48,7 @@ class AlarmProvider(PluginProviderBase[AlarmConfig]):
         )
 
     
-    async def async_trigger(self, context: Context, entity_id: str):
+    async def async_trigger(self, session: Session, context: Context, entity_id: str):
         await self.plugin.hass_api.async_hass_call_service(
             ALARM_DOMAIN,
             SERVICE_ALARM_TRIGGER,

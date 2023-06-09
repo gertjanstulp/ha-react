@@ -10,12 +10,13 @@ from custom_components.react.const import (
     TYPE_SYSTEM,
 )
 from custom_components.react.tasks.filters import EVENT_TYPE_FILTER_STRATEGY
-from custom_components.react.tasks.plugin.base import EventInputBlock
+from custom_components.react.tasks.plugin.base import InputBlock
 from custom_components.react.utils.events import ReactEvent, HassEvent
+from custom_components.react.utils.session import Session
 from custom_components.react.utils.struct import DynamicData
 
 
-class HassEventStartedInputBlock(EventInputBlock[DynamicData]):
+class HassEventStartedInputBlock(InputBlock[DynamicData]):
     def __init__(self, react: ReactBase) -> None:
         super().__init__(react, HassEvent)
         self.track_event_filters = [EVENT_TYPE_FILTER_STRATEGY.get_filter(EVENT_HOMEASSISTANT_STARTED)]
@@ -27,3 +28,8 @@ class HassEventStartedInputBlock(EventInputBlock[DynamicData]):
             ATTR_TYPE: TYPE_SYSTEM,
             ATTR_ACTION: ACTION_STARTED,
         }]
+    
+
+    def log_event_caught(self, react_event: HassEvent) -> None:
+        # if react_event.payload.
+        react_event.session.debug(self.logger, f"Hass started caught")

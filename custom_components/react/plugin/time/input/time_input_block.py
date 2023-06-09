@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util import dt as dt_util
 from custom_components.react.base import ReactBase
 
 from custom_components.react.const import (
@@ -15,28 +16,45 @@ from custom_components.react.const import (
     SIGNAL_ACTION_HANDLER_DESTROYED,
 )
 from custom_components.react.tasks.filters import track_key
-from custom_components.react.tasks.plugin.base import TimeInputBlock as TimeInputBlockBase
+from custom_components.react.tasks.plugin.base import InputBlock
+from custom_components.react.utils.events import ReactEvent, TimeEvent
+from custom_components.react.utils.session import Session
+# from custom_components.react.tasks.plugin.base import TimeInputBlock as TimeInputBlockBase
 from custom_components.react.utils.struct import ActorRuntime, DynamicData
 from custom_components.react.utils.time import parse_time_data
 
 
-class TimeInputBlock(TimeInputBlockBase[DynamicData]):
+class TimeInputBlock(InputBlock[DynamicData]):
     def __init__(self, react: ReactBase) -> None:
-        super().__init__(react)
+        super().__init__(react, TimeEvent)
 
         self.action_track_keys: list[str] = []
 
 
     def load(self):
-        async_dispatcher_connect(self.react.hass, SIGNAL_ACTION_HANDLER_CREATED, self.async_track_actor)
-        async_dispatcher_connect(self.react.hass, SIGNAL_ACTION_HANDLER_DESTROYED, self.async_untrack_actor)
+        super().load()
+        self.manager.wrap_unloader(
+            async_dispatcher_connect(self.react.hass, SIGNAL_ACTION_HANDLER_CREATED, self.async_track_actor),
+            self.id,
+            SIGNAL_ACTION_HANDLER_CREATED,
+        )
+        self.manager.wrap_unloader(
+            async_dispatcher_connect(self.react.hass, SIGNAL_ACTION_HANDLER_DESTROYED, self.async_untrack_actor),
+            self.id,
+            SIGNAL_ACTION_HANDLER_DESTROYED,
+        )
 
 
-    def create_action_event_payloads(self, time_key: str, type: str = None) -> list[dict]:
+    def log_event_caught(self, react_event: TimeEvent) -> None:
+        react_event.session.debug(self.logger, f"Time change caught: {react_event.payload.type} value {react_event.payload.time_key} matched current time ({dt_util.now(time_zone=dt_util.DEFAULT_TIME_ZONE).strftime('%H:%M:%S')})")
+    
+    
+
+    def create_action_event_payloads(self, source_event: TimeEvent) -> list[dict]:
         return [{
             ATTR_ENTITY: ACTOR_ENTITY_TIME,
-            ATTR_TYPE: type,
-            ATTR_ACTION: time_key
+            ATTR_TYPE: source_event.payload.type,
+            ATTR_ACTION: source_event.payload.time_key,
         }]
 
 

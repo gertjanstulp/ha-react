@@ -7,3 +7,4 @@ class Setup(PluginSetup[DynamicData]):
 
     def setup_input_blocks(self, setup: InputBlockSetupCallback):
         setup(BinarySensorStateChangeInputBlock)
+

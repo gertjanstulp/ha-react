@@ -10,10 +10,7 @@ from custom_components.react.plugin.media_player.config import MediaPlayerConfig
 from custom_components.react.tasks.filters import TYPE_ACTION_REACTION_FILTER_STRATEGY
 from custom_components.react.tasks.plugin.base import OutputBlock
 from custom_components.react.utils.events import ReactionEvent
-from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData
-
-_LOGGER = get_react_logger()
 
 
 class MediaPlayerPlayFavoriteOutputBlock(OutputBlock[MediaPlayerConfig], ApiType[MediaPlayerApi]):
@@ -27,13 +24,13 @@ class MediaPlayerPlayFavoriteOutputBlock(OutputBlock[MediaPlayerConfig], ApiType
         )]
 
 
-    def _debug(self, message: str):
-        _LOGGER.debug(f"Mediaplayer plugin: MediaPlayerPlayFavoriteOutputBlock - {message}")
+    def log_event_caught(self, react_event: MediaPlayerPlayFavoriteReactionEvent) -> None:
+        react_event.session.debug(self.logger, f"Mediaplayer play favorite reaction caught: '{react_event.payload.entity}'")
 
 
     async def async_handle_event(self, react_event: MediaPlayerPlayFavoriteReactionEvent):
-        self._debug(f"Playing favorite '{react_event.payload.data.favorite_id}' on '{react_event.payload.entity}'")
         await self.api.async_play_favorite(
+            react_event.session,
             react_event.context, 
             react_event.payload.entity, 
             react_event.payload.data.favorite_id,

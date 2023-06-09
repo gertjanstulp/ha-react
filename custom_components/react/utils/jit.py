@@ -2,19 +2,12 @@ from __future__ import annotations
 
 from typing import Any, Generic, Type, TypeVar, Union
 
-from homeassistant.const import ATTR_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.template import Template, is_template_string
 
-from custom_components.react.utils.logger import get_react_logger
-
-from .struct import DynamicData, MultiItem
-from .context import TemplateContext, TemplateContextDataProvider
-
-from ..const import (
+from custom_components.react.const import (
     ATTR_TYPE_HINTS,
-    PROP_ATTR_TYPE_POSTFIX,
     PROP_TYPE_DEFAULT,
     PROP_TYPE_LIST,
     PROP_TYPE_MULTI_ITEM,
@@ -23,12 +16,16 @@ from ..const import (
     PROP_TYPE_TEMPLATE,
     PROP_TYPE_VALUE,
 )
+from custom_components.react.utils.context import TemplateContext, TemplateContextDataProvider
+from custom_components.react.utils.logger import get_react_logger
+from custom_components.react.utils.struct import DynamicData, MultiItem
 
 _JITTER_PROPERTY = "{}_jitter"
 
 T = TypeVar('T', bound=DynamicData)
 
 _LOGGER = get_react_logger()
+
 
 class BaseJitter:
 

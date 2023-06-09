@@ -15,6 +15,7 @@ from custom_components.react.plugin.factory import ProviderSetupCallback
 from custom_components.react.plugin.notify.const import FeedbackItem
 from custom_components.react.plugin.notify.setup import Setup as NotifySetup
 from custom_components.react.plugin.notify.provider import NotifyProvider
+from custom_components.react.utils.session import Session
 
 from tests._plugins.common import HassApiMockExtend
 from tests.common import TEST_CONTEXT
@@ -48,7 +49,7 @@ class Setup(NotifySetup, HassApiMockExtend):
 
 class NotifyProviderMock(NotifyProvider):
 
-    async def async_notify(self, context: Context, entity_id: str, message: str, feedback_items: list[FeedbackItem]):
+    async def async_notify(self, session: Session, context: Context, entity_id: str, message: str, feedback_items: list[FeedbackItem]):
         context: TstContext = self.plugin.hass_api.hass_get_data(TEST_CONTEXT)
         context.register_plugin_data({
             ATTR_ENTITY_ID: entity_id,
@@ -60,6 +61,7 @@ class NotifyProviderMock(NotifyProvider):
 
 
     async def async_confirm_feedback(self,
+        session: Session, 
         context: Context, 
         conversation_id: str, 
         message_id: str, 

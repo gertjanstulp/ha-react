@@ -23,31 +23,29 @@ from custom_components.react.plugin.mobile_app.const import (
     NOTIFY_PROVIDER_MOBILE_APP
 )
 from custom_components.react.tasks.filters import EVENT_TYPE_FILTER_STRATEGY
-from custom_components.react.tasks.plugin.base import EventInputBlock
+from custom_components.react.tasks.plugin.base import InputBlock
 from custom_components.react.utils.events import ReactEvent
-from custom_components.react.utils.logger import get_react_logger
+from custom_components.react.utils.session import Session
 from custom_components.react.utils.struct import DynamicData
 
 
-_LOGGER = get_react_logger()
 
-
-class CallbackInputBlock(EventInputBlock[MobileAppConfig]):
+class CallbackInputBlock(InputBlock[MobileAppConfig]):
     def __init__(self, react: ReactBase) -> None:
         super().__init__(react, CallbackActionEvent)
         self.track_event_filters = [EVENT_TYPE_FILTER_STRATEGY.get_filter(EVENT_MOBILE_APP_CALLBACK)]
 
 
     def load(self):
+        super().load()
         self.entity_maps = self.plugin.config.entity_maps if self.plugin.config.entity_maps else DynamicData()
 
 
-    def _debug(self, message: str):
-        _LOGGER.debug(f"Mobile app plugin: CallbackInputBlock - {message}")
+    def log_event_caught(self, react_event: CallbackActionEvent) -> None:
+        react_event.session.debug(self.logger, f"Mobile app callback caught: '{react_event.payload.action}' action from device '{react_event.payload.device_id}'")
 
 
     def create_action_event_payloads(self, source_event: CallbackActionEvent) -> list[dict]:
-        self._debug("Processing callback event from mobile app")
         entity_id = self.entity_maps.get(source_event.payload.device_id, source_event.payload.device_id)
         return [{
             ATTR_ENTITY: entity_id,

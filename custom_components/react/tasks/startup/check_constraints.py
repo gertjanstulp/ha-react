@@ -8,13 +8,10 @@ from custom_components.react.utils.version import version_left_higher_or_equal_t
 
 
 async def async_setup_task(react: ReactBase) -> Task:
-    """Set up this task."""
     return Task(react=react)
 
 
 class Task(ReactTask):
-    """Check env Constraints."""
-
     def __init__(self, react: ReactBase) -> None:
         super().__init__(react)
     
@@ -25,14 +22,10 @@ class Task(ReactTask):
     
 
     def execute(self) -> None:
-        """Execute the task."""
-
+        self.task_logger.debug(f"Checking HA version")
         if not version_left_higher_or_equal_then_right(
             self.react.core.ha_version.string,
             MINIMUM_HA_VERSION,
         ):
-            self.task_logger(
-                self.react.log.critical,
-                f"You need HA version {MINIMUM_HA_VERSION} or newer to use this integration.",
-            )
+            self.task_logger.critical(f"You need HA version {MINIMUM_HA_VERSION} or newer to use this integration.")
             self.react.disable_react(ReactDisabledReason.CONSTRAINTS)

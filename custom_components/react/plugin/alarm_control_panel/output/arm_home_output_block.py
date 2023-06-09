@@ -13,10 +13,7 @@ from custom_components.react.plugin.base import ApiType
 from custom_components.react.tasks.filters import TYPE_ACTION_REACTION_FILTER_STRATEGY
 from custom_components.react.tasks.plugin.base import OutputBlock
 from custom_components.react.utils.events import ReactionEvent
-from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData
-
-_LOGGER = get_react_logger()
 
 
 class AlarmArmHomeOutputBlock(OutputBlock[AlarmConfig], ApiType[AlarmApi]):
@@ -30,13 +27,13 @@ class AlarmArmHomeOutputBlock(OutputBlock[AlarmConfig], ApiType[AlarmApi]):
         )]
 
 
-    def _debug(self, message: str):
-        _LOGGER.debug(f"Alarm_control_panel plugin: AlarmArmHomeOutputBlock - {message}")
+    def log_event_caught(self, react_event: AlarmArmHomeReactionEvent) -> None:
+        react_event.session.debug(self.logger, f"Alarm arm home reaction caught: '{react_event.payload.entity}'")
 
 
     async def async_handle_event(self, react_event: AlarmArmHomeReactionEvent):
-        self._debug(f"Arming home '{react_event.payload.entity}'")
         await self.api.async_alarm_arm_home(
+            react_event.session,
             react_event.context, 
             react_event.payload.entity,
             react_event.payload.data.alarm_control_panel_provider if react_event.payload.data else None

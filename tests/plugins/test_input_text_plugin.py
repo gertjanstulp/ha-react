@@ -65,7 +65,7 @@ async def test_input_text_plugin_api_set_invalid_entity(test_context: TstContext
     await test_context.async_start_react([mock_plugin])
     await test_context.async_send_reaction_event(data=data_in)
     test_context.verify_plugin_data_not_sent()
-    test_context.verify_has_log_record("WARNING", f"Input text plugin: Api - input_text.input_text_value_test not found")
+    test_context.verify_has_log_warning(f"1 - input_text.input_text_value_test not found")
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["input_text_set_test"])
@@ -85,7 +85,7 @@ async def test_input_text_plugin_api_invalid_provider(test_context: TstContext, 
     await test_context.async_start_react([mock_plugin])
     await test_context.async_send_reaction_event(data=data)
     test_context.verify_plugin_data_not_sent()
-    test_context.verify_has_log_error(f"Input text plugin: Api - Input text provider for '{invalid_provider}' not found")
+    test_context.verify_has_log_error(f"1 - Input_text provider for '{invalid_provider}' not found")
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["input_text_set_test"])

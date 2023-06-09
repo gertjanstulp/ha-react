@@ -49,10 +49,11 @@ from custom_components.react.const import (
     MONIKER_DISPATCH,
     MONIKER_RESET,
     MONIKER_TRIGGER,
+    REACT_LOGGER_CONFIG,
     WORKFLOW_MODE_PARALLEL,
 )
 
-_LOGGER = get_react_logger()
+_LOGGER = get_react_logger(REACT_LOGGER_CONFIG)
 
 
 class Delay(DelayData):
@@ -305,18 +306,18 @@ class WorkflowConfiguration:
 
 
     def load(self, react_config: ConfigType) -> None:
-        _LOGGER.debug(f"Config: loading react configuration")
         
         self.config = react_config
 
         if self.workflows:
-            _LOGGER.debug("Config: unloading existing react configuration")
+            _LOGGER.debug("Unloading existing react configuration")
             self.workflows = None
             self.workflow_config = None
             self.stencil_config = None
 
         if react_config:
-            _LOGGER.debug("Config: found react configuration, processing")
+            _LOGGER.debug(f"Loading react configuration")
+            # _LOGGER.debug("Found react configuration, processing")
 
             self.stencil_config = react_config.get(CONF_STENCIL, {}) or {}
             self.workflow_config = react_config.get(CONF_WORKFLOW, {}) or {}
@@ -324,18 +325,18 @@ class WorkflowConfiguration:
             self.parse_workflow_config()
         else:
             self.workflows: dict[str, Workflow] = {}
-            _LOGGER.debug("Config: no react configuration found")
+            _LOGGER.debug("No react configuration found")
 
 
     def parse_workflow_config(self):
-        _LOGGER.debug("Config: loading react workflows")
+        _LOGGER.debug("Loading react workflows")
 
         self.workflows: dict[str, Workflow] = {}
 
         if not self.workflow_config: return
 
         for id, config in self.workflow_config.items():
-            _LOGGER.debug(f"Config: '{id}' processing workflow")
+            _LOGGER.debug(f"Loading config for react.{id}")
             if not config:
                 config = {}
 
@@ -343,7 +344,7 @@ class WorkflowConfiguration:
             stencil = self.get_stencil_by_name(workflow.stencil)
             workflow.load(config, stencil)
             if not workflow.is_valid:
-                _LOGGER.error(f"Config: '{id}' has invalid configuration and will not be loaded:" + '\n- '.join([""] + workflow.errors))
+                _LOGGER.error(f"'{id}' has invalid configuration and will not be loaded:" + '\n- '.join([""] + workflow.errors))
             self.workflows[id] = workflow
 
 
@@ -354,7 +355,7 @@ class WorkflowConfiguration:
             if stencil:
                 result = stencil
             else:
-                _LOGGER.error(f"Config: Stencil not found: '{stencil_name}'")
+                _LOGGER.error(f"Stencil not found: '{stencil_name}'")
 
         return result
 

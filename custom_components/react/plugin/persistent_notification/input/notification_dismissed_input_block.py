@@ -7,8 +7,7 @@ from custom_components.react.plugin.const import ATTR_OBJECT_ID
 from custom_components.react.tasks.filters import DOMAIN_STATE_CHANGE_FILTER_STRATEGY
 from custom_components.react.utils.events import StateChangedEvent
 from custom_components.react.base import ReactBase
-from custom_components.react.tasks.plugin.base import EventInputBlock
-from custom_components.react.utils.logger import get_react_logger
+from custom_components.react.tasks.plugin.base import InputBlock
 from custom_components.react.const import (
     ATTR_ACTION, 
     ATTR_DATA, 
@@ -20,21 +19,18 @@ from custom_components.react.const import (
 from custom_components.react.utils.struct import DynamicData
 
 
-_LOGGER = get_react_logger()
 
-
-class NotificationDismissedInputBlock(EventInputBlock[DynamicData]):
+class NotificationDismissedInputBlock(InputBlock[DynamicData]):
     def __init__(self, react: ReactBase) -> None:
         super().__init__(react, PersistentNotificationStateChangeEvent)
         self.track_state_change_filters = [DOMAIN_STATE_CHANGE_FILTER_STRATEGY.get_filter(PERSISTENT_NOTIFICATION_DOMAIN)]
 
 
-    def _debug(self, message: str):
-        _LOGGER.debug(f"Persistent notification plugin: NotificationDismissedInputBlock - {message}")
+    def log_event_caught(self, react_event: PersistentNotificationStateChangeEvent) -> None:
+        react_event.session.debug(self.logger, f"Persistent notification callback caught: '{react_event.payload.entity_id}' dismissed")
 
 
     def create_action_event_payloads(self, source_event: PersistentNotificationStateChangeEvent) -> list[dict]:
-        self._debug("Processing dismiss event from persistent_notification")
         return [{
             ATTR_ENTITY: PERSISTENT_NOTIFICATION_DOMAIN,
             ATTR_TYPE: REACT_TYPE_NOTIFY,

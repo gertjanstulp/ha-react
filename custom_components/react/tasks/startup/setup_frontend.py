@@ -5,25 +5,19 @@ from aiohttp import web
 from homeassistant.components.http import HomeAssistantView
 
 from custom_components.react.base import ReactBase
+from custom_components.react.const import DOMAIN
 from custom_components.react.react_frontend import locate_dir
 from custom_components.react.react_frontend import VERSION as FE_VERSION
 from custom_components.react.tasks.base import ReactTask, ReactTaskType
-
-
-from ...const import (
-    DOMAIN,
-)
 
 URL_BASE = "/reactfiles"
 
 
 async def async_setup_task(react: ReactBase) -> Task:
-    """Set up this task."""
     return Task(react=react)
 
 
 class Task(ReactTask):
-    """Setup the React frontend."""
 
     def __init__(self, react: ReactBase) -> None:
         super().__init__(react)
@@ -35,38 +29,17 @@ class Task(ReactTask):
 
 
     async def async_execute(self) -> None:
-        """Execute the task."""
+        self.task_logger.debug("Setting up react frontend")
 
         # Register themes
         self.react.hass.http.register_static_path(f"{URL_BASE}/themes", self.react.hass.config.path("themes"))
 
         # Register frontend
         if self.react.configuration.frontend_repo_url:
-            self.task_logger(self.react.log.warning, "Frontend development mode enabled. Do not run in production!")
+            self.task_logger.warning("Frontend development mode enabled. Do not run in production!")
             self.react.hass.http.register_view(ReactFrontendDev())
         else:
             self.react.hass.http.register_static_path(f"{URL_BASE}/frontend", locate_dir(), cache_headers=False)
-
-        # # Custom iconset
-        # self.react.hass.http.register_static_path(
-        #     f"{URL_BASE}/iconset.js", str(self.react.integration_dir / "iconset.js")
-        # )
-        # if "frontend_extra_module_url" not in self.react.hass.data:
-        #     self.react.hass.data["frontend_extra_module_url"] = set()
-        # self.react.hass.data["frontend_extra_module_url"].add(f"{URL_BASE}/iconset.js")
-
-        # # Register www/community for all other files
-        # use_cache = self.react.core.lovelace_mode == "storage"
-        # self.task_logger(
-        #     self.react.log.info,
-        #     f"{self.react.core.lovelace_mode} mode, cache for /reactfiles/: {use_cache}",
-        # )
-
-        # self.react.hass.http.register_static_path(
-        #     URL_BASE,
-        #     self.react.hass.config.path("www/community"),
-        #     cache_headers=use_cache,
-        # )
 
         self.react.frontend_version = FE_VERSION
 

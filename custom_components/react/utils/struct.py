@@ -44,16 +44,13 @@ class DynamicData():
     def keys(self):
         return self._keys
 
-    # def items(self):
-    #     for name in self._keys:
-    #         yield self.get(name)
-
 
     def load(self, source: Union[dict, DynamicData]) -> None:
         if not source:
             return
         for key in source.keys():
             self.set(key, source.get(key))
+        self.source = source
 
 
     def type_hint(self, key):

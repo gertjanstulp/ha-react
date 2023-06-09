@@ -77,7 +77,7 @@ async def test_input_boolean_plugin_api_set_invalid_entity(test_context: TstCont
     await test_context.async_start_react([mock_plugin])
     await test_context.async_send_reaction_event()
     test_context.verify_plugin_data_not_sent()
-    test_context.verify_has_log_record("WARNING", f"Input boolean plugin: Api - input_boolean.input_boolean_{input_boolean_name}_test not found")
+    test_context.verify_has_log_warning(f"1 - input_boolean.input_boolean_{input_boolean_name}_test not found")
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, [
@@ -101,7 +101,7 @@ async def test_input_boolean_plugin_api_invalid_provider(test_context: TstContex
     await test_context.async_start_react([mock_plugin])
     await test_context.async_send_reaction_event(data=data)
     test_context.verify_plugin_data_not_sent()
-    test_context.verify_has_log_error(f"Input boolean plugin: Api - Input boolean provider for '{invalid_provider}' not found")
+    test_context.verify_has_log_error(f"1 - Input_boolean provider for '{invalid_provider}' not found")
 
 
 @pytest.mark.parametrize(f"{FIXTURE_WORKFLOW_NAME},{FIXTURE_VALUE_BEFORE},{FIXTURE_VALUE_AFTER},{FIXTURE_NAME_INITIAL}", [

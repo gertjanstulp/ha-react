@@ -9,6 +9,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context
 
 from custom_components.react.plugin.base import PluginProviderBase
+from custom_components.react.utils.session import Session
 from custom_components.react.utils.struct import DynamicData
 
 T_config = TypeVar("T_config", bound=DynamicData)
@@ -21,19 +22,19 @@ class MediaPlayerProvider(Generic[T_config], PluginProviderBase[T_config]):
         return False
 
     
-    async def async_play_favorite(self, context: Context, entity_id: str, favorite_id: str):
+    async def async_play_favorite(self, session: Session, context: Context, entity_id: str, favorite_id: str):
         raise NotImplementedError()
     
 
-    async def async_suspend(self, context: Context, entity_id: str):
+    async def async_suspend(self, session: Session, context: Context, entity_id: str):
         raise NotImplementedError()
     
 
-    async def async_resume(self, context: Context, entity_id: str):
+    async def async_resume(self, session: Session, context: Context, entity_id: str):
         raise NotImplementedError()
     
 
-    async def async_set_volume(self, context: Context, entity_id: str, volume: float):
+    async def async_set_volume(self, session: Session, context: Context, entity_id: str, volume: float):
         data: dict = {
             ATTR_ENTITY_ID: entity_id,
             ATTR_MEDIA_VOLUME_LEVEL: volume
@@ -50,5 +51,5 @@ class MediaPlayerProvider(Generic[T_config], PluginProviderBase[T_config]):
 
 class TtsProvider(Generic[T_config], PluginProviderBase[T_config]):
 
-    async def async_speek(self, context: Context, entity_id: str, message: str, language: str, cache: bool, options: DynamicData):
+    async def async_speek(self, session: Session, context: Context, entity_id: str, message: str, language: str, cache: bool, options: DynamicData):
         raise NotImplementedError()

@@ -16,7 +16,7 @@ from homeassistant.helpers.trace import (
 from homeassistant.util import dt as dt_util
 
 from custom_components.react.const import DOMAIN
-from custom_components.react.lib.config import Workflow
+from custom_components.react.config.config import Workflow
 
 ROOT_SECTION = "root"
 

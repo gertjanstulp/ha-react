@@ -9,73 +9,67 @@ from custom_components.react.plugin.light.config import LightConfig
 from custom_components.react.plugin.light.const import LIGHT_GENERIC_PROVIDER
 from custom_components.react.plugin.light.provider import LightProvider
 from custom_components.react.plugin.base import PluginApiBase
-from custom_components.react.utils.logger import get_react_logger
+from custom_components.react.utils.session import Session
 
-
-_LOGGER = get_react_logger()
 
 
 class LightApi(PluginApiBase[LightConfig]):
 
-    def _debug(self, message: str):
-        _LOGGER.debug(f"Light plugin: Api - {message}")
-
-
-    async def async_light_turn_on(self, context: Context, entity_id: str, light_provider: str):
-        self._debug(f"Turning on light '{entity_id}'")
+    async def async_light_turn_on(self, session: Session, context: Context, entity_id: str, light_provider: str):
+        session.debug(self.logger, f"Turning on light '{entity_id}'")
         try:
             full_entity_id = f"light.{entity_id}"
             if state := self.plugin.hass_api.hass_get_state(full_entity_id):
                 value = state.state
             else:
-                _LOGGER.warn(f"Light plugin: Api - {full_entity_id} not found")
+                session.warning(self.plugin.logger, f"{full_entity_id} not found")
                 return
             
-            provider = self.get_light_provider(light_provider)
+            provider = self.get_light_provider(session, light_provider)
             if provider and value is not None and value == STATE_OFF:
-                await provider.async_set_state(context, full_entity_id, STATE_ON)
+                await provider.async_set_state(session, context, full_entity_id, STATE_ON)
         except:
-            _LOGGER.exception("Turning on light failed")
+            self.plugin.logger.exception("Turning on light failed")
 
 
-    async def async_light_turn_off(self, context: Context, entity_id: str, light_provider: str):
-        self._debug(f"Turning off light '{entity_id}'")
+    async def async_light_turn_off(self, session: Session, context: Context, entity_id: str, light_provider: str):
+        session.debug(self.logger, f"Turning off light '{entity_id}'")
         try:
             full_entity_id = f"light.{entity_id}"
             if state := self.plugin.hass_api.hass_get_state(full_entity_id):
                 value = state.state
             else:
-                _LOGGER.warn(f"Light plugin: Api - {full_entity_id} not found")
+                session.warning(self.plugin.logger, f"{full_entity_id} not found")
                 return
             
-            provider = self.get_light_provider(light_provider)
+            provider = self.get_light_provider(session, light_provider)
             if provider and value is not None and value == STATE_ON:
-                await provider.async_set_state(context, full_entity_id, STATE_OFF)
+                await provider.async_set_state(session, context, full_entity_id, STATE_OFF)
         except:
-            _LOGGER.exception("Turning off light failed")
+            self.plugin.logger.exception("Turning off light failed")
 
 
-    async def async_light_toggle(self, context: Context, entity_id: str, light_provider: str):
-        self._debug(f"Toggling light '{entity_id}'")
+    async def async_light_toggle(self, session: Session, context: Context, entity_id: str, light_provider: str):
+        session.debug(self.logger, f"Toggling light '{entity_id}'")
         try:
             full_entity_id = f"light.{entity_id}"
             if state := self.plugin.hass_api.hass_get_state(full_entity_id):
                 value = state.state
             else:
-                _LOGGER.warn(f"Light plugin: Api - {full_entity_id} not found")
+                session.warning(self.plugin.logger, f"{full_entity_id} not found")
                 return
             
-            provider = self.get_light_provider(light_provider)
+            provider = self.get_light_provider(session, light_provider)
             if provider and value is not None:
-                await provider.async_set_state(context, full_entity_id, STATE_ON if value == STATE_OFF else STATE_OFF)
+                await provider.async_set_state(session, context, full_entity_id, STATE_ON if value == STATE_OFF else STATE_OFF)
         except:
-            _LOGGER.exception("Toggling light failed")
+            self.plugin.logger.exception("Toggling light failed")
 
 
-    def get_light_provider(self, light_provider: str) -> LightProvider:
+    def get_light_provider(self, session: Session, light_provider: str) -> LightProvider:
         light_provider = light_provider or self.plugin.config.light_provider or LIGHT_GENERIC_PROVIDER
         result = self.plugin.get_provider(PROVIDER_TYPE_LIGHT, light_provider)
         if not result:
-            _LOGGER.error(f"Light plugin: Api - Light provider for '{light_provider}' not found")
+            session.error(self.plugin.logger, f"Light provider for '{light_provider}' not found")
             return None
         return result

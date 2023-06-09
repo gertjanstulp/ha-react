@@ -14,7 +14,7 @@ from ..const import (
 
 async def async_setup_component(react: ReactBase):
     # Enable workflow toggling
-    component = EntityComponent(react.log, DOMAIN, react.hass)
+    component = EntityComponent(react.logger, DOMAIN, react.hass)
     component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
     component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
     component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
@@ -29,7 +29,7 @@ async def async_setup_component(react: ReactBase):
     async def async_load():
         entities = []
         for workflow in react.configuration.workflow_config.workflows.values():
-            entities.append(WorkflowEntity(workflow, react.runtime))
+            entities.append(WorkflowEntity(workflow, react))
         if entities:
             await component.async_add_entities(entities)
     await async_load()
@@ -41,6 +41,10 @@ async def async_setup_component(react: ReactBase):
         conf = await component.async_prepare_reload()
         if conf is None:
             conf = {DOMAIN: {}}
+            
+        # Reload plugins
+        react.plugin_factory.unload_plugins()
+        react.plugin_factory.load_plugins()
 
         # Reload configuration from file
         react.configuration.update_from_dict(
@@ -50,10 +54,9 @@ async def async_setup_component(react: ReactBase):
             }
         )
 
+
         # Load new workflow entities
         await async_load()
 
-        # Reload plugins
-        react.plugin_factory.reload()
 
     async_register_admin_service(react.hass, DOMAIN, SERVICE_RELOAD, reload_service_handler)

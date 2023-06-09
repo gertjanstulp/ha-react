@@ -9,9 +9,7 @@ from custom_components.react.plugin.notify.const import NOTIFY_RESOLVER_KEY, Fee
 from custom_components.react.plugin.notify.resolver import NotifyPluginResolver
 from custom_components.react.plugin.notify.provider import NotifyProvider
 from custom_components.react.plugin.base import PluginApiBase
-from custom_components.react.utils.logger import get_react_logger
-
-_LOGGER = get_react_logger()
+from custom_components.react.utils.session import Session
 
 
 class NotifyApi(PluginApiBase[NotifyConfig]):
@@ -20,35 +18,33 @@ class NotifyApi(PluginApiBase[NotifyConfig]):
         self.resolver: NotifyPluginResolver = self.plugin.hass_api.hass_get_data(NOTIFY_RESOLVER_KEY)
 
     
-    def _debug(self, message: str):
-        _LOGGER.debug(f"Notify plugin: Api - {message}")
-
-
     def _exception(self, message: str):
-        _LOGGER.exception(f"Notify plugin: Api - {message}")
+        self.plugin.logger.exception(f"{message}")
 
 
     async def async_send_message(self, 
+        session: Session,
         context: Context, 
         entity_id: str, 
         message: str, 
         feedback_items: list[FeedbackItem],
         notify_provider: str,
     ):
-        self._debug("Sending notify message")
+        session.debug(self.logger, "Sending notify message")
         try:
             if not self.plugin.hass_api.hass_service_available(NOTIFY_DOMAIN, entity_id):
-                _LOGGER.warn(f"Notify plugin: Api - {NOTIFY_DOMAIN}.{entity_id} not found")
+                session.warning(self.plugin.logger, f"{NOTIFY_DOMAIN}.{entity_id} not found")
                 return
 
-            provider = self.get_notify_provider(entity_id, notify_provider)
+            provider = self.get_notify_provider(session, entity_id, notify_provider)
             if provider:
-                await provider.async_notify(context, entity_id, message, feedback_items)
+                await provider.async_notify(session, context, entity_id, message, feedback_items)
         except:
             self._exception("Sending message failed")
 
 
     async def async_confirm_feedback(self, 
+        session: Session, 
         context: Context,
         conversation_id: str,
         message_id: str,
@@ -57,16 +53,16 @@ class NotifyApi(PluginApiBase[NotifyConfig]):
         acknowledgement: str,
         notify_provider: str, 
     ):
-        self._debug("Confirming notify feedback")
+        session.debug(self.logger, "Confirming notify feedback")
         try:
-            provider = self.get_notify_provider(None, notify_provider)
+            provider = self.get_notify_provider(session, None, notify_provider)
             if provider:
-                await provider.async_confirm_feedback(context, conversation_id, message_id, text, feedback, acknowledgement)
+                await provider.async_confirm_feedback(session, context, conversation_id, message_id, text, feedback, acknowledgement)
         except:
             self._exception("Confirming notify feedback failed")
     
         
-    def get_notify_provider(self, entity_id: str, notify_provider: str) -> NotifyProvider:
+    def get_notify_provider(self, session: Session, entity_id: str, notify_provider: str) -> NotifyProvider:
         provider = None
         
         self.resolver.load(self.plugin.hass_api)
@@ -92,9 +88,9 @@ class NotifyApi(PluginApiBase[NotifyConfig]):
                         target = f"{target}/{notify_provider_config}"
                     else:
                         target = notify_provider_config
-                _LOGGER.error(f"Notify plugin: Api - Notify provider for '{target}' not found")
+                session.error(self.plugin.logger, f"Notify provider for '{target}' not found")
             else:
-                _LOGGER.error(f"Notify plugin: Api - Notify provider not found")
+                session.error(self.plugin.logger, f"Notify provider not found")
             return None
         return provider
     

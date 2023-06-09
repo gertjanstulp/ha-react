@@ -8,13 +8,11 @@ from custom_components.react.tasks.base import ReactTask, ReactTaskType
 from custom_components.react.tasks.filters import EVENT_TYPE_FILTER_STRATEGY
 
 
-async def async_setup_task(react: ReactBase) -> Task:
-    """Set up this task."""
-    return Task(react=react)
+async def async_setup_task(react: ReactBase) -> ShutdownTask:
+    return ShutdownTask(react=react)
 
 
-class Task(ReactTask):
-    """ "React task base."""
+class ShutdownTask(ReactTask):
 
     def __init__(self, react: ReactBase) -> None:
         super().__init__(react)
@@ -27,5 +25,10 @@ class Task(ReactTask):
 
 
     async def async_execute(self, ha_event: HaEvent) -> None:
-        """Execute the task."""
-        await self.react.async_shutdown()
+        self.task_logger.debug("Shutting down react")
+
+        async def async_shutdown():
+            await self.react.async_shutdown()
+            self.task_logger.debug("Shutdown complete")
+
+        self.react.hass.async_add_job(async_shutdown)

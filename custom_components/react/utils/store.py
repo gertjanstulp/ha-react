@@ -9,10 +9,7 @@ from .logger import get_react_logger
 _LOGGER = get_react_logger()
 
 class ReactStore(Store):
-    """A subclass of Store that allows multiple loads in the executor."""
-
     def load(self):
-        """Load the data from disk if version matches."""
         try:
             data = json_util.load_json(self.path)
         except BaseException as exception: 
@@ -28,22 +25,18 @@ class ReactStore(Store):
 
 
 def get_store_key(key):
-    """Return the key to use with homeassistant.helpers.storage.Storage."""
     return key if "/" in key else f"react.{key}"
 
 
 def _get_store_for_key(hass, key, encoder):
-    """Create a Store object for the key."""
     return ReactStore(hass, VERSION_STORAGE, get_store_key(key), encoder=encoder)
 
 
 def get_store_for_key(hass, key):
-    """Create a Store object for the key."""
     return _get_store_for_key(hass, key, JSONEncoder)
 
 
 async def async_load_from_store(hass, key):
-    """Load the retained data from store and return de-serialized data."""
     return await get_store_for_key(hass, key).async_load() or {}
 
 

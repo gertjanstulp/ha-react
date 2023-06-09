@@ -27,8 +27,8 @@ views:
           - entity: input_button.button_trigger_templated_state
           - entity: input_button.button_trigger_actor_condition
           - entity: input_button.button_trigger_reactor_condition
-          - entity: input_button.button_trigger_wait
-          - entity: input_button.button_trigger_wait_delayed
+          - entity: input_button.button_trigger_wait_for_state
+          - entity: input_button.button_trigger_wait_for_state_delayed
       - type: entities
         title: plugins trigger
         entities:
@@ -57,6 +57,11 @@ views:
           - entity: input_button.button_trigger_alarm_disarm
           - entity: input_button.button_trigger_alarm_trigger
       - type: entities
+        title: state change
+        entities:
+          - entity: input_boolean.input_boolean_state_test
+      - type: entities
+        title: conditions & waits
         entities:
           - entity: input_boolean.actor_condition_test
           - entity: input_boolean.reactor_condition_test

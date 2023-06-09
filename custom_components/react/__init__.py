@@ -15,7 +15,7 @@ from homeassistant.loader import async_get_integration
 from homeassistant.util.dt import parse_datetime, utcnow
 
 from custom_components.react.base import ReactBase
-from custom_components.react.lib.config import Actor, Reactor, Workflow
+from custom_components.react.config.config import Actor, Reactor, Workflow
 from custom_components.react.plugin.factory import PluginFactory
 from custom_components.react.runtime.runtime import ReactRuntime
 from custom_components.react.runtime.snapshots import create_snapshot
@@ -25,6 +25,7 @@ from custom_components.react.utils.data import ReactData
 from custom_components.react.utils.events import ActionEvent
 from custom_components.react.utils.jit import ObjectJitter
 from custom_components.react.utils.logger import format_data, get_react_logger
+from custom_components.react.utils.session import SessionManager
 from custom_components.react.utils.struct import ActorRuntime, ReactorRuntime
 from custom_components.react.utils.track import ObjectTracker
 
@@ -44,9 +45,11 @@ from custom_components.react.const import (
     DOMAIN,
     EVENT_REACT_ACTION,
     PLUGIN_SCHEMA,
+    REACT_LOGGER_ENTITY,
+    REACT_LOGGER_RUNTIME,
     SIGNAL_ACTION_HANDLER_CREATED,
     SIGNAL_ACTION_HANDLER_DESTROYED,
-    STARTUP,
+    STARTUP_MESSAGE,
     STENCIL_SCHEMA, 
     WORKFLOW_SCHEMA,
 )
@@ -61,7 +64,9 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
-_LOGGER = get_react_logger()
+_ROOT_LOGGER = get_react_logger()
+_ENTITY_LOGGER = get_react_logger(REACT_LOGGER_ENTITY)
+_RUNTIME_LOGGER = get_react_logger(REACT_LOGGER_RUNTIME)
 
 AWAITABLE_TYPE = Awaitable[Any]
 
@@ -71,10 +76,10 @@ async def async_initialize_integration(
     config: Union[dict[str, Any], None] = None,
 ) -> bool:
 
-    """Initialize the integration"""
-
     hass.data[DOMAIN] = react = ReactBase()
     react.enable_react()
+
+    integration = await async_get_integration(hass, DOMAIN)
 
     # Load configuration from file
     if config is not None:
@@ -87,9 +92,7 @@ async def async_initialize_integration(
             }
         )
 
-    integration = await async_get_integration(hass, DOMAIN)
-
-    _LOGGER.info(STARTUP, integration.version)
+    _ROOT_LOGGER.info(STARTUP_MESSAGE, integration.version)
 
     clientsession = async_get_clientsession(hass)
 
@@ -100,6 +103,7 @@ async def async_initialize_integration(
     react.session = clientsession
     react.system.running = True
     react.task_manager = ReactTaskManager(react=react)
+    react.session_manager = SessionManager(react=react)
     react.version = integration.version
     react.plugin_factory = PluginFactory(react=react)
     react.runtime = ReactRuntime(hass)
@@ -118,7 +122,7 @@ async def async_initialize_integration(
         if react.system.disabled:
             return False
 
-        _LOGGER.debug("Setup complete")
+        _ROOT_LOGGER.debug("Setup complete")
 
         return True
 
@@ -126,9 +130,7 @@ async def async_initialize_integration(
 
 
 async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
-    """Set up this integration using yaml."""
-    _LOGGER.debug("Init: setting up react domain")
-    
+    _ROOT_LOGGER.debug("Setting up react")
     return await async_initialize_integration(hass=hass, config=config)
 
 
@@ -137,17 +139,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
-    _LOGGER.debug(f"Init: Migrating from version {config_entry.version}")
+    _ROOT_LOGGER.debug(f"Init: Migrating from version {config_entry.version}")
     return True
 
     
 class WorkflowEntity(ToggleEntity, RestoreEntity):
-    """Representation of a workflow."""
-
-    def __init__(self, workflow: Workflow, runtime: ReactRuntime):
-        """Initialize a workflow."""
+    def __init__(self, workflow: Workflow, react: ReactBase):
         self.workflow = workflow
-        self.runtime = runtime
+        self.react = react
 
         self.is_enabled: bool = False
         self._attr_unique_id = workflow.id
@@ -161,8 +160,7 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
         
 
     async def async_added_to_hass(self) -> None:
-        """Startup with initial state or previous state."""
-        _LOGGER.debug(f"Registry: Entity {self.entity_id} - added to registry")
+        _ENTITY_LOGGER.debug(f"Added {self.entity_id} to registry")
 
         self._destroyers = []
         self._async_destroyers = []
@@ -213,9 +211,9 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
             self.reactor_jitters = [ create_reactor_jitter(reactor) for reactor in self.workflow.reactors ]
 
             # Create the runtime and start listening for events
-            self.runtime.create_workflow_runtime(self.workflow)
+            self.react.runtime.create_workflow_runtime(self.workflow)
             async def async_destroy_runtime():
-                await self.runtime.async_destroy_workflow_runtime(self.workflow.id)
+                await self.react.runtime.async_destroy_workflow_runtime(self.workflow.id)
             self.on_destroy_async(async_destroy_runtime)
             self.on_destroy(self.hass.bus.async_listen(EVENT_REACT_ACTION, self.async_handle))
         
@@ -224,22 +222,22 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
                 last_triggered = state.attributes.get("last_triggered")
                 if last_triggered is not None:
                     self._last_triggered = parse_datetime(last_triggered)
-                _LOGGER.debug(f"Registry: Entity {self.entity_id} - setting state: {format_data(last_state=enable_workflow, enabled=state.state)}")
+                _ENTITY_LOGGER.debug(f"Setting {self.entity_id} state: {format_data(last_state=enable_workflow, enabled=state.state)}")
             else:
                 enable_workflow = DEFAULT_INITIAL_STATE
-                _LOGGER.debug(f"Registry: Entity {self.entity_id} - setting state (no last state found): {format_data(enabled=enable_workflow)}")
+                _ENTITY_LOGGER.debug(f"Setting {self.entity_id} state (no last state found): {format_data(enabled=enable_workflow)}")
             
             if enable_workflow:
                 await self.async_enable()
         
         except:
-            _LOGGER.exception(f"Failed adding workflow entity {self.entity_id} to hass")
+            _ENTITY_LOGGER.exception(f"Failed adding workflow entity {self.entity_id} to hass")
             self._attr_available = False
             await self.async_destroy()
 
 
     async def async_will_remove_from_hass(self):
-        _LOGGER.debug(f"Registry: Entity {self.entity_id} - removing from registry")
+        _ENTITY_LOGGER.debug(f"Removing {self.entity_id} from registry")
         await self.async_destroy()
         
 
@@ -291,20 +289,20 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
     
     async def async_enable(self):
         if not self.is_enabled:
+            _ENTITY_LOGGER.debug(f"Enabling {self.entity_id}")
             self.is_enabled = True
             self.async_write_ha_state()
-            _LOGGER.debug(f"Registry: Entity {self.entity_id} - enabled")
 
-        self.runtime.start_workflow_runtime(self.workflow.id)
+        self.react.runtime.start_workflow_runtime(self.workflow.id)
     
     
     async def async_disable(self):
         if self.is_enabled:
+            _ENTITY_LOGGER.debug(f"Disabling {self.entity_id}")
             self.is_enabled = False
             self.async_write_ha_state()
-            _LOGGER.debug(f"Registry: Entity {self.entity_id} - disabled")
 
-        await self.runtime.async_stop_workflow_runtime(self.workflow.id)
+        await self.react.runtime.async_stop_workflow_runtime(self.workflow.id)
 
 
     @callback
@@ -342,6 +340,8 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
                         run = False
 
             if run: 
+                self.react.session_manager.load_session(action_event)
+                action_event.session.debug(_RUNTIME_LOGGER, f"Action event caught by actor {actor_runtime.id} from react.{self.workflow.id}: {format_data(**action_event.payload.source)}")
                 if self.is_enabled:
                     self._last_triggered = utcnow()
                     self.async_write_ha_state()
@@ -353,9 +353,15 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
                     if state := self.hass.states.get(self.entity_id):
                         entity_vars = state.as_dict()
 
-                    await self.runtime.async_run(self.workflow.id, create_snapshot(self.hass, self._variable_tracker, actor_tracker, self.reactor_jitters, action_event), entity_vars, hass_run_context)
+                    await self.react.runtime.async_run(
+                        self.workflow.id, 
+                        create_snapshot(self.hass, self._variable_tracker, actor_tracker, self.reactor_jitters, action_event), 
+                        entity_vars, 
+                        hass_run_context,
+                        action_event.session,
+                    )
                 else:
-                    _LOGGER.debug(f"WorkflowEntity: {self.workflow.id} {actor_runtime.id} skipping (workflow is disabled)")
+                    action_event.session.debug(_RUNTIME_LOGGER, f"Skipping react.{self.workflow.id} {actor_runtime.id} (workflow is disabled)")
 
 
     @callback

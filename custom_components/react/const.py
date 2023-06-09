@@ -7,7 +7,7 @@ from homeassistant.const import ATTR_NAME, CONF_ICON
 from homeassistant.helpers.template import result_as_boolean
 from homeassistant.components.trace import TRACE_CONFIG_SCHEMA
 
-STARTUP = """
+STARTUP_MESSAGE = """
 -------------------------------------------------------------------
 React
 
@@ -21,7 +21,7 @@ https://github.com/gertjanstulp/ha-react/issues
 
 # VERSION = "0.7.0"
 VERSION_STORAGE = "6"
-MINIMUM_HA_VERSION = "2023.0.0"
+MINIMUM_HA_VERSION = "2023.5.0"
 
 TITLE = 'React'
 DOMAIN = 'react'
@@ -116,6 +116,7 @@ ATTR_INDEX = "index"
 ATTR_TRIGGER = "trigger"
 ATTR_EVENT = "event"
 ATTR_TYPE_HINTS = "type_hints"
+ATTR_SESSION_ID = "session_id"
 
 # Monikers
 MONIKER_TRIGGER = "trigger"
@@ -270,6 +271,15 @@ TYPE_SYSTEM = "system"
 ACTION_SHUTDOWN = "shutdown"
 ACTION_START = "start"
 ACTION_STARTED = "started"
+
+REACT_LOGGER_CONFIG = "config"
+REACT_LOGGER_ENTITY = "entity"
+REACT_LOGGER_RUNTIME = "runtime"
+REACT_LOGGER_PLUGIN = "plugin"
+
+# Time formats
+DATETIME_FORMAT_READABLE = '%Y/%m/%d %H:%M:%S'
+DATETIME_FORMAT_TRACE = '%c (%Z)'
 
 
 def is_list_of_strings(obj):

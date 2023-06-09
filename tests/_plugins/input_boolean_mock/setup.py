@@ -6,6 +6,7 @@ from custom_components.react.plugin.const import PROVIDER_TYPE_INPUT_BOOLEAN
 from custom_components.react.plugin.factory import ProviderSetupCallback
 from custom_components.react.plugin.input_boolean.setup import Setup as InputBooleanSetup
 from custom_components.react.plugin.input_boolean.provider import InputBooleanProvider
+from custom_components.react.utils.session import Session
 
 from tests._plugins.common import HassApiMockExtend
 from tests.common import TEST_CONTEXT
@@ -41,7 +42,7 @@ class Setup(InputBooleanSetup, HassApiMockExtend):
 
 class InputBooleanProviderMock(InputBooleanProvider):
 
-    async def async_input_boolean_set_value(self, context: Context, entity_id: str, value: bool):
+    async def async_input_boolean_set_value(self, session: Session, context: Context, entity_id: str, value: bool):
         test_context: TstContext = self.plugin.hass_api.hass_get_data(TEST_CONTEXT)
         data = {
             ATTR_ENTITY_ID: entity_id,

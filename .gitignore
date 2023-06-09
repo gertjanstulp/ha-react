@@ -19,7 +19,6 @@ coverage.xml
 htmlcov
 venv
 venv.bak
-config
 
 homeassistant
 tests/config/custom_components

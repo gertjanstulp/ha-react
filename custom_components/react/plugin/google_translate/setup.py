@@ -14,10 +14,7 @@ from custom_components.react.plugin.google_translate.const import (
     TTS_GOOGLE_TRANSLATE_PROVIDER
 )
 from custom_components.react.plugin.google_translate.provider import GoogleTranslateTtsProvider
-from custom_components.react.utils.logger import get_react_logger
 
-
-_LOGGER = get_react_logger()
 
 GOOGLE_TRANSLATE_PLUGIN_SCHEMA = vol.Schema({
     vol.Optional(ATTR_LANGUAGE) : cv.string,

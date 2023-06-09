@@ -13,10 +13,7 @@ from custom_components.react.plugin.state.api import StateApi
 from custom_components.react.tasks.filters import TYPE_ACTION_REACTION_FILTER_STRATEGY
 from custom_components.react.tasks.plugin.base import OutputBlock
 from custom_components.react.utils.events import ReactionEvent
-from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData, StateConfig
-
-_LOGGER = get_react_logger()
 
 
 class TrackStateOutputBlock(OutputBlock[StateConfig], ApiType[StateApi]):
@@ -30,13 +27,13 @@ class TrackStateOutputBlock(OutputBlock[StateConfig], ApiType[StateApi]):
         )]
 
 
-    def _debug(self, message: str):
-        _LOGGER.debug(f"State plugin: TrackStateOutputBlock - {message}")
+    def log_event_caught(self, react_event: TrackStateReactionEvent) -> None:
+        react_event.session.debug(self.logger, f"State track state reaction caught: '{react_event.payload.entity}'")
 
 
     async def async_handle_event(self, react_event: TrackStateReactionEvent):
-        self._debug(f"Tracking state of '{react_event.payload.entity}'")
         await self.api.async_track_entity_state_change(
+            react_event.session,
             react_event.context, 
             react_event.payload.entity, 
             react_event.payload.data.old_state if react_event.payload.data else None, 

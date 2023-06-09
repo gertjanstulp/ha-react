@@ -8,12 +8,13 @@ from homeassistant.core import Context
 from custom_components.react.plugin.notify.const import FeedbackItem
 from custom_components.react.plugin.notify.provider import NotifyProvider
 from custom_components.react.plugin.persistent_notification.const import SERVICE_CREATE
+from custom_components.react.utils.session import Session
 from custom_components.react.utils.struct import DynamicData
 
 
 class PersistentNotificationProvider(NotifyProvider[DynamicData]):
 
-    async def async_notify(self, context: Context, entity_id: str, message: str, feedback_items: list[FeedbackItem]):
+    async def async_notify(self, session: Session, context: Context, entity_id: str, message: str, feedback_items: list[FeedbackItem]):
         await self.plugin.hass_api.async_hass_call_service(
             PERSISTENT_NOTIFICATION_DOMAIN, 
             SERVICE_CREATE,

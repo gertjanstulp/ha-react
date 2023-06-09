@@ -8,6 +8,7 @@ from custom_components.react.plugin.const import PROVIDER_TYPE_SWITCH
 from custom_components.react.plugin.factory import ProviderSetupCallback
 from custom_components.react.plugin.switch.setup import Setup as SwitchSetup
 from custom_components.react.plugin.switch.provider import SwitchProvider
+from custom_components.react.utils.session import Session
 
 from tests._plugins.common import HassApiMockExtend
 from tests.common import TEST_CONTEXT
@@ -42,7 +43,7 @@ class Setup(SwitchSetup, HassApiMockExtend):
 
 class SwitchProviderMock(SwitchProvider):
 
-    async def async_set_state(self, context: Context, entity_id: str, state: str):
+    async def async_set_state(self, session: Session, context: Context, entity_id: str, state: str):
         test_context: TstContext = self.plugin.hass_api.hass_get_data(TEST_CONTEXT)
         data = {
             ATTR_ENTITY_ID: entity_id,
