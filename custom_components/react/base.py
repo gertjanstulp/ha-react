@@ -13,7 +13,7 @@ from homeassistant.loader import Integration
 
 from custom_components.react.enums import ReactDisabledReason
 from custom_components.react.exceptions import ReactException
-from custom_components.react.lib.config import PluginConfiguration, WorkflowConfiguration
+from custom_components.react.config.config import PluginConfiguration, WorkflowConfiguration
 from custom_components.react.runtime.runtime import ReactRuntime
 from custom_components.react.utils.logger import get_react_logger
 
@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     from custom_components.react.tasks.manager import ReactTaskManager
     from custom_components.react.utils.data import ReactData
     from custom_components.react.plugin.factory import PluginFactory
+    from custom_components.react.utils.session import SessionManager
 
 
 @dataclass
@@ -103,11 +104,12 @@ class ReactBase():
         self.frontend_version: Union[str, None] = None
         self.hass: Union[HomeAssistant, None] = None
         self.integration: Union[Integration, None] = None
-        self.log: logging.Logger = get_react_logger()
+        self.logger: logging.Logger = get_react_logger()
         self.session: Union[ClientSession, None] = None
         self.status = ReactStatus()
         self.system = ReactSystem()
         self.task_manager: Union[ReactTaskManager, None] = None
+        self.session_manager: SessionManager | None = None
         self.version: Union[str, None] = None
         self.plugin_factory: Union[PluginFactory, None] = None
         self.runtime: Union[ReactRuntime, None] = None
@@ -125,15 +127,19 @@ class ReactBase():
 
         self.system.disabled_reason = reason
         if reason != ReactDisabledReason.REMOVED:
-            self.log.error("React is disabled - %s", reason)
+            self.logger.error("React is disabled - %s", reason)
 
 
     def enable_react(self) -> None:
         if self.system.disabled_reason is not None:
             self.system.disabled_reason = None
-            self.log.debug("React is enabled")
+            self.logger.debug("React is enabled")
 
 
     async def async_shutdown(self) -> None:
         if self.runtime:
             await self.runtime.async_shutdown(is_hass_shutdown=True)
+        if self.plugin_factory:
+            self.plugin_factory.unload_plugins()
+        if self.task_manager:
+            self.task_manager.unload()

@@ -9,20 +9,13 @@ from custom_components.react.plugin.input_boolean.config import InputBooleanConf
 from custom_components.react.plugin.input_boolean.const import INPUT_BOOLEAN_GENERIC_PROVIDER
 from custom_components.react.plugin.input_boolean.provider import InputBooleanProvider
 from custom_components.react.plugin.base import PluginApiBase
-from custom_components.react.utils.logger import get_react_logger
-
-
-_LOGGER = get_react_logger()
+from custom_components.react.utils.session import Session
 
 
 class InputBooleanApi(PluginApiBase[InputBooleanConfig]):
 
-    def _debug(self, message: str):
-        _LOGGER.debug(f"Input boolean plugin: Api - {message}")
-
-
-    async def async_input_boolean_turn_on(self, context: Context, entity_id: str, input_boolean_provider: str = None):
-        self._debug(f"Turning on input_boolean '{entity_id}'")
+    async def async_input_boolean_turn_on(self, session: Session, context: Context, entity_id: str, input_boolean_provider: str = None):
+        session.debug(self.logger, f"Turning on input_boolean '{entity_id}'")
         try:
             full_entity_id = f"input_boolean.{entity_id}"
             value: bool = None
@@ -30,19 +23,19 @@ class InputBooleanApi(PluginApiBase[InputBooleanConfig]):
                 try:
                     value = state.state
                 except ValueError:
-                    _LOGGER.warn(f"Input boolean plugin: Api - {full_entity_id} has no bool value, could not turn on")
+                    session.warning(self.plugin.logger, f"{full_entity_id} has no bool value, could not turn on")
             else:
-                _LOGGER.warn(f"Input boolean plugin: Api - {full_entity_id} not found")
+                session.warning(self.plugin.logger, f"{full_entity_id} not found")
             
-            provider = self.get_input_boolean_provider(input_boolean_provider)
+            provider = self.get_input_boolean_provider(session, input_boolean_provider)
             if provider and value is not None and value == STATE_OFF:
-                await provider.async_input_boolean_set_value(context, full_entity_id, STATE_ON)
+                await provider.async_input_boolean_set_value(session, context, full_entity_id, STATE_ON)
         except:
-            _LOGGER.exception("Turning on input_boolean failed")
+            self.plugin.logger.exception("Turning on input_boolean failed")
 
 
-    async def async_input_boolean_turn_off(self, context: Context, entity_id: str, input_boolean_provider: str = None):
-        self._debug(f"Turning off input_boolean '{entity_id}'")
+    async def async_input_boolean_turn_off(self, session: Session, context: Context, entity_id: str, input_boolean_provider: str = None):
+        session.debug(self.logger, f"Turning off input_boolean '{entity_id}'")
         try:
             full_entity_id = f"input_boolean.{entity_id}"
             value: bool = None
@@ -50,19 +43,19 @@ class InputBooleanApi(PluginApiBase[InputBooleanConfig]):
                 try:
                     value = state.state
                 except ValueError:
-                    _LOGGER.warn(f"Input boolean plugin: Api - {full_entity_id} has no bool value, could not turn off")
+                    session.warning(self.plugin.logger, f"{full_entity_id} has no bool value, could not turn off")
             else:
-                _LOGGER.warn(f"Input boolean plugin: Api - {full_entity_id} not found")
+                session.warning(self.plugin.logger, f"{full_entity_id} not found")
             
-            provider = self.get_input_boolean_provider(input_boolean_provider)
+            provider = self.get_input_boolean_provider(session, input_boolean_provider)
             if provider and value is not None and value == STATE_ON:
-                await provider.async_input_boolean_set_value(context, full_entity_id, STATE_OFF)
+                await provider.async_input_boolean_set_value(session, context, full_entity_id, STATE_OFF)
         except:
-            _LOGGER.exception("Turning off input_boolean failed")
+            self.plugin.logger.exception("Turning off input_boolean failed")
 
 
-    async def async_input_boolean_toggle(self, context: Context, entity_id: str, input_boolean_provider: str = None):
-        self._debug(f"Toggling input_boolean '{entity_id}'")
+    async def async_input_boolean_toggle(self, session: Session, context: Context, entity_id: str, input_boolean_provider: str = None):
+        session.debug(self.logger, f"Toggling input_boolean '{entity_id}'")
         try:
             full_entity_id = f"input_boolean.{entity_id}"
             value: bool = None
@@ -70,21 +63,21 @@ class InputBooleanApi(PluginApiBase[InputBooleanConfig]):
                 try:
                     value = state.state
                 except ValueError:
-                    _LOGGER.warn(f"Input boolean plugin: Api - {full_entity_id} has no bool value, could not turn on")
+                    session.warning(self.plugin.logger, f"{full_entity_id} has no bool value, could not turn on")
             else:
-                _LOGGER.warn(f"Input boolean plugin: Api - {full_entity_id} not found")
+                session.warning(self.plugin.logger, f"{full_entity_id} not found")
             
-            provider = self.get_input_boolean_provider(input_boolean_provider)
+            provider = self.get_input_boolean_provider(session, input_boolean_provider)
             if provider and value is not None:
-                await provider.async_input_boolean_set_value(context, full_entity_id, STATE_ON if value == STATE_OFF else STATE_OFF)
+                await provider.async_input_boolean_set_value(session, context, full_entity_id, STATE_ON if value == STATE_OFF else STATE_OFF)
         except:
-            _LOGGER.exception("Toggling input_boolean failed")
+            self.plugin.logger.exception("Toggling input_boolean failed")
 
 
-    def get_input_boolean_provider(self, input_boolean_provider: str) -> InputBooleanProvider:
+    def get_input_boolean_provider(self, session: Session, input_boolean_provider: str) -> InputBooleanProvider:
         input_boolean_provider = input_boolean_provider or self.plugin.config.input_boolean_provider or INPUT_BOOLEAN_GENERIC_PROVIDER
         result = self.plugin.get_provider(PROVIDER_TYPE_INPUT_BOOLEAN, input_boolean_provider)
         if not result:
-            _LOGGER.error(f"Input boolean plugin: Api - Input boolean provider for '{input_boolean_provider}' not found")
+            session.error(self.plugin.logger, f"Input_boolean provider for '{input_boolean_provider}' not found")
             return None
         return result

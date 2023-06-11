@@ -18,25 +18,19 @@ from homeassistant.core import Context
 
 from custom_components.react.plugin.media_player.provider import MediaPlayerProvider
 from custom_components.react.plugin.sonos.const import CONTENT_TYPE_FAVORITE_ITEM_ID
-from custom_components.react.utils.logger import get_react_logger
+from custom_components.react.utils.session import Session
 from custom_components.react.utils.struct import DynamicData
-
-_LOGGER = get_react_logger()
 
 
 class SonosProvider(MediaPlayerProvider[DynamicData]):
-
-    def _debug(self, message: str):
-        _LOGGER.debug(f"Sonos plugin: Provider - {message}")
-
 
     @property
     def support_announce(self) -> bool:
         return False
 
 
-    async def async_suspend(self, context: Context, entity_id: str):
-        self._debug(f"Suspending '{entity_id}'")
+    async def async_suspend(self, session: Session, context: Context, entity_id: str):
+        session.debug(self.logger, f"Suspending '{entity_id}'")
         try:
             await self.plugin.hass_api.async_hass_call_service(
                 SONOS_DOMAIN,
@@ -47,11 +41,11 @@ class SonosProvider(MediaPlayerProvider[DynamicData]):
                 context,
             )
         except:
-            _LOGGER.exception("Interrupting mediaplayer failed")
+            self.plugin.logger.exception("Interrupting mediaplayer failed")
 
 
-    async def async_resume(self, context: Context, entity_id: str):
-        self._debug(f"Resuming '{entity_id}'")
+    async def async_resume(self, session: Session, context: Context, entity_id: str):
+        session.debug(self.logger, f"Resuming '{entity_id}'")
         try:
             await self.plugin.hass_api.async_hass_call_service(
                 SONOS_DOMAIN,
@@ -62,10 +56,10 @@ class SonosProvider(MediaPlayerProvider[DynamicData]):
                 context,
             )
         except:
-            _LOGGER.exception("Resuming mediaplayer failed")
+            self.plugin.logger.exception("Resuming mediaplayer failed")
         
 
-    async def async_play_favorite(self, context: Context, entity_id: str, favorite_id: str):
+    async def async_play_favorite(self, session: Session, context: Context, entity_id: str, favorite_id: str):
         data: dict = {
             ATTR_ENTITY_ID: entity_id,
             ATTR_MEDIA_CONTENT_TYPE: CONTENT_TYPE_FAVORITE_ITEM_ID,

@@ -16,6 +16,7 @@ from custom_components.react.plugin.const import (
 from custom_components.react.plugin.factory import ProviderSetupCallback
 from custom_components.react.plugin.media_player.setup import Setup as MediaPlayerSetup
 from custom_components.react.plugin.media_player.provider import MediaPlayerProvider, TtsProvider
+from custom_components.react.utils.session import Session
 from custom_components.react.utils.struct import DynamicData
 
 from tests._plugins.common import HassApiMockExtend
@@ -77,7 +78,7 @@ class MediaPlayerProviderMock(MediaPlayerProvider):
         return self._support_announce
 
 
-    async def async_play_favorite(self, context: Context, entity_id: str, favorite_id: str):
+    async def async_play_favorite(self, session: Session, context: Context, entity_id: str, favorite_id: str):
         test_context: TstContext = self.plugin.hass_api.hass_get_data(TEST_CONTEXT)
         test_context.register_plugin_data({
             ATTR_ENTITY_ID: entity_id,
@@ -85,7 +86,7 @@ class MediaPlayerProviderMock(MediaPlayerProvider):
         })
 
 
-    async def async_suspend(self, context: Context, entity_id: str):
+    async def async_suspend(self, session: Session, context: Context, entity_id: str):
         test_context: TstContext = self.plugin.hass_api.hass_get_data(TEST_CONTEXT)
         test_context.register_plugin_data({
             ATTR_ENTITY_ID: entity_id,
@@ -93,7 +94,7 @@ class MediaPlayerProviderMock(MediaPlayerProvider):
         })
 
 
-    async def async_resume(self, context: Context, entity_id: str):
+    async def async_resume(self, session: Session, context: Context, entity_id: str):
         test_context: TstContext = self.plugin.hass_api.hass_get_data(TEST_CONTEXT)
         test_context.register_plugin_data({
             ATTR_ENTITY_ID: entity_id,
@@ -101,7 +102,7 @@ class MediaPlayerProviderMock(MediaPlayerProvider):
         })
 
     
-    async def async_set_volume(self, context: Context, entity_id: str, volume: float):
+    async def async_set_volume(self, session: Session, context: Context, entity_id: str, volume: float):
         test_context: TstContext = self.plugin.hass_api.hass_get_data(TEST_CONTEXT)
         test_context.register_plugin_data({
             ATTR_ENTITY_ID: entity_id,
@@ -113,7 +114,7 @@ class TtsProviderMock(TtsProvider):
     def __init__(self) -> None:
         super().__init__()
         
-    async def async_speek(self, context: Context, entity_id: str, message: str, language: str, cache: bool, options: DynamicData):
+    async def async_speek(self, session: Session, context: Context, entity_id: str, message: str, language: str, cache: bool, options: DynamicData):
         context: TstContext = self.plugin.hass_api.hass_get_data(TEST_CONTEXT)
         context.register_plugin_data({
             ATTR_ENTITY_ID: entity_id,

@@ -13,9 +13,6 @@ from custom_components.react.plugin.state.const import (
 from custom_components.react.plugin.state.provider import StateProvider
 from custom_components.react.plugin.state.input.state_change_input_block import StateChangeInputBlock
 from custom_components.react.plugin.state.output.track_state_output_block import TrackStateOutputBlock
-from custom_components.react.utils.logger import get_react_logger
-
-_LOGGER = get_react_logger()
 
 WARN_MESSAGE = "WARNING: The state plugin is for troubleshooting purposes only. Do NOT use regularly as it generates a lot of events and could potentially overload the system."
 
@@ -30,7 +27,7 @@ class Setup(PluginSetup[StateConfig]):
 
 
     def setup(self):
-        _LOGGER.warn(WARN_MESSAGE)
+        self.plugin_logger.warn(WARN_MESSAGE)
     
 
     def setup_config(self, raw_config: dict) -> StateConfig:

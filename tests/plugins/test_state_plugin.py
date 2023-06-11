@@ -74,7 +74,7 @@ async def test_state_plugin_api_invalid_provider(test_context: TstContext, workf
     await test_context.async_start_react([mock_plugin])
     await test_context.async_send_reaction_event(entity=entity_id, data=data)
     test_context.verify_plugin_data_not_sent()
-    test_context.verify_has_log_error(f"State plugin: Api - State provider for '{invalid_provider}' not found")
+    test_context.verify_has_log_error(f"1 - State provider for '{invalid_provider}' not found")
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["state_track_test"])

@@ -8,7 +8,6 @@ from custom_components.react.plugin.notify.config import NotifyConfig
 from custom_components.react.tasks.filters import TYPE_ACTION_REACTION_FILTER_STRATEGY
 from custom_components.react.tasks.plugin.base import OutputBlock
 from custom_components.react.utils.events import ReactionEvent
-from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData
 from custom_components.react.const import (
     ATTR_EVENT_NOTIFY_PROVIDER_PAYLOAD, 
@@ -17,8 +16,6 @@ from custom_components.react.const import (
 )
 
 from custom_components.react.plugin.notify.api import NotifyApi
-
-_LOGGER = get_react_logger()
 
 
 class NotifyConfirmFeedbackOutputBlock(OutputBlock[NotifyConfig], ApiType[NotifyApi]):
@@ -31,13 +28,13 @@ class NotifyConfirmFeedbackOutputBlock(OutputBlock[NotifyConfig], ApiType[Notify
         )]
 
 
-    def _debug(self, message: str):
-        _LOGGER.debug(f"Notify plugin: NotifyConfirmFeedbackOutputBlock - {message}")
+    def log_event_caught(self, react_event: NotifyConfirmFeedbackReactionEvent) -> None:
+        react_event.session.debug(self.logger, f"Notify confirm feedback reaction caught: '{react_event.payload.entity}'")
 
 
     async def async_handle_event(self, react_event: NotifyConfirmFeedbackReactionEvent):
-        self._debug("Confirming feedback")
         await self.api.async_confirm_feedback(
+            react_event.session,
             react_event.context, 
             react_event.payload.data.provider_payload.conversation_id if react_event.payload.data.provider_payload else None,
             react_event.payload.data.provider_payload.message_id if react_event.payload.data.provider_payload else None,

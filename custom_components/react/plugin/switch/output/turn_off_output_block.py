@@ -11,10 +11,7 @@ from custom_components.react.plugin.switch.api import SwitchApi
 from custom_components.react.tasks.filters import TYPE_ACTION_REACTION_FILTER_STRATEGY
 from custom_components.react.tasks.plugin.base import OutputBlock
 from custom_components.react.utils.events import ReactionEvent
-from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData
-
-_LOGGER = get_react_logger()
 
 
 class SwitchTurnOffOutputBlock(OutputBlock[LightConfig], ApiType[SwitchApi]):
@@ -28,13 +25,13 @@ class SwitchTurnOffOutputBlock(OutputBlock[LightConfig], ApiType[SwitchApi]):
         )]
 
 
-    def _debug(self, message: str):
-        _LOGGER.debug(f"Switch plugin: SwitchTurnOffOutputBlock - {message}")
+    def log_event_caught(self, react_event: SwitchTurnOffReactionEvent) -> None:
+        react_event.session.debug(self.logger, f"Switch turn off reaction caught: '{react_event.payload.entity}'")
 
 
     async def async_handle_event(self, react_event: SwitchTurnOffReactionEvent):
-        self._debug(f"Turning off switch '{react_event.payload.entity}'")
         await self.api.async_switch_turn_off(
+            react_event.session,
             react_event.context, 
             react_event.payload.entity, 
             react_event.payload.data.switch_provider if react_event.payload.data else None

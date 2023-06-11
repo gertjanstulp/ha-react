@@ -8,11 +8,12 @@ from homeassistant.core import Context
 
 from custom_components.react.plugin.input_number.config import InputNumberConfig
 from custom_components.react.plugin.base import PluginProviderBase
+from custom_components.react.utils.session import Session
 
 
 class InputNumberProvider(PluginProviderBase[InputNumberConfig]):
 
-    async def async_input_number_set_value(self, context: Context, entity_id: str, value: float):
+    async def async_input_number_set_value(self, session: Session, context: Context, entity_id: str, value: float):
         await self.plugin.hass_api.async_hass_call_service(
             DOMAIN,
             SERVICE_SET_VALUE,

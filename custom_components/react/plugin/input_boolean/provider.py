@@ -11,11 +11,12 @@ from homeassistant.core import Context
 
 from custom_components.react.plugin.base import PluginProviderBase
 from custom_components.react.plugin.input_boolean.config import InputBooleanConfig
+from custom_components.react.utils.session import Session
 
 
 class InputBooleanProvider(PluginProviderBase[InputBooleanConfig]):
     
-    async def async_input_boolean_set_value(self, context: Context, entity_id: str, value: str):
+    async def async_input_boolean_set_value(self, session: Session, context: Context, entity_id: str, value: str):
         await self.plugin.hass_api.async_hass_call_service(
             BOOLEAN_DOMAIN,
             SERVICE_TURN_ON if value == STATE_ON else SERVICE_TURN_OFF,

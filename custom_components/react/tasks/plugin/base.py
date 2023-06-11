@@ -1,4 +1,5 @@
 from __future__ import annotations
+from logging import Logger
 
 from typing import TYPE_CHECKING, Dict, Generic, TypeVar
 
@@ -18,6 +19,7 @@ from custom_components.react.const import (
     ACTION_TOGGLE, 
     ACTION_UNAVAILABLE,
     ATTR_ACTION,
+    ATTR_SESSION_ID,
     ATTR_ENTITY,
     ATTR_TYPE,
     EVENT_REACT_ACTION, 
@@ -27,13 +29,12 @@ from custom_components.react.const import (
 from custom_components.react.tasks.base import ReactTask, ReactTaskType
 from custom_components.react.tasks.filters import ENTITY_ID_STATE_CHANGE_FILTER_STRATEGY, track_key
 from custom_components.react.utils.events import ReactEvent, StateChangedEvent, StateChangedEventPayload
-from custom_components.react.utils.logger import format_data, get_react_logger
+from custom_components.react.utils.logger import format_data
+from custom_components.react.utils.session import Session
 from custom_components.react.utils.struct import ActorRuntime, DynamicData
 
 if TYPE_CHECKING:
     from custom_components.react.plugin.factory import Plugin
-
-_LOGGER = get_react_logger()
 
 T_config = TypeVar("T_config", bound=DynamicData)
 
@@ -41,7 +42,7 @@ T_config = TypeVar("T_config", bound=DynamicData)
 class BlockBase(Generic[T_config], ReactTask):
 
     def __init__(self, react: ReactBase) -> None:
-        super().__init__(react)
+        super().__init__(react, skip_task_log=True)
 
         self.plugin: Plugin[T_config] = None
 
@@ -50,30 +51,27 @@ class BlockBase(Generic[T_config], ReactTask):
         self.plugin = plugin
 
 
+    @property
+    def logger(self) -> Logger:
+        return self.plugin.logger if self.plugin else None
+
+
     def load(self):
-        pass
-
-
-    def start(self):
         self.react.task_manager.register_task(self)
+
+
+    def on_start(self):
+        self.plugin.logger.debug(f"Starting {self.__class__.__name__}")
+
+
+    def on_unload(self):
+        self.plugin.logger.debug(f"Unloading {self.__class__.__name__}")
 
 
     @property
     def task_type(self) -> ReactTaskType:
         return ReactTaskType.BLOCK
     
-
-class InputBlock():
-    def create_action_event_payloads(self, *args) -> list[dict]:
-        raise NotImplementedError()
-
-
-    def produce_actions(self, react: ReactBase, time_key: str, *args):
-        action_event_payloads = self.create_action_event_payloads(time_key, *args)
-        for action_event_payload in action_event_payloads:
-            _LOGGER.debug(f"InputBlock: sending action event: {format_data(**action_event_payload)}")
-            react.hass.bus.async_fire(EVENT_REACT_ACTION, action_event_payload)
-
 
 class EventBlock(Generic[T_config], BlockBase[T_config]):
     def __init__(self, react: ReactBase, e_type: type[ReactEvent]) -> None:
@@ -83,7 +81,7 @@ class EventBlock(Generic[T_config], BlockBase[T_config]):
         self.react_events: Dict[str, ReactEvent] = {}
         self.block_filter = self.async_filter
     
-    
+
     @callback
     def async_filter(self, ha_event: HaEvent) -> bool:
         react_event = self.e_type(ha_event)
@@ -95,8 +93,14 @@ class EventBlock(Generic[T_config], BlockBase[T_config]):
 
     async def async_execute(self, ha_event: HaEvent) -> None:
         react_event = self.get_react_event(ha_event)
+        self.react.session_manager.load_session(react_event)
+        self.log_event_caught(react_event)
         await self.async_handle_event(react_event)
     
+
+    def log_event_caught(self, react_event: ReactEvent) -> None:
+        pass
+
 
     async def async_handle_event(self, react_event: ReactEvent):
         raise NotImplementedError()
@@ -110,30 +114,48 @@ class EventBlock(Generic[T_config], BlockBase[T_config]):
         return self.react_events.get(id(ha_event))
 
 
-class EventInputBlock(Generic[T_config], EventBlock[T_config], InputBlock):
+class InputBlock(Generic[T_config], EventBlock[T_config]):
     def __init__(self, react: ReactBase, e_type: type[ReactEvent]):
         super().__init__(react, e_type)
 
 
     async def async_handle_event(self, react_event: ReactEvent):
-        self.produce_actions(self.react, react_event)
+        action_event_payloads = self.create_action_event_payloads(react_event)
+        session_payload = {ATTR_SESSION_ID: react_event.session.id}
+        for action_event_payload in action_event_payloads:
+            react_event.session.debug(self.logger, f"Sending action event: {format_data(**action_event_payload)}")
+            self.react.hass.bus.async_fire(EVENT_REACT_ACTION, action_event_payload | session_payload)
 
 
-class StateChangeInputBlock(Generic[T_config], EventInputBlock[T_config]):
+    def create_action_event_payloads(self, source_event: ReactEvent) -> list[dict]:
+        raise NotImplementedError()
+
+
+class StateChangeInputBlock(Generic[T_config], InputBlock[T_config]):
     def __init__(self, react: ReactBase, type: str) -> None:
         super().__init__(react, StateChangedEvent)
 
         self.type = type
         self.entity_track_keys: list[str] = []
 
-        async_dispatcher_connect(self.react.hass, SIGNAL_ACTION_HANDLER_CREATED, self.async_track_entity)
-        async_dispatcher_connect(self.react.hass, SIGNAL_ACTION_HANDLER_DESTROYED, self.async_untrack_entity)
+
+    def load(self):
+        super().load()
+        self.manager.wrap_unloader(
+            async_dispatcher_connect(self.react.hass, SIGNAL_ACTION_HANDLER_CREATED, self.async_track_actor),
+            self.id,
+            SIGNAL_ACTION_HANDLER_CREATED,
+        )
+        self.manager.wrap_unloader(
+            async_dispatcher_connect(self.react.hass, SIGNAL_ACTION_HANDLER_DESTROYED, self.async_untrack_actor),
+            self.id,
+            SIGNAL_ACTION_HANDLER_DESTROYED,
+        )
 
 
-    @property
-    def slug(self) -> str:
-        return f"{self.type.lower() if self.type else ''}_{super().slug}"
-    
+    def log_event_caught(self, react_event: StateChangedEvent) -> None:
+        react_event.session.debug(self.logger, f"State change caught: {react_event.payload.entity_id} ({react_event.payload.old_state.state if react_event.payload.old_state else None} -> {react_event.payload.new_state.state if react_event.payload.new_state else None})")
+            
 
     def read_state_data(self, react_event: StateChangedEvent) -> StateChangeData: 
         raise NotImplementedError()
@@ -146,12 +168,12 @@ class StateChangeInputBlock(Generic[T_config], EventInputBlock[T_config]):
 
 
     @callback
-    def async_track_entity(self, workflow_id: str, actor: ActorRuntime):
+    def async_track_actor(self, workflow_id: str, actor: ActorRuntime):
         self.update_tracker(True, actor)
 
     
     @callback
-    def async_untrack_entity(self, workflow_id: str, actor: ActorRuntime):
+    def async_untrack_actor(self, workflow_id: str, actor: ActorRuntime):
         self.update_tracker(False, actor)
 
 
@@ -167,23 +189,10 @@ class StateChangeInputBlock(Generic[T_config], EventInputBlock[T_config]):
                     self.entity_track_keys.remove(entity_track_key)
 
 
-class TimeInputBlock(Generic[T_config], BlockBase[T_config], InputBlock):
-
-    async def async_execute(self, time_key: str, *args) -> None:
-        self.produce_actions(self.react, time_key, *args)
-    
-
 class OutputBlock(Generic[T_config], EventBlock[T_config]):
     def __init__(self, react: ReactBase, e_type: type[ReactEvent]):
         super().__init__(react, e_type)
     
-
-    @property
-    def slug(self) -> str:
-        return super().slug
-        # return f"{self.type.lower() if self.type else ''}_{super().slug}"
-
-
 
 class StateChangeData:
 

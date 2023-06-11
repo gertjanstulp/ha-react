@@ -1,14 +1,14 @@
 from __future__ import annotations
-import json
 
-from anyio import TASK_STATUS_IGNORED
+import json
 import voluptuous as vol
+from anyio import TASK_STATUS_IGNORED
 
 from homeassistant.components import websocket_api
 from homeassistant.components.trace import async_get_trace, async_list_traces
 from homeassistant.components.websocket_api import async_register_command
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import ExtendedJSONEncoder
 
 from custom_components.react.base import ReactBase
@@ -17,12 +17,10 @@ from custom_components.react.tasks.base import ReactTask, ReactTaskType
 
 
 async def async_setup_task(react: ReactBase) -> TASK_STATUS_IGNORED:
-    """Set up this task."""
     return Task(react=react)
 
 
 class Task(ReactTask):
-    """Setup the React websocket API."""
 
     def __init__(self, react: ReactBase) -> None:
         super().__init__(react)
@@ -34,7 +32,7 @@ class Task(ReactTask):
 
 
     async def async_execute(self) -> None:
-        """Execute the task."""
+        self.task_logger.debug("Setting up websocket commands")
         async_register_command(self.react.hass, react_get_traces)
         async_register_command(self.react.hass, react_get_trace)
         async_register_command(self.react.hass, websocket_list_runs)
@@ -92,7 +90,6 @@ async def react_get_trace(hass: HomeAssistant, connection: websocket_api.ActiveC
 @websocket_api.websocket_command({vol.Required("type"): "react/run/list"})
 @callback
 def websocket_list_runs(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict):
-    """Handle list runs command."""
     react: ReactBase = hass.data.get(DOMAIN)
     connection.send_result(
         msg["id"],
@@ -103,7 +100,6 @@ def websocket_list_runs(hass: HomeAssistant, connection: websocket_api.ActiveCon
 @websocket_api.websocket_command({vol.Required("type"): "react/reaction/list"})
 @callback
 def websocket_list_reactions(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict):
-    """Handle list reactions command."""
     react: ReactBase = hass.data.get(DOMAIN)
     connection.send_result(
         msg["id"],

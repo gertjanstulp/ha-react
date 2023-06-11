@@ -1,4 +1,5 @@
 from __future__ import annotations
+from logging import Logger
 
 from typing import Callable, Generic, TypeVar
 
@@ -10,11 +11,13 @@ T_config = TypeVar("T_config", bound=DynamicData)
 
 
 class Plugin(Generic[T_config]):
-    def __init__(self, hass_api: HassApi, config: T_config) -> None:
+    def __init__(self, module_name: str, hass_api: HassApi, config: T_config, logger: Logger) -> None:
         super().__init__()
 
+        self.module_name = module_name
         self.hass_api = hass_api
         self.config = config
+        self.logger = logger
 
         self._api: PluginApiBase[T_config] = None
         self._providers: list[PluginProviderBase[T_config]] = []
@@ -39,10 +42,10 @@ class Plugin(Generic[T_config]):
         for block in self._input_blocks + self._output_blocks:
             block._build(self)
             block.load()
-            block.start()
 
 
     def unload(self):
+        self.logger.debug(f"Unloading {self.module_name} plugin")
         for block in self._input_blocks:
             block.unload()
         for block in self._output_blocks:
@@ -54,6 +57,11 @@ class Plugin(Generic[T_config]):
 class PluginApiBase(Generic[T_config]):
     def __init__(self) -> None:
         self.plugin: Plugin[T_config] = None
+
+
+    @property
+    def logger(self) -> Logger:
+        return self.plugin.logger if self.plugin else None
 
 
     def _build(self, plugin: Plugin[T_config]):
@@ -80,6 +88,11 @@ class PluginProviderBase(Generic[T_config]):
 
     def _build(self, plugin: Plugin[T_config]):
         self.plugin = plugin
+
+
+    @property
+    def logger(self) -> Logger:
+        return self.plugin.logger if self.plugin else None
 
 
     def load(self):

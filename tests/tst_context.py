@@ -39,7 +39,7 @@ from homeassistant.setup import async_setup_component
 from unittest.mock import Mock
 
 from custom_components.react.base import ReactBase
-from custom_components.react.lib.config import Workflow
+from custom_components.react.config.config import Workflow
 from custom_components.react.runtime.runtime import Reaction, WorkflowRun
 from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData, MultiItem

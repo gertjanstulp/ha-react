@@ -275,9 +275,9 @@
   action:
     event: ev_react_action
     event_data:
-      entity: actor_entity_templated_state
-      type: actor_type_templated_state
-      action: actor_action_templated_state
+      entity: actor_entity_templated_state_test
+      type: actor_type_templated_state_test
+      action: actor_action_templated_state_test
 
 - id: trigger_actor_condition
   alias: Trigger actor_condition
@@ -287,9 +287,9 @@
   action:
     event: ev_react_action
     event_data:
-      entity: actor_entity_actor_condition
-      type: actor_type_actor_condition
-      action: actor_action_actor_condition
+      entity: actor_entity_actor_condition_test
+      type: actor_type_actor_condition_test
+      action: actor_action_actor_condition_test
 
 - id: trigger_reactor_condition
   alias: Trigger reactor_condition
@@ -299,9 +299,9 @@
   action:
     event: ev_react_action
     event_data:
-      entity: actor_entity_reactor_condition
-      type: actor_type_reactor_condition
-      action: actor_action_reactor_condition
+      entity: actor_entity_reactor_condition_test
+      type: actor_type_reactor_condition_test
+      action: actor_action_reactor_condition_test
 
 - id: trigger_device_tracker_home
   alias: Trigger device tracker home
@@ -339,29 +339,29 @@
       type: actor_type_notify_send_message_test
       action: actor_action_notify_send_message_test
 
-- id: trigger_wait
-  alias: Trigger wait
+- id: trigger_wait_for_state_test
+  alias: Trigger wait for state
   trigger:
     platform: state
-    entity_id: input_button.button_trigger_wait
+    entity_id: input_button.button_trigger_wait_for_state
   action:
     event: ev_react_action
     event_data:
-      entity: actor_entity_wait
-      type: actor_type_wait
-      action: actor_action_wait
+      entity: actor_entity_wait_for_state_test
+      type: actor_type_wait_for_state_test
+      action: actor_action_wait_for_state_test
 
-- id: trigger_wait_delayed
-  alias: Trigger wait_delayed
+- id: trigger_wait_for_state_delayed_test
+  alias: Trigger wait_for_state_delayed
   trigger:
     platform: state
-    entity_id: input_button.button_trigger_wait_delayed
+    entity_id: input_button.button_trigger_wait_for_state_delayed
   action:
     event: ev_react_action
     event_data:
-      entity: actor_entity_wait_delayed
-      type: actor_type_wait_delayed
-      action: actor_action_wait_delayed
+      entity: actor_entity_wait_for_state_delayed_test
+      type: actor_type_wait_for_state_delayed_test
+      action: actor_action_wait_for_state_delayed_test
 
 
 - id: trigger_immediate_double

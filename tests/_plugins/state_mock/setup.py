@@ -13,6 +13,7 @@ from custom_components.react.plugin.const import PROVIDER_TYPE_STATE
 from custom_components.react.plugin.factory import ProviderSetupCallback
 from custom_components.react.plugin.state.setup import Setup as StateSetup
 from custom_components.react.plugin.state.provider import StateProvider
+from custom_components.react.utils.session import Session
 
 from tests._plugins.common import HassApiMockExtend
 from tests.common import TEST_CONTEXT
@@ -48,7 +49,7 @@ class Setup(StateSetup, HassApiMockExtend):
 
 class StateProviderMock(StateProvider):
 
-    async def async_track_entity_state_change(self, context: Context, entity_id: str, old_state: Any, new_state: Any, timestamp: datetime):
+    async def async_track_entity_state_change(self, session: Session, context: Context, entity_id: str, old_state: Any, new_state: Any, timestamp: datetime):
         test_context: TstContext = self.plugin.hass_api.hass_get_data(TEST_CONTEXT)
         data = {
             ATTR_ENTITY_ID: entity_id,

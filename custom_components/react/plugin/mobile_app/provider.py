@@ -19,22 +19,13 @@ from custom_components.react.plugin.mobile_app.const import (
 )
 from custom_components.react.plugin.notify.const import FeedbackItem
 from custom_components.react.plugin.notify.provider import NotifyProvider
-from custom_components.react.utils.logger import get_react_logger
-
-_LOGGER = get_react_logger()
+from custom_components.react.utils.session import Session
 
 
 class MobileAppProvider(NotifyProvider[MobileAppConfig]):
 
-    def __init__(self) -> None:
-        super().__init__()
-        
-    def _debug(self, message: str):
-        _LOGGER.debug(f"Mobile app plugin: MobileAppProvider - {message}")
-
-
-    async def async_notify(self, context: Context, entity_id: str, message: str, feedback_items: list[FeedbackItem]):
-        self._debug(f"Sending message to {entity_id}")
+    async def async_notify(self, session: Session, context: Context, entity_id: str, message: str, feedback_items: list[FeedbackItem]):
+        session.debug(self.logger, f"Sending message to {entity_id}")
         data = {
             ATTR_EVENT_MESSAGE: message,
         }
@@ -58,6 +49,7 @@ class MobileAppProvider(NotifyProvider[MobileAppConfig]):
 
 
     async def async_confirm_feedback(self, 
+        session: Session,
         context: Context, 
         conversation_id: str, 
         message_id: str, 
@@ -65,7 +57,7 @@ class MobileAppProvider(NotifyProvider[MobileAppConfig]):
         feedback: str,
         acknowledgement: str,
     ):
-        self._debug(f"Confirming feedback '{feedback}'")
+        session.debug(self.logger, f"Confirming feedback '{feedback}'")
         data = {
             ATTR_EVENT_MESSAGE: MESSAGE_CLEAR_NOTIFICATION,
             ATTR_DATA: {

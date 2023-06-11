@@ -86,7 +86,7 @@ async def test_group_plugin_provider_notify_no_resolver(test_context: TstContext
     await test_context.async_start_react(mock_plugins)
     await test_context.async_send_reaction_event(data={})
     test_context.verify_plugin_data_not_sent()
-    test_context.verify_has_log_error("Group plugin: Provider - Notify resolver not found, notify plugin is not configured")
+    test_context.verify_has_log_error("1 - Notify resolver not found, notify plugin is not configured")
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["notify_send_message_test"])
@@ -100,7 +100,7 @@ async def test_group_plugin_provider_notify_no_notify_platform(test_context: Tst
     await test_context.async_start_react(mock_plugins)
     await test_context.async_send_reaction_event(data={})
     test_context.verify_plugin_data_not_sent()
-    test_context.verify_has_log_error(f"Group plugin: Provider - Could not find notify platform for entity '{entity_id}'")
+    test_context.verify_has_log_error(f"1 - Could not find notify platform for entity '{entity_id}'")
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["notify_send_message_test"])
@@ -117,7 +117,7 @@ async def test_group_plugin_provider_notify_no_child_provider(test_context: TstC
     await test_context.async_start_react(mock_plugins)
     await test_context.async_send_reaction_event(data={})
     test_context.verify_plugin_data_not_sent()
-    test_context.verify_has_log_warning(f"Group plugin: Provider - Could not find notify provider for child entity '{child_entity_id}'")
+    test_context.verify_has_log_warning(f"1 - Could not find notify provider for child entity '{child_entity_id}'")
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["notify_send_message_test"])

@@ -19,19 +19,13 @@ from custom_components.react.const import (
 from custom_components.react.plugin.notify.const import FeedbackItem
 from custom_components.react.plugin.notify.provider import NotifyProvider
 from custom_components.react.plugin.telegram.config import TelegramConfig
-from custom_components.react.utils.logger import get_react_logger
-
-_LOGGER = get_react_logger()
+from custom_components.react.utils.session import Session
 
 
 class TelegramProvider(NotifyProvider[TelegramConfig]):
 
-    def _debug(self, message: str):
-        _LOGGER.debug(f"Telegram app plugin: TelegramProvider - {message}")
-
-
-    async def async_notify(self, context: Context, entity_id: str, message: str, feedback_items: list[FeedbackItem]):
-        self._debug(f"Sending message to {entity_id}")
+    async def async_notify(self, session: Session, context: Context, entity_id: str, message: str, feedback_items: list[FeedbackItem]):
+        session.debug(self.logger, f"Sending message to {entity_id}")
         data: dict = {
             ATTR_EVENT_MESSAGE: escape_markdown(message),
         }
@@ -53,6 +47,7 @@ class TelegramProvider(NotifyProvider[TelegramConfig]):
 
 
     async def async_confirm_feedback(self, 
+        session: Session,
         context: Context, 
         conversation_id: str, 
         message_id: str, 
@@ -60,7 +55,7 @@ class TelegramProvider(NotifyProvider[TelegramConfig]):
         feedback: str,
         acknowledgement: str,
     ):
-        self._debug(f"Confirming feedback '{feedback}' with acknowledgement '{acknowledgement}'")
+        session.debug(self.logger, f"Confirming feedback '{feedback}' with acknowledgement '{acknowledgement}'")
         data = {
             ATTR_MESSAGEID: message_id,
             ATTR_CHAT_ID: conversation_id,

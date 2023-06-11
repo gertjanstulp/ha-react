@@ -8,6 +8,7 @@ logger:
   default: warn
   logs:
     custom_components.react: debug
+    custom_components.react.*: debug
 
 lovelace:
   mode: yaml

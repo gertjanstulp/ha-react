@@ -18,30 +18,39 @@ from custom_components.react.const import (
     SIGNAL_ACTION_HANDLER_DESTROYED, 
 )
 from custom_components.react.tasks.filters import ENTITY_ID_STATE_CHANGE_FILTER_STRATEGY, track_key
-from custom_components.react.tasks.plugin.base import EventInputBlock
-from custom_components.react.utils.events import StateChangedEvent
-from custom_components.react.utils.logger import get_react_logger
+from custom_components.react.tasks.plugin.base import InputBlock
+from custom_components.react.utils.events import ReactEvent, StateChangedEvent
+from custom_components.react.utils.session import Session
 from custom_components.react.utils.struct import ActorRuntime, StateConfig
 
-_LOGGER = get_react_logger()
 
-
-class StateChangeInputBlock(EventInputBlock[StateConfig]):
+class StateChangeInputBlock(InputBlock[StateConfig]):
     def __init__(self, react: ReactBase) -> None:
         super().__init__(react, StateChangedEvent)
-
-        async_dispatcher_connect(self.react.hass, SIGNAL_ACTION_HANDLER_CREATED, self.async_track_entity)
-        async_dispatcher_connect(self.react.hass, SIGNAL_ACTION_HANDLER_DESTROYED, self.async_untrack_entity)
-
         self.state_track_keys: list[str] = []
-        
 
-    def _debug(self, message: str):
-        _LOGGER.debug(f"State plugin: StateChangeInputBlock - {message}")
+
+    def load(self):
+        super().load()
+        self.manager.wrap_unloader(
+            async_dispatcher_connect(self.react.hass, SIGNAL_ACTION_HANDLER_CREATED, self.async_track_actor),
+            self.id,
+            SIGNAL_ACTION_HANDLER_CREATED,
+        )
+        self.manager.wrap_unloader(
+            async_dispatcher_connect(self.react.hass, SIGNAL_ACTION_HANDLER_DESTROYED, self.async_untrack_actor),
+            self.id,
+            SIGNAL_ACTION_HANDLER_DESTROYED,
+        )
+
+
+    def log_event_caught(self, react_event: StateChangedEvent) -> None:
+        old_state_value = react_event.payload.old_state.state if react_event.payload.old_state else None
+        new_state_value = react_event.payload.new_state.state if react_event.payload.new_state else None
+        react_event.session.debug(self.logger, f"State change caught: {react_event.payload.entity_id} ({old_state_value} -> {new_state_value})")
 
 
     def create_action_event_payloads(self, source_event: StateChangedEvent) -> list[dict]:
-        self._debug("Processing state change event")
         return [{
             ATTR_ENTITY: source_event.payload.entity_id,
             ATTR_TYPE: REACT_TYPE_STATE,
@@ -58,12 +67,12 @@ class StateChangeInputBlock(EventInputBlock[StateConfig]):
 
 
     @callback
-    def async_track_entity(self, workflow_id: str, actor: ActorRuntime):
+    def async_track_actor(self, workflow_id: str, actor: ActorRuntime):
         self.update_tracker(True, actor)
                 
     
     @callback
-    def async_untrack_entity(self, workflow_id: str, actor: ActorRuntime):
+    def async_untrack_actor(self, workflow_id: str, actor: ActorRuntime):
         self.update_tracker(False, actor)
 
 

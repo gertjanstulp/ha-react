@@ -12,9 +12,7 @@ from custom_components.react.plugin.media_player.const import (
 from custom_components.react.plugin.media_player.input.state_change_input_block import MediaPlayerStateChangeInputBlock
 from custom_components.react.plugin.media_player.output.speek_output_block import MediaPlayerSpeekOutputBlock
 from custom_components.react.plugin.media_player.output.play_favorite_output_block import MediaPlayerPlayFavoriteOutputBlock
-from custom_components.react.utils.logger import get_react_logger
 
-_LOGGER = get_react_logger()
 
 MEDIA_PLAYER_PLUGIN_CONFIG_SCHEMA = vol.Schema({
     vol.Optional(ATTR_MEDIA_PLAYER_PROVIDER) : cv.string,

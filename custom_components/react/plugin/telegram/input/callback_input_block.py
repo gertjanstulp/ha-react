@@ -11,8 +11,7 @@ from custom_components.react.tasks.filters import EVENT_TYPE_FILTER_STRATEGY
 
 from custom_components.react.utils.events import ReactEvent
 from custom_components.react.base import ReactBase
-from custom_components.react.tasks.plugin.base import EventInputBlock
-from custom_components.react.utils.logger import get_react_logger
+from custom_components.react.tasks.plugin.base import InputBlock
 from custom_components.react.utils.struct import DynamicData
 from custom_components.react.const import (
     ATTR_ACTION, 
@@ -32,10 +31,8 @@ from custom_components.react.const import (
 )
 
 
-_LOGGER = get_react_logger()
 
-
-class CallbackInputBlock(EventInputBlock[TelegramConfig]):
+class CallbackInputBlock(InputBlock[TelegramConfig]):
     def __init__(self, react: ReactBase) -> None:
         super().__init__(react, CallbackActionEvent)
         
@@ -43,15 +40,15 @@ class CallbackInputBlock(EventInputBlock[TelegramConfig]):
 
 
     def load(self):
+        super().load()
         self.entity_maps = self.plugin.config.entity_maps if self.plugin.config.entity_maps else DynamicData()
 
 
-    def _debug(self, message: str):
-        _LOGGER.debug(f"Telegram plugin: CallbackInputBlock - {message}")
+    def log_event_caught(self, react_event: CallbackActionEvent) -> None:
+        react_event.session.debug(self.logger, f"Telegram callback caught: '{react_event.payload.feedback}' feedback from chat '{react_event.payload.chat_id}'")
 
 
     def create_action_event_payloads(self, source_event: CallbackActionEvent) -> list[dict]:
-        self._debug("Processing callback event from telegram")
         return [{
             ATTR_ENTITY: self.entity_maps.get(f"{source_event.payload.entity_source}", source_event.payload.entity_source),
             ATTR_TYPE: REACT_TYPE_NOTIFY,

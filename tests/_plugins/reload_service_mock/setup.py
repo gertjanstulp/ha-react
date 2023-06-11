@@ -24,5 +24,6 @@ class DummyTask(OutputBlock[DynamicData]):
 
 
     def on_unload(self):
+        super().on_unload()
         context: TstContext = self.react.hass.data[TEST_CONTEXT]
         context.register_plugin_task_unload(self.id)

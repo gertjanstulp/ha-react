@@ -7,41 +7,37 @@ from custom_components.react.plugin.const import (
 from custom_components.react.plugin.media_player.config import MediaPlayerConfig
 from custom_components.react.plugin.media_player.provider import MediaPlayerProvider, TtsProvider
 from custom_components.react.plugin.base import PluginApiBase
-from custom_components.react.utils.logger import get_react_logger
+from custom_components.react.utils.session import Session
 from custom_components.react.utils.struct import DynamicData
-
-_LOGGER = get_react_logger()
 
 
 class MediaPlayerApi(PluginApiBase[MediaPlayerConfig]):
 
-    def _debug(self, message: str):
-        _LOGGER.debug(f"Mediaplayer plugin: Api - {message}")
-
-    
     async def async_play_favorite(self, 
+        session: Session,
         context: Context,
         entity_id: str,
         favorite_id: str,
         media_player_provider: str, 
     ):
-        self._debug(f"Playing favorite '{favorite_id}' on '{entity_id}'")
+        session.debug(self.logger, f"Playing favorite '{favorite_id}' on '{entity_id}'")
         try:
             full_entity_id = f"media_player.{entity_id}"
             if state := self.plugin.hass_api.hass_get_state(full_entity_id):
                 value = state.state
             else:
-                _LOGGER.warn(f"Mediaplayer plugin: Api - {full_entity_id} not found")
+                session.warning(self.plugin.logger, f"{full_entity_id} not found")
                 return
             
-            provider = self.get_media_player_provider(full_entity_id, media_player_provider)
+            provider = self.get_media_player_provider(session, full_entity_id, media_player_provider)
             if provider:
-                await provider.async_play_favorite(context, entity_id, favorite_id)
+                await provider.async_play_favorite(session, context, entity_id, favorite_id)
         except:
-            _LOGGER.exception("Mediaplayer plugin: Api - Playing media failed")
+            self.plugin.logger.exception("Playing media failed")
 
 
     async def async_speek(self, 
+        session: Session,
         context: Context, 
         entity_id: str, 
         announce: bool, 
@@ -54,53 +50,53 @@ class MediaPlayerApi(PluginApiBase[MediaPlayerConfig]):
         media_player_provider: str,
         tts_provider: str,
     ):
-        self._debug(f"Speeking '{message}' on mediaplayer")
+        session.debug(self.logger, f"Speeking '{message}' on mediaplayer")
         try:
             full_entity_id = f"media_player.{entity_id}"
             if state := self.plugin.hass_api.hass_get_state(full_entity_id):
                 value = state.state
             else:
-                _LOGGER.warn(f"Mediaplayer plugin: Api - {full_entity_id} not found")
+                session.warning(self.plugin.logger, f"{full_entity_id} not found")
                 return
             
             # Retrieve providers
-            mp_provider = self.get_media_player_provider(full_entity_id, media_player_provider)
+            mp_provider = self.get_media_player_provider(session, full_entity_id, media_player_provider)
             if not mp_provider: return
-            t_provider = self.get_tts_provider(tts_provider)
+            t_provider = self.get_tts_provider(session, tts_provider)
             if not t_provider: return
 
             # If the mediaplayer doesn't support 'announce' it has to be suspended before sending tts messages
             if announce and not mp_provider.support_announce:
-                await mp_provider.async_suspend(context, full_entity_id)
+                await mp_provider.async_suspend(session, context, full_entity_id)
             
             if volume:
-                await mp_provider.async_set_volume(context, full_entity_id, volume)
+                await mp_provider.async_set_volume(session, context, full_entity_id, volume)
 
-            await t_provider.async_speek(context, full_entity_id, message, language, cache, options)
+            await t_provider.async_speek(session, context, full_entity_id, message, language, cache, options)
 
             if wait:
                 await self.plugin.hass_api.async_hass_wait(wait)
 
             # If the mediaplayer doesn't support 'announce' it has to be resumed after sending tts messages
             if announce and not mp_provider.support_announce:
-                await mp_provider.async_resume(context, full_entity_id)
+                await mp_provider.async_resume(session, context, full_entity_id)
         except:
-            _LOGGER.exception("Speeking message failed")
+            self.plugin.logger.exception("Speeking message failed")
 
 
-    def get_tts_provider(self, tts_provider: str) -> TtsProvider:
+    def get_tts_provider(self, session: Session, tts_provider: str) -> TtsProvider:
         tts_provider = tts_provider or self.plugin.config.tts_provider
         result = self.plugin.get_provider(PROVIDER_TYPE_TTS, tts_provider)
         if not result:
             if tts_provider:
-                _LOGGER.error(f"Mediaplayer plugin: Api - Tts provider for '{tts_provider}' not found")
+                session.error(self.plugin.logger, f"Tts provider for '{tts_provider}' not found")
             else:
-                _LOGGER.error(f"Mediaplayer plugin: Api - Tts provider not provided")
+                session.error(self.plugin.logger, f"Tts provider not provided")
             return None
         return result
     
         
-    def get_media_player_provider(self, entity_id: str, media_player_provider: str) -> MediaPlayerProvider:
+    def get_media_player_provider(self, session: Session, entity_id: str, media_player_provider: str) -> MediaPlayerProvider:
         result = None
     
         entity = self.plugin.hass_api.hass_get_entity(entity_id)
@@ -116,6 +112,6 @@ class MediaPlayerApi(PluginApiBase[MediaPlayerConfig]):
             target = entity_id
             if media_player_provider:
                 target = f"{target}/{media_player_provider}"
-            _LOGGER.error(f"Mediaplayer plugin: Api - Mediaplayer provider for '{target}' not found")
+            session.error(self.plugin.logger, f"Mediaplayer provider for '{target}' not found")
             return None
         return result

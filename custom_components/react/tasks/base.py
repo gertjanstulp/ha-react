@@ -1,8 +1,5 @@
-from datetime import timedelta
 from enum import Enum
-from logging import Handler
-from time import monotonic
-from typing import TYPE_CHECKING, Callable, Union
+from typing import TYPE_CHECKING, Callable
 import uuid
 
 from custom_components.react.base import ReactBase
@@ -11,9 +8,6 @@ from custom_components.react.utils.logger import get_react_logger
 
 if TYPE_CHECKING:
     from custom_components.react.tasks.manager import ReactTaskManager
-
-
-_LOGGER = get_react_logger()
 
 
 class ReactTaskType(str, Enum):
@@ -25,9 +19,11 @@ class ReactTaskType(str, Enum):
 class ReactTask:
     """React task base."""
 
-    def __init__(self, react: ReactBase) -> None:
+    def __init__(self, react: ReactBase, skip_task_log: bool = False) -> None:
         self.react = react
+        self.skip_task_log = skip_task_log
         self.id = uuid.uuid4().hex
+        self.task_logger = get_react_logger()
     
         self.track_event_filters: list[EventFilter] | None = None
         self.track_state_change_filters: list[EventFilter] | None = None
@@ -43,22 +39,10 @@ class ReactTask:
         raise NotImplementedError()
 
 
-    @property
-    def slug(self) -> str:
-        """Return the check slug."""
-        return self.__class__.__module__.rsplit(".", maxsplit=1)[-1]
-
-
-    def task_logger(self, handler: Handler, msg: str) -> None:
-        """Log message from task"""
-        handler("ReactTask<%s> %s", self.slug, msg)
+    # def register_unloader(self):
 
 
     async def execute_task(self, *args, **kwargs) -> None:
-        """Execute the task defined in subclass."""
-        self.task_logger(_LOGGER.debug, "Executing task")
-        start_time = monotonic()
-
         try:
             proceed = True
             if self.block_filter:
@@ -71,12 +55,7 @@ class ReactTask:
                     await self.react.hass.async_add_executor_job(task, *args)
 
         except BaseException as exception:  # lgtm [py/catch-base-exception] pylint: disable=broad-except
-            self.task_logger(_LOGGER.exception, f"failed:")
-
-        else:
-            _LOGGER.debug(
-                "ReactTask<%s> took %.3f seconds to complete", self.slug, monotonic() - start_time
-            )
+            self.task_logger.exception(f"Executing task failed:")
 
 
     def unload(self):
@@ -84,4 +63,8 @@ class ReactTask:
         
 
     def on_unload(self):
+        pass
+
+
+    def on_start(self):
         pass

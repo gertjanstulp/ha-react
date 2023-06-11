@@ -74,7 +74,7 @@ async def run_alarm_plugin_api_arm_invalid_config(test_context: TstContext):
     await test_context.async_start_react([mock_plugin])
     await test_context.async_send_reaction_event()
     test_context.verify_plugin_data_not_sent()
-    test_context.verify_has_log_record("ERROR", "Configuration for tests._plugins.alarm_mock is invalid - required key not provided: code")
+    test_context.verify_has_log_error("Configuration for tests._plugins.alarm_mock is invalid - required key not provided: code")
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, [
@@ -92,7 +92,7 @@ async def test_alarm_plugin_api_invalid_entity(test_context: TstContext, workflo
     await test_context.async_start_react([mock_plugin])
     await test_context.async_send_reaction_event()
     test_context.verify_plugin_data_not_sent()
-    test_context.verify_has_log_record("WARNING", "Alarm_control_panel plugin: Api - alarm_control_panel.alarm_plugin_test not found")
+    test_context.verify_has_log_warning("1 - alarm_control_panel.alarm_plugin_test not found")
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["alarm_plugin_arm_away_test"])
@@ -114,7 +114,7 @@ async def test_alarm_plugin_api_invalid_provider(test_context: TstContext, workf
     await test_context.async_start_react([mock_plugin])
     await test_context.async_send_reaction_event(data=data)
     test_context.verify_plugin_data_not_sent()
-    test_context.verify_has_log_error(f"Alarm_control_panel plugin: Api - Alarm_control_panel provider for '{invalid_provider}' not found")
+    test_context.verify_has_log_error(f"1 - Alarm_control_panel provider for '{invalid_provider}' not found")
 
 
 @pytest.mark.parametrize(f"{FIXTURE_WORKFLOW_NAME},{FIXTURE_EXPECTED_ARM_MODE}", [

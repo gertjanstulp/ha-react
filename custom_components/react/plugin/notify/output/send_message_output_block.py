@@ -8,7 +8,6 @@ from custom_components.react.plugin.notify.config import NotifyConfig
 from custom_components.react.tasks.filters import TYPE_ACTION_REACTION_FILTER_STRATEGY
 from custom_components.react.tasks.plugin.base import OutputBlock
 from custom_components.react.utils.events import ReactionEvent
-from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData
 from custom_components.react.const import (
     ATTR_EVENT_FEEDBACK_ITEMS, 
@@ -18,8 +17,6 @@ from custom_components.react.const import (
 
 from custom_components.react.plugin.notify.api import NotifyApi
 from custom_components.react.plugin.notify.const import FeedbackItem
-
-_LOGGER = get_react_logger()
 
 
 class NotifySendMessageOutputBlock(OutputBlock[NotifyConfig], ApiType[NotifyApi]):
@@ -32,13 +29,13 @@ class NotifySendMessageOutputBlock(OutputBlock[NotifyConfig], ApiType[NotifyApi]
         )]
 
 
-    def _debug(self, message: str):
-        _LOGGER.debug(f"Notify plugin: NotifySendMessageOutputBlock - {message}")
+    def log_event_caught(self, react_event: NotifySendMessageReactionEvent) -> None:
+        react_event.session.debug(self.logger, f"Notify send message reaction caught: '{react_event.payload.entity}'")
 
 
     async def async_handle_event(self, react_event: NotifySendMessageReactionEvent):
-        self._debug("Sending message")
         await self.api.async_send_message(
+            react_event.session,
             react_event.context,
             react_event.payload.entity,
             react_event.payload.data.message if react_event.payload.data else None,

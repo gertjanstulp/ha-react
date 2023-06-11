@@ -1165,7 +1165,7 @@ workflow:
     when:
       entity: hass
       type: system
-      action: start
+      action: started
     then:
       entity: input_boolean_hass_started_test
       type: input_boolean

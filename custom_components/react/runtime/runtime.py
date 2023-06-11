@@ -7,7 +7,6 @@ from datetime import datetime
 from decimal import InvalidOperation
 from itertools import product
 from typing import Callable, Generator, Union
-import secrets
 
 from homeassistant.core import HomeAssistant, callback, Context, CALLBACK_TYPE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, async_dispatcher_send
@@ -17,11 +16,12 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import utcnow
 from custom_components.react.enums import YIELD_RESULTS, StepResult
 
-from custom_components.react.lib.config import Workflow, calculate_reaction_datetime
+from custom_components.react.config.config import Workflow, calculate_reaction_datetime
 from custom_components.react.reactions.base import ReactionData
 from custom_components.react.runtime.snapshots import WorkflowSnapshot
 from custom_components.react.utils.events import ActionEventPayload
 from custom_components.react.utils.logger import format_data, get_react_logger
+from custom_components.react.utils.session import Session
 from custom_components.react.utils.struct import ReactorRuntime
 from custom_components.react.utils.trace import ReactTrace, create_trace
 
@@ -50,9 +50,13 @@ from custom_components.react.const import (
     ATTR_WAIT_TYPE,
     ATTR_WHEN,
     ATTR_WORKFLOW_ID,
+    DATETIME_FORMAT_READABLE,
+    DATETIME_FORMAT_TRACE,
     EVENT_REACT_REACTION,
     EVENT_REACTION_REGISTRY_UPDATED,
     EVENT_RUN_REGISTRY_UPDATED,
+    PACKAGE_NAME,
+    REACT_LOGGER_RUNTIME,
     RESTART_MODE_FORCE, 
     SIGNAL_WORKFLOW_RESET, 
     TRACE_PATH_ACTOR, 
@@ -71,7 +75,7 @@ from custom_components.react.const import (
 )
 
 
-_LOGGER = get_react_logger()
+_LOGGER = get_react_logger(REACT_LOGGER_RUNTIME)
 
 run_stack_cv: ContextVar[list[int] | None] = ContextVar("run_stack", default=None)
 
@@ -115,11 +119,6 @@ class ReactionRegistry:
             existing_reactions = self.find(workflow_id=reaction.workflow_id, reactor_id=reaction.reactor_id)
             for existing_reaction in existing_reactions:
                 existing_reaction.stop()
-
-        id = secrets.token_hex(6)
-        while id in self._reactions_by_id:
-            id = secrets.token_hex(6)
-        reaction.id = id
 
         self._reactions_by_id[reaction.id] = reaction
         if not reaction.workflow_run_id in self._reactions_by_run:
@@ -168,11 +167,6 @@ class RunRegistry:
 
 
     def register(self, run: WorkflowRun):
-        id = secrets.token_hex(6)
-        while id in self._runs_by_id:
-            id = secrets.token_hex(6)
-        run.id = id
-
         if not run.workflow_id in self._runs:
             self._runs[run.workflow_id] = []
         self._runs[run.workflow_id].append(run)
@@ -208,29 +202,23 @@ class ReactRuntime:
         self.reaction_registry = ReactionRegistry(hass)
 
         @callback
-        async def async_reset(workflow_id: str):
+        async def async_reset(workflow_id: str, source_session: Session):
             if workflow_runtime := self.get_workflow_runtime(workflow_id):
-                await workflow_runtime.async_stop_all_runs()
+                await workflow_runtime.async_stop_all_runs(source_session=source_session)
         self._cancel_reset = async_dispatcher_connect(hass, SIGNAL_WORKFLOW_RESET, async_reset)
 
 
-    def _debug(self, message: str):
-        _LOGGER.debug(f"Runtime: ReactRuntime - {message}")
-
-        
     def create_workflow_runtime(self, workflow_config: Workflow) -> WorkflowRuntime:
-        self._debug(f"Creating workflowruntime for {workflow_config.id}")
+        _LOGGER.debug(f"Creating workflowruntime for react.{workflow_config.id}")
         result = WorkflowRuntime(self._hass, self.run_registry, self.reaction_registry, workflow_config)
         self._workflow_runtimes[workflow_config.id] = result
-        self._debug(f"Created workflowruntime for {workflow_config.id}")
         return result
 
 
     async def async_destroy_workflow_runtime(self, workflow_id: str, is_hass_shutdown: bool = False):
-        self._debug(f"Destroying workflowruntime for {workflow_id}")
         await self.async_stop_workflow_runtime(workflow_id, is_hass_shutdown=is_hass_shutdown)
+        _LOGGER.debug(f"Destroying workflow runtime for react.{workflow_id}")
         self._workflow_runtimes.pop(workflow_id)
-        self._debug(f"Destroyed workflowruntime for {workflow_id}")
 
 
     def start_workflow_runtime(self, workflow_id: str):
@@ -239,20 +227,24 @@ class ReactRuntime:
 
 
     async def async_stop_workflow_runtime(self, workflow_id: str, is_hass_shutdown: bool = False):
-        self._debug(f"Stopping workflowruntime for {workflow_id}")
         workflow_runtime = self.get_workflow_runtime(workflow_id)
         if workflow_runtime and workflow_runtime.running:
             await workflow_runtime.async_stop(is_hass_shutdown=is_hass_shutdown)
-        self._debug(f"Stopped workflowruntime for {workflow_id}")
 
 
     def get_workflow_runtime(self, workflow_id: str) -> WorkflowRuntime:
         return self._workflow_runtimes.get(workflow_id, None)
 
 
-    async def async_run(self, workflow_id: str, snapshot: WorkflowSnapshot, entity_vars: dict, hass_run_context: Context):
+    async def async_run(self, 
+        workflow_id: str, 
+        snapshot: WorkflowSnapshot, 
+        entity_vars: dict, 
+        hass_run_context: Context, 
+        source_session: Session,
+    ):
         if workflow_runtime := self.get_workflow_runtime(workflow_id):
-            await workflow_runtime.async_run(snapshot, entity_vars, hass_run_context)
+            await workflow_runtime.async_run(snapshot, entity_vars, hass_run_context, source_session)
 
 
     def run_now(self, run_id: str):
@@ -297,43 +289,43 @@ class ReactRuntime:
     
 class WorkflowRuntime:
 
-    def __init__(self, hass: HomeAssistant, run_registry: RunRegistry, reaction_registry: ReactionRegistry, workflow_config: Workflow) -> None:
+    def __init__(self, 
+        hass: HomeAssistant, 
+        run_registry: RunRegistry, 
+        reaction_registry: ReactionRegistry, 
+        workflow_config: Workflow
+    ) -> None:
         self._hass = hass
         self._run_registry = run_registry
         self._reaction_registry = reaction_registry
         self._workflow_config = workflow_config
-        self._queue: deque[WorkflowRun] = deque()
+        self._queue: deque[(WorkflowRun, Session)] = deque()
         self.running = False
         
-
-    def _debug(self, message: str):
-        _LOGGER.debug(f"Runtime: WorkflowRuntime {self._workflow_config.id} - {message}")
-
 
     def get_runs(self) -> list[WorkflowRun]:
         return self._run_registry.get_runs(self._workflow_config.id)
 
 
     def start(self):
-        self._debug("starting")
+        _LOGGER.debug(f"Starting react.{self._workflow_config.id} runtime")
         self.running = True
-        self._debug("started")
 
 
     async def async_stop(self, is_hass_shutdown: bool = False):
-        self._debug("stopping")
+        _LOGGER.debug(f"Stopping workflow runtime for react.{self._workflow_config.id}")
         self.running = False
         await self.async_stop_all_runs(is_hass_shutdown=is_hass_shutdown)
-        self._debug("stopped")
 
 
-    async def async_run(self, snapshot: WorkflowSnapshot, entity_vars: dict, hass_run_context: Context):
-        self._debug(f"triggered by event ({format_data(entity=snapshot.action_event.payload.entity, type=snapshot.action_event.payload.type, action=snapshot.action_event.payload.action, data=snapshot.action_event.payload.data)})")
+    async def async_run(self, snapshot: WorkflowSnapshot, entity_vars: dict, hass_run_context: Context, source_session: Session):
+        run_session = source_session.create_child_session() 
+        source_session.debug(_LOGGER, f"Creating run {run_session.id} from react.{self._workflow_config.id} for event: {format_data(**snapshot.action_event.payload.source)}")
         if not self.running:
-            self._debug(f"skipping (workflow is disabled)")
+            source_session.debug(_LOGGER, f"Skipping react.{self._workflow_config.id} (workflow is disabled)")
             return
         elif self._workflow_config.mode == WORKFLOW_MODE_SINGLE and self.runs > 0:
-            self._debug(f"skipping (workflow is in 'Single' mode and another run is active)")
+            source_session.debug(_LOGGER, f"Skipping react.{self._workflow_config.id} (workflow is in 'Single' mode and another run is active)")
             return
 
         # Prevent non-allowed recursive calls which will cause deadlocks when we try to
@@ -344,7 +336,7 @@ class WorkflowRuntime:
             and (run_stack := run_stack_cv.get()) is not None
             and id(self) in run_stack
         ):
-            self._debug(f"skipping (workflow is in 'Restart' or 'Queued' mode and a recursion was detected)")
+            source_session.debug(_LOGGER, f"Skipping react.{self._workflow_config.id} (workflow is in 'Restart' or 'Queued' mode and a recursion was detected)")
             return
 
         run = WorkflowRun(
@@ -355,21 +347,23 @@ class WorkflowRuntime:
             snapshot, 
             dict(entity_vars), 
             hass_run_context, 
-            self.finish_run)
+            run_session,
+            self.finish_run,
+        )
 
         self._run_registry.register(run)
         if self._workflow_config.mode == WORKFLOW_MODE_RESTART:
             await self.async_stop_all_runs(spare=run)
 
         if self._workflow_config.mode == WORKFLOW_MODE_QUEUED and self.runs > 1:
-            self._queue.append(run)
+            self._queue.append((run, source_session))
         else:
-            await self.async_run_now(run)
+            await self.async_run_now(run, source_session)
 
 
-    async def async_run_now(self, run: WorkflowRun):
+    async def async_run_now(self, run: WorkflowRun, source_session: Session):
         try:
-            self._debug(f"starting run '{run.id}'")
+            source_session.debug(_LOGGER, f"Scheduling run {run.id} now")
             await run.async_run()
         except asyncio.CancelledError:
             await run.async_stop()
@@ -380,18 +374,29 @@ class WorkflowRuntime:
         self._run_registry.remove(self._workflow_config.id, run)
         if self._workflow_config.mode == WORKFLOW_MODE_QUEUED:
             if len(self._queue) > 0:
-                next_run = self._queue.popleft()
-                self._hass.add_job(self.async_run_now(next_run))
+                next_run, source_session = self._queue.popleft()
+                self._hass.add_job(self.async_run_now(next_run, source_session))
 
 
-    async def async_stop_all_runs(self, is_hass_shutdown: bool = False, spare: WorkflowRun | None = None) -> None:
-        self._debug(f"stopping all runs")
+    async def async_stop_all_runs(self, 
+        is_hass_shutdown: bool = False, 
+        spare: WorkflowRun | None = None,
+        source_session: Session = None,
+    ) -> None:
+        self._debug(f"Stopping all react.{self._workflow_config.id} jobs", source_session)
         self._queue.clear()
         aws = [ asyncio.create_task(run.async_stop(is_hass_shutdown)) for run in self.get_runs() if run != spare ]
         if not aws:
-            self._debug(f"no runs to stop")
+            self._debug(f"No react.{self._workflow_config.id} jobs to stop", source_session)
             return
         await asyncio.shield(self._async_stop_all_runs(aws))
+
+    
+    def _debug(self, message: str, session: Session = None):
+        if session:
+            session.debug(_LOGGER, message)
+        else:
+            _LOGGER.debug(message)
 
 
     async def _async_stop_all_runs(self, aws: list[asyncio.Task]) -> None:
@@ -417,6 +422,7 @@ class WorkflowRun:
         snapshot: WorkflowSnapshot, 
         entity_vars: dict, 
         hass_run_context: Context,
+        session: Session,
         run_done_callback: Callable[[WorkflowRun], None],
     ) -> None:
 
@@ -427,20 +433,17 @@ class WorkflowRun:
         self.snapshot = snapshot
         self._entity_vars = entity_vars
         self._hass_run_context = hass_run_context
+        self.session = session
         self._run_done_callback = run_done_callback
 
         self._stopped = False
         self._start_time = utcnow()
-        self.id: str = None
+        self.id = session.id
 
 
     @property
     def workflow_id(self):
         return self._workflow.id
-
-
-    def _debug(self, message: str):
-        _LOGGER.debug(f"Runtime: WorkflowRun {self.id} - {message}")
 
 
     def as_short_dict(self):
@@ -452,7 +455,7 @@ class WorkflowRun:
 
     
     async def async_stop(self, is_hass_shutdown: bool = False) -> None:
-        self._debug(f"stopping")
+        self.session.debug(_LOGGER, f"Stopping run")
 
         self._stopped = True
         for reaction in self._get_reactions():
@@ -460,7 +463,7 @@ class WorkflowRun:
 
 
     def finish(self) -> None:
-        self._debug(f"finished")
+        self.session.debug(_LOGGER, f"Finishing run")
         self.trace.finished()
         self._run_done_callback(self)
 
@@ -474,12 +477,12 @@ class WorkflowRun:
         run_stack.append(self._runtime_id)
 
         try:
-            self._debug("running")
+            self.session.debug(_LOGGER, f"Starting run")
             await self.async_step_main()
         except _ConditionFail:
             self.finish()
         except Exception as ex:
-            _LOGGER.exception(f"workflow run failed")
+            _LOGGER.exception(f"Run failed")
             raise
 
 
@@ -521,7 +524,7 @@ class WorkflowRun:
             self.trace.trace_node(make_path(TRACE_PATH_CONDITION, parent_path), result=condition_result)
             
         if not condition_result:
-            self._debug(f"skipping actor {self.snapshot.actor.id} (condition false)")
+            self.session.debug(_LOGGER, f"Cancelling run (actor {self.snapshot.actor.id} condition false)")
             raise _ConditionFail()
         
 
@@ -534,13 +537,23 @@ class WorkflowRun:
             self.trace.trace_node(TRACE_PATH_PARALLEL, parallel=True)
         
         def create_reaction(reactor: ReactorRuntime) -> Reaction:
-            reaction = Reaction(self._hass, self.id, self.workflow_id, self.snapshot.action_event.payload, reactor, self.trace, self.reaction_done)
+            reaction_session = self.session.create_child_session()
+            self.session.debug(_LOGGER, f"Creating reaction {reaction_session.id} from reactor {reactor.id}")
+            reaction = Reaction(
+                self._hass, 
+                self.id, 
+                self.workflow_id, 
+                self.snapshot.action_event.payload, 
+                reactor, 
+                self.trace, 
+                self.reaction_done,
+                reaction_session,
+            )
             self._reaction_registry.register(reactor, reaction)
             return reaction
         reactions = [ create_reaction(reactor) for reactor in self.snapshot.reactors ]
         
         async def async_run_reactor(reaction: Reaction) -> None:
-            self._debug(f"starting reaction {reaction.id}")
             reaction.run()
         results = await asyncio.gather(
             *(async_run_reactor(reaction) for reaction in reactions),
@@ -577,6 +590,7 @@ class Reaction:
         reactor: ReactorRuntime,
         trace: ReactTrace,
         reaction_done_callback: Callable[[Reaction], None],
+        session: Session,
     ) -> None:
 
         self._hass = hass
@@ -586,12 +600,13 @@ class Reaction:
         self._reactor = reactor
         self._trace = trace
         self._reaction_done_callback = reaction_done_callback
+        self.session = session
 
         self._steps = self.run_steps()
         self._path = make_path([TRACE_PATH_REACTOR, str(self._reactor.index)])
         self.result = StepResult.NONE
         self._cancel_yield: CALLBACK_TYPE = None
-        self.id: str = None
+        self.id = session.id 
         self._created = utcnow()
         self._when: datetime = None
         self._restart_mode: str = None
@@ -600,10 +615,6 @@ class Reaction:
     @property
     def reactor_id(self):
         return self._reactor.id
-
-
-    def _debug(self, message: str):
-        _LOGGER.debug(f"Runtime: Reaction {self._reactor.id} {self.id} - {message}")
 
 
     def as_short_dict(self):
@@ -623,7 +634,7 @@ class Reaction:
 
 
     def stop(self, is_hass_shutdown: bool = False):
-        self._debug("stopping")
+        self.session.debug(_LOGGER, f"Stopping reaction")
         if is_hass_shutdown and self._restart_mode == RESTART_MODE_FORCE:
             self.force_resume()
         else:
@@ -639,7 +650,7 @@ class Reaction:
 
 
     def finish(self):
-        self._debug(f"finished")
+        self.session.debug(_LOGGER, f"Finishing reaction")
         self._reaction_done_callback(self)
 
 
@@ -652,7 +663,7 @@ class Reaction:
     @callback
     def run(self, *args):
         try:
-            self._debug("resuming" if self.result in YIELD_RESULTS else "running")
+            self.session.debug(_LOGGER, f"{'Resuming' if self.result in YIELD_RESULTS else 'Starting'} reaction" )
             if self.result in DONE_RESULTS:
                 raise InvalidOperation()
             self.result = next(self._steps, StepResult.SUCCESS)
@@ -670,7 +681,7 @@ class Reaction:
             self.step_reactor_condition()
             yield from self.step_reactor_event()
         except _ConditionFail:
-            self._debug(f"skipping (condition false)")
+            self.session.debug(_LOGGER, f"Cancelling reaction (condition false)")
             pass
 
     
@@ -686,7 +697,7 @@ class Reaction:
         reactor_action = [ self._event_payload.action ] if self._reactor.forward_action else self._reactor.action
         reactor_data = [ self._event_payload.data ] if self._reactor.forward_data else self._reactor.data
         for entity, type, action, data in product(self._reactor.entity or [None], self._reactor.type or [None], reactor_action or [None], reactor_data or [None]):
-            reaction = ReactionData(self._reactor.id, entity, type, action, data.as_dict() if data else None)
+            reaction = ReactionData(self._reactor.id, entity, type, action, data.as_dict() if data else None, self.session.id)
             yield from self.step_reaction_main(reaction)
 
 
@@ -719,7 +730,7 @@ class Reaction:
         wait_template_string = self._reactor.wait.state.get_template(ATTR_CONDITION)
         wait_template = Template(wait_template_string, self._hass)
         self._cancel_yield = async_track_template(self._hass, wait_template, self.run, self._trace.get_vars(self.id))
-        self._debug("yielding on state")
+        self.session.debug(_LOGGER, f"Yielding reaction on state")
         yield StepResult.YIELD_STATE
 
         wait[ATTR_DONE] = True
@@ -728,14 +739,14 @@ class Reaction:
 
     def step_reaction_delay(self) -> Generator[StepResult, None, None]:
         self._when = calculate_reaction_datetime(delay = self._reactor.wait.delay)
-        trace_timestamp = self._when.astimezone(dt_util.DEFAULT_TIME_ZONE).strftime("%c (%Z)")
+        trace_timestamp = self._when.astimezone(dt_util.DEFAULT_TIME_ZONE).strftime(DATETIME_FORMAT_TRACE)
         wait = {ATTR_DELAY: self._reactor.wait.delay, ATTR_TIMESTAMP: trace_timestamp, ATTR_DONE: False}
         self._trace.set_var(ATTR_WAIT, wait, self.id)
         self._trace.trace_section_node(self.id, self.make_reactor_path(TRACE_PATH_DELAY), wait=wait)
 
         self._restart_mode = self._reactor.wait.delay.restart_mode
         self._cancel_yield = async_track_point_in_utc_time(self._hass, self.run, self._when)
-        self._debug("yielding with delay")
+        self.session.debug(_LOGGER, f"Yielding reaction with delay, will resume at {self._when.strftime(DATETIME_FORMAT_READABLE)}")
         yield StepResult.YIELD_DELAY
         
         wait[ATTR_DONE] = True
@@ -744,14 +755,14 @@ class Reaction:
 
     def step_reaction_schedule(self) -> Generator[StepResult, None, None]:
         self._when = calculate_reaction_datetime(schedule = self._reactor.wait.schedule)
-        trace_timestamp = self._when.astimezone(dt_util.DEFAULT_TIME_ZONE).strftime("%c (%Z)")
+        trace_timestamp = self._when.astimezone(dt_util.DEFAULT_TIME_ZONE).strftime(DATETIME_FORMAT_TRACE)
         wait = {ATTR_SCHEDULE: self._reactor.wait.schedule.as_dict(), ATTR_TIMESTAMP: trace_timestamp, ATTR_DONE: False}
         self._trace.set_var(ATTR_WAIT, wait, self.id)
         self._trace.trace_section_node(self.id, self.make_reactor_path(TRACE_PATH_SCHEDULE), wait=wait)
 
         self._restart_mode = self._reactor.wait.schedule.restart_mode
         self._cancel_yield = async_track_point_in_utc_time(self._hass, self.run, self._when)
-        self._debug("yielding with schedule")
+        self.session.debug(_LOGGER, f"Yielding reaction with schedule, will resume at {self._when.strftime(DATETIME_FORMAT_READABLE)}")
         yield StepResult.YIELD_SCHEDULE
  
         wait[ATTR_DONE] = True
@@ -760,23 +771,23 @@ class Reaction:
 
     def step_reaction_reset(self):
         self._trace.trace_section_node(self.id, self.make_reactor_path(TRACE_PATH_RESET), reset_workflow=self._reactor.reset_workflow)
-        self._debug(f"dispatching reset: {self._reactor.reset_workflow}")
-        async_dispatcher_send(self._hass, SIGNAL_WORKFLOW_RESET, self._reactor.reset_workflow)
+        self.session.debug(_LOGGER, f"Dispatching reset react.{self._reactor.reset_workflow} from reaction")
+        async_dispatcher_send(self._hass, SIGNAL_WORKFLOW_RESET, self._reactor.reset_workflow, self.session)
 
 
     def step_reaction_dispatch(self, reaction: ReactionData):
         node = self._trace.trace_section_node(self.id, self.make_reactor_path(TRACE_PATH_DISPATCH))
         if self._reactor.forward_action and self._event_payload.action == ACTION_TOGGLE:
             # Don't forward toggle actions as they are always accompanied by other actions which will be forwarded
-            self._debug(f"skipping (action 'toggle' with forward_action)")
+            self.session.debug(_LOGGER, f"Cancelling reaction (action 'toggle' with forward_action)")
             node.set_result(message="Skipped, toggle with forward-action")
                 
         elif self._reactor.forward_action and (self._event_payload.action == ACTION_AVAILABLE or self._event_payload.action == ACTION_UNAVAILABLE):
             # Don't forward availabililty actions as reactors don't support them
-            self._debug(f"skipping reactor (availability action with forward_action)")
-            node.set_result(message="Skipped, availability action with forward_action")
+            self.session.debug(_LOGGER, f"Cancelling reaction (availability action with forward_action)")
+            node.set_result(message="Skipped, availability action with forward-action")
 
         else:
-            self._debug(f"dispatching reaction: {format_data(entity=reaction.entity, type=reaction.type, action=reaction.action, overwrite=self._reactor.overwrite, reset_workflow=self._reactor.reset_workflow)}")
+            self.session.debug(_LOGGER, f"Dispatching reaction event with data {format_data(**vars(reaction))}")
             self._hass.bus.async_fire(EVENT_REACT_REACTION, vars(reaction))
             node.set_result(reaction=reaction.to_trace_result())

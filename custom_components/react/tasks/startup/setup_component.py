@@ -5,9 +5,7 @@ from custom_components.react.tasks.base import ReactTask, ReactTaskType
 from custom_components.react.utils.component import async_setup_component
 
 
-
 async def async_setup_task(react: ReactBase) -> Task:
-    """Set up this task."""
     return Task(react=react)
 
 
@@ -23,5 +21,5 @@ class Task(ReactTask):
 
 
     async def async_execute(self) -> None:
-        """Execute the task."""
+        self.task_logger.debug("Setting up react component")
         await async_setup_component(self.react)

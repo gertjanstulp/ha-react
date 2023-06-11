@@ -10,10 +10,7 @@ from custom_components.react.plugin.input_number.config import InputNumberConfig
 from custom_components.react.tasks.filters import TYPE_ACTION_REACTION_FILTER_STRATEGY
 from custom_components.react.tasks.plugin.base import OutputBlock
 from custom_components.react.utils.events import ReactionEvent
-from custom_components.react.utils.logger import get_react_logger
 from custom_components.react.utils.struct import DynamicData
-
-_LOGGER = get_react_logger()
 
 
 class InputNumberIncreaseOutputBlock(OutputBlock[InputNumberConfig], ApiType[InputNumberApi]):
@@ -27,13 +24,13 @@ class InputNumberIncreaseOutputBlock(OutputBlock[InputNumberConfig], ApiType[Inp
         )]
 
 
-    def _debug(self, message: str):
-        _LOGGER.debug(f"Input number plugin: InputNumberIncreaseOutputBlock - {message}")
+    def log_event_caught(self, react_event: InputNumberIncreaseReactionEvent) -> None:
+        react_event.session.debug(self.logger, f"Input_number increase reaction caught: '{react_event.payload.entity}'")
 
 
     async def async_handle_event(self, react_event: InputNumberIncreaseReactionEvent):
-        self._debug(f"Increasing input_number '{react_event.payload.entity}'")
         await self.api.async_input_number_increase(
+            react_event.session,
             react_event.context, 
             react_event.payload.entity, 
             react_event.payload.data.value, 

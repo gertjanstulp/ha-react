@@ -10,6 +10,7 @@ from custom_components.react.plugin.alarm_control_panel.setup import Setup as Al
 from custom_components.react.plugin.alarm_control_panel.provider import AlarmProvider
 from custom_components.react.plugin.const import PROVIDER_TYPE_ALARM_CONTROL_PANEL
 from custom_components.react.plugin.factory import ProviderSetupCallback
+from custom_components.react.utils.session import Session
 
 from tests._plugins.common import HassApiMockExtend
 from tests.common import TEST_CONTEXT
@@ -40,7 +41,7 @@ class Setup(AlarmSetup, HassApiMockExtend):
 
 class AlarmProviderMock(AlarmProvider):
 
-    async def async_arm(self, context: Context, entity_id: str, code: str, arm_mode: ArmMode):
+    async def async_arm(self, session: Session, context: Context, entity_id: str, code: str, arm_mode: ArmMode):
         test_context: TstContext = self.plugin.hass_api.hass_get_data(TEST_CONTEXT)
         test_context.register_plugin_data({
             ATTR_ENTITY_ID: entity_id,
@@ -49,7 +50,7 @@ class AlarmProviderMock(AlarmProvider):
         })
 
     
-    async def async_disarm(self, context: Context, entity_id: str, code: str):
+    async def async_disarm(self, session: Session, context: Context, entity_id: str, code: str):
         test_context: TstContext = self.plugin.hass_api.hass_get_data(TEST_CONTEXT)
         test_context.register_plugin_data({
             ATTR_ENTITY_ID: entity_id,
@@ -57,7 +58,7 @@ class AlarmProviderMock(AlarmProvider):
         })
 
 
-    async def async_trigger(self, context: Context, entity_id: str):
+    async def async_trigger(self, session: Session, context: Context, entity_id: str):
         test_context: TstContext = self.plugin.hass_api.hass_get_data(TEST_CONTEXT)
         test_context.register_plugin_data({
             ATTR_ENTITY_ID: entity_id,

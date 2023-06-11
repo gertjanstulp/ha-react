@@ -6,6 +6,7 @@ from custom_components.react.plugin.const import PROVIDER_TYPE_INPUT_TEXT
 from custom_components.react.plugin.factory import ProviderSetupCallback
 from custom_components.react.plugin.input_text.setup import Setup as InputTextSetup
 from custom_components.react.plugin.input_text.provider import InputTextProvider
+from custom_components.react.utils.session import Session
 
 from tests._plugins.common import HassApiMockExtend
 from tests.common import TEST_CONTEXT
@@ -40,7 +41,7 @@ class Setup(InputTextSetup, HassApiMockExtend):
 
 class InputTextProviderMock(InputTextProvider):
 
-    async def async_input_text_set_value(self, context: Context, entity_id: str, value: str):
+    async def async_input_text_set_value(self, session: Session, context: Context, entity_id: str, value: str):
         test_context: TstContext = self.plugin.hass_api.hass_get_data(TEST_CONTEXT)
         data = {
             ATTR_ENTITY_ID: entity_id,
