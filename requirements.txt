@@ -1,6 +1,4 @@
-aiohttp_cors==0.7.0
-Pillow==9.5.0
-homeassistant==2023.5.2
-home-assistant-frontend==20230503.2
-hass-nabucasa==0.66.2
-python-telegram-bot==13.1
+-c package_constraints.txt
+
+aiohttp_cors
+homeassistant
