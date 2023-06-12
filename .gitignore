@@ -18,7 +18,6 @@ manage/secrets.json
 coverage.xml
 htmlcov
 venv
-venv.bak
 
 homeassistant
 tests/config/custom_components
