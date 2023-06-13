@@ -1,26 +1,23 @@
-from __future__ import annotations
-
 from homeassistant.components.tts import ATTR_OPTIONS
 
-from custom_components.react.plugin.google_translate.const import ATTR_TTS_TLD
 from custom_components.react.utils.struct import DynamicData
 
 
-class GoogleTranslateConfigOptions(DynamicData):
+class CloudConfigOptions(DynamicData):
     def __init__(self, source: dict = None) -> None:
         super().__init__()
-        self.tld: str = None
+        self.voice: str = None
         self.load(source)
 
 
-class GoogleTranslateConfig(DynamicData):
+class CloudConfig(DynamicData):
     type_hints: dict = {
-        ATTR_OPTIONS: GoogleTranslateConfigOptions,
+        ATTR_OPTIONS: CloudConfigOptions,
     }
 
     def __init__(self, source: dict = None) -> None:
         super().__init__()
         self.type_hints 
         self.language: str = None
-        self.options: GoogleTranslateConfigOptions = None
+        self.options: CloudConfigOptions = None
         self.load(source)

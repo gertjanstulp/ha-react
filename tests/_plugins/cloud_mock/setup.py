@@ -1,6 +1,6 @@
 from homeassistant.const import ATTR_ENTITY_ID
 
-from custom_components.react.plugin.google_translate.setup import Setup as GoogleTranslateSetup
+from custom_components.react.plugin.cloud.setup import Setup as CloudSetup
 
 from tests._plugins.common import HassApiMockExtend
 from tests.const import (
@@ -9,7 +9,7 @@ from tests.const import (
 )
 
 
-class Setup(GoogleTranslateSetup, HassApiMockExtend):
+class Setup(CloudSetup, HassApiMockExtend):
     def setup(self):
         test_config: dict = self.hass_api_mock.hass_get_data(TEST_CONFIG, {})
         media_player_entity_id = test_config.get(ATTR_ENTITY_ID)

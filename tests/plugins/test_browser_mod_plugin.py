@@ -58,8 +58,8 @@ def get_mock_plugins():
     return result
 
 
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["media_player_speek_with_volume_test"])
-async def test_browser_mod_plugin_provider_speek_with_volume(test_context: TstContext, workflow_name: str):
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["media_player_speak_with_volume_test"])
+async def test_browser_mod_plugin_provider_speak_with_volume(test_context: TstContext, workflow_name: str):
     entity_id = "media_player.browser"
     mock_plugins = get_mock_plugins()
     set_test_config(test_context,

@@ -11,29 +11,28 @@ from custom_components.react.tasks.plugin.base import OutputBlock
 from custom_components.react.utils.events import ReactionEvent
 from custom_components.react.utils.struct import DynamicData
 from custom_components.react.const import (
-    REACT_ACTION_SPEEK, 
+    REACT_ACTION_SPEAK, 
     REACT_TYPE_MEDIA_PLAYER
 )
 
 
-
-class MediaPlayerSpeekOutputBlock(OutputBlock[MediaPlayerConfig], ApiType[MediaPlayerApi]):
+class MediaPlayerSpeakOutputBlock(OutputBlock[MediaPlayerConfig], ApiType[MediaPlayerApi]):
 
     def __init__(self, react: ReactBase) -> None:
-        super().__init__(react, MediaPlayerSpeekReactionEvent)
+        super().__init__(react, MediaPlayerSpeakReactionEvent)
 
         self.track_reaction_filters=[TYPE_ACTION_REACTION_FILTER_STRATEGY.get_filter(
             REACT_TYPE_MEDIA_PLAYER, 
-            REACT_ACTION_SPEEK
+            REACT_ACTION_SPEAK
         )]
 
 
-    def log_event_caught(self, react_event: MediaPlayerSpeekReactionEvent) -> None:
-        react_event.session.debug(self.logger, f"Mediaplayer speek reaction caught: '{react_event.payload.entity}'")
+    def log_event_caught(self, react_event: MediaPlayerSpeakReactionEvent) -> None:
+        react_event.session.debug(self.logger, f"Mediaplayer speak reaction caught: '{react_event.payload.entity}'")
 
 
-    async def async_handle_event(self, react_event: MediaPlayerSpeekReactionEvent):
-        await self.api.async_speek(
+    async def async_handle_event(self, react_event: MediaPlayerSpeakReactionEvent):
+        await self.api.async_speak(
             react_event.session,
             react_event.context, 
             react_event.payload.entity,
@@ -49,7 +48,7 @@ class MediaPlayerSpeekOutputBlock(OutputBlock[MediaPlayerConfig], ApiType[MediaP
         )
 
 
-class MediaPlayerSpeekReactionEventData(DynamicData):
+class MediaPlayerSpeakReactionEventData(DynamicData):
 
     def __init__(self, source: dict) -> None:
         super().__init__()
@@ -68,10 +67,10 @@ class MediaPlayerSpeekReactionEventData(DynamicData):
         self.load(source)
 
 
-class MediaPlayerSpeekReactionEvent(ReactionEvent[MediaPlayerSpeekReactionEventData]):
+class MediaPlayerSpeakReactionEvent(ReactionEvent[MediaPlayerSpeakReactionEventData]):
     
     def __init__(self, ha_event: HaEvent) -> None:
-        super().__init__(ha_event, MediaPlayerSpeekReactionEventData)
+        super().__init__(ha_event, MediaPlayerSpeakReactionEventData)
         
 
     @property

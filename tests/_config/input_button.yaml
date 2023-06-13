@@ -59,10 +59,10 @@ button_trigger_wait_for_state:
   name: Wait for state
 button_trigger_wait_for_state_delayed:
   name: Wait for state delayed
-button_trigger_media_player_speek_with_volume:
-  name: Media player speek with volume
-button_trigger_media_player_speek:
-  name: Media player speek without volume
+button_trigger_media_player_speak_with_volume:
+  name: Media player speak with volume
+button_trigger_media_player_speak:
+  name: Media player speak without volume
 button_trigger_input_number_set:
   name: Input number set
 button_trigger_input_number_increase:

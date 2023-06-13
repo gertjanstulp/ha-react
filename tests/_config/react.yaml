@@ -30,6 +30,11 @@ plugins:
   - module: custom_components.react.plugin.google_translate
     config:
       language: nl
+  - module: custom_components.react.plugin.cloud
+    config:
+      language: nl-NL
+      options:
+        voice: MaartenNeural
 
   - module: custom_components.react.plugin.alarm_control_panel
     config:
@@ -759,56 +764,56 @@ workflow:
           at: "00:00:00"
           restart_mode: force
 
-  workflow_media_player_speek_test:
+  workflow_media_player_speak_test:
     when:
-      entity: actor_entity_media_player_speek_test
-      type: actor_type_media_player_speek_test
-      action: actor_action_media_player_speek_test
+      entity: actor_entity_media_player_speak_test
+      type: actor_type_media_player_speak_test
+      action: actor_action_media_player_speak_test
     then:
       entity: browser
       type: media_player
-      action: speek
+      action: speak
       data:
         message: This is a test without volume
         language: en
 
-  workflow_media_player_speek_with_volume_test:
+  workflow_media_player_speak_with_volume_test:
     when:
-      entity: actor_entity_media_player_speek_with_volume_test
-      type: actor_type_media_player_speek_with_volume_test
-      action: actor_action_media_player_speek_with_volume_test
+      entity: actor_entity_media_player_speak_with_volume_test
+      type: actor_type_media_player_speak_with_volume_test
+      action: actor_action_media_player_speak_with_volume_test
     then:
       entity: browser
       type: media_player
-      action: speek
+      action: speak
       data:
         message: This is a test with volume
         language: en
         volume: 0.1
 
-  workflow_media_player_speek_with_announce_test:
+  workflow_media_player_speak_with_announce_test:
     when:
-      entity: actor_entity_media_player_speek_with_announce_test
-      type: actor_type_media_player_speek_with_announce_test
-      action: actor_action_media_player_speek_with_announce_test
+      entity: actor_entity_media_player_speak_with_announce_test
+      type: actor_type_media_player_speak_with_announce_test
+      action: actor_action_media_player_speak_with_announce_test
     then:
       entity: browser
       type: media_player
-      action: speek
+      action: speak
       data:
         message: This is a test with announce
         language: en
         announce: True
 
-  workflow_media_player_speek_with_wait_test:
+  workflow_media_player_speak_with_wait_test:
     when:
-      entity: actor_entity_media_player_speek_with_wait_test
-      type: actor_type_media_player_speek_with_wait_test
-      action: actor_action_media_player_speek_with_wait_test
+      entity: actor_entity_media_player_speak_with_wait_test
+      type: actor_type_media_player_speak_with_wait_test
+      action: actor_action_media_player_speak_with_wait_test
     then:
       entity: browser
       type: media_player
-      action: speek
+      action: speak
       data:
         message: This is a test with wait
         language: en

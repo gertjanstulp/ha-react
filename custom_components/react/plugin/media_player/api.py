@@ -58,7 +58,7 @@ class MediaPlayerApi(PluginApiBase[MediaPlayerConfig]):
             session.exception("Pausing failed")
 
 
-    async def async_speek(self, 
+    async def async_speak(self, 
         session: Session,
         context: Context, 
         entity_id: str, 
@@ -72,7 +72,7 @@ class MediaPlayerApi(PluginApiBase[MediaPlayerConfig]):
         media_player_provider: str,
         tts_provider: str,
     ):
-        session.debug(self.logger, f"Speeking '{message}' on mediaplayer")
+        session.debug(self.logger, f"Speaking '{message}' on mediaplayer")
         try:
             full_entity_id = f"media_player.{entity_id}"
             if state := self.plugin.hass_api.hass_get_state(full_entity_id):
@@ -94,7 +94,7 @@ class MediaPlayerApi(PluginApiBase[MediaPlayerConfig]):
             if volume:
                 await mp_provider.async_set_volume(session, context, full_entity_id, volume)
 
-            await t_provider.async_speek(session, context, full_entity_id, message, language, cache, options)
+            await t_provider.async_speak(session, context, full_entity_id, message, language, cache, options)
 
             if wait:
                 await self.plugin.hass_api.async_hass_wait(wait)
@@ -103,7 +103,7 @@ class MediaPlayerApi(PluginApiBase[MediaPlayerConfig]):
             if announce and not mp_provider.support_announce:
                 await mp_provider.async_resume(session, context, full_entity_id)
         except:
-            session.exception("Speeking message failed")
+            session.exception("Speaking message failed")
 
 
     def get_tts_provider(self, session: Session, tts_provider: str) -> TtsProvider:

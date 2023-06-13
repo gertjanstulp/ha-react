@@ -3,11 +3,11 @@ from __future__ import annotations
 import os
 
 FIXTURE_WORKFLOW_NAME = "workflow_name"
-FIXTURE_CONFIG_PROVIDER = "config_provider"
-FIXTURE_EVENT_PROVIDER = "event_provider"
-PROVIDER_FIXTURES = f"{FIXTURE_CONFIG_PROVIDER},{FIXTURE_EVENT_PROVIDER}"
-PROVIDER_FIXTURE_COMBOS = [(True, False), (False, True)]
-
+FIXTURE_CONFIG_VALUE = "config_value"
+FIXTURE_EVENT_VALUE = "event_value"
+VALUE_FIXTURES = f"{FIXTURE_CONFIG_VALUE},{FIXTURE_EVENT_VALUE}"
+VALUE_FIXTURE_COMBOS = [(True, False), (False, True)]
+VALUE_FIXTURE_COMBOS_EXTENDED = [(True, False), (False, True), (False, False)]
 EVENT_TEST_CALLBACK = "test_callback"
 
 ALARM_CONFIG = "alarm_control_panel.yaml"

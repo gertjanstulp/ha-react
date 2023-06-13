@@ -32,8 +32,8 @@ views:
       - type: entities
         title: plugins trigger
         entities:
-          - entity: input_button.button_trigger_media_player_speek_with_volume
-          - entity: input_button.button_trigger_media_player_speek
+          - entity: input_button.button_trigger_media_player_speak_with_volume
+          - entity: input_button.button_trigger_media_player_speak
           - type: divider
           - entity: input_button.button_trigger_input_number_set
           - entity: input_button.button_trigger_input_number_increase
