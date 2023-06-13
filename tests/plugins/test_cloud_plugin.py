@@ -16,14 +16,14 @@ from homeassistant.const import ATTR_ENTITY_ID
 
 from custom_components.react.const import ATTR_PLUGIN_MODULE
 from custom_components.react.plugin.const import ATTR_CONFIG
-from custom_components.react.plugin.google_translate.const import (
-    ATTR_TTS_TLD,
-    TTS_GOOGLE_TRANSLATE_PROVIDER,
+from custom_components.react.plugin.cloud.const import (
+    ATTR_TTS_VOICE,
+    TTS_CLOUD_DEFAULT_LANGUAGE,
+    TTS_CLOUD_PROVIDER,
 )
 from custom_components.react.plugin.media_player.const import (
     ATTR_MEDIA_PLAYER_PROVIDER, 
     ATTR_TTS_PROVIDER, 
-    TTS_DEFAULT_LANGUAGE,
 )
 
 from tests._plugins.media_player_mock.const import (
@@ -54,18 +54,18 @@ def set_test_config(test_context: TstContext,
 
 
 def get_mock_plugins(
-    google_translate_config: dict = {},
+    cloud_config: dict = {},
 ):
     result = [
         {
-            ATTR_PLUGIN_MODULE: "tests._plugins.google_translate_mock", 
-            ATTR_CONFIG: google_translate_config
+            ATTR_PLUGIN_MODULE: "tests._plugins.cloud_mock", 
+            ATTR_CONFIG: cloud_config
         },
         {
             ATTR_PLUGIN_MODULE: "tests._plugins.media_player_mock", 
             ATTR_CONFIG: { 
                 ATTR_MEDIA_PLAYER_PROVIDER: MEDIA_PLAYER_PROVIDER_MOCK,
-                ATTR_TTS_PROVIDER: TTS_GOOGLE_TRANSLATE_PROVIDER,
+                ATTR_TTS_PROVIDER: TTS_CLOUD_PROVIDER,
             }
         },
     ]
@@ -74,11 +74,11 @@ def get_mock_plugins(
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["media_player_speak_test"])
 @pytest.mark.parametrize(VALUE_FIXTURES, VALUE_FIXTURE_COMBOS_EXTENDED)
-async def test_google_translate_plugin_provider_speak_language(test_context: TstContext, workflow_name: str, config_value: bool, event_value: bool):
+async def test_cloud_plugin_provider_speak_language(test_context: TstContext, workflow_name: str, config_value: bool, event_value: bool):
     entity_id = "media_player.browser"
-    language = "nl" if config_value or event_value else TTS_DEFAULT_LANGUAGE
+    language = "nl-NL" if config_value or event_value else TTS_CLOUD_DEFAULT_LANGUAGE
     mock_plugins = get_mock_plugins(
-        google_translate_config={ATTR_LANGUAGE: language} if config_value else {}
+        cloud_config={ATTR_LANGUAGE: language} if config_value else {}
     )
     set_test_config(test_context,
         setup_mock_media_player_provider=True,
@@ -95,7 +95,7 @@ async def test_google_translate_plugin_provider_speak_language(test_context: Tst
 
     data_out = {
         ATTR_ENTITY_ID: entity_id,
-        ATTR_MEDIA_CONTENT_ID: f"This is a test without volume|{TTS_GOOGLE_TRANSLATE_PROVIDER}|{language}",
+        ATTR_MEDIA_CONTENT_ID: f"This is a test without volume|{TTS_CLOUD_PROVIDER}|{language}",
         ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
         ATTR_MEDIA_ANNOUNCE: True,
     }
@@ -108,11 +108,11 @@ async def test_google_translate_plugin_provider_speak_language(test_context: Tst
 
 @pytest.mark.parametrize(VALUE_FIXTURES, VALUE_FIXTURE_COMBOS)
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["media_player_speak_test"])
-async def test_google_translate_plugin_provider_speak_options(test_context: TstContext, workflow_name: str, config_value: bool, event_value: bool):
+async def test_cloud_plugin_provider_speak_options(test_context: TstContext, workflow_name: str, config_value: bool, event_value: bool):
     entity_id = "media_player.browser"
-    tld = "co.uk"
+    voice = "MaartenNeural"
     mock_plugins = get_mock_plugins(
-        google_translate_config={ATTR_OPTIONS: {ATTR_TTS_TLD: tld}} if config_value else {}
+        cloud_config={ATTR_OPTIONS: {ATTR_TTS_VOICE: voice}} if config_value else {}
     )
     set_test_config(test_context,
         setup_mock_media_player_provider=True,
@@ -124,12 +124,12 @@ async def test_google_translate_plugin_provider_speak_options(test_context: TstC
     
     data_in = {
         ATTR_MESSAGE: "This is a test without volume",
-        ATTR_OPTIONS: {ATTR_TTS_TLD: tld} if event_value else None,
+        ATTR_OPTIONS: {ATTR_TTS_VOICE: voice} if event_value else None,
     }
 
     data_out = {
         ATTR_ENTITY_ID: entity_id,
-        ATTR_MEDIA_CONTENT_ID: f"This is a test without volume|{TTS_GOOGLE_TRANSLATE_PROVIDER}|{TTS_DEFAULT_LANGUAGE}|{str({ATTR_TTS_TLD: tld})}",
+        ATTR_MEDIA_CONTENT_ID: f"This is a test without volume|{TTS_CLOUD_PROVIDER}|{TTS_CLOUD_DEFAULT_LANGUAGE}|{str({ATTR_TTS_VOICE: voice})}",
         ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
         ATTR_MEDIA_ANNOUNCE: True,
     }
@@ -138,35 +138,3 @@ async def test_google_translate_plugin_provider_speak_options(test_context: TstC
     test_context.verify_has_no_log_issues()
     test_context.verify_service_call_sent()
     test_context.verify_service_call_content(MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA, data_out)
-
-
-# @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["media_player_speak_test"])
-# async def test_google_translate_plugin_provider_speak_config_options(test_context: TstContext, workflow_name: str):
-#     entity_id = "media_player.browser"
-#     tld = "co.uk"
-#     mock_plugins = get_mock_plugins(
-#         google_translate_config={ATTR_OPTIONS: {ATTR_TTS_TLD: tld}}
-#     )
-#     set_test_config(test_context,
-#         setup_mock_media_player_provider=True,
-#         media_player_entity_id=entity_id,
-#         media_player_entity_state="stopped",
-#     )
-
-#     await test_context.async_start_react(mock_plugins)
-    
-#     data_in = {
-#         ATTR_MESSAGE: "This is a test without volume",
-#     }
-
-#     data_out = {
-#         ATTR_ENTITY_ID: entity_id,
-#         ATTR_MEDIA_CONTENT_ID: f"This is a test without volume|{TTS_GOOGLE_TRANSLATE_PROVIDER}|{TTS_DEFAULT_LANGUAGE}|{str({ATTR_TTS_TLD: tld})}",
-#         ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-#         ATTR_MEDIA_ANNOUNCE: True,
-#     }
-    
-#     await test_context.async_send_reaction_event(data=data_in)
-#     test_context.verify_has_no_log_issues()
-#     test_context.verify_service_call_sent()
-#     test_context.verify_service_call_content(MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA, data_out)

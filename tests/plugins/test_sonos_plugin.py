@@ -98,8 +98,8 @@ async def test_sonos_plugin_provider_play_favorite(test_context: TstContext, wor
     test_context.verify_service_call_content(Platform.MEDIA_PLAYER, SERVICE_PLAY_MEDIA, data_out)
 
 
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["media_player_speek_with_volume_test"])
-async def test_sonos_plugin_provider_speek_with_volume(test_context: TstContext, workflow_name: str):
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["media_player_speak_with_volume_test"])
+async def test_sonos_plugin_provider_speak_with_volume(test_context: TstContext, workflow_name: str):
     entity_id = "media_player.browser"
     mock_plugins = get_mock_plugins()
     set_test_config(test_context,
@@ -126,8 +126,8 @@ async def test_sonos_plugin_provider_speek_with_volume(test_context: TstContext,
     test_context.verify_service_call_content(MEDIA_PLAYER_DOMAIN, SERVICE_VOLUME_SET, data_out)
 
 
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["media_player_speek_with_announce_test"])
-async def test_sonos_plugin_provider_speek_with_announce(test_context: TstContext, workflow_name: str):
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["media_player_speak_with_announce_test"])
+async def test_sonos_plugin_provider_speak_with_announce(test_context: TstContext, workflow_name: str):
     entity_id = "media_player.browser"
     mock_plugins = get_mock_plugins()
     set_test_config(test_context,

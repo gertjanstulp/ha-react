@@ -382,29 +382,29 @@
           type: actor_type_immediate2
           action: actor_action_immediate2
 
-- id: trigger_media_player_speek_with_volume
-  alias: Trigger tts speek
+- id: trigger_media_player_speak_with_volume
+  alias: Trigger tts speak
   trigger:
     platform: state
-    entity_id: input_button.button_trigger_media_player_speek_with_volume
+    entity_id: input_button.button_trigger_media_player_speak_with_volume
   action:
     event: ev_react_action
     event_data:
-      entity: actor_entity_media_player_speek_with_volume_test
-      type: actor_type_media_player_speek_with_volume_test
-      action: actor_action_media_player_speek_with_volume_test
+      entity: actor_entity_media_player_speak_with_volume_test
+      type: actor_type_media_player_speak_with_volume_test
+      action: actor_action_media_player_speak_with_volume_test
 
-- id: trigger_media_player_speek
-  alias: Trigger tts speek
+- id: trigger_media_player_speak
+  alias: Trigger tts speak
   trigger:
     platform: state
-    entity_id: input_button.button_trigger_media_player_speek
+    entity_id: input_button.button_trigger_media_player_speak
   action:
     event: ev_react_action
     event_data:
-      entity: actor_entity_media_player_speek_test
-      type: actor_type_media_player_speek_test
-      action: actor_action_media_player_speek_test
+      entity: actor_entity_media_player_speak_test
+      type: actor_type_media_player_speak_test
+      action: actor_action_media_player_speak_test
 
 - id: trigger_input_number_set
   alias: Trigger input number set

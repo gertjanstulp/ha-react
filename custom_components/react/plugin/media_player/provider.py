@@ -67,5 +67,5 @@ class MediaPlayerProvider(Generic[T_config], PluginProviderBase[T_config]):
 
 class TtsProvider(Generic[T_config], PluginProviderBase[T_config]):
 
-    async def async_speek(self, session: Session, context: Context, entity_id: str, message: str, language: str, cache: bool, options: DynamicData):
+    async def async_speak(self, session: Session, context: Context, entity_id: str, message: str, language: str, cache: bool, options: DynamicData):
         raise NotImplementedError()

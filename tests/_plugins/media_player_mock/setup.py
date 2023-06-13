@@ -121,7 +121,7 @@ class TtsProviderMock(TtsProvider):
     def __init__(self) -> None:
         super().__init__()
         
-    async def async_speek(self, session: Session, context: Context, entity_id: str, message: str, language: str, cache: bool, options: DynamicData):
+    async def async_speak(self, session: Session, context: Context, entity_id: str, message: str, language: str, cache: bool, options: DynamicData):
         context: TstContext = self.plugin.hass_api.hass_get_data(TEST_CONTEXT)
         context.register_plugin_data({
             ATTR_ENTITY_ID: entity_id,

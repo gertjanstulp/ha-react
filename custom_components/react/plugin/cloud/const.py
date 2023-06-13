@@ -1,0 +1,5 @@
+TTS_CLOUD_PROVIDER = "cloud"
+
+TTS_CLOUD_DEFAULT_LANGUAGE = "en-EN"
+
+ATTR_TTS_VOICE = "voice"
