@@ -513,6 +513,27 @@ workflow:
       type: reactor_type_media_player_state_test
       action: reactor_action_media_player_state_test
 
+  workflow_fan_state_test:
+    when:
+      entity: fan_state_test
+      type: fan
+      action: change
+    then:
+      entity: reactor_entity_fan_state_test
+      type: reactor_type_fan_state_test
+      action: reactor_action_fan_state_test
+
+  workflow_fan_state_percentage_test:
+    when:
+      entity: fan_state_percentage_test
+      type: fan
+      action: change
+    then:
+      entity: reactor_entity_fan_state_percentage_test
+      type: reactor_type_fan_state_percentage_test
+      action: reactor_action_fan_state_percentage_test
+
+
   workflow_state_track_test:
     when:
       entity: input_number.input_number_value_test
@@ -779,22 +800,6 @@ workflow:
         language: en
         announce: True
 
-  # workflow_media_player_speek_with_resume:
-  #   when:
-  #     id: actor_media_player_speek_with_resume
-  #     entity: actor_entity_media_player_speek_with_resume
-  #     type: actor_type_media_player_speek_with_resume
-  #     action: actor_action_media_player_speek_with_resume
-  #   then:
-  #     id: reactor_media_player_speek_with_resume
-  #     entity: browser
-  #     type: media_player
-  #     action: speek
-  #     data:
-  #       message: This is a test with resume service
-  #       language: en
-  #       resume_service: sonos.restore
-
   workflow_media_player_speek_with_wait_test:
     when:
       entity: actor_entity_media_player_speek_with_wait_test
@@ -808,25 +813,6 @@ workflow:
         message: This is a test with wait
         language: en
         wait: 3
-
-  # workflow_media_player_speek_with_all:
-  #   when:
-  #     id: actor_media_player_speek_with_all
-  #     entity: actor_entity_media_player_speek_with_all
-  #     type: actor_type_media_player_speek_with_all
-  #     action: actor_action_media_player_speek_with_all
-  #   then:
-  #     id: reactor_media_player_speek_with_all
-  #     entity: browser
-  #     type: media_player
-  #     action: speek
-  #     data:
-  #       message: This is a test with resume service
-  #       language: en
-  #       volume: 0.1
-  #       interrupt_service: sonos.snapshot
-  #       resume_service: sonos.restore
-  #       wait: 2
 
   workflow_notify_send_message_test:
     when:
@@ -1160,6 +1146,50 @@ workflow:
       entity: alarm_plugin_test
       type: alarm_control_panel
       action: trigger
+
+  workflow_fan_set_percentage_test:
+    when:
+      entity: actor_entity_fan_set_percentage_test
+      type: actor_type_fan_set_percentage_test
+      action: actor_action_fan_set_percentage_test
+    then:
+      entity: fan_initial_off_test
+      type: fan
+      action: set_percentage
+      data:
+        percentage: 50
+
+  workflow_fan_increase_speed_test:
+    when:
+      entity: actor_entity_fan_increase_speed_test
+      type: actor_type_fan_increase_speed_test
+      action: actor_action_fan_increase_speed_test
+    then:
+      entity: fan_initial_on_test
+      type: fan
+      action: increase_speed
+
+  workflow_fan_decrease_speed_test:
+    when:
+      entity: actor_entity_fan_decrease_speed_test
+      type: actor_type_fan_decrease_speed_test
+      action: actor_action_fan_decrease_speed_test
+    then:
+      entity: fan_initial_on_test
+      type: fan
+      action: decrease_speed
+
+  workflow_fan_turn_off_test:
+    when:
+      entity: actor_entity_fan_turn_off_test
+      type: actor_type_fan_turn_off_test
+      action: actor_action_fan_turn_off_test
+    then:
+      entity: fan_initial_on_test
+      type: fan
+      action: set_percentage
+      data:
+        percentage: 50
 
   workflow_hass_started_test:
     when:

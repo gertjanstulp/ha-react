@@ -31,7 +31,7 @@ class InputBooleanApi(PluginApiBase[InputBooleanConfig]):
             if provider and value is not None and value == STATE_OFF:
                 await provider.async_input_boolean_set_value(session, context, full_entity_id, STATE_ON)
         except:
-            self.plugin.logger.exception("Turning on input_boolean failed")
+            session.exception("Turning on input_boolean failed")
 
 
     async def async_input_boolean_turn_off(self, session: Session, context: Context, entity_id: str, input_boolean_provider: str = None):
@@ -51,7 +51,7 @@ class InputBooleanApi(PluginApiBase[InputBooleanConfig]):
             if provider and value is not None and value == STATE_ON:
                 await provider.async_input_boolean_set_value(session, context, full_entity_id, STATE_OFF)
         except:
-            self.plugin.logger.exception("Turning off input_boolean failed")
+            session.exception("Turning off input_boolean failed")
 
 
     async def async_input_boolean_toggle(self, session: Session, context: Context, entity_id: str, input_boolean_provider: str = None):
@@ -71,7 +71,7 @@ class InputBooleanApi(PluginApiBase[InputBooleanConfig]):
             if provider and value is not None:
                 await provider.async_input_boolean_set_value(session, context, full_entity_id, STATE_ON if value == STATE_OFF else STATE_OFF)
         except:
-            self.plugin.logger.exception("Toggling input_boolean failed")
+            session.exception("Toggling input_boolean failed")
 
 
     def get_input_boolean_provider(self, session: Session, input_boolean_provider: str) -> InputBooleanProvider:

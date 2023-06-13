@@ -1,11 +1,11 @@
 - platform: virtual
   devices:
     - name: person_group_state_test
-      peristent: false
+      persistent: False
       location: not_home
     - name: device_tracker_state_test
-      peristent: false
+      persistent: False
       location: not_home
     - name: person_state_test
-      peristent: false
+      persistent: False
       location: home

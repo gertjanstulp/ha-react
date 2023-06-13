@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Mapping
 from homeassistant.core import Context, HomeAssistant, SERVICE_CALL_LIMIT, State
 from custom_components.react.const import ATTR_WAIT
 
@@ -60,8 +60,8 @@ class HassApiMock(HassApi):
         return self.available_services[domain].append(entity_id)
 
 
-    def hass_register_state(self, entity_id: str, state: str):
-        self.states[entity_id] = State(entity_id, state)
+    def hass_register_state(self, entity_id: str, state: str, attributes: Mapping[str, Any] | None = None):
+        self.states[entity_id] = State(entity_id, state, attributes)
 
 
     def hass_get_uid_str(self) -> str:

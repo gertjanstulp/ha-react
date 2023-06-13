@@ -11,6 +11,7 @@ ATTR_DOMAIN = "domain"
 ATTR_SERVICE_NAME = "service_name"
 
 ATTR_ENTITY_STATE = "entity_state"
+ATTR_ENTITY_STATE_ATTRIBUTES = "entity_state_attributes"
 
 ATTR_MESSAGE = "message"
 ATTR_VOLUME = "volume"

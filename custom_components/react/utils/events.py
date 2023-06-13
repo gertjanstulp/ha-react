@@ -13,6 +13,7 @@ from homeassistant.core import Event as HaEvent, State
 
 from custom_components.react.const import (
     ATTR_ACTION,
+    ATTR_ATTRIBUTES,
     ATTR_SESSION_ID, 
     ATTR_DATA, 
     ATTR_ENTITY, 
@@ -123,12 +124,14 @@ class StateChangedEventPayloadState(DynamicData):
         self.domain: str = None
         self.object_id: str = None
         self.last_changed: datetime = None
+        self.attributes: dict[str, Any] = None
 
         self.set(ATTR_ENTITY_ID, source.entity_id)
         self.set(ATTR_STATE, source.state)
         self.set(ATTR_DOMAIN, source.domain)
         self.set(ATTR_OBJECT_ID, source.object_id)
         self.set(ATTR_LAST_CHANGED, source.last_changed)
+        self.set(ATTR_ATTRIBUTES, source.attributes)
 
     
 class StateChangedEventPayload(DynamicData):

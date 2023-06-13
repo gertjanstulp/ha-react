@@ -1,7 +1,3 @@
-- unique_id: browser
-  platform: universal
-  name: browser
-  children: []
 - unique_id: media_player_play_favorite_test
   platform: universal
   name: media_player_play_favorite_test

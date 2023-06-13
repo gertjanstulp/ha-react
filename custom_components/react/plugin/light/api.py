@@ -29,7 +29,7 @@ class LightApi(PluginApiBase[LightConfig]):
             if provider and value is not None and value == STATE_OFF:
                 await provider.async_set_state(session, context, full_entity_id, STATE_ON)
         except:
-            self.plugin.logger.exception("Turning on light failed")
+            session.exception("Turning on light failed")
 
 
     async def async_light_turn_off(self, session: Session, context: Context, entity_id: str, light_provider: str):
@@ -46,7 +46,7 @@ class LightApi(PluginApiBase[LightConfig]):
             if provider and value is not None and value == STATE_ON:
                 await provider.async_set_state(session, context, full_entity_id, STATE_OFF)
         except:
-            self.plugin.logger.exception("Turning off light failed")
+            session.exception("Turning off light failed")
 
 
     async def async_light_toggle(self, session: Session, context: Context, entity_id: str, light_provider: str):
@@ -63,7 +63,7 @@ class LightApi(PluginApiBase[LightConfig]):
             if provider and value is not None:
                 await provider.async_set_state(session, context, full_entity_id, STATE_ON if value == STATE_OFF else STATE_OFF)
         except:
-            self.plugin.logger.exception("Toggling light failed")
+            session.exception("Toggling light failed")
 
 
     def get_light_provider(self, session: Session, light_provider: str) -> LightProvider:

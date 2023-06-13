@@ -152,6 +152,7 @@ ATTR_OLD_STATE = "old_state"
 ATTR_NEW_STATE = "new_state"
 ATTR_LAST_CHANGED = "last_changed"
 ATTR_OBJECT_ID = "object_id"
+ATTR_ATTRIBUTES = "attributes"
 
 # events
 EVENT_REACT_ACTION = "ev_react_action"
@@ -175,6 +176,7 @@ REACT_TYPE_SWITCH = "switch"
 REACT_TYPE_MEDIA_PLAYER = "media_player"
 REACT_TYPE_ALARM_CONTROL_PANEL = "alarm_control_panel"
 REACT_TYPE_STATE = "state"
+REACT_TYPE_FAN = "fan"
 
 
 # React actions
@@ -219,6 +221,8 @@ ACTION_CHANGE = "change"
 ACTION_PRESS = "press"
 ACTION_AVAILABLE = "available"
 ACTION_UNAVAILABLE = "unavailable"
+ACTION_INCREASE = "increase"
+ACTION_DECREASE = "decrease"
 
 # workflow entity settings
 DEFAULT_INITIAL_STATE = True
