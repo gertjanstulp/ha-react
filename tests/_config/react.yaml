@@ -814,6 +814,16 @@ workflow:
         language: en
         wait: 3
 
+  workflow_media_player_pause_test:
+    when:
+      entity: actor_entity_media_player_pause_test
+      type: actor_type_media_player_pause_test
+      action: actor_action_media_player_pause_test
+    then:
+      entity: media_player_pause_test
+      type: media_player
+      action: pause
+
   workflow_notify_send_message_test:
     when:
       entity: actor_entity_notify_send_message_test

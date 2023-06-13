@@ -34,7 +34,9 @@ from tests._plugins.media_player_mock.const import (
 )
 
 from tests.common import (
-    FIXTURE_WORKFLOW_NAME, 
+    FIXTURE_WORKFLOW_NAME,
+    PROVIDER_FIXTURE_COMBOS,
+    PROVIDER_FIXTURES, 
 )
 from tests.const import (
     ATTR_ENTITY_STATE,
@@ -88,6 +90,7 @@ def get_mock_plugin(
 @pytest.mark.parametrize(F"{FIXTURE_WORKFLOW_NAME},{FIXTURE_MEDIA_PLAYER_ENTITY_ID}", [
     ("media_player_play_favorite_test", "media_player_play_favorite_test"),
     ("media_player_speek_test", "browser"),
+    ("media_player_pause_test", "media_player_pause_test")
 ])
 async def test_media_player_plugin_api_entity_not_found(test_context: TstContext, workflow_name: str, media_player_entity_id: str):
     entity_id = f"media_player.{media_player_entity_id}"
@@ -108,6 +111,7 @@ async def test_media_player_plugin_api_entity_not_found(test_context: TstContext
 @pytest.mark.parametrize(f"{FIXTURE_WORKFLOW_NAME},{FIXTURE_MEDIA_PLAYER_ENTITY_ID}", [
     ("media_player_play_favorite_test", "media_player_play_favorite_test"),
     ("media_player_speek_test", "browser"),
+    ("media_player_pause_test", "media_player_pause_test"),
 ])
 async def test_media_player_plugin_api_no_media_player_provider_set_up(test_context: TstContext, workflow_name: str, media_player_entity_id: str):
     entity_id = f"media_player.{media_player_entity_id}"
@@ -149,6 +153,7 @@ async def test_media_player_plugin_api_no_tts_provider_set_up(test_context: TstC
 @pytest.mark.parametrize(f"{FIXTURE_WORKFLOW_NAME},{FIXTURE_MEDIA_PLAYER_ENTITY_ID}", [
     ("media_player_play_favorite_test", "media_player_play_favorite_test"),
     ("media_player_speek_test", "browser"),
+    ("media_player_pause_test", "media_player_pause_test"),
 ])
 async def test_media_player_plugin_api_no_media_player_provider_provided(test_context: TstContext, workflow_name: str, media_player_entity_id: str):
     entity_id = f"media_player.{media_player_entity_id}"
@@ -185,10 +190,11 @@ async def test_media_player_plugin_api_no_tts_provider_provided(test_context: Ts
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["media_player_play_favorite_test"])
-async def test_media_player_plugin_api_play_favorite_config_provider(test_context: TstContext, workflow_name: str):
+@pytest.mark.parametrize(PROVIDER_FIXTURES, PROVIDER_FIXTURE_COMBOS)
+async def test_media_player_plugin_api_play_favorite(test_context: TstContext, workflow_name: str, config_provider: bool, event_provider: bool):
     entity_id = "media_player.media_player_play_favorite_test"
     mock_plugin = get_mock_plugin(
-        media_player_provider=MEDIA_PLAYER_PROVIDER_MOCK,
+        media_player_provider=MEDIA_PLAYER_PROVIDER_MOCK if config_provider else None
     )
     set_test_config(test_context,
         setup_mock_media_player_provider=True,
@@ -199,6 +205,7 @@ async def test_media_player_plugin_api_play_favorite_config_provider(test_contex
     await test_context.async_start_react([mock_plugin])
         
     data_in = {
+        ATTR_MEDIA_PLAYER_PROVIDER: MEDIA_PLAYER_PROVIDER_MOCK if event_provider else None,
         ATTR_MEDIA_PLAYER_FAVORITE_ID: "test_id"
     }
     data_out = {
@@ -212,25 +219,25 @@ async def test_media_player_plugin_api_play_favorite_config_provider(test_contex
     test_context.verify_plugin_data_content(data_out)
 
 
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["media_player_play_favorite_test"])
-async def test_media_player_plugin_api_play_favorite_event_provider(test_context: TstContext, workflow_name: str):
-    entity_id = "media_player.media_player_play_favorite_test"
-    mock_plugin = get_mock_plugin()
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["media_player_pause_test"])
+@pytest.mark.parametrize(PROVIDER_FIXTURES, PROVIDER_FIXTURE_COMBOS)
+async def test_media_player_plugin_api_pause(test_context: TstContext, workflow_name: str, config_provider: bool, event_provider: bool):
+    entity_id = "media_player.media_player_pause_test"
+    mock_plugin = get_mock_plugin(media_player_provider=MEDIA_PLAYER_PROVIDER_MOCK if config_provider else None)
     set_test_config(test_context,
         setup_mock_media_player_provider=True,
         media_player_entity_id=entity_id,
-        media_player_entity_state="stopped",
+        media_player_entity_state="playing",
     )
    
     await test_context.async_start_react([mock_plugin])
         
     data_in = {
-        ATTR_MEDIA_PLAYER_PROVIDER: MEDIA_PLAYER_PROVIDER_MOCK,
+        ATTR_MEDIA_PLAYER_PROVIDER: MEDIA_PLAYER_PROVIDER_MOCK if event_provider else None,
         ATTR_MEDIA_PLAYER_FAVORITE_ID: "test_id"
     }
     data_out = {
-        ATTR_ENTITY_ID: "media_player_play_favorite_test",
-        ATTR_MEDIA_PLAYER_FAVORITE_ID: "test_id"
+        ATTR_ENTITY_ID: "media_player_pause_test",
     }
 
     await test_context.async_send_reaction_event(data=data_in)
@@ -240,10 +247,11 @@ async def test_media_player_plugin_api_play_favorite_event_provider(test_context
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["media_player_speek_test"])
-async def test_media_player_plugin_api_speek_config_provider(test_context: TstContext, workflow_name: str):
+@pytest.mark.parametrize(PROVIDER_FIXTURES, PROVIDER_FIXTURE_COMBOS)
+async def test_media_player_plugin_api_speek(test_context: TstContext, workflow_name: str, config_provider: bool, event_provider: bool):
     entity_id = "media_player.browser"
     mock_plugin = get_mock_plugin(
-        media_player_provider=MEDIA_PLAYER_PROVIDER_MOCK,
+        media_player_provider=MEDIA_PLAYER_PROVIDER_MOCK if config_provider else None,
         tts_provider=TTS_PROVIDER_MOCK,
     )
     set_test_config(test_context,
@@ -256,39 +264,7 @@ async def test_media_player_plugin_api_speek_config_provider(test_context: TstCo
     await test_context.async_start_react([mock_plugin])
         
     data_in = {
-        ATTR_EVENT_MESSAGE: "This is a test without volume",
-        ATTR_TTS_EVENT_LANGUAGE: "en"
-    }
-    data_out = {
-        ATTR_ENTITY_ID: "media_player.browser",
-        ATTR_EVENT_MESSAGE: "This is a test without volume",
-        ATTR_TTS_EVENT_LANGUAGE: "en",
-        ATTR_CACHE: None,
-        ATTR_TTS_EVENT_OPTIONS: None
-    }
-
-    await test_context.async_send_reaction_event(data=data_in)
-    test_context.verify_has_no_log_issues()
-    test_context.verify_plugin_data_sent(expected_count=1)
-    test_context.verify_plugin_data_content(data_out, data_index=0)
-
-
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["media_player_speek_test"])
-async def test_media_player_plugin_api_speek_event_provider(test_context: TstContext, workflow_name: str):
-    entity_id = "media_player.browser"
-    mock_plugin = get_mock_plugin()
-    set_test_config(test_context,
-        setup_mock_media_player_provider=True,
-        setup_mock_tts_provider=True,
-        media_player_entity_id=entity_id,
-        media_player_entity_state="stopped",
-    )
-
-    await test_context.async_start_react([mock_plugin])
-        
-    data_in = {
-        ATTR_MEDIA_PLAYER_PROVIDER: MEDIA_PLAYER_PROVIDER_MOCK,
-        ATTR_TTS_PROVIDER: TTS_PROVIDER_MOCK,
+        ATTR_MEDIA_PLAYER_PROVIDER: MEDIA_PLAYER_PROVIDER_MOCK if event_provider else None,
         ATTR_EVENT_MESSAGE: "This is a test without volume",
         ATTR_TTS_EVENT_LANGUAGE: "en"
     }

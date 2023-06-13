@@ -36,6 +36,28 @@ class MediaPlayerApi(PluginApiBase[MediaPlayerConfig]):
             session.exception("Playing media failed")
 
 
+    async def async_pause(self,
+        session: Session,
+        context: Context, 
+        entity_id: str, 
+        media_player_provider: str,
+    ):
+        session.debug(self.logger, f"Pausing mediaplayer")
+        try:
+            full_entity_id = f"media_player.{entity_id}"
+            if state := self.plugin.hass_api.hass_get_state(full_entity_id):
+                value = state.state
+            else:
+                session.warning(self.plugin.logger, f"{full_entity_id} not found")
+                return
+            
+            provider = self.get_media_player_provider(session, full_entity_id, media_player_provider)
+            if provider:
+                await provider.async_pause(session, context, entity_id)
+        except:
+            session.exception("Pausing failed")
+
+
     async def async_speek(self, 
         session: Session,
         context: Context, 
