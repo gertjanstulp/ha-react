@@ -202,6 +202,8 @@ class StateChangeData:
         
         self.old_state_value = event_payload.old_state.state if event_payload.old_state else None
         self.new_state_value = event_payload.new_state.state if event_payload.new_state else None
+        self.old_state_attributes = event_payload.old_state.attributes if event_payload.old_state else None
+        self.new_state_attributes = event_payload.new_state.attributes if event_payload.new_state else None
 
         if (self.old_state_value == STATE_UNAVAILABLE and self.new_state_value != STATE_UNAVAILABLE):
             self.actions.append(ACTION_AVAILABLE)

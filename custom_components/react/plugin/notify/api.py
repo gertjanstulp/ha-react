@@ -19,7 +19,7 @@ class NotifyApi(PluginApiBase[NotifyConfig]):
 
     
     def _exception(self, message: str):
-        self.plugin.logger.exception(f"{message}")
+        session.exception(f"{message}")
 
 
     async def async_send_message(self, 

@@ -23,7 +23,7 @@ class InputNumberApi(PluginApiBase[InputNumberConfig]):
             if provider:
                 await provider.async_input_number_set_value(session, context, full_entity_id, value)
         except:
-            self.plugin.logger.exception("Setting input_number failed")
+            session.exception("Setting input_number failed")
 
 
     async def async_input_number_increase(self, session: Session, context: Context, entity_id: str, increase: float, max: float = None, input_number_provider: str = None):
@@ -45,7 +45,7 @@ class InputNumberApi(PluginApiBase[InputNumberConfig]):
             if provider and value:
                 await provider.async_input_number_set_value(session, context, full_entity_id, value)
         except:
-            self.plugin.logger.exception("Increasing input_number failed")
+            session.exception("Increasing input_number failed")
 
 
     async def async_input_number_decrease(self, session: Session, context: Context, entity_id: str, decrease: float, min: float = None, input_number_provider: str = None):
@@ -67,7 +67,7 @@ class InputNumberApi(PluginApiBase[InputNumberConfig]):
             if provider and value:
                 await provider.async_input_number_set_value(session, context, full_entity_id, value)
         except:
-            self.plugin.logger.exception("Decreasing input_number failed")
+            session.exception("Decreasing input_number failed")
 
 
     def get_input_number_provider(self, session: Session, input_number_provider: str) -> InputNumberProvider:

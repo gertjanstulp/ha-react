@@ -12,6 +12,7 @@ from homeassistant.components import (
     alarm_control_panel, 
     binary_sensor, 
     device_tracker,
+    fan,
     group, 
     input_boolean, 
     input_button, 
@@ -100,6 +101,7 @@ from tests.common import (
     BINARY_SENSOR_CONFIG,
     DEVICE_TRACKER_CONFIG,
     EVENT_TEST_CALLBACK,
+    FAN_CONFIG,
     GROUP_CONFIG,
     INPUT_BOOLEAN_CONFIG,
     INPUT_BUTTON_CONFIG,
@@ -158,6 +160,7 @@ class TstContext():
         self.plugin_task_unloaded_register: list[str] = []
 
         react_logger = get_react_logger()
+        react_logger.setLevel("DEBUG")
         self.mock_log_handler = MockLogHandler()
         react_logger.addHandler(self.mock_log_handler)
 
@@ -507,12 +510,87 @@ class TstContext():
         result = Mock()
         result.async_play_media = async_play_media
         return result
+    
+
+    async def async_start_fan(self):
+        with open(get_test_config_dir(FAN_CONFIG)) as f:
+            data = yaml.load(f, Loader=SafeLoader) or {}
+        assert await async_setup_component(self.hass, fan.DOMAIN, { fan.DOMAIN: data })
+        await self.hass.async_block_till_done()
+
+        async def async_set_percentage(name: str, percentage: int):
+            await self.hass.services.async_call(
+                fan.DOMAIN,
+                fan.SERVICE_SET_PERCENTAGE,
+                {
+                    ATTR_ENTITY_ID: f"fan.{name}",
+                    fan.ATTR_PERCENTAGE: percentage,
+                }
+            )
+            await self.hass.async_block_till_done()
+
+
+        async def async_increase(name: str, percentage_step: int = None):
+            service_data = {
+                ATTR_ENTITY_ID: f"fan.{name}",
+            }
+            if percentage_step:
+                service_data[fan.ATTR_PERCENTAGE_STEP] = percentage_step,
+            await self.hass.services.async_call(
+                fan.DOMAIN,
+                fan.SERVICE_INCREASE_SPEED,
+                service_data,
+            )
+            await self.hass.async_block_till_done()
+
+
+        async def async_decrease(name: str, percentage_step: int = None):
+            service_data = {
+                ATTR_ENTITY_ID: f"fan.{name}",
+            }
+            if percentage_step:
+                service_data[fan.ATTR_PERCENTAGE_STEP] = percentage_step,
+            await self.hass.services.async_call(
+                fan.DOMAIN,
+                fan.SERVICE_DECREASE_SPEED,
+                service_data,
+            )
+            await self.hass.async_block_till_done()
+            
+
+        # async def async_turn_off(name: str):
+        #     await self.hass.services.async_call(
+        #         fan.DOMAIN,
+        #         fan.SERVICE_TURN_OFF,
+        #         {
+        #             ATTR_ENTITY_ID: f"fan.{name}"
+        #         }
+        #     )
+        #     await self.hass.async_block_till_done()
+
+        result = Mock()
+        result.async_set_percentage = async_set_percentage
+        result.async_increase = async_increase
+        result.async_decrease = async_decrease
+        return result
 
 
     def verify_has_log_record(self, level_name: str, message: str):
         assert self.mock_log_handler.has_record(level_name, message), f"Could not find {level_name} record with message '{message}'"
 
+
+    def verify_has_no_log_record(self, level_name: str, message: str):
+        assert self.mock_log_handler.has_no_record(level_name, message), f"Found {level_name} record with message '{message}'"
+
     
+    def verify_has_no_log_info(self, message: str):
+        self.verify_has_no_log_record("INFO", message)
+
+
+    def verify_has_no_log_debug(self, message: str):
+        self.verify_has_no_log_record("DEBUG", message)
+
+
     def verify_has_log_info(self, message: str):
         self.verify_has_log_record("INFO", message)
 

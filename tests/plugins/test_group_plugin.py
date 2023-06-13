@@ -193,7 +193,7 @@ async def test_person_group_plugin_input_block_state_change(test_context: TstCon
         test_context.verify_action_event_data(
             expected_entity=entity_id,
             expected_type=GROUP_DOMAIN,
-            expected_action=f"{ACTION_TOGGLE}",
+            expected_action=ACTION_TOGGLE,
             event_index=2)
         test_context.verify_has_no_log_issues()
     await test_context.hass.async_block_till_done()
@@ -220,12 +220,12 @@ async def test_group_plugin_input_block_state_change(test_context: TstContext, w
         test_context.verify_action_event_data(
             expected_entity=entity_id,
             expected_type=GROUP_DOMAIN,
-            expected_action=f"{STATE_ON}",
+            expected_action=STATE_ON,
             event_index=1)
         test_context.verify_action_event_data(
             expected_entity=entity_id,
             expected_type=GROUP_DOMAIN,
-            expected_action=f"{ACTION_TOGGLE}",
+            expected_action=ACTION_TOGGLE,
             event_index=2)
         test_context.verify_has_no_log_issues()
     await test_context.hass.async_block_till_done()

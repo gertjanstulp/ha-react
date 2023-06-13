@@ -72,7 +72,7 @@ views:
           - entity: input_text.templated_state_test
       - type: entities
         title: plugins entities
-        show_header_toggle: false
+        show_header_toggle: False
         entities:    
           - entity: input_boolean.input_boolean_initial_off_test
           - entity: input_boolean.input_boolean_initial_on_test

@@ -1,0 +1,23 @@
+- platform: virtual
+  name: '!fan_state_test'
+  speed_count: 10
+  initial_value: 0
+  persistent: False
+
+- platform: virtual
+  name: '!fan_state_percentage_test'
+  speed_count: 10
+  initial_value: 50
+  persistent: False
+
+- platform: virtual
+  name: '!fan_initial_off_test'
+  speed_count: 10
+  initial_value: 0
+  persistent: False
+
+- platform: virtual
+  name: '!fan_initial_on_test'
+  speed_count: 10
+  initial_value: 100
+  persistent: False

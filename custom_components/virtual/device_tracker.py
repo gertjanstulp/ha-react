@@ -75,10 +75,10 @@ async def async_setup_scanner(hass, config, async_see, _discovery_info=None):
 
         name = device.get(CONF_NAME, 'unknown')
         location = device.get(CONF_LOCATION, DEFAULT_LOCATION)
-        peristent = device.get(CONF_PERSISTENT, DEFAULT_PERSISTENT)
+        persistent = device.get(CONF_PERSISTENT, DEFAULT_PERSISTENT)
         entity_id = f"{DOMAIN}.{name}"
 
-        if peristent:
+        if persistent:
             location = old_tracker_states.get(entity_id, location)
             new_tracker_states[entity_id] = location
             _LOGGER.info(f"setting persistent {entity_id} to {location}")

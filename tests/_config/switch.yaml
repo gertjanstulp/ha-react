@@ -1,13 +1,13 @@
 - platform: virtual
   name: '!switch_state_test'
-  persistent: false
+  persistent: False
 
 - platform: virtual
   name: '!switch_initial_off_test'
   initial_value: 'off'
-  persistent: false
+  persistent: False
 
 - platform: virtual
   name: '!switch_initial_on_test'
   initial_value: 'on'
-  persistent: false
+  persistent: False

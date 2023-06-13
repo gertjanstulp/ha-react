@@ -33,7 +33,7 @@ class MediaPlayerApi(PluginApiBase[MediaPlayerConfig]):
             if provider:
                 await provider.async_play_favorite(session, context, entity_id, favorite_id)
         except:
-            self.plugin.logger.exception("Playing media failed")
+            session.exception("Playing media failed")
 
 
     async def async_speek(self, 
@@ -81,7 +81,7 @@ class MediaPlayerApi(PluginApiBase[MediaPlayerConfig]):
             if announce and not mp_provider.support_announce:
                 await mp_provider.async_resume(session, context, full_entity_id)
         except:
-            self.plugin.logger.exception("Speeking message failed")
+            session.exception("Speeking message failed")
 
 
     def get_tts_provider(self, session: Session, tts_provider: str) -> TtsProvider:

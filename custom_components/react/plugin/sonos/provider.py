@@ -41,7 +41,7 @@ class SonosProvider(MediaPlayerProvider[DynamicData]):
                 context,
             )
         except:
-            self.plugin.logger.exception("Interrupting mediaplayer failed")
+            session.exception("Interrupting mediaplayer failed")
 
 
     async def async_resume(self, session: Session, context: Context, entity_id: str):
@@ -56,7 +56,7 @@ class SonosProvider(MediaPlayerProvider[DynamicData]):
                 context,
             )
         except:
-            self.plugin.logger.exception("Resuming mediaplayer failed")
+            session.exception("Resuming mediaplayer failed")
         
 
     async def async_play_favorite(self, session: Session, context: Context, entity_id: str, favorite_id: str):

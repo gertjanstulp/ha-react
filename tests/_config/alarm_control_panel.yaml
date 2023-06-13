@@ -1,7 +1,7 @@
 - platform: manual
   name: alarm_plugin_test
   code: '1234'
-  code_arm_required: false
+  code_arm_required: False
   arming_time: 1
   delay_time: 1
   trigger_time: 1
@@ -10,8 +10,8 @@
 - platform: manual
   name: alarm_state_test
   code: '1234'
-  code_arm_required: false
+  code_arm_required: False
   arming_time: 0
   delay_time: 0
   trigger_time: 0
-  disarm_after_trigger: false
+  disarm_after_trigger: False

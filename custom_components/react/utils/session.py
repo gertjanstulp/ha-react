@@ -57,6 +57,10 @@ class Session:
         logger.error(self.format_message(message))
 
 
+    def exception(self, logger: Logger, message: str):
+        logger.exception(self.format_message(message))
+
+
     def format_message(self, message: str):
         return f"{self.id} - {message}"
         

@@ -482,7 +482,7 @@ class WorkflowRun:
         except _ConditionFail:
             self.finish()
         except Exception as ex:
-            _LOGGER.exception(f"Run failed")
+            self.session.exception(f"Run failed")
             raise
 
 
@@ -671,7 +671,7 @@ class Reaction:
                 self._steps.close()
                 self.finish()
         except Exception as ex:
-            _LOGGER.exception(ex)
+            self.session.exception(ex)
             self.result = StepResult.FAIL
             self.finish()
 

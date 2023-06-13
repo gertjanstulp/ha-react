@@ -28,7 +28,7 @@ class SwitchApi(PluginApiBase[SwitchConfig]):
             if provider and value is not None and value == STATE_OFF:
                 await provider.async_set_state(session, context, full_entity_id, STATE_ON)
         except:
-            self.plugin.logger.exception("Turning on switch failed")
+            session.exception("Turning on switch failed")
 
 
     async def async_switch_turn_off(self, session: Session, context: Context, entity_id: str, switch_provider: str):
@@ -45,7 +45,7 @@ class SwitchApi(PluginApiBase[SwitchConfig]):
             if provider and value is not None and value == STATE_ON:
                 await provider.async_set_state(session, context, full_entity_id, STATE_OFF)
         except:
-            self.plugin.logger.exception("Turning off switch failed")
+            session.exception("Turning off switch failed")
 
 
     async def async_switch_toggle(self, session: Session, context: Context, entity_id: str, switch_provider: str):
@@ -62,7 +62,7 @@ class SwitchApi(PluginApiBase[SwitchConfig]):
             if provider and value is not None:
                 await provider.async_set_state(session, context, full_entity_id, STATE_ON if value == STATE_OFF else STATE_OFF)
         except:
-            self.plugin.logger.exception("Toggling switch failed")
+            session.exception("Toggling switch failed")
 
 
     def get_switch_provider(self, session: Session, switch_provider: str) -> SwitchProvider:

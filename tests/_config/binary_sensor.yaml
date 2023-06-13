@@ -2,18 +2,22 @@
   name: '!binary_sensor_state_test'
   initial_value: 'off'
   initial_availability: True
+  persistent: False
 
 - platform: virtual
   name: '!group_state_test'
   initial_value: 'off'
   initial_availability: True
+  persistent: False
 
 - platform: virtual
   name: '!binary_sensor_available_test'
   initial_value: 'off'
   initial_availability: False
+  persistent: False
 
 - platform: virtual
   name: '!binary_sensor_unavailable_test'
   initial_value: 'off'
   initial_availability: True
+  persistent: False

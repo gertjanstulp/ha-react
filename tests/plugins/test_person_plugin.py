@@ -51,6 +51,6 @@ async def test_person_plugin_input_block_state_change(test_context: TstContext, 
         test_context.verify_action_event_data(
             expected_entity=entity_id,
             expected_type=PERSON_DOMAIN,
-            expected_action=f"{ACTION_TOGGLE}",
+            expected_action=ACTION_TOGGLE,
             event_index=2)
         test_context.verify_has_no_log_issues()

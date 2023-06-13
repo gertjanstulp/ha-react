@@ -51,12 +51,12 @@ async def test_binary_sensor_plugin_input_block_state_change(test_context: TstCo
         test_context.verify_action_event_data(
             expected_entity=entity_id,
             expected_type=BINARY_SENSOR_DOMAIN,
-            expected_action=f"{STATE_ON}",
+            expected_action=STATE_ON,
             event_index=1)
         test_context.verify_action_event_data(
             expected_entity=entity_id,
             expected_type=BINARY_SENSOR_DOMAIN,
-            expected_action=f"{ACTION_TOGGLE}",
+            expected_action=ACTION_TOGGLE,
             event_index=2)
         test_context.verify_has_no_log_issues()
 
