@@ -2,8 +2,12 @@ from __future__ import annotations
 
 import os
 
-DOMAIN_SENSOR = "sensor"
 FIXTURE_WORKFLOW_NAME = "workflow_name"
+FIXTURE_CONFIG_PROVIDER = "config_provider"
+FIXTURE_EVENT_PROVIDER = "event_provider"
+PROVIDER_FIXTURES = f"{FIXTURE_CONFIG_PROVIDER},{FIXTURE_EVENT_PROVIDER}"
+PROVIDER_FIXTURE_COMBOS = [(True, False), (False, True)]
+
 EVENT_TEST_CALLBACK = "test_callback"
 
 ALARM_CONFIG = "alarm_control_panel.yaml"

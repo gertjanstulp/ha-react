@@ -10,6 +10,7 @@ from custom_components.react.plugin.media_player.const import (
     ATTR_TTS_PROVIDER
 )
 from custom_components.react.plugin.media_player.input.state_change_input_block import MediaPlayerStateChangeInputBlock
+from custom_components.react.plugin.media_player.output.pause_output_block import MediaPlayerPauseOutputBlock
 from custom_components.react.plugin.media_player.output.speek_output_block import MediaPlayerSpeekOutputBlock
 from custom_components.react.plugin.media_player.output.play_favorite_output_block import MediaPlayerPlayFavoriteOutputBlock
 
@@ -41,6 +42,7 @@ class Setup(PluginSetup[MediaPlayerConfig]):
         setup(
             [
                 MediaPlayerPlayFavoriteOutputBlock,
+                MediaPlayerPauseOutputBlock,
                 MediaPlayerSpeekOutputBlock,
             ],
         )

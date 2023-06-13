@@ -86,6 +86,13 @@ class MediaPlayerProviderMock(MediaPlayerProvider):
         })
 
 
+    async def async_pause(self, session: Session, context: Context, entity_id: str):
+        test_context: TstContext = self.plugin.hass_api.hass_get_data(TEST_CONTEXT)
+        test_context.register_plugin_data({
+            ATTR_ENTITY_ID: entity_id,
+        })
+
+
     async def async_suspend(self, session: Session, context: Context, entity_id: str):
         test_context: TstContext = self.plugin.hass_api.hass_get_data(TEST_CONTEXT)
         test_context.register_plugin_data({

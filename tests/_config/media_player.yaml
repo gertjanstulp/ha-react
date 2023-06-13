@@ -2,6 +2,10 @@
   platform: universal
   name: media_player_play_favorite_test
   children: []
+- unique_id: media_player_pause_test
+  platform: universal
+  name: media_player_pause_test
+  children: []
 - unique_id: media_player_state_test
   platform: virtual
   name: media_player_state_test

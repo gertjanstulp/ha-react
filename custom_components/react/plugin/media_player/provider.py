@@ -1,6 +1,9 @@
 from typing import Generic, TypeVar
 
-from homeassistant.components.media_player import SERVICE_VOLUME_SET
+from homeassistant.components.media_player import (
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_VOLUME_SET, 
+)
 from homeassistant.components.media_player.const import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     ATTR_MEDIA_VOLUME_LEVEL
@@ -24,6 +27,19 @@ class MediaPlayerProvider(Generic[T_config], PluginProviderBase[T_config]):
     
     async def async_play_favorite(self, session: Session, context: Context, entity_id: str, favorite_id: str):
         raise NotImplementedError()
+    
+
+    async def async_pause(self, session: Session, context: Context, entity_id: str):
+        data: dict = {
+            ATTR_ENTITY_ID: entity_id,
+        }
+
+        await self.plugin.hass_api.async_hass_call_service(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_MEDIA_PAUSE,
+            data, 
+            context
+        )
     
 
     async def async_suspend(self, session: Session, context: Context, entity_id: str):
