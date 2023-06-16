@@ -41,11 +41,8 @@ class CallbackInputBlock(InputBlock[MobileAppConfig]):
         self.entity_maps = self.plugin.config.entity_maps if self.plugin.config.entity_maps else DynamicData()
 
 
-    def log_event_caught(self, react_event: CallbackActionEvent) -> None:
-        react_event.session.debug(self.logger, f"Mobile app callback caught: '{react_event.payload.action}' action from device '{react_event.payload.device_id}'")
-
-
     def create_action_event_payloads(self, source_event: CallbackActionEvent) -> list[dict]:
+        source_event.session.debug(self.logger, f"Mobile app callback caught: '{source_event.payload.action}' action from device '{source_event.payload.device_id}'")
         entity_id = self.entity_maps.get(source_event.payload.device_id, source_event.payload.device_id)
         return [{
             ATTR_ENTITY: entity_id,

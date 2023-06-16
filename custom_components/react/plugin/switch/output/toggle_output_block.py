@@ -25,11 +25,8 @@ class SwitchToggleOutputBlock(OutputBlock[LightConfig], ApiType[SwitchApi]):
         )]
 
 
-    def log_event_caught(self, react_event: SwitchToggleReactionEvent) -> None:
-        react_event.session.debug(self.logger, f"Switch toggle reaction caught: '{react_event.payload.entity}'")
-
-
     async def async_handle_event(self, react_event: SwitchToggleReactionEvent):
+        react_event.session.debug(self.logger, f"Switch toggle reaction caught: '{react_event.payload.entity}'")
         await self.api.async_switch_toggle(
             react_event.session,
             react_event.context, 

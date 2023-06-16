@@ -44,11 +44,8 @@ class CallbackInputBlock(InputBlock[TelegramConfig]):
         self.entity_maps = self.plugin.config.entity_maps if self.plugin.config.entity_maps else DynamicData()
 
 
-    def log_event_caught(self, react_event: CallbackActionEvent) -> None:
-        react_event.session.debug(self.logger, f"Telegram callback caught: '{react_event.payload.feedback}' feedback from chat '{react_event.payload.chat_id}'")
-
-
     def create_action_event_payloads(self, source_event: CallbackActionEvent) -> list[dict]:
+        source_event.session.debug(self.logger, f"Telegram callback caught: '{source_event.payload.feedback}' feedback from chat '{source_event.payload.chat_id}'")
         return [{
             ATTR_ENTITY: self.entity_maps.get(f"{source_event.payload.entity_source}", source_event.payload.entity_source),
             ATTR_TYPE: REACT_TYPE_NOTIFY,

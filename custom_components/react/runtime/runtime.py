@@ -746,7 +746,7 @@ class Reaction:
 
         self._restart_mode = self._reactor.wait.delay.restart_mode
         self._cancel_yield = async_track_point_in_utc_time(self._hass, self.run, self._when)
-        self.session.debug(_LOGGER, f"Yielding reaction with delay, will resume at {self._when.strftime(DATETIME_FORMAT_READABLE)}")
+        self.session.debug(_LOGGER, f"Yielding reaction with delay, will resume at {self._when.astimezone(dt_util.DEFAULT_TIME_ZONE).strftime(DATETIME_FORMAT_READABLE)}")
         yield StepResult.YIELD_DELAY
         
         wait[ATTR_DONE] = True
@@ -762,7 +762,7 @@ class Reaction:
 
         self._restart_mode = self._reactor.wait.schedule.restart_mode
         self._cancel_yield = async_track_point_in_utc_time(self._hass, self.run, self._when)
-        self.session.debug(_LOGGER, f"Yielding reaction with schedule, will resume at {self._when.strftime(DATETIME_FORMAT_READABLE)}")
+        self.session.debug(_LOGGER, f"Yielding reaction with schedule, will resume at {self._when.astimezone(dt_util.DEFAULT_TIME_ZONE).strftime(DATETIME_FORMAT_READABLE)}")
         yield StepResult.YIELD_SCHEDULE
  
         wait[ATTR_DONE] = True

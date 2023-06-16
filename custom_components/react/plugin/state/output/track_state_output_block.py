@@ -27,11 +27,8 @@ class TrackStateOutputBlock(OutputBlock[StateConfig], ApiType[StateApi]):
         )]
 
 
-    def log_event_caught(self, react_event: TrackStateReactionEvent) -> None:
-        react_event.session.debug(self.logger, f"State track state reaction caught: '{react_event.payload.entity}'")
-
-
     async def async_handle_event(self, react_event: TrackStateReactionEvent):
+        react_event.session.debug(self.logger, f"State track state reaction caught: '{react_event.payload.entity}'")
         await self.api.async_track_entity_state_change(
             react_event.session,
             react_event.context, 

@@ -25,11 +25,8 @@ class SwitchTurnOffOutputBlock(OutputBlock[LightConfig], ApiType[SwitchApi]):
         )]
 
 
-    def log_event_caught(self, react_event: SwitchTurnOffReactionEvent) -> None:
-        react_event.session.debug(self.logger, f"Switch turn off reaction caught: '{react_event.payload.entity}'")
-
-
     async def async_handle_event(self, react_event: SwitchTurnOffReactionEvent):
+        react_event.session.debug(self.logger, f"Switch turn off reaction caught: '{react_event.payload.entity}'")
         await self.api.async_switch_turn_off(
             react_event.session,
             react_event.context, 

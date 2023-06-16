@@ -27,11 +27,8 @@ class InputNumberDecreaseOutputBlock(OutputBlock[InputNumberConfig], ApiType[Inp
         )]
 
 
-    def log_event_caught(self, react_event: InputNumberDecreaseReactionEvent) -> None:
-        react_event.session.debug(self.logger, f"Input_number decrease reaction caught: '{react_event.payload.entity}'")
-
-
     async def async_handle_event(self, react_event: InputNumberDecreaseReactionEvent):
+        react_event.session.debug(self.logger, f"Input_number decrease reaction caught: '{react_event.payload.entity}'")
         await self.api.async_input_number_decrease(
             react_event.session,
             react_event.context, 

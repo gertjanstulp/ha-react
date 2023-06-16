@@ -29,11 +29,8 @@ class NotifySendMessageOutputBlock(OutputBlock[NotifyConfig], ApiType[NotifyApi]
         )]
 
 
-    def log_event_caught(self, react_event: NotifySendMessageReactionEvent) -> None:
-        react_event.session.debug(self.logger, f"Notify send message reaction caught: '{react_event.payload.entity}'")
-
-
     async def async_handle_event(self, react_event: NotifySendMessageReactionEvent):
+        react_event.session.debug(self.logger, f"Notify send message reaction caught: '{react_event.payload.entity}'")
         await self.api.async_send_message(
             react_event.session,
             react_event.context,

@@ -27,11 +27,8 @@ class AlarmDisarmOutputBlock(OutputBlock[AlarmConfig], ApiType[AlarmApi]):
         )]
 
 
-    def log_event_caught(self, react_event: AlarmDisarmReactionEvent) -> None:
-        react_event.session.debug(self.logger, f"Alarm disarm reaction caught: '{react_event.payload.entity}'")
-
-
     async def async_handle_event(self, react_event: AlarmDisarmReactionEvent):
+        react_event.session.debug(self.logger, f"Alarm disarm reaction caught: '{react_event.payload.entity}'")
         await self.api.async_alarm_disarm(
             react_event.session,
             react_event.context, 

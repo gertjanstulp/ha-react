@@ -22,7 +22,7 @@ class StateApi(PluginApiBase[StateConfig]):
         timestamp: datetime,
         state_provider: str = None
     ):
-        session.debug(self.logger, f"Tracking state of entity '{entity_id}' ('{str(old_state)}' -> '{str(new_state)}')")
+        session.debug(self.logger, f"Tracking state of entity {entity_id} ({str(old_state)} -> {str(new_state)})")
         try:
             if not self.plugin.hass_api.hass_get_state(entity_id):
                 session.warning(self.plugin.logger, f"{entity_id} not found")
@@ -32,7 +32,7 @@ class StateApi(PluginApiBase[StateConfig]):
             if provider:
                 await provider.async_track_entity_state_change(session, context, entity_id, old_state, new_state, timestamp)
         except:
-            session.exception("Tracking state of entity '{entity_id}' failed")
+            session.exception("Tracking state of entity {entity_id} failed")
 
 
     def get_state_provider(self, session: Session, state_provider: str) -> StateProvider:

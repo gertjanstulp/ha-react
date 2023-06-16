@@ -27,11 +27,8 @@ class AlarmTriggerOutputBlock(OutputBlock[AlarmConfig], ApiType[AlarmApi]):
         )]
 
 
-    def log_event_caught(self, react_event: AlarmTriggerReactionEvent) -> None:
-        react_event.session.debug(self.logger, f"Alarm trigger reaction caught: '{react_event.payload.entity}'")
-
-
     async def async_handle_event(self, react_event: AlarmTriggerReactionEvent):
+        react_event.session.debug(self.logger, f"Alarm trigger reaction caught: '{react_event.payload.entity}'")
         await self.api.async_alarm_trigger(
             react_event.session,
             react_event.context, 

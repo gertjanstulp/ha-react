@@ -25,11 +25,8 @@ class InputTextSetInputBlock(OutputBlock[InputTextConfig], ApiType[InputTextApi]
         )]
 
 
-    def log_event_caught(self, react_event: InputTextSetReactionEvent) -> None:
-        react_event.session.debug(self.logger, f"Input_text set reaction caught: '{react_event.payload.entity}'")
-
-
     async def async_handle_event(self, react_event: InputTextSetReactionEvent):
+        react_event.session.debug(self.logger, f"Input_text set reaction caught: '{react_event.payload.entity}'")
         await self.api.async_input_text_set(
             react_event.session,
             react_event.context, 
