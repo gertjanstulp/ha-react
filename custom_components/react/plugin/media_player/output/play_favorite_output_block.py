@@ -24,11 +24,8 @@ class MediaPlayerPlayFavoriteOutputBlock(OutputBlock[MediaPlayerConfig], ApiType
         )]
 
 
-    def log_event_caught(self, react_event: MediaPlayerPlayFavoriteReactionEvent) -> None:
-        react_event.session.debug(self.logger, f"Mediaplayer play favorite reaction caught: '{react_event.payload.entity}'")
-
-
     async def async_handle_event(self, react_event: MediaPlayerPlayFavoriteReactionEvent):
+        react_event.session.debug(self.logger, f"Mediaplayer play favorite reaction caught: '{react_event.payload.entity}'")
         await self.api.async_play_favorite(
             react_event.session,
             react_event.context, 

@@ -45,12 +45,8 @@ class TimeInputBlock(InputBlock[DynamicData]):
         )
 
 
-    def log_event_caught(self, react_event: TimeEvent) -> None:
-        react_event.session.debug(self.logger, f"Time change caught: {react_event.payload.type} value {react_event.payload.time_key} matched current time ({dt_util.now(time_zone=dt_util.DEFAULT_TIME_ZONE).strftime('%H:%M:%S')})")
-    
-    
-
     def create_action_event_payloads(self, source_event: TimeEvent) -> list[dict]:
+        source_event.session.debug(self.logger, f"Time change caught: {source_event.payload.type} value {source_event.payload.time_key} matched current time ({dt_util.now(time_zone=dt_util.DEFAULT_TIME_ZONE).strftime('%H:%M:%S')})")
         return [{
             ATTR_ENTITY: ACTOR_ENTITY_TIME,
             ATTR_TYPE: source_event.payload.type,

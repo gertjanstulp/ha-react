@@ -27,11 +27,8 @@ class AlarmArmAwayOutputBlock(OutputBlock[AlarmConfig], ApiType[AlarmApi]):
         )]
 
 
-    def log_event_caught(self, react_event: AlarmArmAwayReactionEvent) -> None:
-        react_event.session.debug(self.logger, f"Alarm arm away reaction caught: '{react_event.payload.entity}'")
-
-
     async def async_handle_event(self, react_event: AlarmArmAwayReactionEvent):
+        react_event.session.debug(self.logger, f"Alarm arm away reaction caught: '{react_event.payload.entity}'")
         await self.api.async_alarm_arm_away(
             react_event.session,
             react_event.context, 

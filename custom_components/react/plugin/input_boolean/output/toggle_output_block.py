@@ -25,11 +25,8 @@ class InputBooleanToggleOutputBlock(OutputBlock[InputBooleanConfig], ApiType[Inp
         )]
 
 
-    def log_event_caught(self, react_event: InputBooleanToggleReactionEvent) -> None:
-        react_event.session.debug(self.logger, f"Input_boolean toggle reaction caught: '{react_event.payload.entity}'")
-
-
     async def async_handle_event(self, react_event: InputBooleanToggleReactionEvent):
+        react_event.session.debug(self.logger, f"Input_boolean toggle reaction caught: '{react_event.payload.entity}'")
         await self.api.async_input_boolean_toggle(
             react_event.session,
             react_event.context, 

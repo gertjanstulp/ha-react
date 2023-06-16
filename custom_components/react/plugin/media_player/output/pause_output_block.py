@@ -24,11 +24,8 @@ class MediaPlayerPauseOutputBlock(OutputBlock[MediaPlayerConfig], ApiType[MediaP
         )]
 
 
-    def log_event_caught(self, react_event: MediaPlayerPauseReactionEvent) -> None:
-        react_event.session.debug(self.logger, f"Mediaplayer pause reaction caught: '{react_event.payload.entity}'")
-
-
     async def async_handle_event(self, react_event: MediaPlayerPauseReactionEvent):
+        react_event.session.debug(self.logger, f"Mediaplayer pause reaction caught: '{react_event.payload.entity}'")
         await self.api.async_pause(
             react_event.session,
             react_event.context, 

@@ -25,11 +25,8 @@ class FanSetPercentageOutputBlock(OutputBlock[FanConfig], ApiType[FanApi]):
         )]
 
 
-    def log_event_caught(self, react_event: FanSetPercentageReactionEvent) -> None:
-        react_event.session.debug(self.logger, f"Fan set percentage reaction caught: '{react_event.payload.entity}'")
-
-
     async def async_handle_event(self, react_event: FanSetPercentageReactionEvent):
+        react_event.session.debug(self.logger, f"Fan set percentage reaction caught: '{react_event.payload.entity}'")
         if not (react_event.payload.data and
                 react_event.payload.data.percentage is not None and
                 react_event.payload.data.percentage >= 0 and 

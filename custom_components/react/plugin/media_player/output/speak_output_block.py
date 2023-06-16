@@ -27,11 +27,8 @@ class MediaPlayerSpeakOutputBlock(OutputBlock[MediaPlayerConfig], ApiType[MediaP
         )]
 
 
-    def log_event_caught(self, react_event: MediaPlayerSpeakReactionEvent) -> None:
-        react_event.session.debug(self.logger, f"Mediaplayer speak reaction caught: '{react_event.payload.entity}'")
-
-
     async def async_handle_event(self, react_event: MediaPlayerSpeakReactionEvent):
+        react_event.session.debug(self.logger, f"Mediaplayer speak reaction caught: '{react_event.payload.entity}'")
         await self.api.async_speak(
             react_event.session,
             react_event.context, 

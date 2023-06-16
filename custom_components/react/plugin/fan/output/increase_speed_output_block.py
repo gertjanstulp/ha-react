@@ -25,11 +25,8 @@ class FanIncreaseSpeedOutputBlock(OutputBlock[FanConfig], ApiType[FanApi]):
         )]
 
 
-    def log_event_caught(self, react_event: FanIncreaseSpeedReactionEvent) -> None:
-        react_event.session.debug(self.logger, f"Fan increase speed reaction caught: '{react_event.payload.entity}'")
-
-
     async def async_handle_event(self, react_event: FanIncreaseSpeedReactionEvent):
+        react_event.session.debug(self.logger, f"Fan increase speed reaction caught: '{react_event.payload.entity}'")
         if (react_event.payload.data and
             react_event.payload.data.percentage_step is not None and
             (react_event.payload.data.percentage_step < 0 or 

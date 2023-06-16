@@ -44,13 +44,8 @@ class StateChangeInputBlock(InputBlock[StateConfig]):
         )
 
 
-    def log_event_caught(self, react_event: StateChangedEvent) -> None:
-        old_state_value = react_event.payload.old_state.state if react_event.payload.old_state else None
-        new_state_value = react_event.payload.new_state.state if react_event.payload.new_state else None
-        react_event.session.debug(self.logger, f"State change caught: {react_event.payload.entity_id} ({old_state_value} -> {new_state_value})")
-
-
     def create_action_event_payloads(self, source_event: StateChangedEvent) -> list[dict]:
+        source_event.session.debug(self.logger, f"State change caught: {source_event.payload.entity_id} ({source_event.payload.old_state.state if source_event.payload.old_state else None} -> {source_event.payload.new_state.state if source_event.payload.new_state else None})")
         return [{
             ATTR_ENTITY: source_event.payload.entity_id,
             ATTR_TYPE: REACT_TYPE_STATE,

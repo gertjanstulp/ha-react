@@ -94,13 +94,8 @@ class EventBlock(Generic[T_config], BlockBase[T_config]):
     async def async_execute(self, ha_event: HaEvent) -> None:
         react_event = self.get_react_event(ha_event)
         self.react.session_manager.load_session(react_event)
-        self.log_event_caught(react_event)
         await self.async_handle_event(react_event)
     
-
-    def log_event_caught(self, react_event: ReactEvent) -> None:
-        pass
-
 
     async def async_handle_event(self, react_event: ReactEvent):
         raise NotImplementedError()
@@ -153,10 +148,6 @@ class StateChangeInputBlock(Generic[T_config], InputBlock[T_config]):
         )
 
 
-    def log_event_caught(self, react_event: StateChangedEvent) -> None:
-        react_event.session.debug(self.logger, f"State change caught: {react_event.payload.entity_id} ({react_event.payload.old_state.state if react_event.payload.old_state else None} -> {react_event.payload.new_state.state if react_event.payload.new_state else None})")
-            
-
     def read_state_data(self, react_event: StateChangedEvent) -> StateChangeData: 
         raise NotImplementedError()
     
@@ -164,6 +155,8 @@ class StateChangeInputBlock(Generic[T_config], InputBlock[T_config]):
     def create_action_event_payloads(self, source_event: StateChangedEvent) -> list[dict]:
         state_data = self.read_state_data(source_event)
         react_events = state_data.to_react_events(self.type)
+        if react_events:
+            source_event.session.debug(self.logger, f"State change caught: {source_event.payload.entity_id} ({source_event.payload.old_state.state if source_event.payload.old_state else None} -> {source_event.payload.new_state.state if source_event.payload.new_state else None})")
         return react_events
 
 

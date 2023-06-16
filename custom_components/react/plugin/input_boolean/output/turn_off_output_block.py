@@ -25,11 +25,8 @@ class InputBooleanTurnOffOutputBlock(OutputBlock[InputBooleanConfig], ApiType[In
         )]
 
 
-    def log_event_caught(self, react_event: InputBooleanTurnOffReactionEvent) -> None:
-        react_event.session.debug(self.logger, f"Input_boolean turn off reaction caught: '{react_event.payload.entity}'")
-
-
     async def async_handle_event(self, react_event: InputBooleanTurnOffReactionEvent):
+        react_event.session.debug(self.logger, f"Input_boolean turn off reaction caught: '{react_event.payload.entity}'")
         await self.api.async_input_boolean_turn_off(
             react_event.session,
             react_event.context, 

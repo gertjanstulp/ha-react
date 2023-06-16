@@ -26,11 +26,8 @@ class NotificationDismissedInputBlock(InputBlock[DynamicData]):
         self.track_state_change_filters = [DOMAIN_STATE_CHANGE_FILTER_STRATEGY.get_filter(PERSISTENT_NOTIFICATION_DOMAIN)]
 
 
-    def log_event_caught(self, react_event: PersistentNotificationStateChangeEvent) -> None:
-        react_event.session.debug(self.logger, f"Persistent notification callback caught: '{react_event.payload.entity_id}' dismissed")
-
-
     def create_action_event_payloads(self, source_event: PersistentNotificationStateChangeEvent) -> list[dict]:
+        source_event.session.debug(self.logger, f"Persistent notification callback caught: '{source_event.payload.entity_id}' dismissed")
         return [{
             ATTR_ENTITY: PERSISTENT_NOTIFICATION_DOMAIN,
             ATTR_TYPE: REACT_TYPE_NOTIFY,

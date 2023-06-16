@@ -22,12 +22,9 @@ class HassEventShutdownInputBlock(InputBlock[DynamicData]):
 
 
     def create_action_event_payloads(self, source_event: HassEvent) -> list[dict]:
+        source_event.session.debug(self.logger, f"Hass shutdown caught")
         return [{
             ATTR_ENTITY: ENTITY_HASS,
             ATTR_TYPE: TYPE_SYSTEM,
             ATTR_ACTION: ACTION_SHUTDOWN,
         }]
-    
-
-    def log_event_caught(self, react_event: HassEvent) -> None:
-        react_event.session.debug(self.logger, f"Hass shutdown caught")
