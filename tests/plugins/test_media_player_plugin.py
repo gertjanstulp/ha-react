@@ -203,14 +203,15 @@ async def test_media_player_plugin_api_play_favorite(test_context: TstContext, w
     )
    
     await test_context.async_start_react([mock_plugin])
-        
+    
+    favorite_id = "test_id"
     data_in = {
         ATTR_MEDIA_PLAYER_PROVIDER: MEDIA_PLAYER_PROVIDER_MOCK if event_value else None,
-        ATTR_MEDIA_PLAYER_FAVORITE_ID: "test_id"
+        ATTR_MEDIA_PLAYER_FAVORITE_ID: favorite_id
     }
     data_out = {
-        ATTR_ENTITY_ID: "media_player_play_favorite_test",
-        ATTR_MEDIA_PLAYER_FAVORITE_ID: "test_id"
+        ATTR_ENTITY_ID: entity_id,
+        ATTR_MEDIA_PLAYER_FAVORITE_ID: favorite_id
     }
 
     await test_context.async_send_reaction_event(data=data_in)
@@ -237,7 +238,7 @@ async def test_media_player_plugin_api_pause(test_context: TstContext, workflow_
         ATTR_MEDIA_PLAYER_FAVORITE_ID: "test_id"
     }
     data_out = {
-        ATTR_ENTITY_ID: "media_player_pause_test",
+        ATTR_ENTITY_ID: entity_id,
     }
 
     await test_context.async_send_reaction_event(data=data_in)

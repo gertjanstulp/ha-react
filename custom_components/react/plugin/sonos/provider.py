@@ -30,7 +30,7 @@ class SonosProvider(MediaPlayerProvider[DynamicData]):
 
 
     async def async_suspend(self, session: Session, context: Context, entity_id: str):
-        session.debug(self.logger, f"Suspending '{entity_id}'")
+        session.debug(self.logger, f"Suspending {entity_id}")
         try:
             await self.plugin.hass_api.async_hass_call_service(
                 SONOS_DOMAIN,
@@ -41,11 +41,11 @@ class SonosProvider(MediaPlayerProvider[DynamicData]):
                 context,
             )
         except:
-            session.exception("Interrupting mediaplayer failed")
+            session.exception("Suspending mediaplayer failed")
 
 
     async def async_resume(self, session: Session, context: Context, entity_id: str):
-        session.debug(self.logger, f"Resuming '{entity_id}'")
+        session.debug(self.logger, f"Resuming {entity_id}")
         try:
             await self.plugin.hass_api.async_hass_call_service(
                 SONOS_DOMAIN,
@@ -60,15 +60,13 @@ class SonosProvider(MediaPlayerProvider[DynamicData]):
         
 
     async def async_play_favorite(self, session: Session, context: Context, entity_id: str, favorite_id: str):
-        data: dict = {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_MEDIA_CONTENT_TYPE: CONTENT_TYPE_FAVORITE_ITEM_ID,
-            ATTR_MEDIA_CONTENT_ID: favorite_id
-        }
-
         await self.plugin.hass_api.async_hass_call_service(
             Platform.MEDIA_PLAYER, 
             SERVICE_PLAY_MEDIA,
-            data, 
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_MEDIA_CONTENT_TYPE: CONTENT_TYPE_FAVORITE_ITEM_ID,
+                ATTR_MEDIA_CONTENT_ID: favorite_id
+            }, 
             context
         )

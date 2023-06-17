@@ -31,7 +31,7 @@ class MediaPlayerApi(PluginApiBase[MediaPlayerConfig]):
             
             provider = self.get_media_player_provider(session, full_entity_id, media_player_provider)
             if provider:
-                await provider.async_play_favorite(session, context, entity_id, favorite_id)
+                await provider.async_play_favorite(session, context, full_entity_id, favorite_id)
         except:
             session.exception("Playing media failed")
 
@@ -53,7 +53,7 @@ class MediaPlayerApi(PluginApiBase[MediaPlayerConfig]):
             
             provider = self.get_media_player_provider(session, full_entity_id, media_player_provider)
             if provider:
-                await provider.async_pause(session, context, entity_id)
+                await provider.async_pause(session, context, full_entity_id)
         except:
             session.exception("Pausing failed")
 
@@ -118,10 +118,10 @@ class MediaPlayerApi(PluginApiBase[MediaPlayerConfig]):
         return result
     
         
-    def get_media_player_provider(self, session: Session, entity_id: str, media_player_provider: str) -> MediaPlayerProvider:
+    def get_media_player_provider(self, session: Session, full_entity_id: str, media_player_provider: str) -> MediaPlayerProvider:
         result = None
     
-        entity = self.plugin.hass_api.hass_get_entity(entity_id)
+        entity = self.plugin.hass_api.hass_get_entity(full_entity_id)
         if entity:
             result = self.plugin.get_provider(PROVIDER_TYPE_MEDIA_PLAYER, entity.platform)
         
@@ -131,7 +131,7 @@ class MediaPlayerApi(PluginApiBase[MediaPlayerConfig]):
                 result = self.plugin.get_provider(PROVIDER_TYPE_MEDIA_PLAYER, media_player_provider)
     
         if not result:
-            target = entity_id
+            target = full_entity_id
             if media_player_provider:
                 target = f"{target}/{media_player_provider}"
             session.error(self.plugin.logger, f"Mediaplayer provider for '{target}' not found")
