@@ -116,6 +116,7 @@ class PluginRegister():
     def unload_plugins(self):
         for plugin in self._plugins:
             plugin.unload()
+        self._plugins.clear()
 
 
 class PluginSetup(Generic[T_config]):
