@@ -177,6 +177,7 @@ REACT_TYPE_MEDIA_PLAYER = "media_player"
 REACT_TYPE_ALARM_CONTROL_PANEL = "alarm_control_panel"
 REACT_TYPE_STATE = "state"
 REACT_TYPE_FAN = "fan"
+REACT_TYPE_MQTT = "mqtt"
 
 
 # React actions

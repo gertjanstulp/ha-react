@@ -1216,22 +1216,12 @@ workflow:
       type: input_boolean
       action: toggle
 
-  workflow_template_binary_sensor_test1:
+  workflow_mqtt_publish_test:
     when:
-      entity: template_binary_sensor_test
-      type: binary_sensor
-      action: 'on'
+      entity: actor_entity_mqtt_publish_test
+      type: actor_type_mqtt_publish_test
+      action: actor_action_mqtt_publish_test
     then:
-      entity: input_boolean_hass_started_test
-      type: input_boolean
-      action: toggle
-
-  workflow_template_binary_sensor_test2:
-    when:
-      entity: template_binary_sensor_test
-      type: binary_sensor
-      action: 'on'
-    then:
-      entity: input_boolean_initial_off_test
-      type: input_boolean
-      action: toggle
+      entity: some/test/topic
+      type: mqtt
+      action: publish
