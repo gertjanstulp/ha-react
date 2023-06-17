@@ -15,9 +15,9 @@ from custom_components.react.utils.session import Session
 class SwitchApi(PluginApiBase[SwitchConfig]):
 
     async def async_switch_turn_on(self, session: Session, context: Context, entity_id: str, switch_provider: str):
-        session.debug(self.logger, f"Turning on switch '{entity_id}'")
         try:
             full_entity_id = f"switch.{entity_id}"
+            session.debug(self.logger, f"Turning on {full_entity_id}")
             if state := self.plugin.hass_api.hass_get_state(full_entity_id):
                 value = state.state
             else:
@@ -32,9 +32,9 @@ class SwitchApi(PluginApiBase[SwitchConfig]):
 
 
     async def async_switch_turn_off(self, session: Session, context: Context, entity_id: str, switch_provider: str):
-        session.debug(self.logger, f"Turning off switch '{entity_id}'")
         try:
             full_entity_id = f"switch.{entity_id}"
+            session.debug(self.logger, f"Turning off {full_entity_id}")
             if state := self.plugin.hass_api.hass_get_state(full_entity_id):
                 value = state.state
             else:
@@ -49,9 +49,9 @@ class SwitchApi(PluginApiBase[SwitchConfig]):
 
 
     async def async_switch_toggle(self, session: Session, context: Context, entity_id: str, switch_provider: str):
-        session.debug(self.logger, f"Toggling switch '{entity_id}'")
         try:
             full_entity_id = f"switch.{entity_id}"
+            session.debug(self.logger, f"Toggling {full_entity_id}")
             if state := self.plugin.hass_api.hass_get_state(full_entity_id):
                 value = state.state
             else:

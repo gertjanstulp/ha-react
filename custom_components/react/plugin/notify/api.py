@@ -18,10 +18,6 @@ class NotifyApi(PluginApiBase[NotifyConfig]):
         self.resolver: NotifyPluginResolver = self.plugin.hass_api.hass_get_data(NOTIFY_RESOLVER_KEY)
 
     
-    def _exception(self, message: str):
-        session.exception(f"{message}")
-
-
     async def async_send_message(self, 
         session: Session,
         context: Context, 
@@ -30,7 +26,7 @@ class NotifyApi(PluginApiBase[NotifyConfig]):
         feedback_items: list[FeedbackItem],
         notify_provider: str,
     ):
-        session.debug(self.logger, "Sending notify message")
+        session.debug(self.logger, "Sending notify message '{message}' to {entity_id}")
         try:
             if not self.plugin.hass_api.hass_service_available(NOTIFY_DOMAIN, entity_id):
                 session.warning(self.plugin.logger, f"{NOTIFY_DOMAIN}.{entity_id} not found")
@@ -40,7 +36,7 @@ class NotifyApi(PluginApiBase[NotifyConfig]):
             if provider:
                 await provider.async_notify(session, context, entity_id, message, feedback_items)
         except:
-            self._exception("Sending message failed")
+            session.exception("Sending message failed")
 
 
     async def async_confirm_feedback(self, 
@@ -53,13 +49,13 @@ class NotifyApi(PluginApiBase[NotifyConfig]):
         acknowledgement: str,
         notify_provider: str, 
     ):
-        session.debug(self.logger, "Confirming notify feedback")
+        session.debug(self.logger, f"Confirming notify feedback {feedback}")
         try:
             provider = self.get_notify_provider(session, None, notify_provider)
             if provider:
                 await provider.async_confirm_feedback(session, context, conversation_id, message_id, text, feedback, acknowledgement)
         except:
-            self._exception("Confirming notify feedback failed")
+            session.exception("Confirming notify feedback failed")
     
         
     def get_notify_provider(self, session: Session, entity_id: str, notify_provider: str) -> NotifyProvider:

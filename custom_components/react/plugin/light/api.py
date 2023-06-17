@@ -16,9 +16,9 @@ from custom_components.react.utils.session import Session
 class LightApi(PluginApiBase[LightConfig]):
 
     async def async_light_turn_on(self, session: Session, context: Context, entity_id: str, light_provider: str):
-        session.debug(self.logger, f"Turning on light '{entity_id}'")
         try:
             full_entity_id = f"light.{entity_id}"
+            session.debug(self.logger, f"Turning on {full_entity_id}")
             if state := self.plugin.hass_api.hass_get_state(full_entity_id):
                 value = state.state
             else:
@@ -33,9 +33,9 @@ class LightApi(PluginApiBase[LightConfig]):
 
 
     async def async_light_turn_off(self, session: Session, context: Context, entity_id: str, light_provider: str):
-        session.debug(self.logger, f"Turning off light '{entity_id}'")
         try:
             full_entity_id = f"light.{entity_id}"
+            session.debug(self.logger, f"Turning off {full_entity_id}")
             if state := self.plugin.hass_api.hass_get_state(full_entity_id):
                 value = state.state
             else:
@@ -50,9 +50,9 @@ class LightApi(PluginApiBase[LightConfig]):
 
 
     async def async_light_toggle(self, session: Session, context: Context, entity_id: str, light_provider: str):
-        session.debug(self.logger, f"Toggling light '{entity_id}'")
         try:
             full_entity_id = f"light.{entity_id}"
+            session.debug(self.logger, f"Toggling {full_entity_id}")
             if state := self.plugin.hass_api.hass_get_state(full_entity_id):
                 value = state.state
             else:

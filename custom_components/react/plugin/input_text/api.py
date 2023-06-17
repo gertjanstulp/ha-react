@@ -12,9 +12,9 @@ from custom_components.react.utils.session import Session
 class InputTextApi(PluginApiBase[InputTextConfig]):
 
     async def async_input_text_set(self, session: Session, context: Context, entity_id: str, value: str, input_text_provider: str = None):
-        session.debug(self.logger, f"Setting input_text '{entity_id}' to '{str(value)}'")
         try:
             full_entity_id = f"input_text.{entity_id}"
+            session.debug(self.logger, f"Setting {full_entity_id} to '{str(value)}'")
             if not self.plugin.hass_api.hass_get_state(full_entity_id):
                 session.warning(self.plugin.logger, f"{full_entity_id} not found")
                 return
