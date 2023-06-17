@@ -83,13 +83,14 @@ async def test_sonos_plugin_provider_play_favorite(test_context: TstContext, wor
 
     await test_context.async_start_react(mock_plugins)
         
+    favorite_id = "test_id"
     data_in = {
-        ATTR_MEDIA_PLAYER_FAVORITE_ID: "test_id"
+        ATTR_MEDIA_PLAYER_FAVORITE_ID: favorite_id
     }
     data_out = {
-        ATTR_ENTITY_ID: "media_player_play_favorite_test",
+        ATTR_ENTITY_ID: entity_id,
         ATTR_MEDIA_CONTENT_TYPE: CONTENT_TYPE_FAVORITE_ITEM_ID,
-        ATTR_MEDIA_CONTENT_ID: "test_id"
+        ATTR_MEDIA_CONTENT_ID: favorite_id
     }
 
     await test_context.async_send_reaction_event(data=data_in)
