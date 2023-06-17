@@ -48,8 +48,3 @@ class MediaPlayerPauseReactionEvent(ReactionEvent[MediaPlayerPauseReactionEventD
     
     def __init__(self, ha_event: HaEvent) -> None:
         super().__init__(ha_event, MediaPlayerPauseReactionEventData)
-        
-
-    @property
-    def applies(self) -> bool:
-        return self.payload.data
