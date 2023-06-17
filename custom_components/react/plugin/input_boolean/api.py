@@ -15,9 +15,9 @@ from custom_components.react.utils.session import Session
 class InputBooleanApi(PluginApiBase[InputBooleanConfig]):
 
     async def async_input_boolean_turn_on(self, session: Session, context: Context, entity_id: str, input_boolean_provider: str = None):
-        session.debug(self.logger, f"Turning on input_boolean '{entity_id}'")
         try:
             full_entity_id = f"input_boolean.{entity_id}"
+            session.debug(self.logger, f"Turning on {full_entity_id}")
             value: bool = None
             if state := self.plugin.hass_api.hass_get_state(full_entity_id):
                 try:
@@ -35,9 +35,9 @@ class InputBooleanApi(PluginApiBase[InputBooleanConfig]):
 
 
     async def async_input_boolean_turn_off(self, session: Session, context: Context, entity_id: str, input_boolean_provider: str = None):
-        session.debug(self.logger, f"Turning off input_boolean '{entity_id}'")
         try:
             full_entity_id = f"input_boolean.{entity_id}"
+            session.debug(self.logger, f"Turning off {full_entity_id}")
             value: bool = None
             if state := self.plugin.hass_api.hass_get_state(full_entity_id):
                 try:
@@ -55,9 +55,9 @@ class InputBooleanApi(PluginApiBase[InputBooleanConfig]):
 
 
     async def async_input_boolean_toggle(self, session: Session, context: Context, entity_id: str, input_boolean_provider: str = None):
-        session.debug(self.logger, f"Toggling input_boolean '{entity_id}'")
         try:
             full_entity_id = f"input_boolean.{entity_id}"
+            session.debug(self.logger, f"Toggling {full_entity_id}")
             value: bool = None
             if state := self.plugin.hass_api.hass_get_state(full_entity_id):
                 try:

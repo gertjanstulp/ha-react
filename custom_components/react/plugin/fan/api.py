@@ -20,7 +20,7 @@ class FanApi(PluginApiBase[FanConfig]):
     async def async_fan_set_percentage(self, session: Session, context: Context, entity_id: str, fan_provider: str, percentage: int):
         try:
             full_entity_id = f"fan.{entity_id}"
-            session.debug(self.logger, f"Setting percentage of fan {full_entity_id} to {percentage}")
+            session.debug(self.logger, f"Setting percentage of {full_entity_id} to {percentage}")
             if state := self.plugin.hass_api.hass_get_state(full_entity_id):
                 state_value = state.state
                 state_percentage = state.attributes.get(ATTR_PERCENTAGE, None)
@@ -39,7 +39,7 @@ class FanApi(PluginApiBase[FanConfig]):
     async def async_fan_increase_speed(self, session: Session, context: Context, entity_id: str, fan_provider: str, percentage_step: int):
         try:
             full_entity_id = f"fan.{entity_id}"
-            session.debug(self.logger, f"Increasing speed of fan '{full_entity_id}'")
+            session.debug(self.logger, f"Increasing speed of {full_entity_id}")
             if state := self.plugin.hass_api.hass_get_state(full_entity_id):
                 state_value = state.state
                 state_percentage = state.attributes.get(ATTR_PERCENTAGE, None)
@@ -57,7 +57,7 @@ class FanApi(PluginApiBase[FanConfig]):
     async def async_fan_decrease_speed(self, session: Session, context: Context, entity_id: str, fan_provider: str, percentage_step: int):
         try:
             full_entity_id = f"fan.{entity_id}"
-            session.debug(self.logger, f"Decreasing speed of fan  '{full_entity_id}'")
+            session.debug(self.logger, f"Decreasing speed of {full_entity_id}")
             if state := self.plugin.hass_api.hass_get_state(full_entity_id):
                 state_value = state.state
             else:

@@ -31,9 +31,9 @@ ARMED_STATES = [
 class AlarmApi(PluginApiBase[AlarmConfig]):
 
     async def _async_alarm_arm(self, session: Session, context: Context, entity_id: str, arm_mode: ArmMode, alarm_control_panel_provider: str):
-        session.debug(self.logger, f"Arming {arm_mode} '{entity_id}'")
         try:
             full_entity_id = f"alarm_control_panel.{entity_id}"
+            session.debug(self.logger, f"Arming {arm_mode} {full_entity_id}")
             if state := self.plugin.hass_api.hass_get_state(full_entity_id):
                 value = state.state
             else:
@@ -64,9 +64,9 @@ class AlarmApi(PluginApiBase[AlarmConfig]):
 
 
     async def async_alarm_disarm(self, session: Session, context: Context, entity_id: str, alarm_control_panel_provider: str):
-        session.debug(self.logger, f"Disarming '{entity_id}'")
         try:
             full_entity_id = f"alarm_control_panel.{entity_id}"
+            session.debug(self.logger, f"Disarming {full_entity_id}")
             if state := self.plugin.hass_api.hass_get_state(full_entity_id):
                 value = state.state
             else:
@@ -81,9 +81,9 @@ class AlarmApi(PluginApiBase[AlarmConfig]):
 
 
     async def async_alarm_trigger(self, session: Session, context: Context, entity_id: str, alarm_control_panel_provider: str):
-        session.debug(self.logger, f"Triggering alarm '{entity_id}'")
         try:
             full_entity_id = f"alarm_control_panel.{entity_id}"
+            session.debug(self.logger, f"Triggering alarm {full_entity_id}")
             if state := self.plugin.hass_api.hass_get_state(full_entity_id):
                 value = state.state
             else:

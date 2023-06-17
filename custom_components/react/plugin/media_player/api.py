@@ -20,9 +20,9 @@ class MediaPlayerApi(PluginApiBase[MediaPlayerConfig]):
         favorite_id: str,
         media_player_provider: str, 
     ):
-        session.debug(self.logger, f"Playing favorite '{favorite_id}' on '{entity_id}'")
         try:
             full_entity_id = f"media_player.{entity_id}"
+            session.debug(self.logger, f"Playing favorite {favorite_id} on {full_entity_id}")
             if state := self.plugin.hass_api.hass_get_state(full_entity_id):
                 value = state.state
             else:
@@ -42,9 +42,9 @@ class MediaPlayerApi(PluginApiBase[MediaPlayerConfig]):
         entity_id: str, 
         media_player_provider: str,
     ):
-        session.debug(self.logger, f"Pausing mediaplayer")
         try:
             full_entity_id = f"media_player.{entity_id}"
+            session.debug(self.logger, f"Pausing {full_entity_id}")
             if state := self.plugin.hass_api.hass_get_state(full_entity_id):
                 value = state.state
             else:
@@ -72,9 +72,9 @@ class MediaPlayerApi(PluginApiBase[MediaPlayerConfig]):
         media_player_provider: str,
         tts_provider: str,
     ):
-        session.debug(self.logger, f"Speaking '{message}' on mediaplayer")
         try:
             full_entity_id = f"media_player.{entity_id}"
+            session.debug(self.logger, f"Speaking '{message}' on {full_entity_id}")
             if state := self.plugin.hass_api.hass_get_state(full_entity_id):
                 value = state.state
             else:

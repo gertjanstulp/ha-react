@@ -12,9 +12,9 @@ from custom_components.react.utils.session import Session
 class InputNumberApi(PluginApiBase[InputNumberConfig]):
 
     async def async_input_number_set(self, session: Session, context: Context, entity_id: str, value: float, input_number_provider: str = None):
-        session.debug(self.logger, f"Setting input_number '{entity_id}' to '{str(value)}'")
         try:
             full_entity_id = f"input_number.{entity_id}"
+            session.debug(self.logger, f"Setting {full_entity_id} to {str(value)}")
             if not self.plugin.hass_api.hass_get_state(full_entity_id):
                 session.warning(self.plugin.logger, f"{full_entity_id} not found")
                 return
@@ -27,9 +27,9 @@ class InputNumberApi(PluginApiBase[InputNumberConfig]):
 
 
     async def async_input_number_increase(self, session: Session, context: Context, entity_id: str, increase: float, max: float = None, input_number_provider: str = None):
-        session.debug(self.logger, f"Increasing input_number '{entity_id}' with '{str(increase)}'")
         try:
             full_entity_id = f"input_number.{entity_id}"
+            session.debug(self.logger, f"Increasing {full_entity_id} with {str(increase)}")
             value: float = None
             if state := self.plugin.hass_api.hass_get_state(full_entity_id):
                 try:
@@ -49,9 +49,9 @@ class InputNumberApi(PluginApiBase[InputNumberConfig]):
 
 
     async def async_input_number_decrease(self, session: Session, context: Context, entity_id: str, decrease: float, min: float = None, input_number_provider: str = None):
-        session.debug(self.logger, f"Increasing input_number '{entity_id}' with '{str(decrease)}'")
         try:
             full_entity_id = f"input_number.{entity_id}"
+            session.debug(self.logger, f"Decreasing {full_entity_id} with {str(decrease)}")
             value: float = None
             if state := self.plugin.hass_api.hass_get_state(full_entity_id):
                 try:
