@@ -32,7 +32,7 @@ class StateApi(PluginApiBase[StateConfig]):
             if provider:
                 await provider.async_track_entity_state_change(session, context, entity_id, old_state, new_state, timestamp)
         except:
-            session.exception("Tracking state of entity {entity_id} failed")
+            session.exception(self.logger, "Tracking state of entity {entity_id} failed")
 
 
     def get_state_provider(self, session: Session, state_provider: str) -> StateProvider:

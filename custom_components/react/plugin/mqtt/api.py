@@ -18,7 +18,7 @@ class MqttApi(PluginApiBase[MqttConfig]):
             if provider:
                 await provider.async_publish(session, context, entity_id, payload)
         except:
-            session.exception("publishing failed")
+            session.exception(self.logger, "publishing failed")
 
 
     def get_mqtt_provider(self, session: Session, mqtt_provider: str) -> MqttProvider:

@@ -178,6 +178,7 @@ REACT_TYPE_ALARM_CONTROL_PANEL = "alarm_control_panel"
 REACT_TYPE_STATE = "state"
 REACT_TYPE_FAN = "fan"
 REACT_TYPE_MQTT = "mqtt"
+REACT_TYPE_CLIMATE = "climate"
 
 
 # React actions
@@ -200,6 +201,7 @@ REACT_ACTION_DECREASE = "decrease"
 REACT_ACTION_DISMISSED = "dismissed"
 REACT_ACTION_LOG = "log"
 REACT_ACTION_CHANGE = "change"
+REACT_ACTION_SET_TEMPERATURE = "set_temperature"
 
 # signals
 SIGNAL_ITEM_CREATED = "react_item_created"

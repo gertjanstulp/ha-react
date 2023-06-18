@@ -23,7 +23,7 @@ class InputTextApi(PluginApiBase[InputTextConfig]):
             if provider:
                 await provider.async_input_text_set_value(session, context, full_entity_id, value)
         except:
-            session.exception("Setting input_text failed")
+            session.exception(self.logger, "Setting input_text failed")
 
 
     def get_input_text_provider(self, session: Session, input_text_provider: str) -> InputTextProvider:

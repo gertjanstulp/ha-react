@@ -36,7 +36,7 @@ class NotifyApi(PluginApiBase[NotifyConfig]):
             if provider:
                 await provider.async_notify(session, context, entity_id, message, feedback_items)
         except:
-            session.exception("Sending message failed")
+            session.exception(self.logger, "Sending message failed")
 
 
     async def async_confirm_feedback(self, 
@@ -55,7 +55,7 @@ class NotifyApi(PluginApiBase[NotifyConfig]):
             if provider:
                 await provider.async_confirm_feedback(session, context, conversation_id, message_id, text, feedback, acknowledgement)
         except:
-            session.exception("Confirming notify feedback failed")
+            session.exception(self.logger, "Confirming notify feedback failed")
     
         
     def get_notify_provider(self, session: Session, entity_id: str, notify_provider: str) -> NotifyProvider:

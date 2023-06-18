@@ -33,7 +33,7 @@ class FanApi(PluginApiBase[FanConfig]):
                     (state_value == STATE_ON and state_percentage != percentage)):
                     await provider.async_set_percentage(session, context, full_entity_id, percentage)
         except:
-            session.exception("Setting fan percentage failed")
+            session.exception(self.logger, "Setting fan percentage failed")
 
 
     async def async_fan_increase_speed(self, session: Session, context: Context, entity_id: str, fan_provider: str, percentage_step: int):
@@ -51,7 +51,7 @@ class FanApi(PluginApiBase[FanConfig]):
                 if state_value == STATE_OFF or state_percentage < 100:
                     await provider.async_increase_speed(session, context, full_entity_id, percentage_step)
         except:
-            session.exception("Increasing fan speed failed")
+            session.exception(self.logger, "Increasing fan speed failed")
             
 
     async def async_fan_decrease_speed(self, session: Session, context: Context, entity_id: str, fan_provider: str, percentage_step: int):
@@ -68,7 +68,7 @@ class FanApi(PluginApiBase[FanConfig]):
                 if state_value == STATE_ON:
                     await provider.async_decrease_speed(session, context, full_entity_id, percentage_step)
         except:
-            session.exception("Decreasing fan speed failed")
+            session.exception(self.logger, "Decreasing fan speed failed")
 
 
     def get_fan_provider(self, session: Session, fan_provider: str) -> FanProvider:
