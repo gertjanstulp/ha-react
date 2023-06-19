@@ -26,7 +26,7 @@ class NotifyApi(PluginApiBase[NotifyConfig]):
         feedback_items: list[FeedbackItem],
         notify_provider: str,
     ):
-        session.debug(self.logger, "Sending notify message '{message}' to {entity_id}")
+        session.debug(self.logger, f"Sending notify message '{message}' to {entity_id}")
         try:
             if not self.plugin.hass_api.hass_service_available(NOTIFY_DOMAIN, entity_id):
                 session.warning(self.plugin.logger, f"{NOTIFY_DOMAIN}.{entity_id} not found")
