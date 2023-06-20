@@ -1225,3 +1225,15 @@ workflow:
       entity: some/test/topic
       type: mqtt
       action: publish
+
+  workflow_climate_set_temperature_test:
+    when:
+      entity: actor_entity_climate_set_temperature_test
+      type: actor_type_climate_set_temperature_test
+      action: actor_action_climate_set_temperature_test
+    then:
+      entity: climate_initial_off_test
+      type: climate
+      action: set_temperature
+      data:
+        temperature: 25

@@ -41,7 +41,7 @@ class SonosProvider(MediaPlayerProvider[DynamicData]):
                 context,
             )
         except:
-            session.exception("Suspending mediaplayer failed")
+            session.exception(self.logger, "Suspending mediaplayer failed")
 
 
     async def async_resume(self, session: Session, context: Context, entity_id: str):
@@ -56,7 +56,7 @@ class SonosProvider(MediaPlayerProvider[DynamicData]):
                 context,
             )
         except:
-            session.exception("Resuming mediaplayer failed")
+            session.exception(self.logger, "Resuming mediaplayer failed")
         
 
     async def async_play_favorite(self, session: Session, context: Context, entity_id: str, favorite_id: str):

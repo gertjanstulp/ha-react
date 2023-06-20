@@ -1,0 +1,2 @@
+ATTR_CLIMATE_PROVIDER = "climate_provider"
+CLIMATE_GENERIC_PROVIDER = "generic"

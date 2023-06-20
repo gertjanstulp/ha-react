@@ -10,9 +10,7 @@ from tests.const import (
 
 
 class Setup(SonosSetup, HassApiMockExtend):
-    
     def setup(self):
-
         test_config: dict = self.hass_api_mock.hass_get_data(TEST_CONFIG, {})
         media_player_entity_id = test_config.get(ATTR_ENTITY_ID)
         media_player_state = test_config.get(ATTR_ENTITY_STATE, None)
