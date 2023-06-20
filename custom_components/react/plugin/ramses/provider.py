@@ -16,6 +16,7 @@ from custom_components.react.utils.struct import DynamicData
 
 class RamsesProvider(ClimateProvider[DynamicData]):
     async def async_set_temperature(self, session: Session, context: Context, entity_id: str, temperature: float):
+        session.debug(self.logger, f"Setting {entity_id} zone mode to {MODE_ADVANCED_OVERRIDE} with temperature {temperature}")
         await self.plugin.hass_api.async_hass_call_service(
             DOMAIN,
             SVC_SET_ZONE_MODE,
@@ -29,6 +30,7 @@ class RamsesProvider(ClimateProvider[DynamicData]):
 
 
     async def async_reset_temperature(self, session: Session, context: Context, entity_id: str):
+        session.debug(self.logger, f"Resetting {entity_id} zone mode")
         await self.plugin.hass_api.async_hass_call_service(
             DOMAIN,
             SVC_RESET_ZONE_MODE,
