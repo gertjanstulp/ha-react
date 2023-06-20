@@ -32,10 +32,31 @@ class ClimateApi(PluginApiBase[ClimateConfig]):
                 if temperature != state_temperature:
                     await provider.async_set_temperature(session, context, full_entity_id, temperature)
         except:
-            session.exception(self.logger, "Pausing failed")
+            session.exception(self.logger, "Setting temperature failed")
     
-        
-    def get_climate_provider(self, session: Session, full_entity_id: str, climate_provider: str) -> ClimateProvider:
+
+    async def async_reset_temperature(self,
+        session: Session,
+        context: Context, 
+        entity_id: str, 
+        climate_provider: str,
+    ):
+        try:
+            full_entity_id = f"climate.{entity_id}"
+            session.debug(self.logger, f"Resetting temperature of {full_entity_id}")
+            if state := self.plugin.hass_api.hass_get_state(full_entity_id):
+                state_temperature = state.attributes.get(ATTR_TEMPERATURE, None)
+            else:
+                session.warning(self.plugin.logger, f"{full_entity_id} not found")
+                return
+            
+            if provider := self.get_climate_provider(session, full_entity_id, climate_provider, False):
+                await provider.async_reset_temperature(session, context, full_entity_id)
+        except:
+            session.exception(self.logger, "Resetting temperature failed")
+
+
+    def get_climate_provider(self, session: Session, full_entity_id: str, climate_provider: str, include_generic: bool = True) -> ClimateProvider:
         result = None
     
         entity = self.plugin.hass_api.hass_get_entity(full_entity_id)
@@ -43,7 +64,9 @@ class ClimateApi(PluginApiBase[ClimateConfig]):
             result = self.plugin.get_provider(PROVIDER_TYPE_CLIMATE, entity.platform)
         
         if not result:
-            climate_provider = climate_provider or self.plugin.config.climate_provider or CLIMATE_GENERIC_PROVIDER
+            climate_provider = climate_provider or self.plugin.config.climate_provider 
+            if not climate_provider and include_generic:
+                climate_provider = CLIMATE_GENERIC_PROVIDER
             if climate_provider:
                 result = self.plugin.get_provider(PROVIDER_TYPE_CLIMATE, climate_provider)
     

@@ -49,18 +49,17 @@ class Setup(ClimateSetup, HassApiMockExtend):
             
 
 class ClimateProviderMock(ClimateProvider):
-    def __init__(self, support_announce: bool = False) -> None:
-        super().__init__()
-        self._support_announce = support_announce
-
-
-    @property
-    def support_announce(self) -> bool:
-        return self._support_announce
 
     async def async_set_temperature(self, session: Session, context: Context, entity_id: str, temperature: float):
         test_context: TstContext = self.plugin.hass_api.hass_get_data(TEST_CONTEXT)
         test_context.register_plugin_data({
             ATTR_ENTITY_ID: entity_id,
             ATTR_TEMPERATURE: temperature,
+        })
+
+
+    async def async_reset_temperature(self, session: Session, context: Context, entity_id: str):
+        test_context: TstContext = self.plugin.hass_api.hass_get_data(TEST_CONTEXT)
+        test_context.register_plugin_data({
+            ATTR_ENTITY_ID: entity_id,
         })

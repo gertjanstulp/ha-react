@@ -202,6 +202,7 @@ REACT_ACTION_DISMISSED = "dismissed"
 REACT_ACTION_LOG = "log"
 REACT_ACTION_CHANGE = "change"
 REACT_ACTION_SET_TEMPERATURE = "set_temperature"
+REACT_ACTION_RESET_TEMPERATURE = "reset_temperature"
 
 # signals
 SIGNAL_ITEM_CREATED = "react_item_created"
