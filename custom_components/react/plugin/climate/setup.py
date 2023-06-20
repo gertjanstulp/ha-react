@@ -1,6 +1,7 @@
 import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
+from custom_components.react.plugin.climate.output.reset_temperature_output_block import ClimateResetTemperatureOutputBlock
 from custom_components.react.plugin.climate.output.set_temperature_output_block import ClimateSetTemperatureOutputBlock
 from custom_components.react.plugin.climate.provider import ClimateProvider
 from custom_components.react.plugin.const import PROVIDER_TYPE_CLIMATE
@@ -40,5 +41,6 @@ class Setup(PluginSetup[ClimateConfig]):
         setup(
             [
                 ClimateSetTemperatureOutputBlock,
+                ClimateResetTemperatureOutputBlock,
             ],
         )

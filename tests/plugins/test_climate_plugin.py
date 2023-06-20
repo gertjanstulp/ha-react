@@ -36,7 +36,6 @@ from tests.const import (
 )
 from tests.tst_context import TstContext
 
-FIXTURE_CLIMATE_ENTITY_ID = "climate_entity_id"
 FIXTURE_FAKE_CLIMATE_PROVIDER = "fake_climate_provider"
 
 
@@ -69,11 +68,12 @@ def get_mock_plugin(
     return result
 
 
-@pytest.mark.parametrize(F"{FIXTURE_WORKFLOW_NAME},{FIXTURE_CLIMATE_ENTITY_ID}", [
-    ("climate_set_temperature_test", "climate_initial_off_test"),
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, [
+    "climate_set_temperature_test",
+    "climate_reset_temperature_test"
 ])
-async def test_climate_plugin_api_entity_not_found(test_context: TstContext, workflow_name: str, climate_entity_id: str):
-    entity_id = f"climate.{climate_entity_id}"
+async def test_climate_plugin_api_entity_not_found(test_context: TstContext, workflow_name: str):
+    entity_id = "climate.climate_initial_off_test"
     mock_plugin = get_mock_plugin()
     set_test_config(test_context)
 
@@ -87,45 +87,44 @@ async def test_climate_plugin_api_entity_not_found(test_context: TstContext, wor
     test_context.verify_has_log_warning(f"1 - {entity_id} not found")
 
 
-# @pytest.mark.parametrize(f"{FIXTURE_WORKFLOW_NAME},{FIXTURE_CLIMATE_ENTITY_ID}", [
-#     ("climate_set_temperature_test", "climate_initial_off_test"),
-# ])
-# async def test_climate_plugin_api_no_climate_provider_set_up(test_context: TstContext, workflow_name: str, climate_entity_id: str):
-#     entity_id = f"climate.{climate_entity_id}"
-#     mock_plugin = get_mock_plugin(
-#         climate_provider=CLIMATE_PROVIDER_MOCK,
-#     )
-#     set_test_config(test_context,
-#         setup_mock_climate_provider=False,
-#         climate_entity_id=entity_id,
-#         climate_entity_state="off"
-#     )
-
-#     await test_context.async_start_react([mock_plugin])
-#     await test_context.async_send_reaction_event(data={})
-#     test_context.verify_plugin_data_not_sent()
-#     test_context.verify_has_log_error(f"1 - Climate provider for {entity_id}/{CLIMATE_PROVIDER_MOCK} not found")
-
-
-# @pytest.mark.parametrize(f"{FIXTURE_WORKFLOW_NAME},{FIXTURE_CLIMATE_ENTITY_ID}", [
-#     ("climate_set_temperature_test", "climate_initial_off_test"),
-# ])
-# async def test_climate_plugin_api_no_climate_provider_provided(test_context: TstContext, workflow_name: str, climate_entity_id: str):
-#     entity_id = f"climate.{climate_entity_id}"
-#     mock_plugin = get_mock_plugin()
-#     set_test_config(test_context,
-#         setup_mock_climate_provider=True,
-#         climate_entity_id=entity_id,
-#         climate_entity_state="off"
-#     )
-
-#     await test_context.async_start_react([mock_plugin])
-#     await test_context.async_send_reaction_event(data={})
-#     test_context.verify_plugin_data_not_sent()
-#     test_context.verify_has_log_error(f"1 - Climate provider for {entity_id} not found")
-
-
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["climate_set_temperature_test"])
+async def test_climate_plugin_api_no_climate_provider_set_up(test_context: TstContext, workflow_name: str):
+    entity_id = "climate.climate_initial_off_test"
+    mock_plugin = get_mock_plugin(
+        climate_provider=CLIMATE_PROVIDER_MOCK,
+    )
+    set_test_config(test_context,
+        setup_mock_climate_provider=False,
+        climate_entity_id=entity_id,
+        climate_entity_state="off"
+    )
+
+    await test_context.async_start_react([mock_plugin])
+    await test_context.async_send_reaction_event(data={})
+    test_context.verify_plugin_data_not_sent()
+    test_context.verify_has_log_error(f"1 - Climate provider for {entity_id}/{CLIMATE_PROVIDER_MOCK} not found")
+
+
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["climate_reset_temperature_test"])
+async def test_climate_plugin_api_no_climate_provider_provided(test_context: TstContext, workflow_name: str):
+    entity_id = "climate.climate_initial_off_test"
+    mock_plugin = get_mock_plugin()
+    set_test_config(test_context,
+        setup_mock_climate_provider=True,
+        climate_entity_id=entity_id,
+        climate_entity_state="off"
+    )
+
+    await test_context.async_start_react([mock_plugin])
+    await test_context.async_send_reaction_event(data={})
+    test_context.verify_plugin_data_not_sent()
+    test_context.verify_has_log_error(f"1 - Climate provider for {entity_id} not found")
+
+
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, [
+    "climate_set_temperature_test",
+    "climate_reset_temperature_test"
+])
 async def test_climate_plugin_api_invalid_provider(test_context: TstContext, workflow_name: str):
     entity_id = "climate.climate_initial_off_test"
     invalid_provider = "invalid"
@@ -168,6 +167,34 @@ async def test_climate_plugin_api_set_temperature(test_context: TstContext, work
     data_out = {
         ATTR_ENTITY_ID: entity_id,
         ATTR_TEMPERATURE: temperature
+    }
+
+    await test_context.async_send_reaction_event(data=data_in)
+    test_context.verify_has_no_log_issues()
+    test_context.verify_plugin_data_sent()
+    test_context.verify_plugin_data_content(data_out)
+
+
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["climate_reset_temperature_test"])
+@pytest.mark.parametrize(VALUE_FIXTURES, VALUE_FIXTURE_COMBOS)
+async def test_climate_plugin_api_reset_temperature(test_context: TstContext, workflow_name: str, config_value: bool, event_value: bool):
+    entity_id = "climate.climate_initial_off_test"
+    mock_plugin = get_mock_plugin(
+        climate_provider=CLIMATE_PROVIDER_MOCK if config_value else None
+    )
+    set_test_config(test_context,
+        setup_mock_climate_provider=True,
+        climate_entity_id=entity_id,
+        climate_entity_state="off",
+    )
+   
+    await test_context.async_start_react([mock_plugin])
+    
+    data_in = {
+        ATTR_CLIMATE_PROVIDER: CLIMATE_PROVIDER_MOCK if event_value else None,
+    }
+    data_out = {
+        ATTR_ENTITY_ID: entity_id,
     }
 
     await test_context.async_send_reaction_event(data=data_in)

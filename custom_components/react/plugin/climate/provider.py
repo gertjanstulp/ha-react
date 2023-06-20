@@ -31,3 +31,7 @@ class ClimateProvider(Generic[T_config], PluginProviderBase[T_config]):
             }, 
             context
         )
+
+
+    async def async_reset_temperature(self, session: Session, context: Context, entity_id: str):
+        raise NotImplementedError()
