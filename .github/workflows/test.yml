@@ -31,4 +31,4 @@ jobs:
 
       - name: Run pytest
         run: |
-          pytest -n 4
+          pytest -n 2
