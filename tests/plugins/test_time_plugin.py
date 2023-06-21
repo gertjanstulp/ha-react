@@ -21,6 +21,7 @@ from custom_components.react.const import (
     ATTR_WORKFLOW_WHEN,
 )
 from custom_components.react.plugin.const import ATTR_CONFIG
+from custom_components.react.plugin.time.const import DEFAULT_OFFSET
 
 from tests.common import FIXTURE_WORKFLOW_NAME, async_fire_time_changed
 from tests.const import TEST_CONFIG
@@ -109,9 +110,9 @@ async def test_time_sunrise(test_context: TstContext, workflow_name: str):
             await test_context.hass.async_block_till_done()
             await test_context.async_verify_action_event_received()
             test_context.verify_action_event_data(
-                expected_entity=ACTOR_ENTITY_SUN,
+                expected_entity=SUN_EVENT_SUNRISE,
                 expected_type=ACTOR_TYPE_TIME,
-                expected_action=SUN_EVENT_SUNRISE,
+                expected_action=DEFAULT_OFFSET,
                 event_index=0
             )
         
@@ -133,9 +134,9 @@ async def test_time_sunrise_with_offset(test_context: TstContext, workflow_name:
             await test_context.hass.async_block_till_done()
             await test_context.async_verify_action_event_received()
             test_context.verify_action_event_data(
-                expected_entity=ACTOR_ENTITY_SUN,
+                expected_entity=SUN_EVENT_SUNRISE,
                 expected_type=ACTOR_TYPE_TIME,
-                expected_action=SUN_EVENT_SUNRISE,
+                expected_action="+00:30:00",
                 event_index=0
             )
         
@@ -157,9 +158,9 @@ async def test_time_sunset(test_context: TstContext, workflow_name: str):
             await test_context.hass.async_block_till_done()
             await test_context.async_verify_action_event_received()
             test_context.verify_action_event_data(
-                expected_entity=ACTOR_ENTITY_SUN,
+                expected_entity=SUN_EVENT_SUNSET,
                 expected_type=ACTOR_TYPE_TIME,
-                expected_action=SUN_EVENT_SUNSET,
+                expected_action=DEFAULT_OFFSET,
                 event_index=0
             )
         
@@ -181,8 +182,8 @@ async def test_time_sunset_with_offset(test_context: TstContext, workflow_name: 
             await test_context.hass.async_block_till_done()
             await test_context.async_verify_action_event_received()
             test_context.verify_action_event_data(
-                expected_entity=ACTOR_ENTITY_SUN,
+                expected_entity=SUN_EVENT_SUNSET,
                 expected_type=ACTOR_TYPE_TIME,
-                expected_action=SUN_EVENT_SUNSET,
+                expected_action="-00:30:00",
                 event_index=0
             )

@@ -1,1 +1,3 @@
 ATTR_OFFSET = "offset"
+
+DEFAULT_OFFSET = "-"

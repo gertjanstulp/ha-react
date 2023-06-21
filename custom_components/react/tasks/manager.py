@@ -15,7 +15,8 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, Event as HaEvent, HassJob, callback
 from homeassistant.helpers.event import async_track_time_change, async_track_sunrise, async_track_sunset
 
-from custom_components.react.const import ACTOR_ENTITY_SUN, ATTR_ENTITY, ATTR_TYPE, EVENT_REACT_REACTION
+from custom_components.react.const import ACTOR_ENTITY_SUN, ATTR_DATA, ATTR_ENTITY, ATTR_TYPE, EVENT_REACT_REACTION
+from custom_components.react.plugin.time.const import ATTR_OFFSET
 from custom_components.react.tasks.base import ReactTask, ReactTaskType
 from custom_components.react.tasks.filters import (
     ALL_REACTION_FILTER_STRATEGIES, 
@@ -295,16 +296,12 @@ class ReactTaskManager:
         sun_event: str,
         track_key: str,
         task: ReactTask,
-        offset: timedelta = None,
+        offset: timedelta,
+        offset_str: str,
     ):
-        time_callbacks: dict[str, list[HassJob[[HaEvent], Any]]] = self.react.hass.data.setdefault(
-            TRACK_TIME_CALLBACKS, {}
-        )
-        time_listeners: dict[str, CALLBACK_TYPE] = self.react.hass.data.setdefault(
-            TRACK_TIME_LISTENERS, {}
-        )
-
-        time_key = f"{sun_event}{f'_{str(offset)}' if offset else ''}"
+        time_callbacks: dict[str, list[HassJob[[HaEvent], Any]]] = self.react.hass.data.setdefault(TRACK_TIME_CALLBACKS, {})
+        time_listeners: dict[str, CALLBACK_TYPE] = self.react.hass.data.setdefault(TRACK_TIME_LISTENERS, {})
+        time_key = f"{sun_event}|{offset_str}"
 
         if time_key not in time_listeners:
 
@@ -313,7 +310,7 @@ class ReactTaskManager:
                 if time_key in time_callbacks:
                     for job in time_callbacks[time_key][:]:
                         try:
-                            self.react.hass.async_run_hass_job(job, HaEvent("time", data = {ATTR_time_key: time_key, ATTR_ENTITY: ACTOR_ENTITY_SUN}))
+                            self.react.hass.async_run_hass_job(job)
                         except Exception:  # pylint: disable=broad-except
                             _LOGGER.exception(f"Error while processing sun change for {time_key}")
         
@@ -330,7 +327,9 @@ class ReactTaskManager:
                     offset
                 )
 
-        job = HassJob(task.execute_task, f"track sun change for {time_key}")
+        async def async_send_ha_event():
+            await task.execute_task(HaEvent("time", data = {ATTR_time_key: time_key, ATTR_ENTITY: sun_event}))
+        job = HassJob(async_send_ha_event, f"track sun change for {time_key}")
 
         time_callbacks.setdefault(time_key, []).append(job)
 
@@ -370,7 +369,7 @@ class ReactTaskManager:
                 if time_key in time_callbacks:
                     for job in time_callbacks[time_key][:]:
                         try:
-                            self.react.hass.async_run_hass_job(job, HaEvent("time", data = {ATTR_TIME_KEY: time_key, ATTR_ENTITY: args[0]}))
+                            self.react.hass.async_run_hass_job(job)
                         except Exception:  # pylint: disable=broad-except
                             _LOGGER.exception(f"Error while processing time change for {time_key}")
 
@@ -382,7 +381,9 @@ class ReactTaskManager:
                 time_data.second
             )
 
-        job = HassJob(task.execute_task, f"track time change for {time_key}")
+        async def async_send_ha_event():
+            await task.execute_task(HaEvent("time", data = {ATTR_TIME_KEY: time_key, ATTR_ENTITY: args[0]}))
+        job = HassJob(async_send_ha_event, f"track time change for {time_key}")
 
         time_callbacks.setdefault(time_key, []).append(job)
 

@@ -602,9 +602,9 @@ workflow:
 
   workflow_time_sunrise:
     when:
-      entity: sun
+      entity: sunrise
       type: time
-      action: sunrise
+      action: "-"
     then:
       entity: reactor_entity_sunrise
       type: reactor_type_sunrise
@@ -612,11 +612,9 @@ workflow:
 
   workflow_time_sunrise_with_offset:
     when:
-      entity: sun
+      entity: sunrise
       type: time
-      action: sunrise
-      data:
-        offset: "+00:30:00"
+      action: "+00:30:00"
     then:
       entity: reactor_entity_sunrise_with_offset
       type: reactor_type_sunrise_with_offset
@@ -624,9 +622,9 @@ workflow:
 
   workflow_time_sunset:
     when:
-      entity: sun
+      entity: sunset
       type: time
-      action: sunset
+      action: "-"
     then:
       entity: reactor_entity_sunset
       type: reactor_type_sunset
@@ -634,11 +632,9 @@ workflow:
 
   workflow_time_sunset_with_offset:
     when:
-      entity: sun
+      entity: sunset
       type: time
-      action: sunset
-      data:
-        offset: "-00:30:00"
+      action: "-00:30:00"
     then:
       entity: reactor_entity_sunset_with_offset
       type: reactor_type_sunset_with_offset
