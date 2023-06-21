@@ -3,12 +3,12 @@ from __future__ import annotations
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt as dt_util
-from custom_components.react.base import ReactBase
 
+from custom_components.react.base import ReactBase
 from custom_components.react.const import (
-    ACTOR_ENTITY_TIME, 
-    ACTOR_TYPE_CLOCK, 
-    ACTOR_TYPE_PATTERN, 
+    ACTOR_ENTITY_CLOCK,
+    ACTOR_ENTITY_PATTERN,
+    ACTOR_TYPE_TIME,
     ATTR_ACTION, 
     ATTR_ENTITY, 
     ATTR_TYPE, 
@@ -17,9 +17,7 @@ from custom_components.react.const import (
 )
 from custom_components.react.tasks.filters import track_key
 from custom_components.react.tasks.plugin.base import InputBlock
-from custom_components.react.utils.events import ReactEvent, TimeEvent
-from custom_components.react.utils.session import Session
-# from custom_components.react.tasks.plugin.base import TimeInputBlock as TimeInputBlockBase
+from custom_components.react.utils.events import TimeEvent
 from custom_components.react.utils.struct import ActorRuntime, DynamicData
 from custom_components.react.utils.time import parse_time_data
 
@@ -27,7 +25,6 @@ from custom_components.react.utils.time import parse_time_data
 class TimeInputBlock(InputBlock[DynamicData]):
     def __init__(self, react: ReactBase) -> None:
         super().__init__(react, TimeEvent)
-
         self.action_track_keys: list[str] = []
 
 
@@ -46,10 +43,10 @@ class TimeInputBlock(InputBlock[DynamicData]):
 
 
     def create_action_event_payloads(self, source_event: TimeEvent) -> list[dict]:
-        source_event.session.debug(self.logger, f"Time change caught: {source_event.payload.type} value {source_event.payload.time_key} matched current time ({dt_util.now(time_zone=dt_util.DEFAULT_TIME_ZONE).strftime('%H:%M:%S')})")
+        source_event.session.debug(self.logger, f"Time change caught: {source_event.payload.entity} value {source_event.payload.time_key} matched current time ({dt_util.now(time_zone=dt_util.DEFAULT_TIME_ZONE).strftime('%H:%M:%S')})")
         return [{
-            ATTR_ENTITY: ACTOR_ENTITY_TIME,
-            ATTR_TYPE: source_event.payload.type,
+            ATTR_ENTITY: source_event.payload.entity,
+            ATTR_TYPE: ACTOR_TYPE_TIME,
             ATTR_ACTION: source_event.payload.time_key,
         }]
 
@@ -65,12 +62,12 @@ class TimeInputBlock(InputBlock[DynamicData]):
 
 
     def update_tracker(self, track: bool, actor: ActorRuntime):
-        if ACTOR_ENTITY_TIME in actor.entity and (ACTOR_TYPE_CLOCK in actor.type or ACTOR_TYPE_PATTERN in actor.type):
+        if ACTOR_TYPE_TIME in actor.type and (ACTOR_ENTITY_CLOCK in actor.entity or ACTOR_ENTITY_PATTERN in actor.entity):
             for action in actor.action:
                 action_track_key = track_key(self.__class__.__name__, action)
                 if track and action_track_key not in self.action_track_keys:
-                    self.manager.track_time(parse_time_data(action), action, action_track_key, self, actor.type.first)
+                    self.manager.track_time(parse_time_data(action), action, action_track_key, self, actor.entity.first)
                     self.action_track_keys.append(action_track_key)
                 if not track and action_track_key in self.action_track_keys:
-                    self.manager.untrack_time(self, action_track_key)
+                    self.manager.untrack_key(self, action_track_key)
                     self.action_track_keys.remove(action_track_key)

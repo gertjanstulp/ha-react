@@ -1,10 +1,11 @@
-from asyncio import sleep
 import pytest
+from datetime import timedelta
+from freezegun import freeze_time
 
-from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from tests.tst_context import TstContext
-from tests.common import FIXTURE_WORKFLOW_NAME
+from tests.common import FIXTURE_WORKFLOW_NAME, async_fire_time_changed
 
 FIXTURE_ADDITIONAL_TESTS = "additional_tests"
 
@@ -43,19 +44,24 @@ async def test_delayed(test_context: TstContext, workflow_name: str):
     - Trace data should match configuration
     """
 
-    await test_context.async_start_react()
+    now = dt_util.now()
+    with freeze_time(now):
+        await test_context.async_start_react()
     
-    async with test_context.async_listen_reaction_event():
-        test_context.verify_reaction_not_found()
-        await test_context.async_send_action_event()
-        await test_context.async_verify_reaction_event_not_received()
-        test_context.verify_reaction_found()
-        # test_context.verify_reaction_entity_data()
-        await test_context.async_verify_reaction_event_received(delay=6)
-        test_context.verify_reaction_event_data()
-        test_context.verify_trace_record()
-        test_context.verify_reaction_not_found()
-        test_context.verify_has_no_log_issues()
+        async with test_context.async_listen_reaction_event():
+            test_context.verify_reaction_not_found()
+            await test_context.async_send_action_event()
+            await test_context.async_verify_reaction_event_not_received()
+            test_context.verify_reaction_found()
+
+            async_fire_time_changed(test_context.hass, now + timedelta(seconds=4))
+            await test_context.hass.async_block_till_done()
+    
+            await test_context.async_verify_reaction_event_received()
+            test_context.verify_reaction_event_data()
+            test_context.verify_trace_record()
+            test_context.verify_reaction_not_found()
+            test_context.verify_has_no_log_issues()
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["scheduled"])
@@ -68,17 +74,26 @@ async def test_scheduled(test_context: TstContext, workflow_name: str):
     - Trace data should match configuration
     """
 
-    await test_context.async_start_react()
-    
-    async with test_context.async_listen_reaction_event():
-        test_context.verify_reaction_not_found()
-        await test_context.async_send_action_event()
-        await test_context.async_verify_reaction_event_not_received()
-        test_context.verify_reaction_found()
-        # test_context.verify_reaction_entity_data()
-        test_context.verify_trace_record(expected_event_trace=False)
-        await test_context.async_stop_all_runs()
-        test_context.verify_has_no_log_issues()
+    now = dt_util.now().replace(hour=12, minute=34, second=55)
+    test_time = now + timedelta(days=(4-now.weekday()) % 7)
+
+    with freeze_time(test_time):
+        await test_context.async_start_react()
+        
+        async with test_context.async_listen_reaction_event():
+            test_context.verify_reaction_not_found()
+            await test_context.async_send_action_event()
+            await test_context.async_verify_reaction_event_not_received()
+            test_context.verify_reaction_found()
+            
+            async_fire_time_changed(test_context.hass, test_time + timedelta(seconds=2))
+            await test_context.hass.async_block_till_done()
+
+            await test_context.async_verify_reaction_event_received()
+            test_context.verify_reaction_event_data()
+            test_context.verify_trace_record()
+            test_context.verify_reaction_not_found()
+            test_context.verify_has_no_log_issues()
 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["reset"])
@@ -246,12 +261,6 @@ async def test_overwrite(test_context: TstContext, workflow_name: str):
         await test_context.async_send_action_event()
         await test_context.async_verify_reaction_event_not_received()
         test_context.verify_reaction_found()
-        # test_context.verify_reaction_entity_data()
-        
-        # await test_context.async_verify_reaction_event_received(delay=6)
-        # test_context.verify_reaction_event_data()
-        # test_context.verify_trace_record()
-        # test_context.verify_reaction_not_found()
 
         await test_context.async_stop_all_runs()
         test_context.verify_reaction_not_found()

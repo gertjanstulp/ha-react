@@ -2,16 +2,20 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 from importlib import import_module
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
 
-from homeassistant.const import EVENT_STATE_CHANGED
+from homeassistant.const import (
+    EVENT_STATE_CHANGED,
+    SUN_EVENT_SUNRISE,
+    SUN_EVENT_SUNSET,
+)
 from homeassistant.core import CALLBACK_TYPE, Event as HaEvent, HassJob, callback
-from homeassistant.helpers.event import async_track_time_change
+from homeassistant.helpers.event import async_track_time_change, async_track_sunrise, async_track_sunset
 
-from custom_components.react.const import ATTR_TYPE, EVENT_REACT_REACTION
+from custom_components.react.const import ACTOR_ENTITY_SUN, ATTR_ENTITY, ATTR_TYPE, EVENT_REACT_REACTION
 from custom_components.react.tasks.base import ReactTask, ReactTaskType
 from custom_components.react.tasks.filters import (
     ALL_REACTION_FILTER_STRATEGIES, 
@@ -37,6 +41,7 @@ TRACK_TIME_CALLBACKS = "react_track_time_callbacks"
 TRACK_TIME_LISTENERS = "react_track_time_listeners"
 
 ATTR_TIME_KEY = "time_key"
+ATTR_time_key = "time_key"
 
 _LOGGER = get_react_logger()
 
@@ -99,16 +104,11 @@ class ReactTaskManager:
                 self.track_state_change(filter, task)
         
 
-    def untrack_entity(self, task: ReactTask, track_key: str):
+    def untrack_key(self, task: ReactTask, track_key: str):
         if unloader := self._unloaders.get(task.id, {}).pop(track_key, None):
             unloader.unload()
         
     
-    def untrack_time(self, task: ReactTask, track_key: str):
-        if unloader := self._unloaders.get(task.id, {}).pop(track_key, None):
-            unloader.unload()
-
-
     def wrap_unloader(self, callback: CALLBACK_TYPE, task_id: str, key: str):
         if not task_id in self._unloaders:
             self._unloaders[task_id] = {}
@@ -218,9 +218,7 @@ class ReactTaskManager:
                             try:
                                 self.react.hass.async_run_hass_job(job, ha_event)
                             except Exception:  # pylint: disable=broad-except
-                                _LOGGER.exception(
-                                    "Error while processing reaction for %s", key
-                                )
+                                _LOGGER.exception(f"Error while processing reaction for {key}")
 
             self.react.hass.data[TRACK_REACTION_LISTENER] = self.react.hass.bus.async_listen(
                 EVENT_REACT_REACTION,
@@ -268,9 +266,7 @@ class ReactTaskManager:
                             try:
                                 self.react.hass.async_run_hass_job(job, ha_event)
                             except Exception:  # pylint: disable=broad-except
-                                _LOGGER.exception(
-                                    "Error while processing state change for %s", key
-                                )
+                                _LOGGER.exception(f"Error while processing state change for {key}")
 
             self.react.hass.data[TRACK_STATE_CHANGE_LISTENER] = self.react.hass.bus.async_listen(
                 EVENT_STATE_CHANGED,
@@ -295,6 +291,64 @@ class ReactTaskManager:
         self.wrap_unloader(remove_listener, task.id, filter.track_key)
 
 
+    def track_sun(self,
+        sun_event: str,
+        track_key: str,
+        task: ReactTask,
+        offset: timedelta = None,
+    ):
+        time_callbacks: dict[str, list[HassJob[[HaEvent], Any]]] = self.react.hass.data.setdefault(
+            TRACK_TIME_CALLBACKS, {}
+        )
+        time_listeners: dict[str, CALLBACK_TYPE] = self.react.hass.data.setdefault(
+            TRACK_TIME_LISTENERS, {}
+        )
+
+        time_key = f"{sun_event}{f'_{str(offset)}' if offset else ''}"
+
+        if time_key not in time_listeners:
+
+            @callback
+            def _async_sun_dispatcher() -> None:
+                if time_key in time_callbacks:
+                    for job in time_callbacks[time_key][:]:
+                        try:
+                            self.react.hass.async_run_hass_job(job, HaEvent("time", data = {ATTR_time_key: time_key, ATTR_ENTITY: ACTOR_ENTITY_SUN}))
+                        except Exception:  # pylint: disable=broad-except
+                            _LOGGER.exception(f"Error while processing sun change for {time_key}")
+        
+            if sun_event == SUN_EVENT_SUNRISE:
+                time_listeners[time_key] = async_track_sunrise(
+                    self.react.hass,
+                    _async_sun_dispatcher,
+                    offset
+                )
+            if sun_event == SUN_EVENT_SUNSET:
+                time_listeners[time_key] = async_track_sunset(
+                    self.react.hass,
+                    _async_sun_dispatcher,
+                    offset
+                )
+
+        job = HassJob(task.execute_task, f"track sun change for {time_key}")
+
+        time_callbacks.setdefault(time_key, []).append(job)
+
+        @callback
+        def remove_listener() -> None:
+            time_callbacks[time_key].remove(job)
+            if len(time_callbacks[time_key]) == 0:
+                del time_callbacks[time_key]
+
+            if not time_callbacks:
+                time_listeners[time_key]()
+                del time_listeners[time_key]
+                if not time_listeners:
+                    del self.react.hass.data[TRACK_TIME_LISTENERS]
+
+        self.wrap_unloader(remove_listener, task.id, track_key)
+
+
     def track_time(self,
         time_data: TimeData,
         time_key: str,
@@ -316,9 +370,9 @@ class ReactTaskManager:
                 if time_key in time_callbacks:
                     for job in time_callbacks[time_key][:]:
                         try:
-                            self.react.hass.async_run_hass_job(job, HaEvent("time", data = {ATTR_TIME_KEY: time_key, ATTR_TYPE: args[0]}))
+                            self.react.hass.async_run_hass_job(job, HaEvent("time", data = {ATTR_TIME_KEY: time_key, ATTR_ENTITY: args[0]}))
                         except Exception:  # pylint: disable=broad-except
-                            _LOGGER.exception("Error while processing time change for %s", time_key)
+                            _LOGGER.exception(f"Error while processing time change for {time_key}")
 
             time_listeners[time_key] = async_track_time_change(
                 self.react.hass,
