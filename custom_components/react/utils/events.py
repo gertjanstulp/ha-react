@@ -182,6 +182,7 @@ class TimeEventPayload(DynamicData):
         super().__init__()
         self.time_key: str = None
         self.entity: str = None
+        self.data: dict[str, Any] = None
         self.load(source)
 
 
