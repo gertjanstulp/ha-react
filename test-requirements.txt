@@ -32,4 +32,7 @@ PyNaCl
 # for telegram
 python-telegram-bot==13.1
 
+# for time
+freezegun==1.2.2
+
 Pillow

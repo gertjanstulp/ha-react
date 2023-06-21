@@ -750,7 +750,6 @@ class TstContext():
         self.verify_reaction_entity_data_item(ATTR_ENTITY, reaction_entity, workflow_config_reactor.entity, expected_entity, entity_index)
         self.verify_reaction_entity_data_item(ATTR_TYPE, reaction_entity, workflow_config_reactor.type, expected_type, type_index)
         self.verify_reaction_entity_data_item(ATTR_ACTION, reaction_entity, workflow_config_reactor.action, expected_action, action_index)
-        # self.verify_reaction_entity_state(reaction_entity, workflow_config_reactor)
 
     
     def verify_reaction_entity_data_item(self, attr: str, reaction_entity: State, multi_item: MultiItem, expected_value: Any = None, item_index: int = 0):
@@ -759,34 +758,9 @@ class TstContext():
         assert got_value == expected_value, f"Expected reaction entity {attr} '{expected_value}', got '{got_value}'"
 
 
-    # def verify_reaction_entity_state(self, reaction_entity: State, workflow_config_reactor: Reactor):
-    #     react: ReactBase = self.hass.data[DOMAIN]
-    #     reaction_internal = react.reactions.get_by_id(reaction_entity.attributes.get(ATTR_ID))
-        
-    #     got_value = reaction_entity.state
-
-    #     if workflow_config_reactor.wait and reaction_internal.data.waiting:
-    #         assert got_value == WAITING, f"Expected reaction entity state '{WAITING}', got '{got_value}'"
-    #     elif workflow_config_reactor.delay or workflow_config_reactor.schedule:
-    #         try:
-    #             datetime_parse(got_value)
-    #         except:
-    #             assert False, f"Expected datetime as reaction entity state, got '{got_value}'"
-
-
     def retrieve_reaction_id(self):
         reaction = self.retrieve_reactions()[0]
         return reaction.id
-
-
-    # def verify_reaction_internal_data(self, expected_data: dict = None):
-    #     react: ReactBase = self.hass.data[DOMAIN]
-    #     reaction_entity = self.retrieve_reactions()[0]
-    #     reaction_internal = react.reactions.get_by_id(reaction_entity.attributes.get(ATTR_ID))
-
-    #     data_got = reaction_internal.data.data
-    #     data_expected = expected_data 
-    #     assert data_got == data_expected, f"Expected reaction data '{data_expected}', got '{data_got}'"
 
 
     def verify_action_event_count(self, expected_count: int = 1):
@@ -794,15 +768,11 @@ class TstContext():
         assert got_count == expected_count, f"Expected event count {expected_count}, got {got_count}"
 
 
-    async def async_verify_action_event_not_received(self, delay: int = 0) -> None:
-        if delay > 0:
-            await sleep(delay)
+    async def async_verify_action_event_not_received(self) -> None:
         self.verify_action_event_count(0)
 
 
-    async def async_verify_action_event_received(self, expected_count: int = 1, delay: int = 0) -> None:
-        if delay > 0:
-            await sleep(delay)
+    async def async_verify_action_event_received(self, expected_count: int = 1) -> None:
         self.verify_action_event_count(expected_count)
         for i,call in enumerate(self.action_event_mock.mock_calls):
             assert len(call.args) > 0, f"Expected args for call {i}, got none"
@@ -842,15 +812,11 @@ class TstContext():
             assert got_count == expected_count, f"Expected event count {expected_count}, got {got_count}"
 
 
-    async def async_verify_reaction_event_not_received(self, delay: int = 0) -> None:
-        if delay > 0:
-            await sleep(delay)
+    async def async_verify_reaction_event_not_received(self) -> None:
         self.verify_reaction_event_count(0)
 
 
-    async def async_verify_reaction_event_received(self, expected_count: int = 1, delay: int = 0, at_least_count: bool = False) -> None:
-        if delay > 0:
-            await sleep(delay)
+    async def async_verify_reaction_event_received(self, expected_count: int = 1, at_least_count: bool = False) -> None:
         self.verify_reaction_event_count(expected_count, at_least_count)
         for i,call in enumerate(self.reaction_event_mock.mock_calls):
             assert len(call.args) > 0, f"Expected args for call {i}, got none"

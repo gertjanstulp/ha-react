@@ -271,9 +271,13 @@ WORKFLOW_MODE_QUEUED = "queued"
 WORKFLOW_MODE_PARALLEL = "parallel"
 
 # time
-ACTOR_ENTITY_TIME = "time"
-ACTOR_TYPE_CLOCK = "clock"
-ACTOR_TYPE_PATTERN = "pattern"
+ACTOR_ENTITY_CLOCK = "clock"
+ACTOR_ENTITY_PATTERN = "pattern"
+ACTOR_ENTITY_SUN = "sun"
+ACTOR_TYPE_TIME = "time"
+# ACTOR_ENTITY_TIME = "time"
+# ACTOR_TYPE_CLOCK = "clock"
+# ACTOR_TYPE_PATTERN = "pattern"
 
 ENTITY_HASS = "hass"
 TYPE_SYSTEM = "system"

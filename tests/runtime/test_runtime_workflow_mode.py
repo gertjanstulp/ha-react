@@ -1,12 +1,13 @@
-from asyncio import sleep
 import pytest
 
-from homeassistant.core import HomeAssistant
-from custom_components.react.base import ReactBase
-from custom_components.react.const import DOMAIN
+from datetime import timedelta
+from freezegun import freeze_time
+
+from homeassistant.util import dt as dt_util
+
 from custom_components.react.runtime.runtime import WorkflowRuntime
 
-from tests.common import FIXTURE_WORKFLOW_NAME
+from tests.common import FIXTURE_WORKFLOW_NAME, async_fire_time_changed
 from tests.tst_context import TstContext
 
 
@@ -57,38 +58,46 @@ async def test_runtime_workflow_mode_restart(test_context: TstContext, workflow_
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["delayed_long_queued"])
 async def test_runtime_workflow_mode_queued(test_context: TstContext, workflow_name: str):
-    await test_context.async_start_react()
-    runtime = test_context.react.runtime.get_workflow_runtime(test_context.workflow_id)
-    try:
+    
+    now = dt_util.now()
+    with freeze_time(now):
+        await test_context.async_start_react()
+        runtime = test_context.react.runtime.get_workflow_runtime(test_context.workflow_id)
+        try:
+            async with test_context.async_listen_reaction_event():
+                await test_context.async_send_action_event()
+                assert_run_count(runtime, 1)
+                await test_context.async_send_action_event()
+                assert_run_count(runtime, 2)
+                test_context.verify_reaction_event_count(0)
+                async_fire_time_changed(test_context.hass, now + timedelta(seconds=4))
+                await test_context.hass.async_block_till_done()
+                assert_run_count(runtime, 1)
+                test_context.verify_reaction_event_count(1)
+                async_fire_time_changed(test_context.hass, now + timedelta(seconds=4))
+                await test_context.hass.async_block_till_done()
+                assert_run_count(runtime, 0)
+                test_context.verify_reaction_event_count(2)
+        finally:
+            await runtime.async_stop_all_runs()
+    
+
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["delayed_long_parallel"])
+async def test_runtime_workflow_mode_parallel(test_context: TstContext, workflow_name: str):
+    now = dt_util.now()
+    with freeze_time(now):
+        await test_context.async_start_react()
+        runtime = test_context.react.runtime.get_workflow_runtime(test_context.workflow_id)
         async with test_context.async_listen_reaction_event():
             await test_context.async_send_action_event()
             assert_run_count(runtime, 1)
             await test_context.async_send_action_event()
             assert_run_count(runtime, 2)
             test_context.verify_reaction_event_count(0)
-            await sleep(4)
-            assert_run_count(runtime, 1)
-            test_context.verify_reaction_event_count(1)
-            await sleep(4)
+            async_fire_time_changed(test_context.hass, now + timedelta(seconds=4))
+            await test_context.hass.async_block_till_done()
             assert_run_count(runtime, 0)
             test_context.verify_reaction_event_count(2)
-    finally:
-        await runtime.async_stop_all_runs()
-    
-
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["delayed_long_parallel"])
-async def test_runtime_workflow_mode_parallel(test_context: TstContext, workflow_name: str):
-    await test_context.async_start_react()
-    runtime = test_context.react.runtime.get_workflow_runtime(test_context.workflow_id)
-    async with test_context.async_listen_reaction_event():
-        await test_context.async_send_action_event()
-        assert_run_count(runtime, 1)
-        await test_context.async_send_action_event()
-        assert_run_count(runtime, 2)
-        test_context.verify_reaction_event_count(0)
-        await sleep(4)
-        assert_run_count(runtime, 0)
-        test_context.verify_reaction_event_count(2)
 
 
 def assert_run_count(runtime: WorkflowRuntime, expected_count: int):

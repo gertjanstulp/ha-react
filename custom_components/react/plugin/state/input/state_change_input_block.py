@@ -79,5 +79,5 @@ class StateChangeInputBlock(InputBlock[StateConfig]):
                     self.manager.track_state_change(ENTITY_ID_STATE_CHANGE_FILTER_STRATEGY.get_filter(entity, state_track_key), self)
                     self.state_track_keys.append(state_track_key)
                 if not track and state_track_key in self.state_track_keys:
-                    self.manager.untrack_entity(self, state_track_key)
+                    self.manager.untrack_key(self, state_track_key)
                     self.state_track_keys.remove(state_track_key)

@@ -582,8 +582,8 @@ workflow:
 
   workflow_time_clock:
     when:
-      entity: time
-      type: clock
+      entity: clock
+      type: time
       action: "23:59:59"
     then:
       entity: reactor_entity_time_clock
@@ -592,13 +592,57 @@ workflow:
 
   workflow_time_pattern:
     when:
-      entity: time
-      type: pattern
-      action: "23:59:59"
+      entity: pattern
+      type: time
+      action: "23:59:59" # keep like this, otherwise test instance will constantly trigger. will be set properly by unittest
     then:
       entity: reactor_entity_time_pattern
       type: reactor_type_time_pattern
       action: reactor_action_time_pattern
+
+  workflow_time_sunrise:
+    when:
+      entity: sun
+      type: time
+      action: sunrise
+    then:
+      entity: reactor_entity_sunrise
+      type: reactor_type_sunrise
+      action: reactor_action_sunrise
+
+  workflow_time_sunrise_with_offset:
+    when:
+      entity: sun
+      type: time
+      action: sunrise
+      data:
+        offset: "+00:30:00"
+    then:
+      entity: reactor_entity_sunrise_with_offset
+      type: reactor_type_sunrise_with_offset
+      action: reactor_action_sunrise_with_offset
+
+  workflow_time_sunset:
+    when:
+      entity: sun
+      type: time
+      action: sunset
+    then:
+      entity: reactor_entity_sunset
+      type: reactor_type_sunset
+      action: reactor_action_sunset
+
+  workflow_time_sunset_with_offset:
+    when:
+      entity: sun
+      type: time
+      action: sunset
+      data:
+        offset: "-00:30:00"
+    then:
+      entity: reactor_entity_sunset_with_offset
+      type: reactor_type_sunset_with_offset
+      action: reactor_action_sunset_with_offset
 
   workflow_binary_sensor_available_test:
     when:
