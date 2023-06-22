@@ -18,7 +18,7 @@ from custom_components.react.utils.struct import DynamicData
 class HassEventShutdownInputBlock(InputBlock[DynamicData]):
     def __init__(self, react: ReactBase) -> None:
         super().__init__(react, HassEvent)
-        self.track_event_filters = [EVENT_TYPE_FILTER_STRATEGY.get_filter(EVENT_HOMEASSISTANT_STOP)]
+        self.track_event_filter = EVENT_TYPE_FILTER_STRATEGY.get_filter(EVENT_HOMEASSISTANT_STOP)
 
 
     def create_action_event_payloads(self, source_event: HassEvent) -> list[dict]:

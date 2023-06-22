@@ -179,6 +179,7 @@ REACT_TYPE_STATE = "state"
 REACT_TYPE_FAN = "fan"
 REACT_TYPE_MQTT = "mqtt"
 REACT_TYPE_CLIMATE = "climate"
+REACT_TYPE_BUTTON = "button"
 
 
 # React actions
@@ -203,6 +204,9 @@ REACT_ACTION_LOG = "log"
 REACT_ACTION_CHANGE = "change"
 REACT_ACTION_SET_TEMPERATURE = "set_temperature"
 REACT_ACTION_RESET_TEMPERATURE = "reset_temperature"
+REACT_ACTION_SHORT_PRESS = "short_press"
+REACT_ACTION_LONG_PRESS = "long_press"
+REACT_ACTION_DOUBLE_PRESS = "double_press"
 
 # signals
 SIGNAL_ITEM_CREATED = "react_item_created"

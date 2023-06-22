@@ -33,7 +33,7 @@ from custom_components.react.utils.struct import DynamicData
 class CallbackInputBlock(InputBlock[MobileAppConfig]):
     def __init__(self, react: ReactBase) -> None:
         super().__init__(react, CallbackActionEvent)
-        self.track_event_filters = [EVENT_TYPE_FILTER_STRATEGY.get_filter(EVENT_MOBILE_APP_CALLBACK)]
+        self.track_event_filter = EVENT_TYPE_FILTER_STRATEGY.get_filter(EVENT_MOBILE_APP_CALLBACK)
 
 
     def load(self):

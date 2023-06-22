@@ -36,7 +36,7 @@ class CallbackInputBlock(InputBlock[TelegramConfig]):
     def __init__(self, react: ReactBase) -> None:
         super().__init__(react, CallbackActionEvent)
         
-        self.track_event_filters = [EVENT_TYPE_FILTER_STRATEGY.get_filter(EVENT_TELEGRAM_CALLBACK)]
+        self.track_event_filter = EVENT_TYPE_FILTER_STRATEGY.get_filter(EVENT_TELEGRAM_CALLBACK)
 
 
     def load(self):
