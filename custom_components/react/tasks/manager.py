@@ -1,5 +1,6 @@
 """React task manager."""
 from __future__ import annotations
+from ast import Tuple
 
 import asyncio
 from datetime import datetime, timedelta
@@ -15,10 +16,13 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, Event as HaEvent, HassJob, callback
 from homeassistant.helpers.event import async_track_time_change, async_track_sunrise, async_track_sunset
 
-from custom_components.react.const import ACTOR_ENTITY_SUN, ATTR_DATA, ATTR_ENTITY, ATTR_TYPE, EVENT_REACT_REACTION
-from custom_components.react.plugin.time.const import ATTR_OFFSET
+from custom_components.react.const import (
+    ATTR_ENTITY, 
+    EVENT_REACT_REACTION,
+)
 from custom_components.react.tasks.base import ReactTask, ReactTaskType
 from custom_components.react.tasks.filters import (
+    ALL_EVENTTYPE_FILTER_STRATEGIES,
     ALL_REACTION_FILTER_STRATEGIES, 
     ALL_STATE_CHANGE_FILTER_STRATEGIES,
     EventFilter,
@@ -31,6 +35,7 @@ if TYPE_CHECKING:
 
 TRACK_EVENT_CALLBACKS = "react_track_event_callbacks"
 TRACK_EVENT_LISTENERS = "react_track_event_listeners"
+TRACK_EVENT_FILTERS = "react_track_event_filters"
 
 TRACK_REACTION_CALLBACKS = "react_track_reaction_callbacks"
 TRACK_REACTION_LISTENER = "react_track_reaction_listener"
@@ -92,9 +97,8 @@ class ReactTaskManager:
 
     def start_task(self, task: ReactTask):
         task.on_start()
-        if task.track_event_filters is not None:
-            for filter in task.track_event_filters:
-                self.track_event(filter, task)
+        if task.track_event_filter:
+            self.track_event(task.track_event_filter, task)
         
         if task.track_reaction_filters:
             for filter in task.track_reaction_filters:
@@ -154,42 +158,43 @@ class ReactTaskManager:
 
 
     def track_event(self, filter: EventFilter, task: ReactTask):
-        event_callbacks: dict[str, list[HassJob[[HaEvent], Any]]] = self.react.hass.data.setdefault(
+        event_callbacks: dict[str, list[tuple[HassJob[[HaEvent], Any], EventFilter]]] = self.react.hass.data.setdefault(
             TRACK_EVENT_CALLBACKS, {}
         )
         event_listeners: dict[str, CALLBACK_TYPE] = self.react.hass.data.setdefault(
             TRACK_EVENT_LISTENERS, {}
         )
 
-        if filter.filter_key not in event_listeners:
+        if filter.event_type not in event_listeners:
             @callback
             def _async_reaction_dispatcher(ha_event: HaEvent) -> None:
-                if ha_event.event_type in event_callbacks:
-                    for job in event_callbacks[ha_event.event_type][:]:
-                        try:
-                            self.react.hass.async_run_hass_job(job, ha_event)
-                        except Exception:  # pylint: disable=broad-except
-                            _LOGGER.exception(f"Error while processing event for {ha_event.event_type}")
+                for key in [ strategy.get_event_key(ha_event) for strategy in ALL_EVENTTYPE_FILTER_STRATEGIES ]:
+                    if key in event_callbacks:
+                        for job,filter in event_callbacks[key][:]:
+                            if filter.applies(ha_event):
+                                try:
+                                    self.react.hass.async_run_hass_job(job, ha_event)
+                                except Exception:  # pylint: disable=broad-except
+                                    _LOGGER.exception(f"Error while processing event for {key}")
 
-            event_listeners[filter.filter_key] = self.react.hass.bus.async_listen(
-                filter.filter_key,
+            event_listeners[filter.event_type] = self.react.hass.bus.async_listen(
+                filter.event_type,
                 _async_reaction_dispatcher,
             )
 
-
         job = HassJob(task.execute_task, f"track reaction type {filter.filter_key}")
 
-        event_callbacks.setdefault(filter.filter_key, []).append(job)
+        event_callbacks.setdefault(filter.filter_key, []).append((job, filter))
         
         @callback
         def remove_listener() -> None:
-            event_callbacks[filter.filter_key].remove(job)
+            event_callbacks[filter.filter_key].remove((job, filter))
             if len(event_callbacks[filter.filter_key]) == 0:
                 del event_callbacks[filter.filter_key]
 
             if not event_callbacks:
-                event_listeners[filter.filter_key]()
-                del event_listeners[filter.filter_key]
+                event_listeners[filter.event_type]()
+                del event_listeners[filter.event_type]
                 if not event_listeners:
                     del self.react.hass.data[TRACK_EVENT_LISTENERS]
 
@@ -203,15 +208,6 @@ class ReactTaskManager:
 
         if TRACK_REACTION_LISTENER not in self.react.hass.data:
             @callback
-            def _async_reaction_filter(ha_event: HaEvent) -> bool:
-                for strategy in ALL_REACTION_FILTER_STRATEGIES:
-                    key = strategy.get_event_key(ha_event)
-                    if key in reaction_callbacks:
-                        return True
-
-                return False
-
-            @callback
             def _async_reaction_dispatcher(ha_event: HaEvent) -> None:
                 for key in [ strategy.get_event_key(ha_event) for strategy in ALL_REACTION_FILTER_STRATEGIES ]:
                     if key in reaction_callbacks:
@@ -224,7 +220,6 @@ class ReactTaskManager:
             self.react.hass.data[TRACK_REACTION_LISTENER] = self.react.hass.bus.async_listen(
                 EVENT_REACT_REACTION,
                 _async_reaction_dispatcher,
-                event_filter=_async_reaction_filter,
             )
 
         job = HassJob(task.execute_task, f"track reaction type {filter.filter_key}")
@@ -251,15 +246,6 @@ class ReactTaskManager:
 
         if TRACK_STATE_CHANGE_LISTENER not in self.react.hass.data:
             @callback
-            def _async_state_change_filter(ha_event: HaEvent) -> bool:
-                for strategy in ALL_STATE_CHANGE_FILTER_STRATEGIES:
-                    key = strategy.get_event_key(ha_event)
-                    if key in state_change_callbacks:
-                        return True
-
-                return False
-
-            @callback
             def _async_state_change_dispatcher(ha_event: HaEvent) -> None:
                 for key in [ strategy.get_event_key(ha_event) for strategy in ALL_STATE_CHANGE_FILTER_STRATEGIES ]:
                     if key in state_change_callbacks:
@@ -272,7 +258,6 @@ class ReactTaskManager:
             self.react.hass.data[TRACK_STATE_CHANGE_LISTENER] = self.react.hass.bus.async_listen(
                 EVENT_STATE_CHANGED,
                 _async_state_change_dispatcher,
-                event_filter=_async_state_change_filter,
             )
 
         job = HassJob(task.execute_task, f"track state change {filter.filter_key}")

@@ -25,7 +25,7 @@ class ReactTask:
         self.id = uuid.uuid4().hex
         self.task_logger = get_react_logger()
     
-        self.track_event_filters: list[EventFilter] | None = None
+        self.track_event_filter: EventFilter | None = None
         self.track_state_change_filters: list[EventFilter] | None = None
         self.track_reaction_filters: list[EventFilter] | None = None
 
