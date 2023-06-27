@@ -181,7 +181,6 @@ REACT_TYPE_MQTT = "mqtt"
 REACT_TYPE_CLIMATE = "climate"
 REACT_TYPE_BUTTON = "button"
 
-
 # React actions
 REACT_ACTION_SEND_MESSAGE = "send_message"
 REACT_ACTION_FEEDBACK = "feedback"
@@ -279,9 +278,6 @@ ACTOR_ENTITY_CLOCK = "clock"
 ACTOR_ENTITY_PATTERN = "pattern"
 ACTOR_ENTITY_SUN = "sun"
 ACTOR_TYPE_TIME = "time"
-# ACTOR_ENTITY_TIME = "time"
-# ACTOR_TYPE_CLOCK = "clock"
-# ACTOR_TYPE_PATTERN = "pattern"
 
 ENTITY_HASS = "hass"
 TYPE_SYSTEM = "system"

@@ -35,7 +35,6 @@ if TYPE_CHECKING:
 
 TRACK_EVENT_CALLBACKS = "react_track_event_callbacks"
 TRACK_EVENT_LISTENERS = "react_track_event_listeners"
-TRACK_EVENT_FILTERS = "react_track_event_filters"
 
 TRACK_REACTION_CALLBACKS = "react_track_reaction_callbacks"
 TRACK_REACTION_LISTENER = "react_track_reaction_listener"
