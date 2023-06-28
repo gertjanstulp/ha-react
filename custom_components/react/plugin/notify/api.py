@@ -49,7 +49,7 @@ class NotifyApi(PluginApiBase[NotifyConfig]):
         acknowledgement: str,
         notify_provider: str, 
     ):
-        session.debug(self.logger, f"Confirming notify feedback {feedback}")
+        session.debug(self.logger, f"Confirming notify feedback '{feedback}'")
         try:
             provider = self.get_notify_provider(session, None, notify_provider)
             if provider:
