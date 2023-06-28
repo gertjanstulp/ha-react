@@ -8,5 +8,5 @@ from custom_components.react.plugin.deconz.input.button_input_block import Decon
 
 class DeconzDoublePressInputBlock(DeconzButtonInputBlock):
     def __init__(self, react: ReactBase) -> None:
-        super().__init__(react, DECONZ_CODE_DOUBLE_PRESS, REACT_ACTION_DOUBLE_PRESS)
+        super().__init__(react, DECONZ_CODE_DOUBLE_PRESS, REACT_ACTION_DOUBLE_PRESS, "double press")
     

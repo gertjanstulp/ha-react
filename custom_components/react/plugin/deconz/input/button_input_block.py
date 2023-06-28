@@ -19,9 +19,10 @@ from custom_components.react.utils.struct import DynamicData
 
 
 class DeconzButtonInputBlock(InputBlock[DeconzConfig]):
-    def __init__(self, react: ReactBase, deconz_code: int, react_action: str) -> None:
+    def __init__(self, react: ReactBase, deconz_code: int, react_action: str, event_description: str) -> None:
         super().__init__(react, DeconzButtonEvent)
         self.react_action = react_action
+        self.event_description = event_description
         match_data = {
             ATTR_EVENT: deconz_code
         }
@@ -34,8 +35,8 @@ class DeconzButtonInputBlock(InputBlock[DeconzConfig]):
 
 
     def create_action_event_payloads(self, source_event: DeconzButtonEvent) -> list[dict]:
-        source_event.session.debug(self.logger, f"Deconz short press event caught: device id '{source_event.payload.device_id}'")
         entity_id = self.entity_maps.get(source_event.payload.device_id, source_event.payload.device_id)
+        source_event.session.debug(self.logger, f"Deconz {self.event_description} event caught: device id {source_event.payload.device_id} mapped to {entity_id}")
         return [{
             ATTR_ENTITY: entity_id,
             ATTR_TYPE: REACT_TYPE_BUTTON,
@@ -47,6 +48,7 @@ class DeconzButtonEventPayload(DynamicData):
     def __init__(self, source: dict = None) -> None:
         super().__init__()
         self.event: str = None
+        self.device_id: str = None
         self.load(source)
         
             
