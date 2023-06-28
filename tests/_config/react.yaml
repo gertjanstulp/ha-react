@@ -49,6 +49,12 @@ plugins:
   - module: custom_components.react.plugin.hass
   - module: custom_components.react.plugin.state
 
+  - module: custom_components.react.plugin.deconz
+    config:
+      entity_maps:
+        "935688da192d1dadfd586e00f61b2113": test_entity
+
+
 stencil:
   full_stencil:
     when:
