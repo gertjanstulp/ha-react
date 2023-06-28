@@ -42,9 +42,8 @@ async def async_setup_component(react: ReactBase):
         if conf is None:
             conf = {DOMAIN: {}}
             
-        # Reload plugins
+        # Unload plugins
         react.plugin_factory.unload_plugins()
-        react.plugin_factory.load_plugins()
 
         # Reload configuration from file
         react.configuration.update_from_dict(
@@ -53,6 +52,9 @@ async def async_setup_component(react: ReactBase):
                 "config": conf[DOMAIN],
             }
         )
+
+        # Load new plugin configuration
+        react.plugin_factory.load_plugins()
 
         # Load new workflow entities
         await async_load()
