@@ -19,7 +19,7 @@ from custom_components.react.utils.struct import DynamicData
 
 
 class DeconzButtonInputBlock(InputBlock[DeconzConfig]):
-    def __init__(self, react: ReactBase, deconz_code: str, react_action: str) -> None:
+    def __init__(self, react: ReactBase, deconz_code: int, react_action: str) -> None:
         super().__init__(react, DeconzButtonEvent)
         self.react_action = react_action
         match_data = {
