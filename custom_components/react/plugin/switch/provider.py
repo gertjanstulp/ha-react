@@ -20,8 +20,8 @@ class SwitchProvider(PluginProviderBase[SwitchConfig]):
         await self.plugin.hass_api.async_hass_call_service(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON if state == STATE_ON else SERVICE_TURN_OFF,
-            {
+            service_data={
                 ATTR_ENTITY_ID: entity_id,
             },
-            context,
+            context=context,
         )

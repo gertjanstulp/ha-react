@@ -41,8 +41,8 @@ class TelegramProvider(NotifyProvider[TelegramConfig]):
         await self.plugin.hass_api.async_hass_call_service(
             NOTIFY_DOMAIN, 
             entity_id,
-            data, 
-            context
+            service_data=data, 
+            context=context
         )
 
 

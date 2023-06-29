@@ -18,9 +18,9 @@ class PersistentNotificationProvider(NotifyProvider[DynamicData]):
         await self.plugin.hass_api.async_hass_call_service(
             PERSISTENT_NOTIFICATION_DOMAIN, 
             SERVICE_CREATE,
-            {
+            service_data={
                 ATTR_MESSAGE: message,
                 ATTR_NOTIFICATION_ID: entity_id
             }, 
-            context
+            context=context
         )

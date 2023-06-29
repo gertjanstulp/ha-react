@@ -562,35 +562,35 @@ workflow:
       action: log
       forward_data: True
 
-  workflow_hass_event_start_test:
+  workflow_system_hass_start_test:
     when:
       entity: hass
       type: system
       action: start
     then:
-      entity: reactor_entity_hass_event_start_test
-      type: reactor_type_hass_event_start_test
-      action: reactor_action_hass_event_start_test
+      entity: reactor_entity_system_hass_start_test
+      type: reactor_type_system_hass_start_test
+      action: reactor_action_system_hass_start_test
 
-  workflow_hass_event_started_test:
+  workflow_system_hass_started_test:
     when:
       entity: hass
       type: system
       action: started
     then:
-      entity: reactor_entity_hass_event_started_test
-      type: reactor_type_hass_event_started_test
-      action: reactor_action_hass_event_started_test
+      entity: reactor_entity_system_hass_started_test
+      type: reactor_type_system_hass_started_test
+      action: reactor_action_system_hass_started_test
 
-  workflow_hass_event_shutdown_test:
+  workflow_system_hass_shutdown_test:
     when:
       entity: hass
       type: system
       action: shutdown
     then:
-      entity: reactor_entity_hass_event_shutdown_test
-      type: reactor_type_hass_event_shutdown_test
-      action: reactor_action_hass_event_shutdown_test
+      entity: reactor_entity_system_hass_shutdown_test
+      type: reactor_type_system_hass_shutdown_test
+      action: reactor_action_system_hass_shutdown_test
 
   workflow_time_clock:
     when:

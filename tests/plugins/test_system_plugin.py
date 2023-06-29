@@ -10,7 +10,7 @@ from custom_components.react.const import (
 )
 from custom_components.react.plugin.const import ATTR_CONFIG
 
-from tests._plugins.hass_mock.setup import (
+from tests._plugins.system_mock.setup import (
     SKIP_START_INPUT_BLOCK, 
     SKIP_STARTED_INPUT_BLOCK,
 )
@@ -32,15 +32,15 @@ def set_test_config(test_context: TstContext,
 def get_mock_plugin(
 ) -> dict:
     result = {
-        ATTR_PLUGIN_MODULE: "tests._plugins.hass_mock",
+        ATTR_PLUGIN_MODULE: "tests._plugins.system_mock",
         ATTR_CONFIG: {} 
     }
     return result
 
 
 @pytest.mark.enable_socket
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["hass_event_start_test"])
-async def test_hass_plugin_hass_start_action(test_context: TstContext, workflow_name: str):
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["system_hass_start_test"])
+async def test_system_plugin_hass_start_action(test_context: TstContext, workflow_name: str):
     mock_plugin = get_mock_plugin()
     set_test_config(test_context,
         skip_started_task=True
@@ -60,8 +60,8 @@ async def test_hass_plugin_hass_start_action(test_context: TstContext, workflow_
 
 
 @pytest.mark.enable_socket
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["hass_event_started_test"])
-async def test_hass_plugin_hass_started_action(test_context: TstContext, workflow_name: str):
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["system_hass_started_test"])
+async def test_system_plugin_hass_started_action(test_context: TstContext, workflow_name: str):
     mock_plugin = get_mock_plugin()
     set_test_config(test_context,
         skip_start_task=True
@@ -81,8 +81,8 @@ async def test_hass_plugin_hass_started_action(test_context: TstContext, workflo
 
 
 @pytest.mark.enable_socket
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["hass_event_shutdown_test"])
-async def test_hass_plugin_hass_shutdown_action(test_context: TstContext, workflow_name: str):
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["system_hass_shutdown_test"])
+async def test_system_plugin_hass_shutdown_action(test_context: TstContext, workflow_name: str):
     mock_plugin = get_mock_plugin()
     set_test_config(test_context,
         skip_start_task=True,

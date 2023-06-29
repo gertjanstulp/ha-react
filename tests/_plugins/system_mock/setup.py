@@ -1,8 +1,8 @@
 from custom_components.react.plugin.factory import InputBlockSetupCallback
-from custom_components.react.plugin.hass.setup import Setup as HassSetup
-from custom_components.react.plugin.hass.input.shutdown_input_block import HassEventShutdownInputBlock
-from custom_components.react.plugin.hass.input.start_input_block import HassEventStartInputBlock
-from custom_components.react.plugin.hass.input.started_input_block import HassEventStartedInputBlock
+from custom_components.react.plugin.system.setup import Setup as SystemSetup
+from custom_components.react.plugin.system.input.hass_shutdown_input_block import SystemHassEventShutdownInputBlock
+from custom_components.react.plugin.system.input.hass_start_input_block import SystemHassEventStartInputBlock
+from custom_components.react.plugin.system.input.hass_started_input_block import SystemHassEventStartedInputBlock
 from tests._plugins.common import HassApiMockExtend
 
 from tests.const import TEST_CONFIG
@@ -11,7 +11,7 @@ SKIP_START_INPUT_BLOCK = "skip_start_input_block"
 SKIP_STARTED_INPUT_BLOCK = "skip_started_input_block"
 
 
-class Setup(HassSetup, HassApiMockExtend):
+class Setup(SystemSetup, HassApiMockExtend):
 
     def setup(self):
         test_config: dict = self.hass_api_mock.hass_get_data(TEST_CONFIG, {})
@@ -22,8 +22,8 @@ class Setup(HassSetup, HassApiMockExtend):
     def setup_input_blocks(self, setup: InputBlockSetupCallback):
         input_blocks = []
         if not self.skip_start_input_block:
-            input_blocks.append(HassEventStartInputBlock)
+            input_blocks.append(SystemHassEventStartInputBlock)
         if not self.skip_started_input_block:
-            input_blocks.append(HassEventStartedInputBlock)
-        input_blocks.append(HassEventShutdownInputBlock)
+            input_blocks.append(SystemHassEventStartedInputBlock)
+        input_blocks.append(SystemHassEventShutdownInputBlock)
         setup(input_blocks)

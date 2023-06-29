@@ -37,8 +37,8 @@ class MediaPlayerProvider(Generic[T_config], PluginProviderBase[T_config]):
         await self.plugin.hass_api.async_hass_call_service(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_MEDIA_PAUSE,
-            data, 
-            context
+            service_data=data, 
+            context=context
         )
     
 
@@ -59,8 +59,8 @@ class MediaPlayerProvider(Generic[T_config], PluginProviderBase[T_config]):
         await self.plugin.hass_api.async_hass_call_service(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_VOLUME_SET,
-            data, 
-            context
+            service_data=data, 
+            context=context
         )
 
 
