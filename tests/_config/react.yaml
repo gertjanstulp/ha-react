@@ -63,18 +63,8 @@ plugins:
 
 stencil:
   full_stencil:
-    when:
-      id: actor_full_stencil
-      entity: actor_entity_full_stencil
-      type: actor_type_full_stencil
-      action: actor_action_full_stencil
-    then: 
-      id: reactor_full_stencil
-      entity: reactor_entity_full_stencil
-      type: reactor_type_full_stencil
-      action: reactor_action_full_stencil
-      data:
-        test: 37
+    when: actor_type_full_stencil.actor_entity_full_stencil actor_action_full_stencil
+    then: reactor_type_full_stencil.reactor_entity_full_stencil reactor_action_full_stencil with data test=37
 
   partial_stencil:
     then: 
@@ -84,262 +74,112 @@ stencil:
 
 workflow:
   workflow_immediate:
-    when:
-      id: actor_immediate
-      entity: actor_entity_immediate
-      type: actor_type_immediate
-      action: actor_action_immediate
-    then: 
-      id: reactor_immediate
-      entity: reactor_entity_immediate
-      type: reactor_type_immediate
-      action: reactor_action_immediate
+    when: actor_type_immediate.actor_entity_immediate actor_action_immediate
+    then: reactor_type_immediate.reactor_entity_immediate reactor_action_immediate
 
   workflow_delayed:
-    when:
-      id: actor_delayed
-      entity: actor_entity_delayed
-      type: actor_type_delayed
-      action: actor_action_delayed
-    then:
-      id: reactor_delayed 
-      entity: reactor_entity_delayed
-      type: reactor_type_delayed
-      action: reactor_action_delayed
-      wait:
-        delay: 
-          seconds: 3
+    when: actor_type_delayed.actor_entity_delayed actor_action_delayed
+    then: reactor_type_delayed.reactor_entity_delayed reactor_action_delayed wait for 3 seconds
 
   workflow_overwrite:
-    when:
-      id: actor_overwrite
-      entity: actor_entity_overwrite
-      type: actor_type_overwrite
-      action: actor_action_overwrite
-    then:
-      id: reactor_overwrite 
-      entity: reactor_entity_overwrite
-      type: reactor_type_overwrite
-      action: reactor_action_overwrite
-      overwrite: True
-      wait:
-        delay: 
-          seconds: 10
+    when: actor_type_overwrite.actor_entity_overwrite actor_action_overwrite
+    then: >-
+      reactor_type_overwrite.reactor_entity_overwrite reactor_action_overwrite 
+      with overwrite 
+      wait for 3 seconds
 
-  workflow_scheduled:
-    when: 
-      id: actor_scheduled
-      entity: actor_entity_scheduled
-      type: actor_type_scheduled
-      action: actor_action_scheduled
-    then: 
-      id: reactor_scheduled 
-      entity: reactor_entity_scheduled
-      type: reactor_type_scheduled
-      action: reactor_action_scheduled
-      wait:
-        schedule:
-          at: "12:34:56"
-          weekdays:
-            fri
+  workflow_scheduled_all_days:
+    when: actor_type_scheduled_all_days.actor_entity_scheduled_all_days actor_action_scheduled_all_days
+    then: >-
+      reactor_type_scheduled_all_days.reactor_entity_scheduled_all_days reactor_action_scheduled_all_days 
+      wait until 12:34:56
+
+  workflow_scheduled_some_days:
+    when: actor_type_scheduled_some_days.actor_entity_scheduled_some_days actor_action_scheduled_some_days
+    then: >-
+      reactor_type_scheduled_some_days.reactor_entity_scheduled_some_days reactor_action_scheduled_some_days 
+      wait until 12:34:56 every mon,fri
 
   workflow_reset:
-    when: 
-      id: actor_reset
-      entity: actor_entity_reset
-      type: actor_type_reset
-      action: actor_action_reset
-    then:
-      - id: reactor_reset_1
-        reset_workflow: workflow_delayed
-      - id: reactor_reset_2
-        reset_workflow: workflow_scheduled
+    when: actor_type_reset.actor_entity_reset actor_action_reset
+    then: 
+      - reset workflow_delayed
+      - reset workflow_scheduled_some_days
 
   workflow_forward_action:
-    when:
-      id: actor_forward_action
-      entity: actor_entity_forward_action
-      type: actor_type_forward_action
-    then: 
-      id: reactor_forward_action
-      entity: reactor_entity_forward_action
-      type: reactor_type_forward_action
-      forward_action: True
+    when: actor_type_forward_action.actor_entity_forward_action
+    then: reactor_type_forward_action.reactor_entity_forward_action reactor_action_forward_action with forward_action
   
   workflow_forward_data:
-    when:
-      id: actor_forward_data
-      entity: actor_entity_forward_data
-      type: actor_type_forward_data
-      action: actor_action_forward_data
-    then: 
-      id: reactor_forward_data
-      entity: reactor_entity_forward_data
-      type: reactor_type_forward_data
-      action: reactor_action_forward_data
-      forward_data: True
+    when: actor_type_forward_data.actor_entity_forward_data actor_action_forward_data
+    then: reactor_type_forward_data.reactor_entity_forward_data reactor_action_forward_data with forward_data
 
   workflow_trace_basic_test:
-    when:
-      - entity: actor_entity_trace_basic_test_1
-        type: actor_type_trace_basic_test_1
-        action: actor_action_trace_basic_test_1
-        condition: "{{ is_state('input_boolean.trace_basic_test', 'off') }}"
-      - entity: actor_entity_trace_basic_test_2
-        type: actor_type_trace_basic_test_2
-        action: actor_action_trace_basic_test_2
+    when: 
+      - actor_type_trace_basic_test_1.actor_entity_trace_basic_test_1 actor_action_trace_basic_test_1 if {{ is_state('input_boolean.trace_basic_test', 'off') }}
+      - actor_type_trace_basic_test_2.actor_entity_trace_basic_test_2 actor_action_trace_basic_test_2
     then: 
-      - entity: reactor_entity_trace_basic_test_1
-        type: reactor_type_trace_basic_test_1
-        action: reactor_action_trace_basic_test_1
-        condition: "{{ is_state('input_boolean.trace_basic_test', 'on') }}"
-      - entity: reactor_entity_trace_basic_test_2
-        type: reactor_type_trace_basic_test_2
-        action: reactor_action_trace_basic_test_2
+      - reactor_type_trace_basic_test_1.reactor_entity_trace_basic_test_1 reactor_action_trace_basic_test_1 if {{ is_state('input_boolean.trace_basic_test', 'on') }}
+      - reactor_type_trace_basic_test_2.reactor_entity_trace_basic_test_2 reactor_action_trace_basic_test_2
 
   workflow_trace_advanced_test:
     when:
-      - entity: actor_entity_trace_advanced_test_1
-        type: actor_type_trace_advanced_test_1
-        action: actor_action_trace_advanced_test_1
-        condition: "{{ is_state('input_boolean.trace_advanced_test', 'off') }}"
-      - entity: actor_entity_trace_advanced_test_2
-        type: actor_type_trace_advanced_test_2
-        action: actor_action_trace_advanced_test_2
-        condition: "{{ is_state('input_boolean.trace_advanced_test', 'on') }}"
-    then: 
-      - entity: reactor_entity_trace_advanced_test_1
-        type: reactor_type_trace_advanced_test_1
-        action: reactor_action_trace_advanced_test_1
-        condition: "{{ is_state('input_boolean.trace_advanced_test', 'on') }}"
-        wait:
-          delay:
-            seconds: 3
-          state:
-            condition: "{{ is_state('input_boolean.trace_advanced_test', 'off') }}"
-      - reset_workflow: workflow_scheduled
-        entity: reactor_entity_trace_advanced_test_2
-        type: reactor_type_trace_advanced_test_2
-        action: reactor_action_trace_advanced_test_2
-        wait:
-          schedule:
-            at: '21:00:00'
-          state:
-            condition: "{{ is_state('input_boolean.trace_advanced_test', 'on') }}"
+      - actor_type_trace_advanced_test_1.actor_entity_trace_advanced_test_1 actor_action_trace_advanced_test_1 if {{ is_state('input_boolean.trace_advanced_test', 'off') }}
+      - actor_type_trace_advanced_test_2.actor_entity_trace_advanced_test_2 actor_action_trace_advanced_test_2 if {{ is_state('input_boolean.trace_advanced_test', 'on') }}
+    then:
+      - >-
+        reactor_type_trace_advanced_test_1.reactor_entity_trace_advanced_test_1 reactor_action_trace_advanced_test_1
+        if {{ is_state('input_boolean.trace_advanced_test', 'on') }}
+        wait until {{ is_state('input_boolean.trace_advanced_test', 'off') }}
+        wait for 3 seconds   
+      - reset workflow_scheduled
+      - >-
+        reactor_type_trace_advanced_test_2.reactor_entity_trace_advanced_test_2 reactor_action_trace_advanced_test_2
+        wait until {{ is_state('input_boolean.trace_advanced_test', 'on') }}
+        wait until 21:00:00
 
   workflow_multiple_actor:
     when:
-      - id: actor_multiple_actor_1
-        entity: actor_entity_multiple_actor_1
-        type: actor_type_multiple_actor_1
-        action: actor_action_multiple_actor_1
-      - id: actor_multiple_actor_2
-        entity: actor_entity_multiple_actor_2
-        type: actor_type_multiple_actor_2
-        action: actor_action_multiple_actor_2
-    then: 
-      id: reactor_multiple_actor
-      entity: reactor_entity_multiple_actor
-      type: reactor_type_multiple_actor
-      action: reactor_action_multiple_actor
+      - actor_type_multiple_actor_1.actor_entity_multiple_actor_1 actor_action_multiple_actor_1
+      - actor_type_multiple_actor_2.actor_entity_multiple_actor_2 actor_action_multiple_actor_2
+    then: reactor_type_multiple_actor.reactor_entity_multiple_actor reactor_action_multiple_actor
 
   workflow_multiple_reactor:
-    when:
-      id: actor_multiple_reactor
-      entity: actor_entity_multiple_reactor
-      type: actor_type_multiple_reactor
-      action: actor_action_multiple_reactor
+    when: actor_type_multiple_reactor.actor_entity_multiple_reactor actor_action_multiple_reactor
     then: 
-      - id: reactor_multiple_reactor_1
-        entity: reactor_entity_multiple_reactor_1
-        type: reactor_type_multiple_reactor_1
-        action: reactor_action_multiple_reactor_1
-      - id: reactor_multiple_reactor_2
-        entity: reactor_entity_multiple_reactor_2
-        type: reactor_type_multiple_reactor_2
-        action: reactor_action_multiple_reactor_2
+      - reactor_type_multiple_reactor_1.reactor_entity_multiple_reactor_1 reactor_action_multiple_reactor_1
+      - reactor_type_multiple_reactor_2.reactor_entity_multiple_reactor_2 reactor_action_multiple_reactor_2
 
   workflow_multiple_entities:
-    when:
-      id: actor_multiple_entities
-      entity: 
-        - actor_entity_multiple_entities_1
-        - actor_entity_multiple_entities_2
-      type: actor_type_multiple_entities
-      action: actor_action_multiple_entities
-    then:
-      id: reactor_multiple_entities
-      entity: reactor_entity_multiple_entities
-      type: reactor_type_multiple_entities
-      action: reactor_action_multiple_entities
+    when: actor_type_multiple_entities.actor_entity_multiple_entities_1,actor_entity_multiple_entities_2 actor_action_multiple_entities
+    then: reactor_type_multiple_entities.reactor_entity_multiple_entities reactor_action_multiple_entities
 
   workflow_data:
     variables:
       type_templated: "{{ 1 + 2 }}"
-    when:
-      id: actor_data
-      entity: actor_entity_data
-      type: actor_type_data
-      action: actor_action_data
-      data:
-        actor_data_data: "{{ type_templated }}"
-    then: 
-      id: reactor_data
-      entity: reactor_entity_data
-      type: reactor_type_data
-      action: reactor_action_data
-      data:
-        data1: 1
-        data2: "{{ event.action }}"
-        data3: "{{ type_templated }}"
-        data4: 
-          - asdf
-          - qwer
-        data5: "{{ actor.id }}"
+    when: actor_type_data.actor_entity_data actor_action_data with data actor_data_data={{ type_templated }}
+    then: reactor_type_data.reactor_entity_data reactor_action_data with data data1=1, data2={{ event.action }}, data3={{ type_templated }}, data5={{ actor.id }}
 
   workflow_data_delayed:
-    when:
-      id: actor_data_delayed
-      entity: actor_entity_data_delayed
-      type: actor_type_data_delayed
-      action: actor_action_data_delayed
-    then: 
-      id: reactor_data_delayed
-      entity: reactor_entity_data_delayed
-      type: reactor_type_data_delayed
-      action: reactor_action_data_delayed
-      wait:
-        delay:
-          seconds: "{{ 60 }}"
-      data:
-        data1: 1
-        data2: True
+    when: actor_type_data_delayed.actor_entity_data_delayed actor_action_data_delayed
+    then: reactor_type_data_delayed.reactor_entity_data_delayed reactor_action_data_delayed wait for {{ 60 }} seconds with data data1=1, data2=True
 
   workflow_multiple_actor_data:
-    when:
-      id: actor_multiple_actor_data
-      entity: actor_entity_multiple_actor_data
+    when: 
+      entity: actor_entity_multiple_actor_data 
       type: actor_type_multiple_actor_data
       action: actor_action_multiple_actor_data
       data:
         - actor_data_multiple_actor_data: 1
         - actor_data_multiple_actor_data: 2
-    then:
-      id: reactor_multiple_actor_data
-      entity: reactor_entity_multiple_actor_data
-      type: reactor_type_multiple_actor_data
-      action: reactor_action_multiple_actor_data
+    then: reactor_type_multiple_actor_data.reactor_entity_multiple_actor_data reactor_action_multiple_actor_data
 
   workflow_full_stencil:
     stencil: full_stencil
 
   workflow_partial_stencil:
     stencil: partial_stencil
-    when:
-      id: actor_partial_stencil
-      entity: actor_entity_partial_stencil
-      type: actor_type_partial_stencil
-      action: actor_action_partial_stencil
+    when: actor_type_partial_stencil.actor_entity_partial_stencil actor_action_partial_stencil
     then:
       id: reactor_partial_stencil
       entity: reactor_entity_partial_stencil
@@ -347,548 +187,204 @@ workflow:
   workflow_templated:
     variables:
       templated: templated
-    when:
-      id: actor_templated
-      entity: "{{ 'actor_entity_templated' }}"
-      type: "{{ 'actor' ~ '_type' ~ '_templated' }}"
-      action: "{{ 'actor_action_' ~ templated }}"
-    then:
-      id: reactor_templated
-      entity: "{{ 're' ~ event.entity }}"
-      type: "{{ 'reactor' ~ '_type' ~ '_templated' }}"
-      action: "{{ 'reactor_action_' ~ templated }}"
+    when: "{{ 'actor' ~ '_type' ~ '_templated' }}.{{ 'actor_entity_templated' }} {{ 'actor_action_' ~ templated }}"
+    then: "{{ 'reactor' ~ '_type' ~ '_templated' }}.{{ 're' ~ event.entity }} {{ 'reactor_action_' ~ templated }}"
 
   workflow_templated_state_test:
-    when:
-      entity: "{{ 'actor_entity_templated_state_test' }}"
-      type: "{{ 'actor' ~ '_type' ~ '_templated_state_test' }}"
-      action: "{{ 'actor_action_' ~ states('input_text.templated_state_test') }}"
-    then:
-      entity: "{{ 're' ~ event.entity }}"
-      type: "{{ 'reactor' ~ '_type' ~ '_templated_state_test' }}"
-      action: "{{ 'reactor_action_' ~ states('input_text.templated_state_test') }}"
+    when: "{{ 'actor' ~ '_type' ~ '_templated_state_test' }}.{{ 'actor_entity_templated_state_test' }} {{ 'actor_action_' ~ states('input_text.templated_state_test') }}"
+    then: "{{ 'reactor' ~ '_type' ~ '_templated_state_test' }}.{{ 're' ~ event.entity }} {{ 'reactor_action_' ~ states('input_text.templated_state_test') }}"
 
   workflow_actor_condition_test:
-    when:
-      entity: actor_entity_actor_condition_test
-      type: actor_type_actor_condition_test
-      action: actor_action_actor_condition_test
-      condition: "{{ is_state('input_boolean.actor_condition_test', 'on') }}"
-    then:
-      entity: reactor_entity_actor_condition_test
-      type: reactor_type_actor_condition_test
-      action: reactor_action_actor_condition_test
+    when: actor_type_actor_condition_test.actor_entity_actor_condition_test actor_action_actor_condition_test if {{ is_state('input_boolean.actor_condition_test', 'on') }}
+    then: reactor_type_actor_condition_test.reactor_entity_actor_condition_test reactor_action_actor_condition_test
 
   workflow_reactor_condition_test:
-    when:
-      entity: actor_entity_reactor_condition_test
-      type: actor_type_reactor_condition_test
-      action: actor_action_reactor_condition_test
-    then:
-      entity: reactor_entity_reactor_condition_test
-      type: reactor_type_reactor_condition_test
-      action: reactor_action_reactor_condition_test
-      condition: "{{ is_state('input_boolean.reactor_condition_test', 'on') }}"
+    when: actor_type_reactor_condition_test.actor_entity_reactor_condition_test actor_action_reactor_condition_test
+    then: reactor_type_reactor_condition_test.reactor_entity_reactor_condition_test reactor_action_reactor_condition_test if {{ is_state('input_boolean.reactor_condition_test', 'on') }}
 
   workflow_binary_sensor_state_test:
-    when:
-      entity: binary_sensor_state_test
-      type: binary_sensor
-      action: 'off'
-    then:
-      entity: reactor_entity_binary_sensor_state_test
-      type: reactor_type_binary_sensor_state_test
-      action: reactor_action_binary_sensor_state_test
+    when: binary_sensor.binary_sensor_state_test off
+    then: reactor_type_binary_sensor_state_test.reactor_entity_binary_sensor_state_test reactor_action_binary_sensor_state_test
 
   workflow_group_state_test:
-    when:
-      entity: group_state_test
-      type: group
-      action: 'on'
-    then:
-      entity: reactor_entity_group_state_test
-      type: reactor_type_group_state_test
-      action: reactor_action_group_state_test
+    when: group.group_state_test on
+    then: reactor_type_group_state_test.reactor_entity_group_state_test reactor_action_group_state_test
 
   workflow_person_group_state_test:
-    when:
-      entity: person_group_state_test
-      type: group
-      action: home
-    then:
-      entity: reactor_entity_person_group_state_test
-      type: reactor_type_person_group_state_test
-      action: reactor_action_person_group_state_test
+    when: group.person_group_state_test home
+    then: reactor_type_person_group_state_test.reactor_entity_person_group_state_test reactor_action_person_group_state_test
 
   workflow_device_tracker_state_test:
-    when:
-      entity: device_tracker_state_test
-      type: device_tracker
-      action: home
-    then:
-      entity: reactor_entity_device_tracker_state_test
-      type: reactor_type_device_tracker_state_test
-      action: reactor_action_device_tracker_state_test
+    when: device_tracker.device_tracker_state_test home
+    then: reactor_type_device_tracker_state_test.reactor_entity_device_tracker_state_test reactor_action_device_tracker_state_test
 
   workflow_person_state_test:
-    when:
-      entity: person_state_test
-      type: person
-      action: not_home
-    then:
-      entity: reactor_entity_person_state_test
-      type: reactor_type_person_state_test
-      action: reactor_action_person_state_test
+    when: person.person_state_test not_home
+    then: reactor_type_person_state_test.reactor_entity_person_state_test reactor_action_person_state_test
 
   workflow_input_number_state_test:
-    when:
-      entity: input_number_state_test
-      type: input_number
-      action: change
-    then:
-      entity: reactor_entity_input_number_state_test
-      type: reactor_type_input_number_state_test
-      action: reactor_action_input_number_state_test
+    when: input_number.input_number_state_test change
+    then: reactor_type_input_number_state_test.reactor_entity_input_number_state_test reactor_action_input_number_state_test
 
   workflow_input_text_state_test:
-    when:
-      entity: input_text_state_test
-      type: input_text
-      action: change
-    then:
-      entity: reactor_entity_input_text_state_test
-      type: reactor_type_input_text_state_test
-      action: reactor_action_input_text_state_test
+    when: input_text.input_text_state_test change
+    then: reactor_type_input_text_state_test.reactor_entity_input_text_state_test reactor_action_input_text_state_test
 
   workflow_input_boolean_state_test:
-    when:
-      entity: input_boolean_state_test
-      type: input_boolean
-      action: toggle
-    then:
-      entity: reactor_entity_input_boolean_state_test
-      type: reactor_type_input_boolean_state_test
-      action: reactor_action_input_boolean_state_test
+    when: input_boolean.input_boolean_state_test toggle
+    then: reactor_type_input_boolean_state_test.reactor_entity_input_boolean_state_test reactor_action_input_boolean_state_test
 
   workflow_input_button_state_test:
-    when:
-      entity: input_button_state_test
-      type: input_button
-      action: press
-    then:
-      entity: reactor_entity_input_button_state_test
-      type: reactor_type_input_button_state_test
-      action: reactor_action_input_button_state_test
+    when: input_button.input_button_state_test press
+    then: reactor_type_input_button_state_test.reactor_entity_input_button_state_test reactor_action_input_button_state_test
 
   workflow_light_state_test:
-    when:
-      entity: light_state_test
-      type: light
-      action: toggle
-    then:
-      entity: reactor_entity_light_state_test
-      type: reactor_type_light_state_test
-      action: reactor_action_light_state_test
+    when: light.light_state_test toggle
+    then: reactor_type_light_state_test.reactor_entity_light_state_test reactor_action_light_state_test
 
   workflow_switch_state_test:
-    when:
-      entity: switch_state_test
-      type: switch
-      action: toggle
-    then:
-      entity: reactor_entity_switch_state_test
-      type: reactor_type_switch_state_test
-      action: reactor_action_switch_state_test
+    when: switch.switch_state_test toggle
+    then: reactor_type_switch_state_test.reactor_entity_switch_state_test reactor_action_switch_state_test
 
   workflow_alarm_state_test:
-    when:
-      entity: alarm_state_test
-      action: armed_home
-      type: alarm_control_panel
-    then:
-      entity: reactor_entity_alarm_state_test
-      type: reactor_type_alarm_state_test
-      action: reactor_action_alarm_state_test
+    when: alarm_control_panel.alarm_state_test armed_home
+    then: reactor_type_alarm_state_test.reactor_entity_alarm_state_test reactor_action_alarm_state_test
 
   workflow_sensor_state_test:
-    when:
-      entity: sensor_state_test
-      type: sensor
-      action: change
-    then:
-      entity: reactor_entity_sensor_state_test
-      type: reactor_type_sensor_state_test
-      action: reactor_action_sensor_state_test
+    when: sensor.sensor_state_test change
+    then: reactor_type_sensor_state_test.reactor_entity_sensor_state_test reactor_action_sensor_state_test
 
   workflow_media_player_state_test:
-    when:
-      entity: media_player_state_test
-      type: media_player
-      action: playing
-    then:
-      entity: reactor_entity_media_player_state_test
-      type: reactor_type_media_player_state_test
-      action: reactor_action_media_player_state_test
+    when: media_player.media_player_state_test playing
+    then: reactor_type_media_player_state_test.reactor_entity_media_player_state_test reactor_action_media_player_state_test
 
   workflow_fan_state_test:
-    when:
-      entity: fan_state_test
-      type: fan
-      action: change
-    then:
-      entity: reactor_entity_fan_state_test
-      type: reactor_type_fan_state_test
-      action: reactor_action_fan_state_test
+    when: fan.fan_state_test change
+    then: reactor_type_fan_state_test.reactor_entity_fan_state_test reactor_action_fan_state_test
 
   workflow_fan_state_percentage_test:
-    when:
-      entity: fan_state_percentage_test
-      type: fan
-      action: change
-    then:
-      entity: reactor_entity_fan_state_percentage_test
-      type: reactor_type_fan_state_percentage_test
-      action: reactor_action_fan_state_percentage_test
-
+    when: fan.fan_state_percentage_test change
+    then: reactor_type_fan_state_percentage_test.reactor_entity_fan_state_percentage_test reactor_action_fan_state_percentage_test
 
   workflow_state_track_test:
-    when:
-      entity: input_number.input_number_value_test
-      type: state
-      action: change
-    then:
-      entity: "{{ event.entity }}"
-      type: state
-      action: log
-      forward_data: True
+    when: state.input_number.input_number_value_test change
+    then: state.{{ event.entity }} log with forward_data
 
   workflow_hass_event_start_test:
-    when:
-      entity: hass
-      type: system
-      action: start
-    then:
-      entity: reactor_entity_hass_event_start_test
-      type: reactor_type_hass_event_start_test
-      action: reactor_action_hass_event_start_test
+    when: system.hass start
+    then: reactor_type_hass_event_start_test.reactor_entity_hass_event_start_test reactor_action_hass_event_start_test
 
   workflow_hass_event_started_test:
-    when:
-      entity: hass
-      type: system
-      action: started
-    then:
-      entity: reactor_entity_hass_event_started_test
-      type: reactor_type_hass_event_started_test
-      action: reactor_action_hass_event_started_test
+    when: system.hass started
+    then: reactor_type_hass_event_started_test.reactor_entity_hass_event_started_test reactor_action_hass_event_started_test
 
   workflow_hass_event_shutdown_test:
-    when:
-      entity: hass
-      type: system
-      action: shutdown
-    then:
-      entity: reactor_entity_hass_event_shutdown_test
-      type: reactor_type_hass_event_shutdown_test
-      action: reactor_action_hass_event_shutdown_test
+    when: system.hass shutdown
+    then: reactor_type_hass_event_shutdown_test.reactor_entity_hass_event_shutdown_test reactor_action_hass_event_shutdown_test
 
   workflow_time_clock:
-    when:
-      entity: clock
-      type: time
-      action: "23:59:59"
-    then:
-      entity: reactor_entity_time_clock
-      type: reactor_type_time_clock
-      action: reactor_action_time_clock
+    when: time.clock 23:59:59
+    then: reactor_type_time_clock.reactor_entity_time_clock reactor_action_time_clock
 
   workflow_time_pattern:
-    when:
-      entity: pattern
-      type: time
-      action: "23:59:59" # keep like this, otherwise test instance will constantly trigger. will be set properly by unittest
-    then:
-      entity: reactor_entity_time_pattern
-      type: reactor_type_time_pattern
-      action: reactor_action_time_pattern
+    when: time.pattern 23:59:59 # keep like this, otherwise test instance will constantly trigger. will be set properly by unittest
+    then: reactor_type_time_pattern.reactor_entity_time_pattern reactor_action_time_pattern
 
   workflow_time_sunrise:
-    when:
-      entity: sunrise
-      type: time
-      action: "-"
-    then:
-      entity: reactor_entity_sunrise
-      type: reactor_type_sunrise
-      action: reactor_action_sunrise
+    when: time.sunrise -
+    then: reactor_type_sunrise.reactor_entity_sunrise reactor_action_sunrise
 
   workflow_time_sunrise_with_offset:
-    when:
-      entity: sunrise
-      type: time
-      action: "+00:30:00"
-    then:
-      entity: reactor_entity_sunrise_with_offset
-      type: reactor_type_sunrise_with_offset
-      action: reactor_action_sunrise_with_offset
+    when: time.sunrise +00:30:00
+    then: reactor_type_sunrise_with_offset.reactor_entity_sunrise_with_offset reactor_action_sunrise_with_offset
 
   workflow_time_sunset:
-    when:
-      entity: sunset
-      type: time
-      action: "-"
-    then:
-      entity: reactor_entity_sunset
-      type: reactor_type_sunset
-      action: reactor_action_sunset
+    when: time.sunset -
+    then: reactor_type_sunset.reactor_entity_sunset reactor_action_sunset
 
   workflow_time_sunset_with_offset:
-    when:
-      entity: sunset
-      type: time
-      action: "-00:30:00"
-    then:
-      entity: reactor_entity_sunset_with_offset
-      type: reactor_type_sunset_with_offset
-      action: reactor_action_sunset_with_offset
+    when: time.sunset -00:30:00
+    then: reactor_type_sunset_with_offset.reactor_entity_sunset_with_offset reactor_action_sunset_with_offset
 
   workflow_binary_sensor_available_test:
-    when:
-      entity: binary_sensor_available_test
-      type: binary_sensor
-      action: available
-    then:
-      entity: actor_entity_binary_sensor_available_test
-      type: actor_type_binary_sensor_available_test
-      action: actor_action_binary_sensor_available_test
+    when: binary_sensor.binary_sensor_available_test available
+    then: actor_type_binary_sensor_available_test.actor_entity_binary_sensor_available_test actor_action_binary_sensor_available_test
 
   workflow_binary_sensor_unavailable_test:
-    when:
-      entity: binary_sensor_unavailable_test
-      type: binary_sensor
-      action: unavailable
-    then:
-      entity: actor_entity_binary_sensor_unavailable_test
-      type: actor_type_binary_sensor_unavailable_test
-      action: actor_action_binary_sensor_unavailable_test
+    when: binary_sensor.binary_sensor_unavailable_test unavailable
+    then: actor_type_binary_sensor_unavailable_test.actor_entity_binary_sensor_unavailable_test actor_action_binary_sensor_unavailable_test
 
   workflow_device_tracker_available_test:
-    when:
-      entity: device_tracker_available_test
-      type: device_tracker
-      action: available
-    then:
-      entity: actor_entity_device_tracker_available_test
-      type: actor_type_device_tracker_available_test
-      action: actor_action_device_tracker_available_test
+    when: device_tracker.device_tracker_available_test available
+    then: actor_type_device_tracker_available_test.actor_entity_device_tracker_available_test actor_action_device_tracker_available_test
 
   workflow_device_tracker_unavailable_test:
-    when:
-      entity: device_tracker_unavailable_test
-      type: device_tracker
-      action: unavailable
-    then:
-      entity: actor_entity_device_tracker_unavailable_test
-      type: actor_type_device_tracker_unavailable_test
-      action: actor_action_device_tracker_unavailable_test
+    when: device_tracker.device_tracker_unavailable_test unavailable
+    then: actor_type_device_tracker_unavailable_test.actor_entity_device_tracker_unavailable_test actor_action_device_tracker_unavailable_test
 
   workflow_wait_for_state_test:
-    when:
-      entity: actor_entity_wait_for_state_test
-      type: actor_type_wait_for_state_test
-      action: actor_action_wait_for_state_test
-    then: 
-      entity: reactor_entity_wait_for_state_test
-      type: reactor_type_wait_for_state_test
-      action: reactor_action_wait_for_state_test
-      wait:
-        state:
-          condition: "{{ is_state('input_boolean.wait_for_state_test', 'on') }}"
+    when: actor_type_wait_for_state_test.actor_entity_wait_for_state_test actor_action_wait_for_state_test 
+    then: >-
+      reactor_type_wait_for_state_test.reactor_entity_wait_for_state_test reactor_action_wait_for_state_test
+      wait until {{ is_state('input_boolean.wait_for_state_test', 'on') }}
 
   workflow_wait_for_state_delayed_test:
-    when:
-      entity: actor_entity_wait_for_state_delayed_test
-      type: actor_type_wait_for_state_delayed_test
-      action: actor_action_wait_for_state_delayed_test
-    then: 
-      entity: reactor_entity_wait_for_state_delayed_test
-      type: reactor_type_wait_for_state_delayed_test
-      action: reactor_action_wait_for_state_delayed_test
-      wait:
-        delay: 
-          seconds: 3
-        state:
-          condition: "{{ is_state('input_boolean.wait_for_state_delayed_test', 'on') }}"
+    when: actor_type_wait_for_state_delayed_test.actor_entity_wait_for_state_delayed_test actor_action_wait_for_state_delayed_test
+    then: reactor_type_wait_for_state_delayed_test.reactor_entity_wait_for_state_delayed_test reactor_action_wait_for_state_delayed_test wait until {{ is_state('input_boolean.wait_for_state_delayed_test', 'on') }} wait for 3 seconds
 
   workflow_delayed_long_single:
+    when: actor_type_delayed_long_single.actor_entity_delayed_long_single actor_action_delayed_long_single
+    then: reactor_type_delayed_long_single.reactor_entity_delayed_long_single reactor_action_delayed_long_single wait for 300 seconds
     mode: single
-    when:
-      id: actor_delayed_long_single
-      entity: actor_entity_delayed_long_single
-      type: actor_type_delayed_long_single
-      action: actor_action_delayed_long_single
-    then:
-      id: reactor_delayed_long_single 
-      entity: reactor_entity_delayed_long_single
-      type: reactor_type_delayed_long_single
-      action: reactor_action_delayed_long_single
-      wait:
-        delay: 
-          seconds: 300
 
   workflow_delayed_long_restart:
+    when: actor_type_delayed_long_restart.actor_entity_delayed_long_restart actor_action_delayed_long_restart
+    then: reactor_type_delayed_long_restart.reactor_entity_delayed_long_restart reactor_action_delayed_long_restart wait for 300 seconds
     mode: restart
-    when:
-      id: actor_delayed_long_restart
-      entity: actor_entity_delayed_long_restart
-      type: actor_type_delayed_long_restart
-      action: actor_action_delayed_long_restart
-    then:
-      id: reactor_delayed_long_restart 
-      entity: reactor_entity_delayed_long_restart
-      type: reactor_type_delayed_long_restart
-      action: reactor_action_delayed_long_restart
-      wait:
-        delay: 
-          seconds: 300
 
   workflow_delayed_long_queued:
+    when: actor_type_delayed_long_queued.actor_entity_delayed_long_queued actor_action_delayed_long_queued
+    then: reactor_type_delayed_long_queued.reactor_entity_delayed_long_queued reactor_action_delayed_long_queued wait for 3 seconds
     mode: queued
-    when:
-      id: actor_delayed_long_queued
-      entity: actor_entity_delayed_long_queued
-      type: actor_type_delayed_long_queued
-      action: actor_action_delayed_long_queued
-    then:
-      id: reactor_delayed_long_queued 
-      entity: reactor_entity_delayed_long_queued
-      type: reactor_type_delayed_long_queued
-      action: reactor_action_delayed_long_queued
-      wait:
-        delay: 
-          seconds: 3
 
   workflow_delayed_long_parallel:
+    when: actor_type_delayed_long_parallel.actor_entity_delayed_long_parallel actor_action_delayed_long_parallel
+    then: reactor_type_delayed_long_parallel.reactor_entity_delayed_long_parallel reactor_action_delayed_long_parallel wait for 3 seconds
     mode: parallel
-    when:
-      id: actor_delayed_long_parallel
-      entity: actor_entity_delayed_long_parallel
-      type: actor_type_delayed_long_parallel
-      action: actor_action_delayed_long_parallel
-    then:
-      id: reactor_delayed_long_parallel 
-      entity: reactor_entity_delayed_long_parallel
-      type: reactor_type_delayed_long_parallel
-      action: reactor_action_delayed_long_parallel
-      wait:
-        delay: 
-          seconds: 3
 
   workflow_scheduled_restart_abort:
-    when:
-      id: actor_scheduled_restart_abort
-      entity: actor_entity_scheduled_restart_abort
-      type: actor_type_scheduled_restart_abort
-      action: actor_action_scheduled_restart_abort
-    then:
-      id: reactor_scheduled_restart_abort 
-      entity: reactor_entity_scheduled_restart_abort
-      type: reactor_type_scheduled_restart_abort
-      action: reactor_action_scheduled_restart_abort
-      wait:
-        schedule:
-          at: "00:00:00"
-          restart_mode: abort
+    when: actor_type_scheduled_restart_abort.actor_entity_scheduled_restart_abort actor_action_scheduled_restart_abort
+    then: reactor_type_scheduled_restart_abort.reactor_entity_scheduled_restart_abort reactor_action_scheduled_restart_abort wait until 00:00:00 with restart_mode abort
 
   workflow_scheduled_restart_force:
-    when:
-      id: actor_scheduled_restart_force
-      entity: actor_entity_scheduled_restart_force
-      type: actor_type_scheduled_restart_force
-      action: actor_action_scheduled_restart_force
-    then:
-      id: reactor_scheduled_restart_force 
-      entity: reactor_entity_scheduled_restart_force
-      type: reactor_type_scheduled_restart_force
-      action: reactor_action_scheduled_restart_force
-      wait:
-        schedule:
-          at: "00:00:00"
-          restart_mode: force
+    when: actor_type_scheduled_restart_force.actor_entity_scheduled_restart_force actor_action_scheduled_restart_force
+    then: reactor_type_scheduled_restart_force.reactor_entity_scheduled_restart_force reactor_action_scheduled_restart_force wait until 00:00:00 with restart_mode force
 
   workflow_media_player_speak_test:
-    when:
-      entity: actor_entity_media_player_speak_test
-      type: actor_type_media_player_speak_test
-      action: actor_action_media_player_speak_test
-    then:
-      entity: browser
-      type: media_player
-      action: speak
-      data:
-        message: This is a test without volume
-        language: en
+    when: actor_type_media_player_speak_test.actor_entity_media_player_speak_test actor_action_media_player_speak_test
+    then: media_player.browser speak with data message=This is a test without volume, language=en
 
   workflow_media_player_speak_with_volume_test:
-    when:
-      entity: actor_entity_media_player_speak_with_volume_test
-      type: actor_type_media_player_speak_with_volume_test
-      action: actor_action_media_player_speak_with_volume_test
-    then:
-      entity: browser
-      type: media_player
-      action: speak
-      data:
-        message: This is a test with volume
-        language: en
-        volume: 0.1
+    when: actor_type_media_player_speak_with_volume_test.actor_entity_media_player_speak_with_volume_test actor_action_media_player_speak_with_volume_test
+    then: media_player.browser speak with data message=This is a test with volume, language=en, volume=0.1
 
   workflow_media_player_speak_with_announce_test:
-    when:
-      entity: actor_entity_media_player_speak_with_announce_test
-      type: actor_type_media_player_speak_with_announce_test
-      action: actor_action_media_player_speak_with_announce_test
-    then:
-      entity: browser
-      type: media_player
-      action: speak
-      data:
-        message: This is a test with announce
-        language: en
-        announce: True
+    when: actor_type_media_player_speak_with_announce_test.actor_entity_media_player_speak_with_announce_test actor_action_media_player_speak_with_announce_test
+    then: media_player.browser speak with data message=This is a test with announce, language=en, announce=True
 
   workflow_media_player_speak_with_wait_test:
-    when:
-      entity: actor_entity_media_player_speak_with_wait_test
-      type: actor_type_media_player_speak_with_wait_test
-      action: actor_action_media_player_speak_with_wait_test
-    then:
-      entity: browser
-      type: media_player
-      action: speak
-      data:
-        message: This is a test with wait
-        language: en
-        wait: 3
+    when: actor_type_media_player_speak_with_wait_test.actor_entity_media_player_speak_with_wait_test actor_action_media_player_speak_with_wait_test
+    then: media_player.browser speak with data message=This is a test with wait, language=en, wait=3
 
   workflow_media_player_pause_test:
-    when:
-      entity: actor_entity_media_player_pause_test
-      type: actor_type_media_player_pause_test
-      action: actor_action_media_player_pause_test
-    then:
-      entity: media_player_pause_test
-      type: media_player
-      action: pause
+    when: actor_type_media_player_pause_test.actor_entity_media_player_pause_test actor_action_media_player_pause_test
+    then: media_player.media_player_pause_test pause
 
   workflow_notify_send_message_test:
-    when:
-      entity: actor_entity_notify_send_message_test
-      type: actor_type_notify_send_message_test
-      action: actor_action_notify_send_message_test
-    then:
-      entity: mobile_group
+    when: actor_type_notify_send_message_test.actor_entity_notify_send_message_test actor_action_notify_send_message_test
+    then: 
       type: notify
+      entity: mobile_group
       action: send_message
       data:
         message: Approve something
@@ -901,401 +397,151 @@ workflow:
             acknowledgement: denied
 
   workflow_notify_confirm_feedback_test:
-    when:
-      entity: 
-        - telegram_user
-        - mobile_app_hd1903
-      type: notify
-      action: feedback_retrieved
+    when: notify.telegram_user,mobile_app_hd1903 feedback_retrieved
     then:
-      - entity: reactor_entity_notify_confirm_feedback_test
-        type: reactor_type_notify_confirm_feedback_test
-        action: reactor_action_notify_confirm_feedback_test
-        data:
-          feedback: "{{ event.data.feedback }}"
-      - entity: "{{ event.entity }}"
-        type: notify
-        action: confirm_feedback
-        forward_data: True
+      - reactor_type_notify_confirm_feedback_test.reactor_entity_notify_confirm_feedback_test reactor_action_notify_confirm_feedback_test with data feedback={{ event.data.feedback }}
+      - notify.{{ event.entity }} confirm_feedback with forward_data
 
   workflow_input_number_set_test:
-    when:
-      entity: actor_entity_input_number_set_test
-      type: actor_type_input_number_set_test
-      action: actor_action_input_number_set_test
-    then:
-      entity: input_number_value_test
-      type: input_number
-      action: set_value
-      data:
-        value: 12.34
+    when: actor_type_input_number_set_test.actor_entity_input_number_set_test actor_action_input_number_set_test
+    then: input_number.input_number_value_test set_value data value=12.34
 
   workflow_input_number_increase_test:
-    when:
-      entity: actor_entity_input_number_increase_test
-      type: actor_type_input_number_increase_test
-      action: actor_action_input_number_increase_test
-    then:
-      entity: input_number_value_test
-      type: input_number
-      action: increase
-      data:
-        value: 1.5
+    when: actor_type_input_number_increase_test.actor_entity_input_number_increase_test actor_action_input_number_increase_test
+    then: input_number.input_number_value_test increase data value1.5
 
   workflow_input_number_increase_with_max_test:
-    when:
-      entity: actor_entity_input_number_increase_with_max_test
-      type: actor_type_input_number_increase_with_max_test
-      action: actor_action_input_number_increase_with_max_test
-    then:
-      entity: input_number_value_test
-      type: input_number
-      action: increase
-      data:
-        value: 1.5
-        max: 51
+    when: actor_type_input_number_increase_with_max_test.actor_entity_input_number_increase_with_max_test actor_action_input_number_increase_with_max_test
+    then: input_number.input_number_value_test increase with data value=1.5, max=51
 
   workflow_input_number_decrease_test:
-    when:
-      entity: actor_entity_input_number_decrease_test
-      type: actor_type_input_number_decrease_test
-      action: actor_action_input_number_decrease_test
-    then:
-      entity: input_number_value_test
-      type: input_number
-      action: decrease
-      data:
-        value: 1.5
+    when: actor_type_input_number_decrease_test.actor_entity_input_number_decrease_test actor_action_input_number_decrease_test
+    then: input_number.input_number_value_test decrease with data value=1.5
 
   workflow_input_number_decrease_with_min_test:
-    when:
-      entity: actor_entity_input_number_decrease_with_min_test
-      type: actor_type_input_number_decrease_with_min_test
-      action: actor_action_input_number_decrease_with_min_test
-    then:
-      entity: input_number_value_test
-      type: input_number
-      action: decrease
-      data:
-        value: 1.5
-        min: 49
+    when: actor_type_input_number_decrease_with_min_test.actor_entity_input_number_decrease_with_min_test actor_action_input_number_decrease_with_min_test
+    then: input_number.input_number_value_test decrease with data value=1.5, min=49
 
   workflow_input_text_set_test:
-    when:
-      entity: actor_entity_input_text_set_test
-      type: actor_type_input_text_set_test
-      action: actor_action_input_text_set_test
-    then:
-      entity: input_text_value_test
-      type: input_text
-      action: set_value
-      data:
-        value: test_value
+    when: actor_type_input_text_set_test.actor_entity_input_text_set_test actor_action_input_text_set_test
+    then: input_text.input_text_value_test set_value with data value=test_value
 
   workflow_input_boolean_turn_on_test:
-    when:
-      entity: actor_entity_input_boolean_turn_on_test
-      type: actor_type_input_boolean_turn_on_test
-      action: actor_action_input_boolean_turn_on_test
-    then:
-      entity: input_boolean_initial_off_test
-      type: input_boolean
-      action: 'on'
+    when: actor_type_input_boolean_turn_on_test.actor_entity_input_boolean_turn_on_test actor_action_input_boolean_turn_on_test
+    then: input_boolean.input_boolean_initial_off_test on
 
   workflow_input_boolean_turn_off_test:
-    when:
-      entity: actor_entity_input_boolean_turn_off_test
-      type: actor_type_input_boolean_turn_off_test
-      action: actor_action_input_boolean_turn_off_test
-    then:
-      entity: input_boolean_initial_on_test
-      type: input_boolean
-      action: 'off'
+    when: actor_type_input_boolean_turn_off_test.actor_entity_input_boolean_turn_off_test actor_action_input_boolean_turn_off_test
+    then: input_boolean.input_boolean_initial_on_test off
 
   workflow_input_boolean_toggle_test:
-    when:
-      entity: actor_entity_input_boolean_toggle_test
-      type: actor_type_input_boolean_toggle_test
-      action: actor_action_input_boolean_toggle_test
-    then:
-      entity: input_boolean_initial_off_test
-      type: input_boolean
-      action: toggle
+    when: actor_type_input_boolean_toggle_test.actor_entity_input_boolean_toggle_test actor_action_input_boolean_toggle_test
+    then: input_boolean.input_boolean_initial_off_test toggle
 
   workflow_input_boolean_turn_on_skip_test:
-    when:
-      entity: actor_entity_input_boolean_turn_on_skip_test
-      type: actor_type_input_boolean_turn_on_skip_test
-      action: actor_action_input_boolean_turn_on_skip_test
-    then:
-      entity: input_boolean_initial_on_test
-      type: input_boolean
-      action: 'on'
+    when: actor_type_input_boolean_turn_on_skip_test.actor_entity_input_boolean_turn_on_skip_test actor_action_input_boolean_turn_on_skip_test
+    then: input_boolean.input_boolean_initial_on_test on
 
   workflow_input_boolean_turn_off_skip_test:
-    when:
-      entity: actor_entity_input_boolean_turn_off_skip_test
-      type: actor_type_input_boolean_turn_off_skip_test
-      action: actor_action_input_boolean_turn_off_skip_test
-    then:
-      entity: input_boolean_initial_off_test
-      type: input_boolean
-      action: 'off'
+    when: actor_type_input_boolean_turn_off_skip_test.actor_entity_input_boolean_turn_off_skip_test actor_action_input_boolean_turn_off_skip_test
+    then: input_boolean.input_boolean_initial_off_test off
 
   workflow_media_player_play_favorite_test:
-    when:
-      entity: actor_entity_media_player_play_favorite_test
-      type: actor_type_media_player_play_favorite_test
-      action: actor_action_media_player_play_favorite_test
-    then:
-      entity: media_player_play_favorite_test
-      type: media_player
-      action: play_favorite
-      data:
-        favorite_id: test_id
+    when: actor_type_media_player_play_favorite_test.actor_entity_media_player_play_favorite_test actor_action_media_player_play_favorite_test
+    then: media_player.media_player_play_favorite_test play_favorite with data favorite_id=test_id
 
   workflow_light_turn_on_test:
-    when:
-      entity: actor_entity_light_turn_on_test
-      type: actor_type_light_turn_on_test
-      action: actor_action_light_turn_on_test
-    then:
-      entity: light_initial_off_test
-      type: light
-      action: 'on'
+    when: actor_type_light_turn_on_test.actor_entity_light_turn_on_test actor_action_light_turn_on_test
+    then: light.light_initial_off_test on
 
   workflow_light_turn_off_test:
-    when:
-      entity: actor_entity_light_turn_off_test
-      type: actor_type_light_turn_off_test
-      action: actor_action_light_turn_off_test
-    then:
-      entity: light_initial_on_test
-      type: light
-      action: 'off'
+    when: actor_type_light_turn_off_test.actor_entity_light_turn_off_test actor_action_light_turn_off_test
+    then: light.light_initial_on_test off
 
   workflow_light_toggle_test:
-    when:
-      entity: actor_entity_light_toggle_test
-      type: actor_type_light_toggle_test
-      action: actor_action_light_toggle_test
-    then:
-      entity: light_initial_off_test
-      type: light
-      action: toggle
+    when: actor_type_light_toggle_test.actor_entity_light_toggle_test actor_action_light_toggle_test
+    then: light.light_initial_off_test toggle
 
   workflow_light_turn_on_skip_test:
-    when:
-      entity: actor_entity_light_turn_on_skip_test
-      type: actor_type_light_turn_on_skip_test
-      action: actor_action_light_turn_on_skip_test
-    then:
-      entity: light_initial_on_test
-      type: light
-      action: 'on'
+    when: actor_type_light_turn_on_skip_test.actor_entity_light_turn_on_skip_test actor_action_light_turn_on_skip_test
+    then: light.light_initial_on_test on
 
   workflow_light_turn_off_skip_test:
-    when:
-      entity: actor_entity_light_turn_off_skip_test
-      type: actor_type_light_turn_off_skip_test
-      action: actor_action_light_turn_off_skip_test
-    then:
-      entity: light_initial_off_test
-      type: light
-      action: 'off'
+    when: actor_type_light_turn_off_skip_test.actor_entity_light_turn_off_skip_test actor_action_light_turn_off_skip_test
+    then: light.light_initial_off_test off
 
   workflow_switch_turn_on_test:
-    when:
-      entity: actor_entity_switch_turn_on_test
-      type: actor_type_switch_turn_on_test
-      action: actor_action_switch_turn_on_test
-    then:
-      entity: switch_initial_off_test
-      type: switch
-      action: 'on'
+    when: actor_type_switch_turn_on_test.actor_entity_switch_turn_on_test actor_action_switch_turn_on_test
+    then: switch.switch_initial_off_test on
 
   workflow_switch_turn_off_test:
-    when:
-      entity: actor_entity_switch_turn_off_test
-      type: actor_type_switch_turn_off_test
-      action: actor_action_switch_turn_off_test
-    then:
-      entity: switch_initial_on_test
-      type: switch
-      action: 'off'
+    when: actor_type_switch_turn_off_test.actor_entity_switch_turn_off_test actor_action_switch_turn_off_test
+    then: switch.switch_initial_on_test off
 
   workflow_switch_toggle_test:
-    when:
-      entity: actor_entity_switch_toggle_test
-      type: actor_type_switch_toggle_test
-      action: actor_action_switch_toggle_test
-    then:
-      entity: switch_initial_off_test
-      type: switch
-      action: toggle
+    when: actor_type_switch_toggle_test.actor_entity_switch_toggle_test actor_action_switch_toggle_test
+    then: switch.switch_initial_off_test toggle
 
   workflow_switch_turn_on_skip_test:
-    when:
-      entity: actor_entity_switch_turn_on_skip_test
-      type: actor_type_switch_turn_on_skip_test
-      action: actor_action_switch_turn_on_skip_test
-    then:
-      entity: switch_initial_on_test
-      type: switch
-      action: 'on'
+    when: actor_type_switch_turn_on_skip_test.actor_entity_switch_turn_on_skip_test actor_action_switch_turn_on_skip_test
+    then: switch.switch_initial_on_test on
 
   workflow_switch_turn_off_skip_test:
-    when:
-      entity: actor_entity_switch_turn_off_skip_test
-      type: actor_type_switch_turn_off_skip_test
-      action: actor_action_switch_turn_off_skip_test
-    then:
-      entity: switch_initial_off_test
-      type: switch
-      action: 'off'
+    when: actor_type_switch_turn_off_skip_test.actor_entity_switch_turn_off_skip_test actor_action_switch_turn_off_skip_test
+    then: switch.switch_initial_off_test off
 
   workflow_alarm_plugin_arm_home_test:
-    when:
-      entity: actor_entity_alarm_arm_home_test
-      type: actor_type_alarm_arm_home_test
-      action: actor_action_alarm_arm_home_test
-    then:
-      entity: alarm_plugin_test
-      type: alarm_control_panel
-      action: arm_home
+    when: actor_type_alarm_arm_home_test.actor_entity_alarm_arm_home_test actor_action_alarm_arm_home_test
+    then: alarm_control_panel.alarm_plugin_test arm_home
 
   workflow_alarm_plugin_arm_away_test:
-    when:
-      entity: actor_entity_alarm_arm_away_test
-      type: actor_type_alarm_arm_away_test
-      action: actor_action_alarm_arm_away_test
-    then:
-      entity: alarm_plugin_test
-      type: alarm_control_panel
-      action: arm_away
+    when: actor_type_alarm_arm_away_test.actor_entity_alarm_arm_away_test actor_action_alarm_arm_away_test
+    then: alarm_control_panel.alarm_plugin_test arm_away
 
   workflow_alarm_plugin_arm_night_test:
-    when:
-      entity: actor_entity_alarm_arm_night_test
-      type: actor_type_alarm_arm_night_test
-      action: actor_action_alarm_arm_night_test
-    then:
-      entity: alarm_plugin_test
-      type: alarm_control_panel
-      action: arm_night
+    when: actor_type_alarm_arm_night_test.actor_entity_alarm_arm_night_test actor_action_alarm_arm_night_test
+    then: alarm_control_panel.alarm_plugin_test arm_night
 
   workflow_alarm_plugin_arm_vacation_test:
-    when:
-      entity: actor_entity_alarm_arm_vacation_test
-      type: actor_type_alarm_arm_vacation_test
-      action: actor_action_alarm_arm_vacation_test
-    then:
-      entity: alarm_plugin_test
-      type: alarm_control_panel
-      action: arm_vacation
+    when: actor_type_alarm_arm_vacation_test.actor_entity_alarm_arm_vacation_test actor_action_alarm_arm_vacation_test
+    then: alarm_control_panel.alarm_plugin_test arm_vacation
 
   workflow_alarm_plugin_disarm_test:
-    when:
-      entity: actor_entity_alarm_disarm_test
-      type: actor_type_alarm_disarm_test
-      action: actor_action_alarm_disarm_test
-    then:
-      entity: alarm_plugin_test
-      type: alarm_control_panel
-      action: disarm
+    when: actor_type_alarm_disarm_test.actor_entity_alarm_disarm_test actor_action_alarm_disarm_test
+    then: alarm_control_panel.alarm_plugin_test disarm
 
   workflow_alarm_plugin_trigger_test:
-    when:
-      entity: actor_entity_alarm_trigger_test
-      type: actor_type_alarm_trigger_test
-      action: actor_action_alarm_trigger_test
-    then:
-      entity: alarm_plugin_test
-      type: alarm_control_panel
-      action: trigger
+    when: actor_type_alarm_trigger_test.actor_entity_alarm_trigger_test actor_action_alarm_trigger_test
+    then: alarm_control_panel.alarm_plugin_test trigger
 
   workflow_fan_set_percentage_test:
-    when:
-      entity: actor_entity_fan_set_percentage_test
-      type: actor_type_fan_set_percentage_test
-      action: actor_action_fan_set_percentage_test
-    then:
-      entity: fan_initial_off_test
-      type: fan
-      action: set_percentage
-      data:
-        percentage: 50
+    when: actor_type_fan_set_percentage_test.actor_entity_fan_set_percentage_test actor_action_fan_set_percentage_test
+    then: fan.fan_initial_off_test set_percentage with data percentage=50
 
   workflow_fan_increase_speed_test:
-    when:
-      entity: actor_entity_fan_increase_speed_test
-      type: actor_type_fan_increase_speed_test
-      action: actor_action_fan_increase_speed_test
-    then:
-      entity: fan_initial_on_test
-      type: fan
-      action: increase_speed
+    when: actor_type_fan_increase_speed_test.actor_entity_fan_increase_speed_test actor_action_fan_increase_speed_test
+    then: fan.fan_initial_on_test increase_speed
 
   workflow_fan_decrease_speed_test:
-    when:
-      entity: actor_entity_fan_decrease_speed_test
-      type: actor_type_fan_decrease_speed_test
-      action: actor_action_fan_decrease_speed_test
-    then:
-      entity: fan_initial_on_test
-      type: fan
-      action: decrease_speed
+    when: actor_type_fan_decrease_speed_test.actor_entity_fan_decrease_speed_test actor_action_fan_decrease_speed_test
+    then: fan.fan_initial_on_test decrease_speed
 
   workflow_fan_turn_off_test:
-    when:
-      entity: actor_entity_fan_turn_off_test
-      type: actor_type_fan_turn_off_test
-      action: actor_action_fan_turn_off_test
-    then:
-      entity: fan_initial_on_test
-      type: fan
-      action: set_percentage
-      data:
-        percentage: 50
+    when: actor_type_fan_turn_off_test.actor_entity_fan_turn_off_test actor_action_fan_turn_off_test
+    then: fan.fan_initial_on_test set_percentage with data percentage=50
 
   workflow_hass_started_test:
-    when:
-      entity: hass
-      type: system
-      action: started
-    then:
-      entity: input_boolean_hass_started_test
-      type: input_boolean
-      action: toggle
+    when: system.hass started
+    then: input_boolean.input_boolean_hass_started_test toggle
 
   workflow_mqtt_publish_test:
-    when:
-      entity: actor_entity_mqtt_publish_test
-      type: actor_type_mqtt_publish_test
-      action: actor_action_mqtt_publish_test
-    then:
-      entity: some/test/topic
-      type: mqtt
-      action: publish
+    when: actor_type_mqtt_publish_test.actor_entity_mqtt_publish_test actor_action_mqtt_publish_test
+    then: mqtt.some/test/topic publish
 
   workflow_climate_set_temperature_test:
-    when:
-      entity: actor_entity_climate_set_temperature_test
-      type: actor_type_climate_set_temperature_test
-      action: actor_action_climate_set_temperature_test
-    then:
-      entity: climate_initial_off_test
-      type: climate
-      action: set_temperature
-      data:
-        temperature: 25
+    when: actor_type_climate_set_temperature_test.actor_entity_climate_set_temperature_test actor_action_climate_set_temperature_test
+    then: climate.climate_initial_off_test set_temperature with data temperature=25
 
   workflow_climate_reset_temperature_test:
-    when:
-      entity: actor_entity_climate_reset_temperature_test
-      type: actor_type_climate_reset_temperature_test
-      action: actor_action_climate_reset_temperature_test
-    then:
-      entity: climate_initial_off_test
-      type: climate
-      action: reset_temperature
+    when: actor_type_climate_reset_temperature_test.actor_entity_climate_reset_temperature_test actor_action_climate_reset_temperature_test
+    then: climate.climate_initial_off_test reset_temperature

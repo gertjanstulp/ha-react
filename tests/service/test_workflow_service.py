@@ -19,7 +19,7 @@ async def test_call_service_trigger_workflow(test_context: TstContext, workflow_
         test_context.verify_trace_record()
 
 
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["scheduled"])
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["scheduled_some_days"])
 async def test_call_service_delete_reaction(test_context: TstContext, workflow_name: str):
     await test_context.async_start_react()
     async with test_context.async_listen_reaction_event():
@@ -32,7 +32,7 @@ async def test_call_service_delete_reaction(test_context: TstContext, workflow_n
         test_context.verify_reaction_not_found()
 
 
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["scheduled"])
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["scheduled_some_days"])
 async def test_call_service_react_now(test_context: TstContext, workflow_name: str):
     await test_context.async_start_react()
     async with test_context.async_listen_reaction_event():
@@ -48,7 +48,7 @@ async def test_call_service_react_now(test_context: TstContext, workflow_name: s
         test_context.verify_trace_record()
 
 
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["scheduled"])
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["scheduled_some_days"])
 async def test_call_service_delete_run(test_context: TstContext, workflow_name: str):
     await test_context.async_start_react()
     async with test_context.async_listen_reaction_event():
@@ -61,7 +61,7 @@ async def test_call_service_delete_run(test_context: TstContext, workflow_name: 
         test_context.verify_run_not_found()
 
 
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["scheduled"])
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["scheduled_some_days"])
 async def test_call_service_run_now(test_context: TstContext, workflow_name: str):
     await test_context.async_start_react()
     async with test_context.async_listen_reaction_event():

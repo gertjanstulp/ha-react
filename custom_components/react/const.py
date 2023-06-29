@@ -1,11 +1,6 @@
 import logging
-import voluptuous as vol
 
-from typing import Any, Union
-from homeassistant.helpers import config_validation as cv
-from homeassistant.const import ATTR_NAME, CONF_ICON
 from homeassistant.helpers.template import result_as_boolean
-from homeassistant.components.trace import TRACE_CONFIG_SCHEMA
 
 STARTUP_MESSAGE = """
 -------------------------------------------------------------------
@@ -295,14 +290,14 @@ DATETIME_FORMAT_READABLE = '%Y/%m/%d %H:%M:%S'
 DATETIME_FORMAT_TRACE = '%c (%Z)'
 
 
-def is_list_of_strings(obj):
-    return bool(obj) and isinstance(obj, list) and all(isinstance(elem, str) for elem in obj)
+# def is_list_of_strings(obj):
+#     return bool(obj) and isinstance(obj, list) and all(isinstance(elem, str) for elem in obj)
 
 
-def list(value: str | list) -> list[str]:
-    if is_list_of_strings(value):
-        return value
-    raise vol.Invalid("Not a valid list")
+# def list(value: str | list) -> list[str]:
+#     if is_list_of_strings(value):
+#         return value
+#     raise vol.Invalid("Not a valid list")
 
 # template tracker type conversion
 def result_as_string(value):
@@ -332,79 +327,3 @@ PROP_TYPE_STR = result_as_string
 PROP_TYPE_INT = result_as_int
 PROP_TYPE_BOOL = result_as_boolean
 PROP_TYPE_SOURCE = result_as_source
-
-# schema for schedule
-DELAY_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_DELAY_SECONDS) : vol.Any(vol.Coerce(int), cv.string),
-    vol.Optional(ATTR_DELAY_MINUTES) : vol.Any(vol.Coerce(int), cv.string),
-    vol.Optional(ATTR_DELAY_HOURS) : vol.Any(vol.Coerce(int), cv.string),
-    vol.Optional(ATTR_RESTART_MODE) : vol.In([RESTART_MODE_ABORT, RESTART_MODE_FORCE, RESTART_MODE_RERUN]),
-})
-
-# schema for schedule
-SCHEDULE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_SCHEDULE_AT) : cv.string,
-    vol.Optional(ATTR_SCHEDULE_WEEKDAYS) : cv.weekdays,
-    vol.Optional(ATTR_RESTART_MODE) : vol.In([RESTART_MODE_ABORT, RESTART_MODE_FORCE, RESTART_MODE_RERUN]),
-})
-
-STATE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_CONDITION) : cv.string,
-    vol.Optional(ATTR_RESTART_MODE) : vol.In([RESTART_MODE_ABORT, RESTART_MODE_FORCE, RESTART_MODE_RERUN]),
-})
-
-WAIT_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_STATE) : STATE_SCHEMA,
-    vol.Optional(ATTR_DELAY) : DELAY_SCHEMA,
-    vol.Optional(ATTR_SCHEDULE) : SCHEDULE_SCHEMA,
-})
-
-# schema for common elements of actors/reactors
-ENTITY_DATA_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ID) : cv.string,
-    vol.Optional(ATTR_ENTITY) : vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(ATTR_TYPE) : vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(ATTR_ACTION) : vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(ATTR_CONDITION) : cv.string,
-    vol.Optional(ATTR_DATA): vol.All(cv.ensure_list, [dict]),
-})
-
-# schema for reactor elements
-REACTOR_DATA_SCHEMA = ENTITY_DATA_SCHEMA.extend(
-    vol.Schema({
-        vol.Optional(ATTR_OVERWRITE) : cv.boolean,
-        vol.Optional(ATTR_RESET_WORKFLOW) : cv.string,
-        vol.Optional(ATTR_FORWARD_ACTION): cv.boolean,
-        vol.Optional(ATTR_FORWARD_DATA): cv.boolean,
-        vol.Optional(ATTR_WAIT) : WAIT_SCHEMA,
-    }).schema
-)
-
-# stencil schema
-STENCIL_SCHEMA = vol.Schema({
-    cv.slug: vol.Schema({
-        vol.Optional(ATTR_MODE) : vol.In([WORKFLOW_MODE_SINGLE, WORKFLOW_MODE_RESTART, WORKFLOW_MODE_QUEUED, WORKFLOW_MODE_PARALLEL]),
-        vol.Optional(ATTR_WORKFLOW_WHEN) : vol.All(cv.ensure_list, [ENTITY_DATA_SCHEMA]),
-        vol.Optional(ATTR_WORKFLOW_THEN) : vol.All(cv.ensure_list, [REACTOR_DATA_SCHEMA]),
-        vol.Optional(ATTR_RESET_WORKFLOW) : cv.string,
-    })
-})
-
-# workflow schema
-WORKFLOW_SCHEMA = vol.Schema({
-    cv.slug: vol.Schema({
-        vol.Optional(ATTR_STENCIL) : cv.string,
-        vol.Optional(ATTR_MODE) : vol.In([WORKFLOW_MODE_SINGLE, WORKFLOW_MODE_RESTART, WORKFLOW_MODE_QUEUED, WORKFLOW_MODE_PARALLEL]),
-        vol.Optional(ATTR_VARIABLES) : vol.All(dict),
-        vol.Optional(ATTR_WORKFLOW_WHEN) : vol.All(cv.ensure_list, [ENTITY_DATA_SCHEMA]),
-        vol.Optional(ATTR_WORKFLOW_THEN) : vol.All(cv.ensure_list, [REACTOR_DATA_SCHEMA]),
-        vol.Optional(ATTR_NAME): cv.string,
-        vol.Optional(CONF_ICON): cv.icon,
-        vol.Optional(CONF_TRACE, default={}): TRACE_CONFIG_SCHEMA,
-    }, )
-})
-
-PLUGIN_SCHEMA = vol.Schema({
-    vol.Required(ATTR_PLUGIN_MODULE): cv.string,
-    vol.Optional(ATTR_PLUGIN_CONFIG): dict
-})
