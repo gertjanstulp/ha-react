@@ -27,17 +27,22 @@ class GroupStateChangeInputBlock(StateChangeInputBlock[DynamicData]):
 
     def read_state_data(self, react_event: StateChangedEvent) -> StateChangeData:
         states = self.get_states(react_event.payload)
-        return BinaryStateChangeData(react_event.payload, states[STATE_ON], states[STATE_OFF])
+        if states:
+            return BinaryStateChangeData(react_event.payload, states[STATE_ON], states[STATE_OFF])
+        else:
+            return None
 
 
     def get_states(self, payload: StateChangedEventPayload):
-        test = self.state_cache.get(payload.entity_id, None)
-        if not test:
-            test = self.test_states([payload.new_state, payload.old_state], self.registry.on_off_mapping, STATE_ON, STATE_OFF)
-            if not test:
-                test = self.test_states([payload.new_state, payload.old_state], self.registry.off_on_mapping, STATE_OFF, STATE_ON)
-            self.state_cache[payload.entity_id] = test
-        return test
+        states = self.state_cache.get(payload.entity_id, None)
+        if not states:
+            states = self.test_states([payload.new_state, payload.old_state], self.registry.on_off_mapping, STATE_ON, STATE_OFF)
+            if not states:
+                states = self.test_states([payload.new_state, payload.old_state], self.registry.off_on_mapping, STATE_OFF, STATE_ON)
+            if states:
+                self.state_cache[payload.entity_id] = states
+        
+        return states
 
 
     def test_states(self, states: list[State], test_dict: dict[str, str], key1: str, key2: str):

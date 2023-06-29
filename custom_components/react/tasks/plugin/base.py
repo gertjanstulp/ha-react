@@ -153,10 +153,12 @@ class StateChangeInputBlock(Generic[T_config], InputBlock[T_config]):
     
     
     def create_action_event_payloads(self, source_event: StateChangedEvent) -> list[dict]:
+        react_events: list[dict] = []
         state_data = self.read_state_data(source_event)
-        react_events = state_data.to_react_events(self.type)
-        if react_events:
-            source_event.session.debug(self.logger, f"State change caught: {source_event.payload.entity_id} ({source_event.payload.old_state.state if source_event.payload.old_state else None} -> {source_event.payload.new_state.state if source_event.payload.new_state else None})")
+        if state_data:
+            react_events = state_data.to_react_events(self.type)
+            if react_events:
+                source_event.session.debug(self.logger, f"State change caught: {source_event.payload.entity_id} ({source_event.payload.old_state.state if source_event.payload.old_state else None} -> {source_event.payload.new_state.state if source_event.payload.new_state else None})")
         return react_events
 
 
