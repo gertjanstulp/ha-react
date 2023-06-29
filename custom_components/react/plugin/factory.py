@@ -62,11 +62,11 @@ class PluginFactory:
 
                 def register_input_block(block_type: type[InputBlock] | Iterable[type[InputBlock]], **kwargs):
                     if not isinstance(block_type, Iterable): block_type = [block_type]
-                    plugin._input_blocks = [item(self._react, **kwargs) for item in block_type]
+                    plugin._input_blocks.extend([item(self._react, **kwargs) for item in block_type])
 
                 def register_output_block(block_type: type[OutputBlock] | Iterable[type[OutputBlock]], **kwargs):
                     if not isinstance(block_type, Iterable): block_type = [block_type]
-                    plugin._output_blocks = [item(self._react, **kwargs) for item in block_type]
+                    plugin._output_blocks.extend([item(self._react, **kwargs) for item in block_type])
 
                 setup.setup()
                 setup.setup_api(register_plugin_api)
@@ -127,6 +127,7 @@ class PluginSetup(Generic[T_config]):
         self._root_logger = get_react_logger(REACT_LOGGER_PLUGIN)
         self.plugin_logger = get_react_logger(f"{REACT_LOGGER_PLUGIN}.{self.module_name}")
 
+        self.plugin: Plugin[T_config] = None
 
     def create_plugin(self, plugin_register: PluginRegister, hass_api: HassApi, plugin_config: PluginConfig) -> Plugin[T_config]:
         self._root_logger.debug(f"Loading {self.module_name} plugin")

@@ -54,6 +54,12 @@ plugins:
       entity_maps:
         "935688da192d1dadfd586e00f61b2113": test_entity
 
+  - module: custom_components.react.plugin.esphome
+    config:
+      entity_property: device_id
+      type_maps:
+        button:
+          input_toggled: toggle
 
 stencil:
   full_stencil:

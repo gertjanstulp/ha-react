@@ -7,11 +7,9 @@ from custom_components.react.const import (
     ATTR_PLUGIN_MODULE,
     CONF_ENTITY_MAPS,
     REACT_ACTION_DOUBLE_PRESS,
-    REACT_ACTION_FEEDBACK_RETRIEVED,
     REACT_ACTION_LONG_PRESS,
     REACT_ACTION_SHORT_PRESS,
     REACT_TYPE_BUTTON,
-    REACT_TYPE_NOTIFY
 )
 from custom_components.react.plugin.const import ATTR_CONFIG
 from custom_components.react.plugin.deconz.const import (
@@ -22,19 +20,12 @@ from custom_components.react.plugin.deconz.const import (
 )
 
 from tests.common import FIXTURE_WORKFLOW_NAME
-from tests.const import ATTR_SERVICE_NAME, ATTR_SETUP_MOCK_PROVIDER, TEST_CONFIG
+from tests.const import TEST_CONFIG
 from tests.tst_context import TstContext
 
 
-def set_test_config(test_context: TstContext,
-    setup_mock_notify_provider: bool = False,
-    notify_entity_id: str = None,
-) -> dict:
-    result = test_context.hass.data[TEST_CONFIG] = {
-        ATTR_SETUP_MOCK_PROVIDER: setup_mock_notify_provider
-    }
-    if notify_entity_id:
-        result[ATTR_SERVICE_NAME] = notify_entity_id
+def set_test_config(test_context: TstContext) -> dict:
+    test_context.hass.data[TEST_CONFIG] = {}
 
 
 def get_mock_plugin(
@@ -59,9 +50,7 @@ async def test_deconz_task_short_press_input_block(test_context: TstContext):
             DEVICE_ID: MAPPED_DEVICE_ID
         }
     )
-    set_test_config(test_context,
-        setup_mock_notify_provider=True,
-    )
+    set_test_config(test_context)
 
     await test_context.async_start_react(mock_plugins)
 
@@ -91,9 +80,7 @@ async def test_deconz_task_long_press_input_block(test_context: TstContext):
             DEVICE_ID: MAPPED_DEVICE_ID
         }
     )
-    set_test_config(test_context,
-        setup_mock_notify_provider=True,
-    )
+    set_test_config(test_context)
 
     await test_context.async_start_react(mock_plugins)
 
@@ -123,9 +110,7 @@ async def test_deconz_task_double_press_input_block(test_context: TstContext):
             DEVICE_ID: MAPPED_DEVICE_ID
         }
     )
-    set_test_config(test_context,
-        setup_mock_notify_provider=True,
-    )
+    set_test_config(test_context)
 
     await test_context.async_start_react(mock_plugins)
 
