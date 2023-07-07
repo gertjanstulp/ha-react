@@ -16,6 +16,11 @@ from homeassistant.util.dt import parse_datetime, utcnow
 
 from custom_components.react.base import ReactBase
 from custom_components.react.config.config import Actor, Reactor, Workflow
+from custom_components.react.config.schema import (
+    PLUGIN_SCHEMA,
+    STENCIL_SCHEMA,
+    WORKFLOW_SCHEMA,
+)
 from custom_components.react.plugin.factory import PluginFactory
 from custom_components.react.runtime.runtime import ReactRuntime
 from custom_components.react.runtime.snapshots import create_snapshot
@@ -44,14 +49,11 @@ from custom_components.react.const import (
     DEFAULT_INITIAL_STATE, 
     DOMAIN,
     EVENT_REACT_ACTION,
-    PLUGIN_SCHEMA,
     REACT_LOGGER_ENTITY,
     REACT_LOGGER_RUNTIME,
     SIGNAL_ACTION_HANDLER_CREATED,
     SIGNAL_ACTION_HANDLER_DESTROYED,
     STARTUP_MESSAGE,
-    STENCIL_SCHEMA, 
-    WORKFLOW_SCHEMA,
 )
 
 

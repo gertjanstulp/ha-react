@@ -6,7 +6,7 @@ from tests.tst_context import TstContext
 from tests.common import FIXTURE_WORKFLOW_NAME
 
 
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["scheduled"])
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["scheduled_some_days"])
 async def test_call_service_delete_run(test_context: TstContext, workflow_name: str):
     await test_context.async_start_react()
     async with test_context.async_listen_reaction_event():
@@ -38,7 +38,7 @@ async def test_call_service_delete_run_multiple_reactions(test_context: TstConte
         test_context.verify_reaction_not_found()
 
 
-@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["scheduled"])
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["scheduled_some_days"])
 async def test_call_service_run_now(test_context: TstContext, workflow_name: str):
     await test_context.async_start_react()
     async with test_context.async_listen_reaction_event():
