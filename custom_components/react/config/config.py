@@ -14,6 +14,7 @@ from custom_components.react.utils.struct import ActorConfig, CtorConfig, DelayD
 from custom_components.react.const import (
     ATTR_ACTION,
     ATTR_ACTOR,
+    ATTR_ENTITY_GROUP,
     ATTR_REACTOR,
     ATTR_CONDITION,
     ATTR_DATA,
@@ -41,6 +42,7 @@ from custom_components.react.const import (
     ATTR_WAIT,
     ATTR_WORKFLOW_THEN,
     ATTR_WORKFLOW_WHEN,
+    CONF_ENTITY_GROUPS,
     CONF_PLUGINS,
     CONF_STENCIL,
     CONF_TRACE,
@@ -227,10 +229,10 @@ class Workflow():
         return len(self.errors) == 0
 
 
-    def load(self, config: dict, stencil: dict):
+    def load(self, config: dict, stencil: dict, entity_group_configuration: dict):
         merged_config = dict_merge(stencil, config)
-        self.actors: list[Actor] = self.load_items(merged_config, ATTR_WORKFLOW_WHEN, Actor)
-        self.reactors: list[Reactor] = self.load_items(merged_config, ATTR_WORKFLOW_THEN, Reactor)
+        self.actors: list[Actor] = self.load_items(merged_config, entity_group_configuration, ATTR_WORKFLOW_WHEN, Actor)
+        self.reactors: list[Reactor] = self.load_items(merged_config, entity_group_configuration, ATTR_WORKFLOW_THEN, Reactor)
         if ATTR_MODE in merged_config:
             self.mode = merged_config.get(ATTR_MODE)
         self.validate()
@@ -250,13 +252,21 @@ class Workflow():
                         self.errors.append(f"Reactor {reactor.id} has a delay without timing settings. A delay must have at least one of hour, minute or second settings.")
 
 
-    def load_items(self, config: dict, item_property: str, item_type: ctor_type) -> list[Union[Actor, Reactor]]:
+    def load_items(self, config: dict, entity_group_configuration: dict, item_property: str, item_type: ctor_type) -> list[Union[Actor, Reactor]]:
         if not config: return []
         items_config = config.get(item_property, [])
 
         result = []
         for idx,item_config in enumerate(items_config):
             item: Ctor = item_type(item_config, idx, self.id)
+            if entity_group_name_list := item_config.get(ATTR_ENTITY_GROUP, None):
+                for entity_group_name in entity_group_name_list:
+                    if entity_group := entity_group_configuration.get(entity_group_name, None):
+                        entity_list: MultiItem = item.get(ATTR_ENTITY, MultiItem())
+                        entity_list.append(entity_group)
+                        item.set(ATTR_ENTITY, entity_list)
+                    else:
+                        self.errors.append(f"Entity group '{entity_group_name}' in (re)actor {idx} of workflow {self.id} does not exist.")
             result.append(item)
 
         return result
@@ -288,7 +298,6 @@ class PluginConfiguration:
     def load(self, react_config: ConfigType) -> None:
         plugins_raw = react_config.get(CONF_PLUGINS, {})
         self.plugins = [Plugin(plugin_raw) for plugin_raw in plugins_raw]
-        test = 1
 
 
 class Plugin(DynamicData):
@@ -314,13 +323,14 @@ class WorkflowConfiguration:
             self.workflows = None
             self.workflow_config = None
             self.stencil_config = None
+            self.entity_group_config = None
 
         if react_config:
             _LOGGER.debug(f"Loading react configuration")
-            # _LOGGER.debug("Found react configuration, processing")
 
             self.stencil_config = react_config.get(CONF_STENCIL, {}) or {}
             self.workflow_config = react_config.get(CONF_WORKFLOW, {}) or {}
+            self.entity_group_config = react_config.get(CONF_ENTITY_GROUPS, {}) or {}
 
             self.parse_workflow_config()
         else:
@@ -342,7 +352,7 @@ class WorkflowConfiguration:
 
             workflow = Workflow(id, config)
             stencil = self.get_stencil_by_name(workflow.stencil)
-            workflow.load(config, stencil)
+            workflow.load(config, stencil, self.entity_group_config)
             if not workflow.is_valid:
                 _LOGGER.error(f"'{id}' has invalid configuration and will not be loaded:" + '\n- '.join([""] + workflow.errors))
             self.workflows[id] = workflow

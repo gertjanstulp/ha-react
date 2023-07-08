@@ -952,10 +952,10 @@ class TstContext():
                 trace_config_reactor_event.assert_property_match(ATTR_ID, workflow_config_reactor.id)
                 trace_config_reactor_event.assert_property_match(ATTR_ENABLED, True)
                 trace_config_reactor_event.assert_property_match(ATTR_DATA, workflow_config_reactor.data)
-                trace_config_reactor_event.assert_property_match(ATTR_ENTITY, workflow_config_reactor.entity[0])
-                trace_config_reactor_event.assert_property_match(ATTR_TYPE, workflow_config_reactor.type[0])
+                trace_config_reactor_event.assert_property_match(ATTR_ENTITY, workflow_config_reactor.entity)
+                trace_config_reactor_event.assert_property_match(ATTR_TYPE, workflow_config_reactor.type)
                 if not workflow_config_reactor.forward_action:
-                    trace_config_reactor_event.assert_property_match(ATTR_ACTION, workflow_config_reactor.action[0])
+                    trace_config_reactor_event.assert_property_match(ATTR_ACTION, workflow_config_reactor.action)
 
         ########## Trace data ##########
 

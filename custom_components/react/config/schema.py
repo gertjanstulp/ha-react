@@ -14,6 +14,7 @@ from custom_components.react.const import (
     ATTR_DELAY_MINUTES, 
     ATTR_DELAY_SECONDS,
     ATTR_ENTITY,
+    ATTR_ENTITY_GROUP,
     ATTR_FORWARD_ACTION,
     ATTR_FORWARD_DATA,
     ATTR_ID,
@@ -33,7 +34,13 @@ from custom_components.react.const import (
     ATTR_WAIT,
     ATTR_WORKFLOW_THEN,
     ATTR_WORKFLOW_WHEN,
+    CONF_ENTITY_GROUPS,
+    CONF_FRONTEND_REPO_URL,
+    CONF_PLUGINS,
+    CONF_STENCIL,
     CONF_TRACE,
+    CONF_WORKFLOW,
+    DOMAIN,
     RESTART_MODE_ABORT,
     RESTART_MODE_FORCE,
     RESTART_MODE_RERUN,
@@ -73,6 +80,7 @@ WAIT_SCHEMA = vol.Schema({
 ENTITY_DATA_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ID) : cv.string,
     vol.Optional(ATTR_ENTITY) : vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(ATTR_ENTITY_GROUP) : vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_TYPE) : vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_ACTION) : vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_CONDITION) : cv.string,
@@ -89,6 +97,10 @@ REACTOR_DATA_SCHEMA = ENTITY_DATA_SCHEMA.extend(
         vol.Optional(ATTR_WAIT) : WAIT_SCHEMA,
     }).schema
 )
+
+ENTITY_GROUPS_SCHEMA = vol.Schema({
+    cv.slug: vol.All(cv.ensure_list, [cv.string])
+})
 
 # stencil schema
 STENCIL_SCHEMA = vol.Schema({
@@ -118,3 +130,13 @@ PLUGIN_SCHEMA = vol.Schema({
     vol.Required(ATTR_PLUGIN_MODULE): cv.string,
     vol.Optional(ATTR_PLUGIN_CONFIG): dict
 })
+
+REACT_SCHEMA = vol.Schema({
+    vol.Optional(DOMAIN, default={}): vol.Schema({
+        vol.Optional(CONF_FRONTEND_REPO_URL): cv.string,
+        vol.Optional(CONF_PLUGINS): vol.All(cv.ensure_list, [PLUGIN_SCHEMA]),
+        vol.Optional(CONF_WORKFLOW): vol.Any(WORKFLOW_SCHEMA, None),
+        vol.Optional(CONF_STENCIL): vol.Any(STENCIL_SCHEMA, None),
+        vol.Optional(CONF_ENTITY_GROUPS): vol.Any(ENTITY_GROUPS_SCHEMA, None),
+    })
+}, extra=vol.ALLOW_EXTRA)

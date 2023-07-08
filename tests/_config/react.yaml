@@ -61,6 +61,11 @@ plugins:
         button:
           input_toggled: toggle
 
+entity_groups:
+  reactor_entity_entity_groups_test:
+    - entity_groups_test_entity_1
+    - entity_groups_test_entity_2
+
 stencil:
   full_stencil:
     when: actor_type_full_stencil.actor_entity_full_stencil actor_action_full_stencil
@@ -152,7 +157,7 @@ workflow:
 
   workflow_multiple_entities:
     when: actor_type_multiple_entities.actor_entity_multiple_entities_1,actor_entity_multiple_entities_2 actor_action_multiple_entities
-    then: reactor_type_multiple_entities.reactor_entity_multiple_entities reactor_action_multiple_entities
+    then: reactor_type_multiple_entities.reactor_entity_multiple_entities_1,reactor_entity_multiple_entities_2 reactor_action_multiple_entities
 
   workflow_data:
     variables:
@@ -545,3 +550,7 @@ workflow:
   workflow_climate_reset_temperature_test:
     when: actor_type_climate_reset_temperature_test.actor_entity_climate_reset_temperature_test actor_action_climate_reset_temperature_test
     then: climate.climate_initial_off_test reset_temperature
+
+  workflow_entity_groups_test:
+    when: actor_type_entity_groups_test.actor_entity_entity_groups_test actor_action_entity_groups_test
+    then: reactor_type_entity_groups_test.reactor_entity_entity_groups_test!,reactor_entity_entity_groups_test reactor_action_entity_groups_test
