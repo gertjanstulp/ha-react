@@ -28,7 +28,8 @@ CONF_ENTITY_MAPS = "entity_maps"
 CONF_PLUGINS = "plugins"
 CONF_WORKFLOW = "workflow"
 CONF_STENCIL = "stencil"
-
+CONF_ENTITY_GROUPS = "entity_groups"
+ 
 # reaction attributes
 ATTR_ID = "id"
 
@@ -90,6 +91,7 @@ RESTART_MODE_RERUN = "rerun"
 
 # shared actor/reactor attributes
 ATTR_ENTITY = "entity"
+ATTR_ENTITY_GROUP = "entity_group"
 ATTR_TYPE = "type"
 ATTR_ACTION = "action"
 ATTR_CONDITION = "condition"

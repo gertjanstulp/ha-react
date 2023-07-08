@@ -17,7 +17,9 @@ from homeassistant.util.dt import parse_datetime, utcnow
 from custom_components.react.base import ReactBase
 from custom_components.react.config.config import Actor, Reactor, Workflow
 from custom_components.react.config.schema import (
+    ENTITY_GROUPS_SCHEMA,
     PLUGIN_SCHEMA,
+    REACT_SCHEMA,
     STENCIL_SCHEMA,
     WORKFLOW_SCHEMA,
 )
@@ -42,6 +44,7 @@ from custom_components.react.const import (
     ATTR_TRIGGER,
     ATTR_TYPE,
     ATTR_WORKFLOW_ID,
+    CONF_ENTITY_GROUPS,
     CONF_PLUGINS,
     CONF_FRONTEND_REPO_URL,
     CONF_STENCIL,
@@ -57,14 +60,7 @@ from custom_components.react.const import (
 )
 
 
-CONFIG_SCHEMA = vol.Schema({
-    vol.Optional(DOMAIN, default={}): vol.Schema({
-        vol.Optional(CONF_FRONTEND_REPO_URL): cv.string,
-        vol.Optional(CONF_PLUGINS): vol.All(cv.ensure_list, [PLUGIN_SCHEMA]),
-        vol.Optional(CONF_WORKFLOW): vol.Any(WORKFLOW_SCHEMA, None),
-        vol.Optional(CONF_STENCIL): vol.Any(STENCIL_SCHEMA, None),
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = REACT_SCHEMA
 
 _ROOT_LOGGER = get_react_logger()
 _ENTITY_LOGGER = get_react_logger(REACT_LOGGER_ENTITY)

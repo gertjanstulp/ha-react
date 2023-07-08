@@ -238,6 +238,12 @@ class MultiItem(DynamicData):
         return len(self._keys)
 
 
+    def append(self, items: list):
+        cur_len = len(self)
+        for idx, item in enumerate(items):
+            self.set(f"_{cur_len + idx}", item)
+
+
 class CtorConfig(DynamicData):
 
     def __init__(self) -> None:

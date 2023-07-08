@@ -7,7 +7,8 @@ from custom_components.react.const import (
     ATTR_CONDITION,
     ATTR_DATA, 
     ATTR_DELAY, 
-    ATTR_ENTITY, 
+    ATTR_ENTITY,
+    ATTR_ENTITY_GROUP, 
     ATTR_FORWARD_ACTION, 
     ATTR_FORWARD_DATA,
     ATTR_OVERWRITE,
@@ -46,7 +47,7 @@ FLUENT_BLOCK_OPTION_FORWARD_DATA = "forward_data"
 FLUENT_BLOCK_OPTION_RESTART_MODE_MODES = "abort|force|rerun"
 FLUENT_BLOCK_WAIT_DELAY_UNIT = "seconds|minutes|hours"
 FLUENT_BLOCK_WORD_NO_DOT = "[\w\d\-\+\:\/]+"
-FLUENT_BLOCK_WORD = "[\w\d\-\+\:\/\.]+"
+FLUENT_BLOCK_WORD = "[\w\d\-\+\:\/\.\!]+"
 FLUENT_BLOCK_NUMBER = "[\d]+"
 FLUENT_BLOCK_TIME = "[\d\:]+"
 FLUENT_BLOCK_LIST_END = "(?!,\w)"
@@ -331,14 +332,18 @@ def ensure_entity_data(value: list[Any] | None):
 def find_match(value: str) -> tuple[re.Match, dict]:
     if match := re.match(FLUENT_SYNTAX_GENERIC, value):
         result = {
-            ATTR_ENTITY: parse_match_group(match, FLUENT_GROUP_ENTITY),
             ATTR_TYPE: parse_match_group(match, FLUENT_GROUP_TYPE),
             ATTR_ACTION: parse_match_group(match, FLUENT_GROUP_ACTION),
         }
+        items: str = parse_match_group(match, FLUENT_GROUP_ENTITY)
+        for item in items:
+            result.setdefault(ATTR_ENTITY_GROUP if item.endswith('!') else ATTR_ENTITY, []).append(item.replace('!', ''))
+
     elif match := re.match(FLUENT_SYNTAX_RESET, value):
         result = {
             ATTR_RESET_WORKFLOW: match.group(FLUENT_GROUP_RESET_WORKFLOW)
         }
+
     else:
         raise vol.Invalid("Invalid fluent syntax used")
     

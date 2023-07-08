@@ -18,6 +18,7 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 from custom_components.react.const import (
     ATTR_REACTION_ID,
     ATTR_RUN_ID,
+    CONF_ENTITY_GROUPS,
     CONF_PLUGINS,
     CONF_STENCIL,
     CONF_WORKFLOW,
@@ -91,6 +92,7 @@ async def react_component(hass_setup):
 
         data = {
             CONF_STENCIL: raw_data.get(CONF_STENCIL, {}),
+            CONF_ENTITY_GROUPS: raw_data.get(CONF_ENTITY_GROUPS, {}),
             CONF_WORKFLOW: {},
             CONF_PLUGINS: plugins
         }
