@@ -64,7 +64,7 @@ plugins:
 stencil:
   full_stencil:
     when: actor_type_full_stencil.actor_entity_full_stencil actor_action_full_stencil
-    then: reactor_type_full_stencil.reactor_entity_full_stencil reactor_action_full_stencil with data test=37
+    then: reactor_type_full_stencil.reactor_entity_full_stencil reactor_action_full_stencil with test=37
 
   partial_stencil:
     then: 
@@ -85,7 +85,7 @@ workflow:
     when: actor_type_overwrite.actor_entity_overwrite actor_action_overwrite
     then: >-
       reactor_type_overwrite.reactor_entity_overwrite reactor_action_overwrite 
-      with overwrite 
+      use overwrite
       wait for 3 seconds
 
   workflow_scheduled_all_days:
@@ -108,11 +108,11 @@ workflow:
 
   workflow_forward_action:
     when: actor_type_forward_action.actor_entity_forward_action
-    then: reactor_type_forward_action.reactor_entity_forward_action reactor_action_forward_action with forward_action
+    then: reactor_type_forward_action.reactor_entity_forward_action reactor_action_forward_action use forward_action
   
   workflow_forward_data:
     when: actor_type_forward_data.actor_entity_forward_data actor_action_forward_data
-    then: reactor_type_forward_data.reactor_entity_forward_data reactor_action_forward_data with forward_data
+    then: reactor_type_forward_data.reactor_entity_forward_data reactor_action_forward_data use forward_data
 
   workflow_trace_basic_test:
     when: 
@@ -157,12 +157,12 @@ workflow:
   workflow_data:
     variables:
       type_templated: "{{ 1 + 2 }}"
-    when: actor_type_data.actor_entity_data actor_action_data with data actor_data_data={{ type_templated }}
-    then: reactor_type_data.reactor_entity_data reactor_action_data with data data1=1, data2={{ event.action }}, data3={{ type_templated }}, data5={{ actor.id }}
+    when: actor_type_data.actor_entity_data actor_action_data with actor_data_data={{ type_templated }}
+    then: reactor_type_data.reactor_entity_data reactor_action_data with data1=1, data2={{ event.action }}, data3={{ type_templated }}, data5={{ actor.id }}
 
   workflow_data_delayed:
     when: actor_type_data_delayed.actor_entity_data_delayed actor_action_data_delayed
-    then: reactor_type_data_delayed.reactor_entity_data_delayed reactor_action_data_delayed wait for {{ 60 }} seconds with data data1=1, data2=True
+    then: reactor_type_data_delayed.reactor_entity_data_delayed reactor_action_data_delayed wait for {{ 60 }} seconds with data1=1, data2=True
 
   workflow_multiple_actor_data:
     when: 
@@ -268,7 +268,7 @@ workflow:
 
   workflow_state_track_test:
     when: state.input_number.input_number_value_test change
-    then: state.{{ event.entity }} log with forward_data
+    then: state.{{ event.entity }} log use forward_data
 
   workflow_hass_event_start_test:
     when: system.hass start
@@ -354,27 +354,27 @@ workflow:
 
   workflow_scheduled_restart_abort:
     when: actor_type_scheduled_restart_abort.actor_entity_scheduled_restart_abort actor_action_scheduled_restart_abort
-    then: reactor_type_scheduled_restart_abort.reactor_entity_scheduled_restart_abort reactor_action_scheduled_restart_abort wait until 00:00:00 with restart_mode abort
+    then: reactor_type_scheduled_restart_abort.reactor_entity_scheduled_restart_abort reactor_action_scheduled_restart_abort wait until 00:00:00 use restart_mode abort
 
   workflow_scheduled_restart_force:
     when: actor_type_scheduled_restart_force.actor_entity_scheduled_restart_force actor_action_scheduled_restart_force
-    then: reactor_type_scheduled_restart_force.reactor_entity_scheduled_restart_force reactor_action_scheduled_restart_force wait until 00:00:00 with restart_mode force
+    then: reactor_type_scheduled_restart_force.reactor_entity_scheduled_restart_force reactor_action_scheduled_restart_force wait until 00:00:00 use restart_mode force
 
   workflow_media_player_speak_test:
     when: actor_type_media_player_speak_test.actor_entity_media_player_speak_test actor_action_media_player_speak_test
-    then: media_player.browser speak with data message=This is a test without volume, language=en
+    then: media_player.browser speak with message=This is a test without volume, language=en
 
   workflow_media_player_speak_with_volume_test:
     when: actor_type_media_player_speak_with_volume_test.actor_entity_media_player_speak_with_volume_test actor_action_media_player_speak_with_volume_test
-    then: media_player.browser speak with data message=This is a test with volume, language=en, volume=0.1
+    then: media_player.browser speak with message=This is a test with volume, language=en, volume=0.1
 
   workflow_media_player_speak_with_announce_test:
     when: actor_type_media_player_speak_with_announce_test.actor_entity_media_player_speak_with_announce_test actor_action_media_player_speak_with_announce_test
-    then: media_player.browser speak with data message=This is a test with announce, language=en, announce=True
+    then: media_player.browser speak with message=This is a test with announce, language=en, announce=True
 
   workflow_media_player_speak_with_wait_test:
     when: actor_type_media_player_speak_with_wait_test.actor_entity_media_player_speak_with_wait_test actor_action_media_player_speak_with_wait_test
-    then: media_player.browser speak with data message=This is a test with wait, language=en, wait=3
+    then: media_player.browser speak with message=This is a test with wait, language=en, wait=3
 
   workflow_media_player_pause_test:
     when: actor_type_media_player_pause_test.actor_entity_media_player_pause_test actor_action_media_player_pause_test
@@ -399,8 +399,8 @@ workflow:
   workflow_notify_confirm_feedback_test:
     when: notify.telegram_user,mobile_app_hd1903 feedback_retrieved
     then:
-      - reactor_type_notify_confirm_feedback_test.reactor_entity_notify_confirm_feedback_test reactor_action_notify_confirm_feedback_test with data feedback={{ event.data.feedback }}
-      - notify.{{ event.entity }} confirm_feedback with forward_data
+      - reactor_type_notify_confirm_feedback_test.reactor_entity_notify_confirm_feedback_test reactor_action_notify_confirm_feedback_test with feedback={{ event.data.feedback }}
+      - notify.{{ event.entity }} confirm_feedback use forward_data
 
   workflow_input_number_set_test:
     when: actor_type_input_number_set_test.actor_entity_input_number_set_test actor_action_input_number_set_test
@@ -412,19 +412,19 @@ workflow:
 
   workflow_input_number_increase_with_max_test:
     when: actor_type_input_number_increase_with_max_test.actor_entity_input_number_increase_with_max_test actor_action_input_number_increase_with_max_test
-    then: input_number.input_number_value_test increase with data value=1.5, max=51
+    then: input_number.input_number_value_test increase with value=1.5, max=51
 
   workflow_input_number_decrease_test:
     when: actor_type_input_number_decrease_test.actor_entity_input_number_decrease_test actor_action_input_number_decrease_test
-    then: input_number.input_number_value_test decrease with data value=1.5
+    then: input_number.input_number_value_test decrease with value=1.5
 
   workflow_input_number_decrease_with_min_test:
     when: actor_type_input_number_decrease_with_min_test.actor_entity_input_number_decrease_with_min_test actor_action_input_number_decrease_with_min_test
-    then: input_number.input_number_value_test decrease with data value=1.5, min=49
+    then: input_number.input_number_value_test decrease with value=1.5, min=49
 
   workflow_input_text_set_test:
     when: actor_type_input_text_set_test.actor_entity_input_text_set_test actor_action_input_text_set_test
-    then: input_text.input_text_value_test set_value with data value=test_value
+    then: input_text.input_text_value_test set_value with value=test_value
 
   workflow_input_boolean_turn_on_test:
     when: actor_type_input_boolean_turn_on_test.actor_entity_input_boolean_turn_on_test actor_action_input_boolean_turn_on_test
@@ -448,7 +448,7 @@ workflow:
 
   workflow_media_player_play_favorite_test:
     when: actor_type_media_player_play_favorite_test.actor_entity_media_player_play_favorite_test actor_action_media_player_play_favorite_test
-    then: media_player.media_player_play_favorite_test play_favorite with data favorite_id=test_id
+    then: media_player.media_player_play_favorite_test play_favorite with favorite_id=test_id
 
   workflow_light_turn_on_test:
     when: actor_type_light_turn_on_test.actor_entity_light_turn_on_test actor_action_light_turn_on_test
@@ -516,7 +516,7 @@ workflow:
 
   workflow_fan_set_percentage_test:
     when: actor_type_fan_set_percentage_test.actor_entity_fan_set_percentage_test actor_action_fan_set_percentage_test
-    then: fan.fan_initial_off_test set_percentage with data percentage=50
+    then: fan.fan_initial_off_test set_percentage with percentage=50
 
   workflow_fan_increase_speed_test:
     when: actor_type_fan_increase_speed_test.actor_entity_fan_increase_speed_test actor_action_fan_increase_speed_test
@@ -528,7 +528,7 @@ workflow:
 
   workflow_fan_turn_off_test:
     when: actor_type_fan_turn_off_test.actor_entity_fan_turn_off_test actor_action_fan_turn_off_test
-    then: fan.fan_initial_on_test set_percentage with data percentage=50
+    then: fan.fan_initial_on_test set_percentage with percentage=50
 
   workflow_hass_started_test:
     when: system.hass started
@@ -540,7 +540,7 @@ workflow:
 
   workflow_climate_set_temperature_test:
     when: actor_type_climate_set_temperature_test.actor_entity_climate_set_temperature_test actor_action_climate_set_temperature_test
-    then: climate.climate_initial_off_test set_temperature with data temperature=25
+    then: climate.climate_initial_off_test set_temperature with temperature=25
 
   workflow_climate_reset_temperature_test:
     when: actor_type_climate_reset_temperature_test.actor_entity_climate_reset_temperature_test actor_action_climate_reset_temperature_test

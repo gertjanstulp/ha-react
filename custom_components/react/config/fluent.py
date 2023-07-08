@@ -53,14 +53,14 @@ FLUENT_BLOCK_LIST_END = "(?!,\w)"
 FLUENT_BLOCK_DATA = "[^=,]+\=[^=,]+"
 
 FLUENT_TOKEN_RESET = "reset"
-FLUENT_TOKEN_WITH = "with"
+FLUENT_TOKEN_USE = "use"
 FLUENT_TOKEN_IF = "if"
 FLUENT_TOKEN_WAIT_CONDITION = "wait until"
 FLUENT_TOKEN_WAIT_DELAY = "wait for"
 FLUENT_TOKEN_WAIT_SCHEDULE = "wait until"
 FLUENT_TOKEN_EVERY = "every"
-FLUENT_TOKEN_DATA = "with data"
-FLUENT_TOKEN_WITH_RESTART_MODE = "with restart_mode"
+FLUENT_TOKEN_DATA = "with"
+FLUENT_TOKEN_USE_RESTART_MODE = f"{FLUENT_TOKEN_USE} restart_mode"
 
 
 def optional(value: str):
@@ -200,7 +200,7 @@ FLUENT_SYNTAX_WAIT_SCHEDULE = optional(
             ),
             optional(
                 tokenize(
-                    FLUENT_TOKEN_WITH_RESTART_MODE,
+                    FLUENT_TOKEN_USE_RESTART_MODE,
                     named_group(
                         FLUENT_GROUP_OPTION_RESTART_MODE,
                         enum_list(
@@ -225,7 +225,7 @@ FLUENT_SYNTAX_WAIT_CONDITION = optional(
 
 FLUENT_SYNTAX_OVERWRITE = optional(
     tokenize(
-        FLUENT_TOKEN_WITH, 
+        FLUENT_TOKEN_USE, 
         named_group(
             FLUENT_GROUP_OPTION_OVERWRITE, 
             FLUENT_BLOCK_OPTION_OVERWRITE
@@ -235,7 +235,7 @@ FLUENT_SYNTAX_OVERWRITE = optional(
 
 FLUENT_SYNTAX_FORWARD_ACTION = optional(
     tokenize(
-        FLUENT_TOKEN_WITH, 
+        FLUENT_TOKEN_USE, 
         named_group(
             FLUENT_GROUP_OPTION_FORWARD_ACTION, 
             FLUENT_BLOCK_OPTION_FORWARD_ACTION
@@ -245,23 +245,13 @@ FLUENT_SYNTAX_FORWARD_ACTION = optional(
 
 FLUENT_SYNTAX_FORWARD_DATA = optional(
     tokenize(
-        FLUENT_TOKEN_WITH, 
+        FLUENT_TOKEN_USE, 
         named_group(
             FLUENT_GROUP_OPTION_FORWARD_DATA, 
             FLUENT_BLOCK_OPTION_FORWARD_DATA
         )
     )
 )
-
-# FLUENT_SYNTAX_RESTART_MDOE = optional(
-#     tokenize(
-#         FLUENT_TOKEN_WITH,
-#         named_group(
-#             FLUENT_GROUP_OPTION_RESTART_MODE,
-#             FLUENT_BLOCK_OPTION_RESTART_MODE,
-#         )
-#     )
-# )
 
 FLUENT_SYNTAX_CTOR_CONDITION = optional(
     tokenize(
