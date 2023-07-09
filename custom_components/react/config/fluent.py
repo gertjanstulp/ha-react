@@ -142,9 +142,11 @@ FLUENT_SYNTAX_GENERIC_BASE = unspaced(
     optional(
         named_group(
             FLUENT_GROUP_ACTION,
-            or_group(
-                FLUENT_BLOCK_WORD,
-                FLUENT_BLOCK_JINJA,
+            enum_list(
+                or_group(
+                    FLUENT_BLOCK_WORD,
+                    FLUENT_BLOCK_JINJA,
+                )
             )
         )
     )

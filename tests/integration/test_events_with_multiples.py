@@ -114,3 +114,47 @@ async def test_multiple_entities_2(test_context: TstContext, workflow_name: str)
         test_context.verify_reaction_event_data()
         test_context.verify_trace_record(actor_entity_index=1)
         test_context.verify_has_no_log_issues()
+
+
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["entity_groups_test"])
+async def test_entity_groups(test_context: TstContext, workflow_name: str):
+    await test_context.async_start_react()
+    
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
+        await test_context.async_send_action_event()
+        test_context.verify_reaction_not_found()
+        await test_context.async_verify_reaction_event_received(expected_count=3)
+        test_context.verify_reaction_event_data()
+        test_context.verify_trace_record()
+        test_context.verify_has_no_log_issues()
+
+
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["multiple_actions_test"])
+async def test_multiple_actions_1(test_context: TstContext, workflow_name: str):
+    
+    await test_context.async_start_react()
+    
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
+        await test_context.async_send_action_event()
+        test_context.verify_reaction_not_found()
+        await test_context.async_verify_reaction_event_received(expected_count=2)
+        test_context.verify_reaction_event_data()
+        test_context.verify_trace_record()
+        test_context.verify_has_no_log_issues()
+
+
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["multiple_actions_test"])
+async def test_multiple_actions_2(test_context: TstContext, workflow_name: str):
+  
+    await test_context.async_start_react()
+    
+    async with test_context.async_listen_reaction_event():
+        test_context.verify_reaction_not_found()
+        await test_context.async_send_action_event(action_index=1)
+        test_context.verify_reaction_not_found()
+        await test_context.async_verify_reaction_event_received(expected_count=2)
+        test_context.verify_reaction_event_data()
+        test_context.verify_trace_record(actor_action_index=1)
+        test_context.verify_has_no_log_issues()
