@@ -159,6 +159,14 @@ workflow:
     when: actor_type_multiple_entities.actor_entity_multiple_entities_1,actor_entity_multiple_entities_2 actor_action_multiple_entities
     then: reactor_type_multiple_entities.reactor_entity_multiple_entities_1,reactor_entity_multiple_entities_2 reactor_action_multiple_entities
 
+  workflow_multiple_actions_test:
+    when: actor_type_multiple_actions.actor_entity_multiple_actions actor_action_multiple_actions_1,actor_action_multiple_actions_2
+    then: reactor_type_multiple_actions.reactor_entity_multiple_actions reactor_action_multiple_actions_1,reactor_action_multiple_actions_2    
+
+  workflow_entity_groups_test:
+    when: actor_type_entity_groups_test.actor_entity_entity_groups_test actor_action_entity_groups_test
+    then: reactor_type_entity_groups_test.reactor_entity_entity_groups_test!,reactor_entity_entity_groups_test reactor_action_entity_groups_test
+
   workflow_data:
     variables:
       type_templated: "{{ 1 + 2 }}"
@@ -550,7 +558,3 @@ workflow:
   workflow_climate_reset_temperature_test:
     when: actor_type_climate_reset_temperature_test.actor_entity_climate_reset_temperature_test actor_action_climate_reset_temperature_test
     then: climate.climate_initial_off_test reset_temperature
-
-  workflow_entity_groups_test:
-    when: actor_type_entity_groups_test.actor_entity_entity_groups_test actor_action_entity_groups_test
-    then: reactor_type_entity_groups_test.reactor_entity_entity_groups_test!,reactor_entity_entity_groups_test reactor_action_entity_groups_test
