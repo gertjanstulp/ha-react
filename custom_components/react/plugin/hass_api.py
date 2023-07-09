@@ -3,10 +3,9 @@ from typing import Any
 from uuid import uuid4
 
 from homeassistant.components.tts.media_source import generate_media_source_id
-from homeassistant.core import Context, HomeAssistant, SERVICE_CALL_LIMIT, State
+from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntry
-
 
 
 class HassApi:
@@ -22,17 +21,13 @@ class HassApi:
         service_data: dict[str, Any] | None = None,
         blocking: bool = False,
         context: Context | None = None,
-        limit: float | None = SERVICE_CALL_LIMIT,
-        target: dict[str, Any] | None = None,
     ) -> bool | None:
         return await self.hass.services.async_call(
             domain,
             service,
-            service_data,
-            blocking,
-            context,
-            limit,
-            target,
+            service_data=service_data,
+            blocking=blocking,
+            context=context,
         )
     
 

@@ -17,9 +17,9 @@ class InputNumberProvider(PluginProviderBase[InputNumberConfig]):
         await self.plugin.hass_api.async_hass_call_service(
             DOMAIN,
             SERVICE_SET_VALUE,
-            {
+            service_data={
                 ATTR_ENTITY_ID: entity_id,
                 ATTR_VALUE: value,
             },
-            context,
+            context=context,
         )

@@ -23,6 +23,6 @@ class MqttProvider(PluginProviderBase[MqttConfig]):
         await self.plugin.hass_api.async_hass_call_service(
             MQTT_DOMAIN,
             SERVICE_PUBLISH,
-            data,
-            context,
+            service_data=data,
+            context=context,
         )

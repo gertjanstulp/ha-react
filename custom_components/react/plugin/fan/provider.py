@@ -23,11 +23,11 @@ class FanProvider(PluginProviderBase[FanConfig]):
         await self.plugin.hass_api.async_hass_call_service(
             FAN_DOMAIN,
             SERVICE_SET_PERCENTAGE,
-            {
+            service_data={
                 ATTR_ENTITY_ID: entity_id,
                 ATTR_PERCENTAGE: percentage
             },
-            context,
+            context=context,
         )
 
 
@@ -40,8 +40,8 @@ class FanProvider(PluginProviderBase[FanConfig]):
         await self.plugin.hass_api.async_hass_call_service(
             FAN_DOMAIN,
             SERVICE_INCREASE_SPEED,
-            data,
-            context,
+            service_data=data,
+            context=context,
         )
 
 
@@ -54,6 +54,6 @@ class FanProvider(PluginProviderBase[FanConfig]):
         await self.plugin.hass_api.async_hass_call_service(
             FAN_DOMAIN,
             SERVICE_DECREASE_SPEED,
-            data,
-            context,
+            service_data=data,
+            context=context,
         )

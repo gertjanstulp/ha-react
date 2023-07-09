@@ -25,11 +25,11 @@ class ClimateProvider(Generic[T_config], PluginProviderBase[T_config]):
         await self.plugin.hass_api.async_hass_call_service(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
-            {
+            service_data={
                 ATTR_ENTITY_ID: entity_id,
                 ATTR_TEMPERATURE: temperature,
             }, 
-            context
+            context=context
         )
 
 
