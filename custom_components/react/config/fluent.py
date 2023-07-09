@@ -51,7 +51,7 @@ FLUENT_BLOCK_WORD = "[\w\d\-\+\:\/\.\!]+"
 FLUENT_BLOCK_NUMBER = "[\d]+"
 FLUENT_BLOCK_TIME = "[\d\:]+"
 FLUENT_BLOCK_LIST_END = "(?!,\w)"
-FLUENT_BLOCK_DATA = "[^=,]+\=[^=,]+"
+FLUENT_BLOCK_DATA = "[^,]+\=[^,]+"
 
 FLUENT_TOKEN_RESET = "reset"
 FLUENT_TOKEN_USE = "use"
@@ -397,7 +397,7 @@ def parse_data(data: str):
     result = {}
     data_items = data.split(',')
     for data_item in data_items:
-        data_parts = data_item.split('=') 
+        data_parts = data_item.split('=', 1) 
         result[data_parts[0].strip()] = parse_numeric(data_parts[1].strip())
     return result
 
