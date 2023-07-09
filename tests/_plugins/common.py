@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Mapping
-from homeassistant.core import Context, HomeAssistant, SERVICE_CALL_LIMIT, State
+from typing import Any, Coroutine, Mapping
+from homeassistant.core import Context, HomeAssistant, State
 from custom_components.react.const import ATTR_WAIT
 
 from custom_components.react.plugin.hass_api import HassApi
@@ -23,15 +23,13 @@ class HassApiMock(HassApi):
 
 
     async def async_hass_call_service(
-        self,
-        domain: str,
-        service: str,
-        service_data: dict[str, Any] | None = None,
-        blocking: bool = False,
-        context: Context | None = None,
-        limit: float | None = SERVICE_CALL_LIMIT,
-        target: dict[str, Any] | None = None,
-    ) -> bool | None:
+        self, 
+        domain: str, 
+        service: str, 
+        service_data: dict[str, Any] | None = None, 
+        blocking: bool = False, 
+        context: Context | None = None, 
+    ) -> Coroutine[Any, Any, bool | None]:
         test_context: TstContext = self.hass_get_data(TEST_CONTEXT)
         test_context.register_service_call(domain, service, service_data)
         return None

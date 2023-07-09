@@ -35,10 +35,10 @@ class SonosProvider(MediaPlayerProvider[DynamicData]):
             await self.plugin.hass_api.async_hass_call_service(
                 SONOS_DOMAIN,
                 SERVICE_SNAPSHOT,
-                {
+                service_data={
                     ATTR_ENTITY_ID: entity_id,
                 },
-                context,
+                context=context,
             )
         except:
             session.exception(self.logger, "Suspending mediaplayer failed")
@@ -50,10 +50,10 @@ class SonosProvider(MediaPlayerProvider[DynamicData]):
             await self.plugin.hass_api.async_hass_call_service(
                 SONOS_DOMAIN,
                 SERVICE_RESTORE,
-                {
+                service_data={
                     ATTR_ENTITY_ID: entity_id,
                 },
-                context,
+                context=context,
             )
         except:
             session.exception(self.logger, "Resuming mediaplayer failed")
@@ -63,10 +63,10 @@ class SonosProvider(MediaPlayerProvider[DynamicData]):
         await self.plugin.hass_api.async_hass_call_service(
             Platform.MEDIA_PLAYER, 
             SERVICE_PLAY_MEDIA,
-            {
+            service_data={
                 ATTR_ENTITY_ID: entity_id,
                 ATTR_MEDIA_CONTENT_TYPE: CONTENT_TYPE_FAVORITE_ITEM_ID,
                 ATTR_MEDIA_CONTENT_ID: favorite_id
             }, 
-            context
+            context=context
         )

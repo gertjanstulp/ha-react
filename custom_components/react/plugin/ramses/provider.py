@@ -20,12 +20,12 @@ class RamsesProvider(ClimateProvider[DynamicData]):
         await self.plugin.hass_api.async_hass_call_service(
             DOMAIN,
             SVC_SET_ZONE_MODE,
-            {
+            service_data={
                 ATTR_ENTITY_ID: entity_id,
                 ATTR_SETPOINT: temperature,
                 ATTR_MODE: MODE_ADVANCED_OVERRIDE,
             },
-            context,
+            context=context,
         )
 
 
@@ -34,8 +34,8 @@ class RamsesProvider(ClimateProvider[DynamicData]):
         await self.plugin.hass_api.async_hass_call_service(
             DOMAIN,
             SVC_RESET_ZONE_MODE,
-            {
+            service_data={
                 ATTR_ENTITY_ID: entity_id,
             },
-            context,
+            context=context,
         )

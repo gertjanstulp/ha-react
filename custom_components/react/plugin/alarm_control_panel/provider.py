@@ -29,22 +29,22 @@ class AlarmProvider(PluginProviderBase[AlarmConfig]):
             SERVICE_ALARM_ARM_NIGHT if arm_mode == ArmMode.NIGHT else 
             SERVICE_ALARM_ARM_VACATION if arm_mode == ArmMode.VACATION else
             None,
-            {
+            service_data={
                 ATTR_ENTITY_ID: entity_id,
                 ATTR_CODE: code,
             },
-            context,
+            context=context,
         )
 
     async def async_disarm(self, session: Session, context: Context, entity_id: str, code: str):
         await self.plugin.hass_api.async_hass_call_service(
             ALARM_DOMAIN,
             SERVICE_ALARM_DISARM,
-            {
+            service_data={
                 ATTR_ENTITY_ID: entity_id,
                 ATTR_CODE: code,
             },
-            context,
+            context=context,
         )
 
     
@@ -52,8 +52,8 @@ class AlarmProvider(PluginProviderBase[AlarmConfig]):
         await self.plugin.hass_api.async_hass_call_service(
             ALARM_DOMAIN,
             SERVICE_ALARM_TRIGGER,
-            {
+            service_data={
                 ATTR_ENTITY_ID: entity_id,
             },
-            context,
+            context=context,
         )

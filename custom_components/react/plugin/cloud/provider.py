@@ -41,7 +41,7 @@ class CloudTtsProvider(TtsProvider):
         await self.plugin.hass_api.async_hass_call_service(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_PLAY_MEDIA,
-            speak_data,
+            service_data=speak_data,
             blocking=True,
             context=context,
         )
