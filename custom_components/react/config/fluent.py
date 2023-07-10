@@ -52,6 +52,7 @@ FLUENT_BLOCK_NUMBER = "[\d]+"
 FLUENT_BLOCK_TIME = "[\d\:]+"
 FLUENT_BLOCK_LIST_END = "(?!,\w)"
 FLUENT_BLOCK_DATA = "[^,]+\=[^,]+"
+FLUENT_BLOCK_WILDCARD = "\*"
 
 FLUENT_TOKEN_RESET = "reset"
 FLUENT_TOKEN_USE = "use"
@@ -120,7 +121,7 @@ def or_group(value1: str, value2: str):
     return unnamed_group(piped(value1, value2))
 
 
-FLUENT_SYNTAX_GENERIC_BASE = unspaced(
+FLUENT_SYNTAX_GENERIC_BASE = spaced(
     dotted(
         named_group(
             FLUENT_GROUP_TYPE, 
@@ -139,9 +140,10 @@ FLUENT_SYNTAX_GENERIC_BASE = unspaced(
             )
         )
     ), 
-    optional(
-        named_group(
-            FLUENT_GROUP_ACTION,
+    named_group(
+        FLUENT_GROUP_ACTION,
+        or_group(
+            FLUENT_BLOCK_WILDCARD,
             enum_list(
                 or_group(
                     FLUENT_BLOCK_WORD,
@@ -333,13 +335,17 @@ def ensure_entity_data(value: list[Any] | None):
 
 def find_match(value: str) -> tuple[re.Match, dict]:
     if match := re.match(FLUENT_SYNTAX_GENERIC, value):
-        result = {
-            ATTR_TYPE: parse_match_group(match, FLUENT_GROUP_TYPE),
-            ATTR_ACTION: parse_match_group(match, FLUENT_GROUP_ACTION),
-        }
-        items: str = parse_match_group(match, FLUENT_GROUP_ENTITY)
-        for item in items:
-            result.setdefault(ATTR_ENTITY_GROUP if item.endswith('!') else ATTR_ENTITY, []).append(item.replace('!', ''))
+        result = {}
+        entity_items = parse_match_group(match, FLUENT_GROUP_ENTITY)
+        type = parse_match_group(match, FLUENT_GROUP_TYPE)
+        action = parse_match_group(match, FLUENT_GROUP_ACTION)
+
+        for entity_item in entity_items:
+            result.setdefault(ATTR_ENTITY_GROUP if entity_item.endswith('!') else ATTR_ENTITY, []).append(entity_item.replace('!', ''))
+        if type:
+            result[ATTR_TYPE] = type
+        if action:
+            result[ATTR_ACTION] = action
 
     elif match := re.match(FLUENT_SYNTAX_RESET, value):
         result = {
@@ -356,7 +362,8 @@ def parse_match_group(match: re.Match, name: str):
     result = None
     value = match.group(name)
     if value:
-        result = value.split(',')
+        if value != '*':
+            result = value.split(',')
     return result
 
 
