@@ -112,8 +112,8 @@ workflow:
       - reset workflow_scheduled_some_days
 
   workflow_forward_action:
-    when: actor_type_forward_action.actor_entity_forward_action
-    then: reactor_type_forward_action.reactor_entity_forward_action reactor_action_forward_action use forward_action
+    when: actor_type_forward_action.actor_entity_forward_action *
+    then: reactor_type_forward_action.reactor_entity_forward_action * use forward_action
   
   workflow_forward_data:
     when: actor_type_forward_data.actor_entity_forward_data actor_action_forward_data
