@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 from typing import Any, Coroutine, Mapping
-from homeassistant.core import Context, HomeAssistant, State
-from custom_components.react.const import ATTR_WAIT
 
+from homeassistant.core import Context, HomeAssistant, State
+from homeassistant.helpers.device_registry import DeviceEntry, DeviceEntryDisabler
+
+from custom_components.react.const import ATTR_WAIT
 from custom_components.react.plugin.hass_api import HassApi
+
 from tests.common import TEST_CONTEXT
 from tests.tst_context import TstContext
 
@@ -20,6 +23,7 @@ class HassApiMock(HassApi):
         super().__init__(hass)
         self.available_services: dict[str, list[str]] = {}
         self.states: dict[str, State] = {}
+        self.devices: dict[str, DeviceEntry] = {}
 
 
     async def async_hass_call_service(
@@ -52,6 +56,12 @@ class HassApiMock(HassApi):
         return super().hass_get_state(entity_id)
     
 
+    def hass_get_device(self, device_id: str) -> DeviceEntry:
+        if device := self.devices.get(device_id, None):
+            return device
+        return super().hass_get_device(device_id)
+    
+
     def hass_register_service(self, domain: str, entity_id: str):
         if not domain in self.available_services:
             self.available_services[domain] = []
@@ -60,6 +70,10 @@ class HassApiMock(HassApi):
 
     def hass_register_state(self, entity_id: str, state: str, attributes: Mapping[str, Any] | None = None):
         self.states[entity_id] = State(entity_id, state, attributes)
+
+
+    def hass_register_device(self, device_id: str, disabled: bool):
+        self.devices[device_id] = DeviceEntry(disabled_by=DeviceEntryDisabler.USER if disabled else None)
 
 
     def hass_get_uid_str(self) -> str:

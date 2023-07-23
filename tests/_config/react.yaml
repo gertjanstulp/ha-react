@@ -61,6 +61,8 @@ plugins:
         button:
           input_toggled: toggle
 
+  - module: custom_components.react.plugin.unifi
+
 entity_groups:
   reactor_entity_entity_groups_test:
     - entity_groups_test_entity_1
@@ -558,3 +560,7 @@ workflow:
   workflow_climate_reset_temperature_test:
     when: actor_type_climate_reset_temperature_test.actor_entity_climate_reset_temperature_test actor_action_climate_reset_temperature_test
     then: climate.climate_initial_off_test reset_temperature
+
+  workflow_unifi_reconnect_client_test:
+    when: actor_type_unifi_reconnect_client.actor_entity_unifi_reconnect_client actor_action_unifi_reconnect_client
+    then: unifi.device_id_test reconnect_client

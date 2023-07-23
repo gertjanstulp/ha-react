@@ -177,6 +177,7 @@ REACT_TYPE_FAN = "fan"
 REACT_TYPE_MQTT = "mqtt"
 REACT_TYPE_CLIMATE = "climate"
 REACT_TYPE_BUTTON = "button"
+REACT_TYPE_UNIFI = "unifi"
 
 # React actions
 REACT_ACTION_SEND_MESSAGE = "send_message"
