@@ -13,6 +13,8 @@ ATTR_SERVICE_NAME = "service_name"
 ATTR_ENTITY_STATE = "entity_state"
 ATTR_ENTITY_STATE_ATTRIBUTES = "entity_state_attributes"
 
+ATTR_DEVICE_DISABLED = "device_disabled"
+
 ATTR_MESSAGE = "message"
 ATTR_VOLUME = "volume"
 

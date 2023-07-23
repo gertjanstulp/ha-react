@@ -36,3 +36,6 @@ python-telegram-bot==13.1
 freezegun==1.2.2
 
 Pillow
+
+# for unifi
+aiounifi==49
