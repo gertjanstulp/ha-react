@@ -5,10 +5,7 @@ from homeassistant.components.unifi.const import DOMAIN
 from homeassistant.components.unifi.services import SERVICE_RECONNECT_CLIENT
 from homeassistant.const import ATTR_DEVICE_ID
 
-from custom_components.react.const import (
-    ACTION_CHANGE,
-    ATTR_PLUGIN_MODULE,
-)
+from custom_components.react.const import ATTR_PLUGIN_MODULE
 from custom_components.react.plugin.const import ATTR_CONFIG
 from custom_components.react.plugin.unifi.const import ATTR_UNIFI_PROVIDER
 
@@ -16,7 +13,6 @@ from tests._plugins.unifi_mock.setup import UNIFI_MOCK_PROVIDER
 from tests.common import FIXTURE_WORKFLOW_NAME, VALUE_FIXTURE_COMBOS, VALUE_FIXTURES
 from tests.const import (
     ATTR_DEVICE_DISABLED,
-    ATTR_ENTITY_STATE, 
     ATTR_SETUP_MOCK_PROVIDER, 
     TEST_CONFIG,
 )

@@ -62,6 +62,7 @@ plugins:
           input_toggled: toggle
 
   - module: custom_components.react.plugin.unifi
+  - module: custom_components.react.plugin.hassio
 
 entity_groups:
   reactor_entity_entity_groups_test:
@@ -564,3 +565,7 @@ workflow:
   workflow_unifi_reconnect_client_test:
     when: actor_type_unifi_reconnect_client.actor_entity_unifi_reconnect_client actor_action_unifi_reconnect_client
     then: unifi.device_id_test reconnect_client
+
+  workflow_hassio_restart_addon_test:
+    when: actor_type_hassio_restart_addon.actor_entity_hassio_restart_addon actor_action_hassio_restart_addon
+    then: hassio.addon_test addon_restart
