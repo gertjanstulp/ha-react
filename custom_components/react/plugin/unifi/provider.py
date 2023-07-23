@@ -10,7 +10,7 @@ from custom_components.react.utils.session import Session
 
 class UnifiProvider(PluginProviderBase[UnifiConfig]):
 
-    async def async_unifi_set_value(self, session: Session, context: Context, device_id: str):
+    async def async_reconnect_client(self, session: Session, context: Context, device_id: str):
         await self.plugin.hass_api.async_hass_call_service(
             DOMAIN,
             SERVICE_RECONNECT_CLIENT,

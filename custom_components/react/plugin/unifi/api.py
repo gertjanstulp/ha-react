@@ -23,9 +23,9 @@ class UnifiApi(PluginApiBase[UnifiConfig]):
             
             provider = self.get_unifi_provider(session, unifi_provider)
             if provider:
-                await provider.async_unifi_set_value(session, context, device_id)
+                await provider.async_reconnect_client(session, context, device_id)
         except:
-            session.exception(self.logger, "Setting unifi failed")
+            session.exception(self.logger, "Reconnection client failed")
 
 
     def get_unifi_provider(self, session: Session, unifi_provider: str) -> UnifiProvider:
