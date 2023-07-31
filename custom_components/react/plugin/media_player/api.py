@@ -33,7 +33,53 @@ class MediaPlayerApi(PluginApiBase[MediaPlayerConfig]):
             if provider:
                 await provider.async_play_favorite(session, context, full_entity_id, favorite_id)
         except:
-            session.exception(self.logger, "Playing media failed")
+            session.exception(self.logger, "Playing favorite failed")
+
+
+    async def async_play_album(self, 
+        session: Session,
+        context: Context,
+        entity_id: str,
+        album_id: str,
+        media_player_provider: str, 
+    ):
+        try:
+            full_entity_id = f"media_player.{entity_id}"
+            session.debug(self.logger, f"Playing album {album_id} on {full_entity_id}")
+            if state := self.plugin.hass_api.hass_get_state(full_entity_id):
+                value = state.state
+            else:
+                session.warning(self.plugin.logger, f"{full_entity_id} not found")
+                return
+            
+            provider = self.get_media_player_provider(session, full_entity_id, media_player_provider)
+            if provider:
+                await provider.async_play_album(session, context, full_entity_id, album_id)
+        except:
+            session.exception(self.logger, "Playing album failed")
+
+
+    async def async_play_playlist(self, 
+        session: Session,
+        context: Context,
+        entity_id: str,
+        playlist_id: str,
+        media_player_provider: str, 
+    ):
+        try:
+            full_entity_id = f"media_player.{entity_id}"
+            session.debug(self.logger, f"Playing playlist {playlist_id} on {full_entity_id}")
+            if state := self.plugin.hass_api.hass_get_state(full_entity_id):
+                value = state.state
+            else:
+                session.warning(self.plugin.logger, f"{full_entity_id} not found")
+                return
+            
+            provider = self.get_media_player_provider(session, full_entity_id, media_player_provider)
+            if provider:
+                await provider.async_play_playlist(session, context, full_entity_id, playlist_id)
+        except:
+            session.exception(self.logger, "Playing playlist failed")
 
 
     async def async_pause(self,
@@ -121,13 +167,15 @@ class MediaPlayerApi(PluginApiBase[MediaPlayerConfig]):
     def get_media_player_provider(self, session: Session, full_entity_id: str, media_player_provider: str) -> MediaPlayerProvider:
         result = None
     
-        entity = self.plugin.hass_api.hass_get_entity(full_entity_id)
-        if entity:
-            result = self.plugin.get_provider(PROVIDER_TYPE_MEDIA_PLAYER, entity.platform)
+        if media_player_provider:
+            result = self.plugin.get_provider(PROVIDER_TYPE_MEDIA_PLAYER, media_player_provider)
+
+        if not result:
+            if entity := self.plugin.hass_api.hass_get_entity(full_entity_id):
+                result = self.plugin.get_provider(PROVIDER_TYPE_MEDIA_PLAYER, entity.platform)
         
         if not result:
-            media_player_provider = media_player_provider or self.plugin.config.media_player_provider
-            if media_player_provider:
+            if media_player_provider := self.plugin.config.media_player_provider:
                 result = self.plugin.get_provider(PROVIDER_TYPE_MEDIA_PLAYER, media_player_provider)
     
         if not result:

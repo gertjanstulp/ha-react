@@ -30,7 +30,9 @@ from tests._plugins.media_player_mock.const import (
 from tests.common import TEST_CONTEXT
 from tests.const import (
     ATTR_ENTITY_STATE,
+    ATTR_MEDIA_PLAYER_ALBUM_ID,
     ATTR_MEDIA_PLAYER_FAVORITE_ID,
+    ATTR_MEDIA_PLAYER_PLAYLIST_ID,
     ATTR_TTS_EVENT_LANGUAGE, 
     ATTR_TTS_EVENT_OPTIONS,
     TEST_CONFIG
@@ -83,6 +85,22 @@ class MediaPlayerProviderMock(MediaPlayerProvider):
         test_context.register_plugin_data({
             ATTR_ENTITY_ID: entity_id,
             ATTR_MEDIA_PLAYER_FAVORITE_ID: favorite_id,
+        })
+
+
+    async def async_play_album(self, session: Session, context: Context, entity_id: str, album_id: str):
+        test_context: TstContext = self.plugin.hass_api.hass_get_data(TEST_CONTEXT)
+        test_context.register_plugin_data({
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_PLAYER_ALBUM_ID: album_id,
+        })
+
+
+    async def async_play_playlist(self, session: Session, context: Context, entity_id: str, playlist_id: str):
+        test_context: TstContext = self.plugin.hass_api.hass_get_data(TEST_CONTEXT)
+        test_context.register_plugin_data({
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_PLAYER_PLAYLIST_ID: playlist_id,
         })
 
 

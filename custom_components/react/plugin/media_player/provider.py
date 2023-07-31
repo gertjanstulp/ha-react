@@ -29,6 +29,14 @@ class MediaPlayerProvider(Generic[T_config], PluginProviderBase[T_config]):
         raise NotImplementedError()
     
 
+    async def async_play_album(self, session: Session, context: Context, entity_id: str, album_id: str):
+        raise NotImplementedError()
+
+
+    async def async_play_playlist(self, session: Session, context: Context, entity_id: str, playlist_id: str):
+        raise NotImplementedError()
+
+
     async def async_pause(self, session: Session, context: Context, entity_id: str):
         data: dict = {
             ATTR_ENTITY_ID: entity_id,
