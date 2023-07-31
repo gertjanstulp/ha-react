@@ -3,6 +3,8 @@ ATTR_TTS_EVENT_OPTIONS = "options"
 ATTR_TTS_EVENT_ANNOUNCE = "announce"
 
 ATTR_MEDIA_PLAYER_FAVORITE_ID = "favorite_id"
+ATTR_MEDIA_PLAYER_ALBUM_ID = "album_id"
+ATTR_MEDIA_PLAYER_PLAYLIST_ID = "playlist_id"
 
 ATTR_FAIL = "fail"
 

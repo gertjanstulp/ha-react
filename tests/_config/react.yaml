@@ -466,6 +466,14 @@ workflow:
     when: actor_type_media_player_play_favorite_test.actor_entity_media_player_play_favorite_test actor_action_media_player_play_favorite_test
     then: media_player.media_player_play_favorite_test play_favorite with favorite_id=test_id
 
+  workflow_media_player_play_album_test:
+    when: actor_type_media_player_play_album_test.actor_entity_media_player_play_album_test actor_action_media_player_play_album_test
+    then: media_player.media_player_play_album_test play_album with album_id=test_id
+
+  workflow_media_player_play_playlist_test:
+    when: actor_type_media_player_play_playlist_test.actor_entity_media_player_play_playlist_test actor_action_media_player_play_playlist_test
+    then: media_player.media_player_play_playlist_test play_playlist with playlist_id=test_id
+
   workflow_light_turn_on_test:
     when: actor_type_light_turn_on_test.actor_entity_light_turn_on_test actor_action_light_turn_on_test
     then: light.light_initial_off_test on

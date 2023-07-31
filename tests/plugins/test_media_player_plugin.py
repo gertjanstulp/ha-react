@@ -9,12 +9,10 @@ from homeassistant.components.media_player.const import ATTR_MEDIA_ANNOUNCE
 from homeassistant.components.tts import ATTR_CACHE
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    STATE_ON,
 )
 
 from custom_components.react.const import (
     ACTION_CHANGE, 
-    ACTION_TOGGLE, 
     ATTR_EVENT_MESSAGE, 
     ATTR_MODE, 
     ATTR_PLUGIN_MODULE, 
@@ -40,7 +38,9 @@ from tests.common import (
 )
 from tests.const import (
     ATTR_ENTITY_STATE,
+    ATTR_MEDIA_PLAYER_ALBUM_ID,
     ATTR_MEDIA_PLAYER_FAVORITE_ID,
+    ATTR_MEDIA_PLAYER_PLAYLIST_ID,
     ATTR_TTS_EVENT_LANGUAGE, 
     ATTR_TTS_EVENT_OPTIONS,
     ATTR_VOLUME, 
@@ -89,6 +89,8 @@ def get_mock_plugin(
 
 @pytest.mark.parametrize(F"{FIXTURE_WORKFLOW_NAME},{FIXTURE_MEDIA_PLAYER_ENTITY_ID}", [
     ("media_player_play_favorite_test", "media_player_play_favorite_test"),
+    ("media_player_play_album_test", "media_player_play_album_test"),
+    ("media_player_play_playlist_test", "media_player_play_playlist_test"),
     ("media_player_speak_test", "browser"),
     ("media_player_pause_test", "media_player_pause_test")
 ])
@@ -110,6 +112,8 @@ async def test_media_player_plugin_api_entity_not_found(test_context: TstContext
 
 @pytest.mark.parametrize(f"{FIXTURE_WORKFLOW_NAME},{FIXTURE_MEDIA_PLAYER_ENTITY_ID}", [
     ("media_player_play_favorite_test", "media_player_play_favorite_test"),
+    ("media_player_play_album_test", "media_player_play_album_test"),
+    ("media_player_play_playlist_test", "media_player_play_playlist_test"),
     ("media_player_speak_test", "browser"),
     ("media_player_pause_test", "media_player_pause_test"),
 ])
@@ -152,6 +156,8 @@ async def test_media_player_plugin_api_no_tts_provider_set_up(test_context: TstC
 
 @pytest.mark.parametrize(f"{FIXTURE_WORKFLOW_NAME},{FIXTURE_MEDIA_PLAYER_ENTITY_ID}", [
     ("media_player_play_favorite_test", "media_player_play_favorite_test"),
+    ("media_player_play_album_test", "media_player_play_album_test"),
+    ("media_player_play_playlist_test", "media_player_play_playlist_test"),
     ("media_player_speak_test", "browser"),
     ("media_player_pause_test", "media_player_pause_test"),
 ])
@@ -212,6 +218,68 @@ async def test_media_player_plugin_api_play_favorite(test_context: TstContext, w
     data_out = {
         ATTR_ENTITY_ID: entity_id,
         ATTR_MEDIA_PLAYER_FAVORITE_ID: favorite_id
+    }
+
+    await test_context.async_send_reaction_event(data=data_in)
+    test_context.verify_has_no_log_issues()
+    test_context.verify_plugin_data_sent()
+    test_context.verify_plugin_data_content(data_out)
+
+
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["media_player_play_album_test"])
+@pytest.mark.parametrize(VALUE_FIXTURES, VALUE_FIXTURE_COMBOS)
+async def test_media_player_plugin_api_play_album(test_context: TstContext, workflow_name: str, config_value: bool, event_value: bool):
+    entity_id = "media_player.media_player_play_album_test"
+    mock_plugin = get_mock_plugin(
+        media_player_provider=MEDIA_PLAYER_PROVIDER_MOCK if config_value else None
+    )
+    set_test_config(test_context,
+        setup_mock_media_player_provider=True,
+        media_player_entity_id=entity_id,
+        media_player_entity_state="stopped",
+    )
+   
+    await test_context.async_start_react([mock_plugin])
+    
+    album_id = "test_id"
+    data_in = {
+        ATTR_MEDIA_PLAYER_PROVIDER: MEDIA_PLAYER_PROVIDER_MOCK if event_value else None,
+        ATTR_MEDIA_PLAYER_ALBUM_ID: album_id
+    }
+    data_out = {
+        ATTR_ENTITY_ID: entity_id,
+        ATTR_MEDIA_PLAYER_ALBUM_ID: album_id
+    }
+
+    await test_context.async_send_reaction_event(data=data_in)
+    test_context.verify_has_no_log_issues()
+    test_context.verify_plugin_data_sent()
+    test_context.verify_plugin_data_content(data_out)
+
+
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["media_player_play_playlist_test"])
+@pytest.mark.parametrize(VALUE_FIXTURES, VALUE_FIXTURE_COMBOS)
+async def test_media_player_plugin_api_play_playlist(test_context: TstContext, workflow_name: str, config_value: bool, event_value: bool):
+    entity_id = "media_player.media_player_play_playlist_test"
+    mock_plugin = get_mock_plugin(
+        media_player_provider=MEDIA_PLAYER_PROVIDER_MOCK if config_value else None
+    )
+    set_test_config(test_context,
+        setup_mock_media_player_provider=True,
+        media_player_entity_id=entity_id,
+        media_player_entity_state="stopped",
+    )
+   
+    await test_context.async_start_react([mock_plugin])
+    
+    playlist_id = "test_id"
+    data_in = {
+        ATTR_MEDIA_PLAYER_PROVIDER: MEDIA_PLAYER_PROVIDER_MOCK if event_value else None,
+        ATTR_MEDIA_PLAYER_PLAYLIST_ID: playlist_id
+    }
+    data_out = {
+        ATTR_ENTITY_ID: entity_id,
+        ATTR_MEDIA_PLAYER_PLAYLIST_ID: playlist_id
     }
 
     await test_context.async_send_reaction_event(data=data_in)
