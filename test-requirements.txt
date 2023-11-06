@@ -39,5 +39,3 @@ Pillow
 
 # for unifi
 aiounifi==49
-
-pytest-socket==0.6.0
