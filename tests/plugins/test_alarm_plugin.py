@@ -123,7 +123,7 @@ async def test_alarm_plugin_api_invalid_provider(test_context: TstContext, workf
     ("alarm_plugin_arm_night_test", ArmMode.NIGHT), 
     ("alarm_plugin_arm_vacation_test", ArmMode.VACATION)
 ])
-async def test_alarm_plugin_api_arm_config_provider(test_context: TstContext, workflow_name: str, expected_arm_mode: ArmMode):
+async def test_alarm_plugin_api_arm_config_provider(test_context: TstContext, workflow_name: str, expected_arm_mode: ArmMode, socket_enabled):
     entity_id = "alarm_control_panel.alarm_plugin_test"
     mock_plugin = get_mock_plugin(
         code=ALARM_CODE, 

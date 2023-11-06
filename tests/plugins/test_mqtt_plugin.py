@@ -3,11 +3,27 @@ import pytest
 from homeassistant.components.mqtt import ATTR_PAYLOAD
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    EVENT_STATE_CHANGED,
 )
 
-from custom_components.react.const import ATTR_PLUGIN_MODULE
+from custom_components.react.const import (
+    ATTR_NEW_STATE, 
+    ATTR_OLD_STATE, 
+    ATTR_PLUGIN_MODULE, 
+    ATTR_STATE,
+    CONF_ENTITY_MAPS,
+    REACT_ACTION_DOUBLE_PRESS,
+    REACT_ACTION_LONG_PRESS,
+    REACT_ACTION_SHORT_PRESS,
+    REACT_TYPE_BUTTON,
+)
 from custom_components.react.plugin.const import ATTR_CONFIG
-from custom_components.react.plugin.mqtt.const import ATTR_MQTT_PROVIDER
+from custom_components.react.plugin.mqtt.const import (
+    ATTR_MQTT_PROVIDER,
+    MQTT_BUTTON_ACTION_DOUBLE,
+    MQTT_BUTTON_ACTION_RELEASE, 
+    MQTT_BUTTON_ACTION_SINGLE,
+)
 
 from tests._plugins.mqtt_mock.setup import MQTT_MOCK_PROVIDER
 from tests.common import (
@@ -32,6 +48,7 @@ def set_test_config(test_context: TstContext,
 
 def get_mock_plugin(
     mqtt_provider: str = None,
+    entity_map: dict = None,
 ) -> dict:
     result = {
         ATTR_PLUGIN_MODULE: "tests._plugins.mqtt_mock",
@@ -39,6 +56,8 @@ def get_mock_plugin(
     }
     if mqtt_provider:
         result[ATTR_CONFIG][ATTR_MQTT_PROVIDER] = mqtt_provider
+    if entity_map:
+        result[ATTR_CONFIG][CONF_ENTITY_MAPS] = entity_map
     return result
 
 
@@ -85,3 +104,106 @@ async def test_mqtt_plugin_api_publish(test_context: TstContext, workflow_name: 
     test_context.verify_has_no_log_issues()
     test_context.verify_plugin_data_sent()
     test_context.verify_plugin_data_content(data_out)
+
+
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, [""])
+async def test_mqtt_task_short_press_input_block(test_context: TstContext):
+    ENTITY_ID = "entity_id"
+    MAPPED_DEVICE_ID = "mapped_device_id"
+    
+    mock_plugins = get_mock_plugin(
+        entity_map={
+            ENTITY_ID: MAPPED_DEVICE_ID
+        }
+    )
+    set_test_config(test_context)
+
+    await test_context.async_start_react(mock_plugins)
+
+    data_in = {
+        ATTR_ENTITY_ID: ENTITY_ID, 
+        ATTR_OLD_STATE: {
+            ATTR_STATE: MQTT_BUTTON_ACTION_SINGLE
+        },
+        ATTR_NEW_STATE: {
+            ATTR_STATE: ""
+        }
+    }
+
+    async with test_context.async_listen_action_event():
+        await test_context.async_send_event(EVENT_STATE_CHANGED, data_in)
+        await test_context.async_verify_action_event_received()
+        test_context.verify_action_event_data(
+            expected_entity=MAPPED_DEVICE_ID, 
+            expected_type=REACT_TYPE_BUTTON,
+            expected_action=REACT_ACTION_SHORT_PRESS)
+        test_context.verify_has_no_log_issues()
+
+
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, [""])
+async def test_mqtt_task_long_press_input_block(test_context: TstContext):
+    ENTITY_ID = "entity_id"
+    MAPPED_DEVICE_ID = "mapped_device_id"
+    
+    mock_plugins = get_mock_plugin(
+        entity_map={
+            ENTITY_ID: MAPPED_DEVICE_ID
+        }
+    )
+    set_test_config(test_context)
+
+    await test_context.async_start_react(mock_plugins)
+
+    data_in = {
+        ATTR_ENTITY_ID: ENTITY_ID, 
+        ATTR_OLD_STATE: {
+            ATTR_STATE: MQTT_BUTTON_ACTION_RELEASE
+        },
+        ATTR_NEW_STATE: {
+            ATTR_STATE: ""
+        }
+    }
+
+    async with test_context.async_listen_action_event():
+        await test_context.async_send_event(EVENT_STATE_CHANGED, data_in)
+        await test_context.async_verify_action_event_received()
+        test_context.verify_action_event_data(
+            expected_entity=MAPPED_DEVICE_ID, 
+            expected_type=REACT_TYPE_BUTTON,
+            expected_action=REACT_ACTION_LONG_PRESS)
+        test_context.verify_has_no_log_issues()
+
+
+@pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, [""])
+async def test_mqtt_task_double_press_input_block(test_context: TstContext):
+    ENTITY_ID = "entity_id"
+    MAPPED_DEVICE_ID = "mapped_device_id"
+    
+    mock_plugins = get_mock_plugin(
+        entity_map={
+            ENTITY_ID: MAPPED_DEVICE_ID
+        }
+    )
+    set_test_config(test_context)
+
+    await test_context.async_start_react(mock_plugins)
+
+    data_in = {
+        ATTR_ENTITY_ID: ENTITY_ID, 
+        ATTR_OLD_STATE: {
+            ATTR_STATE: MQTT_BUTTON_ACTION_DOUBLE
+        },
+        ATTR_NEW_STATE: {
+            ATTR_STATE: ""
+        }
+    }
+
+    async with test_context.async_listen_action_event():
+        await test_context.async_send_event(EVENT_STATE_CHANGED, data_in)
+        await test_context.async_verify_action_event_received()
+        test_context.verify_action_event_data(
+            expected_entity=MAPPED_DEVICE_ID, 
+            expected_type=REACT_TYPE_BUTTON,
+            expected_action=REACT_ACTION_DOUBLE_PRESS)
+        test_context.verify_has_no_log_issues()
+
