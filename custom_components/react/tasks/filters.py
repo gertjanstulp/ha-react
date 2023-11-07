@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from homeassistant.const import (
+    ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     EVENT_STATE_CHANGED,
 )
@@ -9,7 +10,8 @@ from homeassistant.core import Event as HaEvent, State
 from custom_components.react.const import (
     ATTR_ACTION,
     ATTR_NEW_STATE,
-    ATTR_OLD_STATE, 
+    ATTR_OLD_STATE,
+    ATTR_STATE, 
     ATTR_TYPE,
     EVENT_REACT_REACTION,
 )
@@ -72,10 +74,37 @@ ALL_REACTION_FILTER_STRATEGIES: list[ReactionEventFilterStrategy] = [
 
 ########## State change filters ##########
 
+class StateChangeFilter(EventFilter):
+    def __init__(self, 
+        event_type: str, 
+        filter_key: str, 
+        track_key: str = None, 
+        old_state: str = None, 
+        new_state: str = None, 
+        match_data: dict = None, 
+        *args
+    ) -> None:
+        super().__init__(event_type, filter_key, track_key, match_data, *args)
+        self.old_state = old_state
+        self.new_state = new_state
+
+
+    def applies(self, ha_event: HaEvent) -> bool:
+        result = True
+        if (self.old_state or self.new_state):
+            old_state_value = ""
+            if old_state := ha_event.data.get(ATTR_OLD_STATE):
+                old_state_value = old_state.get(ATTR_STATE, None) if isinstance(old_state, dict) else old_state.state
+            new_state_value = ""
+            if new_state := ha_event.data.get(ATTR_NEW_STATE):
+                new_state_value = new_state.get(ATTR_STATE, None) if isinstance(new_state, dict) else new_state.state
+            result = old_state_value == self.old_state and new_state_value == self.new_state
+        return result
+
 
 class StateChangeFilterStrategy(EventFilterStrategy):
-    def get_state_change_filter(self, filter_key: str, track_key: str = None, *args):
-        return EventFilter(EVENT_STATE_CHANGED, filter_key, track_key=track_key, *args)
+    def get_state_change_filter(self, filter_key: str, track_key: str = None, old_state: str = None, new_state: str = None, *args):
+        return StateChangeFilter(EVENT_STATE_CHANGED, filter_key, track_key=track_key, old_state=old_state, new_state=new_state, *args)
     
 
 class DomainStateChangeFilterStrategy(StateChangeFilterStrategy):
@@ -91,11 +120,14 @@ class DomainStateChangeFilterStrategy(StateChangeFilterStrategy):
         if not state:
             raise ReactException("Invalid event for event_key")
 
-        return self._get_filter_key(state.domain)
+        if isinstance(state, dict):
+            return self._get_filter_key(state.get(ATTR_DOMAIN))
+        else:
+            return self._get_filter_key(state.domain)
     
 
     def get_filter(self, domain: str, track_key: str = None, *args) -> EventFilter:
-        return self.get_state_change_filter(self._get_filter_key(domain), track_key, *args)
+        return self.get_state_change_filter(self._get_filter_key(domain), track_key=track_key, *args)
 
 
 class EntityIdStateChangeFilterStrategy(StateChangeFilterStrategy):
@@ -107,9 +139,9 @@ class EntityIdStateChangeFilterStrategy(StateChangeFilterStrategy):
         return self._get_filter_key(ha_event.data.get(ATTR_ENTITY_ID))
     
 
-    def get_filter(self, entity_id, track_key: str = None, *args) -> EventFilter:
-        return self.get_state_change_filter(self._get_filter_key(entity_id), track_key, *args)
-    
+    def get_filter(self, entity_id, track_key: str = None, old_state: str = None, new_state: str = None, *args) -> EventFilter:
+        return self.get_state_change_filter(self._get_filter_key(entity_id), track_key=track_key, old_state=old_state, new_state=new_state, *args)
+
 
 DOMAIN_STATE_CHANGE_FILTER_STRATEGY = DomainStateChangeFilterStrategy()
 ENTITY_ID_STATE_CHANGE_FILTER_STRATEGY = EntityIdStateChangeFilterStrategy()

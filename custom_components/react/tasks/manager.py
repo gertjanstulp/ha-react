@@ -40,6 +40,7 @@ TRACK_REACTION_CALLBACKS = "react_track_reaction_callbacks"
 TRACK_REACTION_LISTENER = "react_track_reaction_listener"
 
 TRACK_STATE_CHANGE_CALLBACKS = "react_track_state_change_callbacks"
+TRACK_STATE_CHANGE_FILTERS = "react_track_state_change_filters"
 TRACK_STATE_CHANGE_LISTENER = "react_track_state_change_listener"
 
 TRACK_TIME_CALLBACKS = "react_track_time_callbacks"
@@ -239,7 +240,7 @@ class ReactTaskManager:
 
 
     def track_state_change(self, filter: EventFilter, task: ReactTask):
-        state_change_callbacks: dict[str, list[HassJob[[HaEvent], Any]]] = self.react.hass.data.setdefault(
+        state_change_callbacks: dict[str, list[tuple[HassJob[[HaEvent], Any], EventFilter]]] = self.react.hass.data.setdefault(
             TRACK_STATE_CHANGE_CALLBACKS, {}
         )
 
@@ -248,11 +249,12 @@ class ReactTaskManager:
             def _async_state_change_dispatcher(ha_event: HaEvent) -> None:
                 for key in [ strategy.get_event_key(ha_event) for strategy in ALL_STATE_CHANGE_FILTER_STRATEGIES ]:
                     if key in state_change_callbacks:
-                        for job in state_change_callbacks[key][:]:
-                            try:
-                                self.react.hass.async_run_hass_job(job, ha_event)
-                            except Exception:  # pylint: disable=broad-except
-                                _LOGGER.exception(f"Error while processing state change for {key}")
+                        for job,filter in state_change_callbacks[key][:]:
+                            if filter.applies(ha_event):
+                                try:
+                                    self.react.hass.async_run_hass_job(job, ha_event)
+                                except Exception:  # pylint: disable=broad-except
+                                    _LOGGER.exception(f"Error while processing state change for {key}")
 
             self.react.hass.data[TRACK_STATE_CHANGE_LISTENER] = self.react.hass.bus.async_listen(
                 EVENT_STATE_CHANGED,
@@ -261,11 +263,11 @@ class ReactTaskManager:
 
         job = HassJob(task.execute_task, f"track state change {filter.filter_key}")
 
-        state_change_callbacks.setdefault(filter.filter_key, []).append(job)
+        state_change_callbacks.setdefault(filter.filter_key, []).append((job, filter))
         
         @callback
         def remove_listener() -> None:
-            state_change_callbacks[filter.filter_key].remove(job)
+            state_change_callbacks[filter.filter_key].remove((job, filter))
             if len(state_change_callbacks[filter.filter_key]) == 0:
                 del state_change_callbacks[filter.filter_key]
 

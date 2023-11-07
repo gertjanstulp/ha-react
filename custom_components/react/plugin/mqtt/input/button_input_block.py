@@ -17,7 +17,7 @@ from custom_components.react.const import (
     REACT_TYPE_BUTTON,
 )
 from custom_components.react.plugin.mqtt.config import MqttConfig
-from custom_components.react.tasks.filters import EVENT_TYPE_AND_DATA_FILTER_STRATEGY
+from custom_components.react.tasks.filters import ENTITY_ID_STATE_CHANGE_FILTER_STRATEGY, track_key
 from custom_components.react.tasks.plugin.base import InputBlock
 from custom_components.react.utils.events import ReactEvent, StateChangedEventPayload
 from custom_components.react.utils.struct import DynamicData
@@ -26,22 +26,27 @@ from custom_components.react.utils.struct import DynamicData
 class MqttButtonInputBlock(InputBlock[MqttConfig]):
     def __init__(self, react: ReactBase, mqtt_button_state: str, react_action: str, event_description: str) -> None:
         super().__init__(react, MqttButtonEvent)
+        self.mqtt_button_state = mqtt_button_state
         self.react_action = react_action
         self.event_description = event_description
-        match_data = {
-            ATTR_OLD_STATE: {
-                ATTR_STATE: mqtt_button_state
-            },
-            ATTR_NEW_STATE: {
-                ATTR_STATE: ""
-            }
-        }
-        self.track_event_filter = EVENT_TYPE_AND_DATA_FILTER_STRATEGY.get_filter(EVENT_STATE_CHANGED, match_data)
+        
+        self.entity_track_keys: list[str] = []
 
 
     def load(self):
         super().load()
         self.entity_maps = self.plugin.config.entity_maps if self.plugin.config.entity_maps else DynamicData()
+        for entity_id in self.entity_maps.keys():
+            entity_track_key = track_key(self.__class__.__name__, entity_id)
+            self.manager.track_state_change(ENTITY_ID_STATE_CHANGE_FILTER_STRATEGY.get_filter(entity_id, track_key=entity_track_key, old_state=self.mqtt_button_state, new_state=""), self)
+            self.entity_track_keys.append(entity_track_key)
+
+
+    def unload(self):
+        super().unload()
+        for entity_track_key in self.entity_track_keys:
+            self.manager.untrack_key(self, entity_track_key)
+        self.entity_track_keys.clear()
 
 
     def create_action_event_payloads(self, source_event: MqttButtonEvent) -> list[dict]:
