@@ -76,7 +76,7 @@ class StateChangeInputBlock(InputBlock[StateConfig]):
             for entity in actor.entity:
                 state_track_key = track_key(self.__class__.__name__, entity)
                 if track and state_track_key not in self.state_track_keys:
-                    self.manager.track_state_change(ENTITY_ID_STATE_CHANGE_FILTER_STRATEGY.get_filter(entity, state_track_key), self)
+                    self.manager.track_state_change(ENTITY_ID_STATE_CHANGE_FILTER_STRATEGY.get_filter(entity, track_key=state_track_key), self)
                     self.state_track_keys.append(state_track_key)
                 if not track and state_track_key in self.state_track_keys:
                     self.manager.untrack_key(self, state_track_key)

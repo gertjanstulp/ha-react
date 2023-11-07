@@ -64,6 +64,11 @@ plugins:
   - module: custom_components.react.plugin.unifi
   - module: custom_components.react.plugin.hassio
 
+  - module: custom_components.react.plugin.mqtt
+    config:
+      entity_maps:
+        "sensor.sensor_state_test": button.button_test
+
 entity_groups:
   reactor_entity_entity_groups_test:
     - entity_groups_test_entity_1
