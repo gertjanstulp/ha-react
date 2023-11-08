@@ -67,7 +67,9 @@ plugins:
   - module: custom_components.react.plugin.mqtt
     config:
       entity_maps:
-        "sensor.sensor_state_test": button.button_test
+        - entity_id: sensor.sensor_state_test 
+          mapped_entity_id: button.button_test
+          short_press_action: single
 
 entity_groups:
   reactor_entity_entity_groups_test:

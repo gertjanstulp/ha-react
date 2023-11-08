@@ -20,9 +20,10 @@ from custom_components.react.const import (
 from custom_components.react.plugin.const import ATTR_CONFIG
 from custom_components.react.plugin.mqtt.const import (
     ATTR_MQTT_PROVIDER,
-    MQTT_BUTTON_ACTION_DOUBLE,
-    MQTT_BUTTON_ACTION_RELEASE, 
-    MQTT_BUTTON_ACTION_SINGLE,
+    CONF_DOUBLE_PRESS_ACTION,
+    CONF_LONG_PRESS_ACTION,
+    CONF_MAPPED_ENTITY_ID,
+    CONF_SHORT_PRESS_ACTION,
 )
 
 from tests._plugins.mqtt_mock.setup import MQTT_MOCK_PROVIDER
@@ -48,7 +49,7 @@ def set_test_config(test_context: TstContext,
 
 def get_mock_plugin(
     mqtt_provider: str = None,
-    entity_map: dict = None,
+    entity_maps: list = None,
 ) -> dict:
     result = {
         ATTR_PLUGIN_MODULE: "tests._plugins.mqtt_mock",
@@ -56,8 +57,8 @@ def get_mock_plugin(
     }
     if mqtt_provider:
         result[ATTR_CONFIG][ATTR_MQTT_PROVIDER] = mqtt_provider
-    if entity_map:
-        result[ATTR_CONFIG][CONF_ENTITY_MAPS] = entity_map
+    if entity_maps:
+        result[ATTR_CONFIG][CONF_ENTITY_MAPS] = entity_maps
     return result
 
 
@@ -108,22 +109,25 @@ async def test_mqtt_plugin_api_publish(test_context: TstContext, workflow_name: 
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, [""])
 async def test_mqtt_task_short_press_input_block(test_context: TstContext):
-    ENTITY_ID = "entity_id"
-    MAPPED_DEVICE_ID = "mapped_device_id"
+    TEST_ENTITY_ID = "test_entity_id"
+    TEST_MAPPED_DEVICE_ID = "test_mapped_device_id"
+    TEST_SHORT_PRESS_ACTION = "test_short_press_action"
     
     mock_plugins = get_mock_plugin(
-        entity_map={
-            ENTITY_ID: MAPPED_DEVICE_ID
-        }
+        entity_maps=[{
+            ATTR_ENTITY_ID: TEST_ENTITY_ID,
+            CONF_MAPPED_ENTITY_ID: TEST_MAPPED_DEVICE_ID,
+            CONF_SHORT_PRESS_ACTION: TEST_SHORT_PRESS_ACTION
+        }]
     )
     set_test_config(test_context)
 
     await test_context.async_start_react(mock_plugins)
 
     data_in = {
-        ATTR_ENTITY_ID: ENTITY_ID, 
+        ATTR_ENTITY_ID: TEST_ENTITY_ID, 
         ATTR_OLD_STATE: {
-            ATTR_STATE: MQTT_BUTTON_ACTION_SINGLE
+            ATTR_STATE: TEST_SHORT_PRESS_ACTION
         },
         ATTR_NEW_STATE: {
             ATTR_STATE: ""
@@ -134,7 +138,7 @@ async def test_mqtt_task_short_press_input_block(test_context: TstContext):
         await test_context.async_send_event(EVENT_STATE_CHANGED, data_in)
         await test_context.async_verify_action_event_received()
         test_context.verify_action_event_data(
-            expected_entity=MAPPED_DEVICE_ID, 
+            expected_entity=TEST_MAPPED_DEVICE_ID, 
             expected_type=REACT_TYPE_BUTTON,
             expected_action=REACT_ACTION_SHORT_PRESS)
         test_context.verify_has_no_log_issues()
@@ -142,22 +146,25 @@ async def test_mqtt_task_short_press_input_block(test_context: TstContext):
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, [""])
 async def test_mqtt_task_long_press_input_block(test_context: TstContext):
-    ENTITY_ID = "entity_id"
-    MAPPED_DEVICE_ID = "mapped_device_id"
+    TEST_ENTITY_ID = "test_entity_id"
+    TEST_MAPPED_DEVICE_ID = "test_mapped_device_id"
+    TEST_LONG_PRESS_ACTION = "test_long_press_action"
     
     mock_plugins = get_mock_plugin(
-        entity_map={
-            ENTITY_ID: MAPPED_DEVICE_ID
-        }
+        entity_maps=[{
+            ATTR_ENTITY_ID: TEST_ENTITY_ID,
+            CONF_MAPPED_ENTITY_ID: TEST_MAPPED_DEVICE_ID,
+            CONF_LONG_PRESS_ACTION: TEST_LONG_PRESS_ACTION
+        }]
     )
     set_test_config(test_context)
 
     await test_context.async_start_react(mock_plugins)
 
     data_in = {
-        ATTR_ENTITY_ID: ENTITY_ID, 
+        ATTR_ENTITY_ID: TEST_ENTITY_ID, 
         ATTR_OLD_STATE: {
-            ATTR_STATE: MQTT_BUTTON_ACTION_RELEASE
+            ATTR_STATE: TEST_LONG_PRESS_ACTION
         },
         ATTR_NEW_STATE: {
             ATTR_STATE: ""
@@ -168,7 +175,7 @@ async def test_mqtt_task_long_press_input_block(test_context: TstContext):
         await test_context.async_send_event(EVENT_STATE_CHANGED, data_in)
         await test_context.async_verify_action_event_received()
         test_context.verify_action_event_data(
-            expected_entity=MAPPED_DEVICE_ID, 
+            expected_entity=TEST_MAPPED_DEVICE_ID, 
             expected_type=REACT_TYPE_BUTTON,
             expected_action=REACT_ACTION_LONG_PRESS)
         test_context.verify_has_no_log_issues()
@@ -176,22 +183,25 @@ async def test_mqtt_task_long_press_input_block(test_context: TstContext):
 
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, [""])
 async def test_mqtt_task_double_press_input_block(test_context: TstContext):
-    ENTITY_ID = "entity_id"
-    MAPPED_DEVICE_ID = "mapped_device_id"
+    TEST_ENTITY_ID = "test_entity_id"
+    TEST_MAPPED_DEVICE_ID = "test_mapped_device_id"
+    TEST_DOUBLE_PRESS_ACTION = "test_double_press_action"
     
     mock_plugins = get_mock_plugin(
-        entity_map={
-            ENTITY_ID: MAPPED_DEVICE_ID
-        }
+        entity_maps=[{
+            ATTR_ENTITY_ID: TEST_ENTITY_ID,
+            CONF_MAPPED_ENTITY_ID: TEST_MAPPED_DEVICE_ID,
+            CONF_DOUBLE_PRESS_ACTION: TEST_DOUBLE_PRESS_ACTION
+        }]
     )
     set_test_config(test_context)
 
     await test_context.async_start_react(mock_plugins)
 
     data_in = {
-        ATTR_ENTITY_ID: ENTITY_ID, 
+        ATTR_ENTITY_ID: TEST_ENTITY_ID, 
         ATTR_OLD_STATE: {
-            ATTR_STATE: MQTT_BUTTON_ACTION_DOUBLE
+            ATTR_STATE: TEST_DOUBLE_PRESS_ACTION
         },
         ATTR_NEW_STATE: {
             ATTR_STATE: ""
@@ -202,7 +212,7 @@ async def test_mqtt_task_double_press_input_block(test_context: TstContext):
         await test_context.async_send_event(EVENT_STATE_CHANGED, data_in)
         await test_context.async_verify_action_event_received()
         test_context.verify_action_event_data(
-            expected_entity=MAPPED_DEVICE_ID, 
+            expected_entity=TEST_MAPPED_DEVICE_ID, 
             expected_type=REACT_TYPE_BUTTON,
             expected_action=REACT_ACTION_DOUBLE_PRESS)
         test_context.verify_has_no_log_issues()

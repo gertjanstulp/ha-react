@@ -54,7 +54,7 @@ class DynamicData():
 
 
     def type_hint(self, key):
-        return self.type_hints.get(key, DynamicData)
+        return self.type_hints.get(key, self.type_hints.get("__dict", DynamicData))
 
 
     @property

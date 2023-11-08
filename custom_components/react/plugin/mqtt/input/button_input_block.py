@@ -1,44 +1,42 @@
 from __future__ import annotations
 
-from homeassistant.const import (
-    EVENT_STATE_CHANGED,
-)
 from homeassistant.core import Event as HaEvent
 
 from custom_components.react.base import ReactBase
 from custom_components.react.const import (
     ATTR_ACTION, 
     ATTR_ENTITY, 
-    ATTR_EVENT,
     ATTR_NEW_STATE,
     ATTR_OLD_STATE,
-    ATTR_STATE, 
     ATTR_TYPE, 
     REACT_TYPE_BUTTON,
 )
 from custom_components.react.plugin.mqtt.config import MqttConfig
 from custom_components.react.tasks.filters import ENTITY_ID_STATE_CHANGE_FILTER_STRATEGY, track_key
 from custom_components.react.tasks.plugin.base import InputBlock
-from custom_components.react.utils.events import ReactEvent, StateChangedEventPayload
+from custom_components.react.utils.events import ReactEvent
 from custom_components.react.utils.struct import DynamicData
 
 
 class MqttButtonInputBlock(InputBlock[MqttConfig]):
-    def __init__(self, react: ReactBase, mqtt_button_state: str, react_action: str, event_description: str) -> None:
+    def __init__(self, react: ReactBase, mqtt_button_action: str, react_action: str, event_description: str) -> None:
         super().__init__(react, MqttButtonEvent)
-        self.mqtt_button_state = mqtt_button_state
+        self.mqtt_button_action = mqtt_button_action
         self.react_action = react_action
         self.event_description = event_description
         
         self.entity_track_keys: list[str] = []
+        self.mapped_entity_ids: dict[str, str] = {}
 
 
     def load(self):
         super().load()
-        self.entity_maps = self.plugin.config.entity_maps if self.plugin.config.entity_maps else DynamicData()
-        for entity_id in self.entity_maps.keys():
-            entity_track_key = track_key(self.__class__.__name__, entity_id)
-            self.manager.track_state_change(ENTITY_ID_STATE_CHANGE_FILTER_STRATEGY.get_filter(entity_id, track_key=entity_track_key, old_state=self.mqtt_button_state, new_state=""), self)
+        self.entity_maps = self.plugin.config.entity_maps if self.plugin.config.entity_maps else []
+        for entity_map in (item for item in self.entity_maps if self.mqtt_button_action in item):
+            self.mapped_entity_ids[entity_map.entity_id] = entity_map.mapped_entity_id
+            entity_track_key = track_key(self.__class__.__name__, entity_map.entity_id)
+            filter = ENTITY_ID_STATE_CHANGE_FILTER_STRATEGY.get_filter(entity_map.entity_id, track_key=entity_track_key, old_state=entity_map.get(self.mqtt_button_action), new_state="")
+            self.manager.track_state_change(filter, self)
             self.entity_track_keys.append(entity_track_key)
 
 
@@ -50,7 +48,7 @@ class MqttButtonInputBlock(InputBlock[MqttConfig]):
 
 
     def create_action_event_payloads(self, source_event: MqttButtonEvent) -> list[dict]:
-        entity_id = self.entity_maps.get(source_event.payload.entity_id, source_event.payload.entity_id)
+        entity_id = self.mapped_entity_ids.get(source_event.payload.entity_id, source_event.payload.entity_id)
         source_event.session.debug(self.logger, f"Mqtt {self.event_description} event caught: entity id {source_event.payload.entity_id} mapped to {entity_id}")
         return [{
             ATTR_ENTITY: entity_id,
