@@ -4,7 +4,6 @@ from ast import Tuple
 
 import asyncio
 from datetime import datetime, timedelta
-from importlib import import_module
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
 
@@ -15,6 +14,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, Event as HaEvent, HassJob, callback
 from homeassistant.helpers.event import async_track_time_change, async_track_sunrise, async_track_sunset
+from homeassistant.helpers.importlib import async_import_module
 
 from custom_components.react.const import (
     ATTR_ENTITY, 
@@ -77,7 +77,7 @@ class ReactTaskManager:
         )
 
         async def _load_module(module: dict):
-            task_module = import_module(f"{__package__}.{module['parent']}.{module['name']}")
+            task_module = await async_import_module(self.react.hass, f"{__package__}.{module['parent']}.{module['name']}")
             if task := await task_module.async_setup_task(react=self.react):
                 self.register_task(task)
 

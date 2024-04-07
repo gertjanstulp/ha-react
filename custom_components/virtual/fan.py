@@ -16,9 +16,10 @@ from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
     DOMAIN,
-    SUPPORT_DIRECTION,
-    SUPPORT_OSCILLATE,
-    SUPPORT_SET_SPEED,
+    FanEntityFeature,
+    # SUPPORT_DIRECTION,
+    # SUPPORT_OSCILLATE,
+    # SUPPORT_SET_SPEED,
     FanEntity,
 )
 from homeassistant.const import STATE_ON
@@ -80,20 +81,20 @@ class VirtualFan(VirtualEntity, FanEntity):
 
         self._attr_supported_features = 0
         if self._attr_speed_count > 0:
-            self._attr_supported_features |= SUPPORT_SET_SPEED
+            self._attr_supported_features |= FanEntityFeature.SET_SPEED
         if config.get(CONF_OSCILLATE, False):
-            self._attr_supported_features |= SUPPORT_OSCILLATE
+            self._attr_supported_features |= FanEntityFeature.OSCILLATE
         if config.get(CONF_DIRECTION, False):
-            self._attr_supported_features |= SUPPORT_DIRECTION
+            self._attr_supported_features |= FanEntityFeature.DIRECTION
 
         _LOGGER.info('VirtualFan: {} created'.format(self.name))
 
     def _create_state(self, config):
         super()._create_state(config)
 
-        if self._attr_supported_features & SUPPORT_DIRECTION:
+        if self._attr_supported_features & FanEntityFeature.DIRECTION:
             self._attr_current_direction = "forward"
-        if self._attr_supported_features & SUPPORT_OSCILLATE:
+        if self._attr_supported_features & FanEntityFeature.OSCILLATE:
             self._attr_oscillating = False
         self._attr_percentage = None
         self._attr_preset_mode = None
@@ -106,9 +107,9 @@ class VirtualFan(VirtualEntity, FanEntity):
     def _restore_state(self, state, config):
         super()._restore_state(state, config)
 
-        if self._attr_supported_features & SUPPORT_DIRECTION:
+        if self._attr_supported_features & FanEntityFeature.DIRECTION:
             self._attr_current_direction = state.attributes.get(ATTR_DIRECTION)
-        if self._attr_supported_features & SUPPORT_OSCILLATE:
+        if self._attr_supported_features & FanEntityFeature.OSCILLATE:
             self._attr_oscillating = state.attributes.get(ATTR_OSCILLATING)
         self._attr_percentage = state.attributes.get(ATTR_PERCENTAGE)
         self._attr_preset_mode = state.attributes.get(ATTR_PRESET_MODE)

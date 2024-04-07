@@ -90,6 +90,7 @@ class VirtualLight(VirtualEntity, LightEntity):
         """Initialize a Virtual light."""
         super().__init__(config, DOMAIN)
 
+        self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}
         self._attr_supported_features = 0
 

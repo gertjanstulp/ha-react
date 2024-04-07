@@ -110,7 +110,7 @@ async def async_initialize_integration(
         react.core.ha_version = AwesomeVersion(HAVERSION)
 
     await react.task_manager.async_load()
-    react.plugin_factory.load_plugins()
+    await react.plugin_factory.async_load_plugins()
 
     # Run startup sequence
     async def async_startup():

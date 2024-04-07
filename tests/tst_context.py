@@ -35,6 +35,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import Event as HaEvent, HomeAssistant, State
+from homeassistant.components.device_tracker.const import SourceType
 from homeassistant.setup import async_setup_component
 
 from unittest.mock import Mock
@@ -265,15 +266,15 @@ class TstContext():
         await self.hass.async_block_till_done()
         
         async def async_see(dev_id: str, location: str):
-            await self.hass.services.async_call(
+            self.hass.async_create_task(self.hass.services.async_call(
                 device_tracker.DOMAIN,
                 device_tracker.SERVICE_SEE,
                 {
                     device_tracker.ATTR_DEV_ID: dev_id,
                     device_tracker.ATTR_LOCATION_NAME: location,
-                    device_tracker.ATTR_SOURCE_TYPE: device_tracker.SOURCE_TYPE_ROUTER
+                    device_tracker.ATTR_SOURCE_TYPE: SourceType.ROUTER,
                 }
-            )
+            ))
             await self.hass.async_block_till_done()
 
         result = Mock()

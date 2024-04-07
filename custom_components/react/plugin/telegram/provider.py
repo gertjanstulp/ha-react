@@ -1,4 +1,4 @@
-from telegram.utils.helpers import escape_markdown
+from telegram.helpers import escape_markdown
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.telegram.notify import ATTR_INLINE_KEYBOARD

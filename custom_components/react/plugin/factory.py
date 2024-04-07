@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing import Any, Generic, Iterable, TypeVar
 from typing_extensions import Protocol
-from importlib import import_module
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.importlib import async_import_module
 
 from custom_components.react.base import ReactBase
 from custom_components.react.const import (
@@ -35,10 +35,10 @@ class PluginFactory:
         self.hass_api = HassApi(hass)
 
 
-    def load_plugins(self):
+    async def async_load_plugins(self):
         for plugin_config in self._react.configuration.plugin_config.plugins:
             try:
-                plugin_module = import_module(f"{plugin_config.module}.setup")
+                plugin_module = await async_import_module(self._react.hass, f"{plugin_config.module}.setup")
                 if not hasattr(plugin_module, "Setup"):
                     _LOGGER.error(f"Invalid plugin configuration: Setup class not found in '{plugin_module}'")
                     continue

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
+from homeassistant.components import frontend
 from homeassistant.components.http import HomeAssistantView
 
 from custom_components.react.base import ReactBase
@@ -45,7 +46,8 @@ class Task(ReactTask):
 
         # Add to sidepanel if needed
         if DOMAIN not in self.react.hass.data.get("frontend_panels", {}):
-            self.react.hass.components.frontend.async_register_built_in_panel(
+            frontend.async_register_built_in_panel(
+                self.react.hass,
                 component_name="custom",
                 sidebar_title=self.react.configuration.sidepanel_title,
                 sidebar_icon=self.react.configuration.sidepanel_icon,
