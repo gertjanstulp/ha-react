@@ -54,7 +54,7 @@ async def async_setup_component(react: ReactBase):
         )
 
         # Load new plugin configuration
-        react.plugin_factory.load_plugins()
+        await react.plugin_factory.async_load_plugins()
 
         # Load new workflow entities
         await async_load()
