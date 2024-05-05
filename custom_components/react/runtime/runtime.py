@@ -125,7 +125,7 @@ class ReactionRegistry:
             self._reactions_by_run[reaction.workflow_run_id] = []
         self._reactions_by_run[reaction.workflow_run_id].append(reaction)
 
-        self._hass.bus.async_fire(
+        self._hass.bus.fire(
             EVENT_REACTION_REGISTRY_UPDATED, {"action": "create", "run_id": reaction.id}
         )
         return reaction
@@ -135,7 +135,7 @@ class ReactionRegistry:
         self._reactions_by_id.pop(reaction.id)
         self._reactions_by_run[reaction.workflow_run_id].remove(reaction)
 
-        self._hass.bus.async_fire(
+        self._hass.bus.fire(
             EVENT_REACTION_REGISTRY_UPDATED, {"action": "remove", "run_id": reaction.id}
         )
 
@@ -172,7 +172,7 @@ class RunRegistry:
         self._runs[run.workflow_id].append(run)
         self._runs_by_id[run.id] = run
 
-        self._hass.bus.async_fire(
+        self._hass.bus.fire(
             EVENT_RUN_REGISTRY_UPDATED, {"action": "create", "run_id": run.id}
         )
         return run
@@ -182,7 +182,7 @@ class RunRegistry:
         self._runs[workflow_id].remove(workflow_run)
         self._runs_by_id.pop(workflow_run.id)
 
-        self._hass.bus.async_fire(
+        self._hass.bus.fire(
             EVENT_RUN_REGISTRY_UPDATED, {"action": "remove", "run_id": workflow_run.id}
         )
 
@@ -789,5 +789,5 @@ class Reaction:
 
         else:
             self.session.debug(_LOGGER, f"Dispatching reaction event with data {format_data(**vars(reaction))}")
-            self._hass.bus.async_fire(EVENT_REACT_REACTION, vars(reaction))
+            self._hass.bus.fire(EVENT_REACT_REACTION, vars(reaction))
             node.set_result(reaction=reaction.to_trace_result())
