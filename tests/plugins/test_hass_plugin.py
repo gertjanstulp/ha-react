@@ -38,7 +38,7 @@ def get_mock_plugin(
     return result
 
 
-@pytest.mark.enable_socket
+# @pytest.mark.enable_socket
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["hass_event_start_test"])
 async def test_hass_plugin_hass_start_action(test_context: TstContext, workflow_name: str):
     mock_plugin = get_mock_plugin()
@@ -59,7 +59,7 @@ async def test_hass_plugin_hass_start_action(test_context: TstContext, workflow_
         test_context.verify_has_no_log_issues()
 
 
-@pytest.mark.enable_socket
+# @pytest.mark.enable_socket
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["hass_event_started_test"])
 async def test_hass_plugin_hass_started_action(test_context: TstContext, workflow_name: str):
     mock_plugin = get_mock_plugin()
@@ -80,7 +80,7 @@ async def test_hass_plugin_hass_started_action(test_context: TstContext, workflo
         test_context.verify_has_no_log_issues()
 
 
-@pytest.mark.enable_socket
+# @pytest.mark.enable_socket
 @pytest.mark.parametrize(FIXTURE_WORKFLOW_NAME, ["hass_event_shutdown_test"])
 async def test_hass_plugin_hass_shutdown_action(test_context: TstContext, workflow_name: str):
     mock_plugin = get_mock_plugin()
