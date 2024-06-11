@@ -51,8 +51,10 @@ FLUENT_BLOCK_WORD = "[\w\d\-\+\:\/\.\!]+"
 FLUENT_BLOCK_NUMBER = "[\d]+"
 FLUENT_BLOCK_TIME = "[\d\:]+"
 FLUENT_BLOCK_LIST_END = "(?!,\w)"
-FLUENT_BLOCK_DATA = "[^,]+\=[^,]+"
+FLUENT_BLOCK_DATA = r'[^,]+?\=(?:{{.+?}}|".+?"|[^,]+)'
 FLUENT_BLOCK_WILDCARD = "\*"
+
+FLUENT_PARSE_DATA = r'(?P<key>[^,]+?)\=(?P<value>{{.+?}}|".+?"|[^,]+)'
 
 FLUENT_TOKEN_RESET = "reset"
 FLUENT_TOKEN_USE = "use"
@@ -402,10 +404,8 @@ def parse_wait(match: re.Match):
 
 def parse_data(data: str):
     result = {}
-    data_items = data.split(',')
-    for data_item in data_items:
-        data_parts = data_item.split('=', 1) 
-        result[data_parts[0].strip()] = parse_numeric(data_parts[1].strip())
+    for match in re.finditer(FLUENT_PARSE_DATA, data):
+        result[match.group('key').strip()] = parse_numeric(match.group('value').strip().strip('"'))
     return result
 
 
