@@ -31,4 +31,4 @@ class ShutdownTask(ReactTask):
             await self.react.async_shutdown()
             self.task_logger.debug("Shutdown complete")
 
-        self.react.hass.async_add_job(async_shutdown)
+        self.react.hass.async_create_task(async_shutdown())
