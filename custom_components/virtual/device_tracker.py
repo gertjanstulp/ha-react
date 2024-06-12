@@ -60,11 +60,13 @@ async def async_setup_scanner(hass, config, async_see, _discovery_info=None):
 
     # Read in the last known states.
     old_tracker_states = {}
-    try:
-        with open(STATE_FILE, 'r') as f:
-            old_tracker_states = json.load(f)
-    except:
-        pass
+    def _load():
+        try:
+            with open(STATE_FILE, 'r') as f:
+                return json.load(f)
+        except:
+            pass
+    old_tracker_states = await hass.async_add_executor_job(_load)
 
     new_tracker_states = {}
     for device in config[CONF_DEVICES]:
@@ -99,6 +101,6 @@ async def async_setup_scanner(hass, config, async_see, _discovery_info=None):
         async_track_state_change_event(hass, tracker_states.keys(), _state_changed)
         hass.bus.async_listen("homeassistant_stop", _shutting_down)
     else:
-        _write_state()
+        await hass.async_add_executor_job(_write_state)
 
     return True
