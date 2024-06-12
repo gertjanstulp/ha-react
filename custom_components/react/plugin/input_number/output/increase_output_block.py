@@ -55,13 +55,4 @@ class InputNumberIncreaseReactionEvent(ReactionEvent[InputNumberIncreaseReaction
 
     @property
     def applies(self) -> bool:
-        return (
-            self.payload.type == REACT_TYPE_INPUT_NUMBER and
-            self.payload.action == REACT_ACTION_INCREASE and
-            self.payload.data
-        )
-
-
-    @property
-    def applies(self) -> bool:
         return self.payload.data is not None
