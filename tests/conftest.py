@@ -61,10 +61,10 @@ def verify_cleanup() -> Generator[None, None, None]:
 
 
 @pytest.fixture
-def hass_setup(hass: HomeAssistant, hass_api_mock):
+async def hass_setup(hass: HomeAssistant, hass_api_mock):
     hass.data[DATA_TRACE] = {}
     hass.data[HASS_API_MOCK] = HassApiMock(hass)
-    hass.config.set_time_zone("Europe/Amsterdam")
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
     hass.config.units = METRIC_SYSTEM
     result = Mock()
     result.hass = hass

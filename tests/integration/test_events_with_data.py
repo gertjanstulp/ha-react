@@ -59,7 +59,10 @@ async def test_data_event(test_context: TstContext, workflow_name: str):
         "data3": 3,
         # "data4": ["asdf", "qwer"],
         "data5": int(test_context.workflow_config.actors[0].id),
-        "data6": '='
+        "data6": '=',
+        "data7": 'as,df',
+        "data8": 'qw,er',
+        "data9": 'true'
     }
     async with test_context.async_listen_reaction_event():
         test_context.verify_reaction_not_found()

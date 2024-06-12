@@ -46,13 +46,15 @@ FLUENT_BLOCK_OPTION_FORWARD_ACTION = "forward_action"
 FLUENT_BLOCK_OPTION_FORWARD_DATA = "forward_data"
 FLUENT_BLOCK_OPTION_RESTART_MODE_MODES = "abort|force|rerun"
 FLUENT_BLOCK_WAIT_DELAY_UNIT = "seconds|minutes|hours"
-FLUENT_BLOCK_WORD_NO_DOT = "[\w\d\-\+\:\/]+"
-FLUENT_BLOCK_WORD = "[\w\d\-\+\:\/\.\!]+"
-FLUENT_BLOCK_NUMBER = "[\d]+"
-FLUENT_BLOCK_TIME = "[\d\:]+"
-FLUENT_BLOCK_LIST_END = "(?!,\w)"
-FLUENT_BLOCK_DATA = "[^,]+\=[^,]+"
-FLUENT_BLOCK_WILDCARD = "\*"
+FLUENT_BLOCK_WORD_NO_DOT = r"[\w\d\-\+\:\/]+"
+FLUENT_BLOCK_WORD = r"[\w\d\-\+\:\/\.\!]+"
+FLUENT_BLOCK_NUMBER = r"[\d]+"
+FLUENT_BLOCK_TIME = r"[\d\:]+"
+FLUENT_BLOCK_LIST_END = r"(?!,\w)"
+FLUENT_BLOCK_DATA = r'[^,]+?\=(?:{{.+?}}|".+?"|[^,]+)'
+FLUENT_BLOCK_WILDCARD = r"\*"
+
+FLUENT_PARSE_DATA = r'(?P<key>[^,]+?)\=(?P<value>{{.+?}}|".+?"|[^,]+)'
 
 FLUENT_TOKEN_RESET = "reset"
 FLUENT_TOKEN_USE = "use"
@@ -94,7 +96,7 @@ def zero_or_many(value: str) -> str:
 
 
 def prepend_comma(value: str) -> str:
-    return f",\s*{value}"
+    return rf",\s*{value}"
 
 
 def tokenize(token: str, value: str):
@@ -106,7 +108,7 @@ def spaced(*args):
 
 
 def dotted(*args):
-    return '\.'.join(args)
+    return r'\.'.join(args)
 
 
 def piped(*args):
@@ -402,10 +404,8 @@ def parse_wait(match: re.Match):
 
 def parse_data(data: str):
     result = {}
-    data_items = data.split(',')
-    for data_item in data_items:
-        data_parts = data_item.split('=', 1) 
-        result[data_parts[0].strip()] = parse_numeric(data_parts[1].strip())
+    for match in re.finditer(FLUENT_PARSE_DATA, data):
+        result[match.group('key').strip()] = parse_numeric(match.group('value').strip().strip('"'))
     return result
 
 

@@ -181,7 +181,7 @@ workflow:
     variables:
       type_templated: "{{ 1 + 2 }}"
     when: actor_type_data.actor_entity_data actor_action_data with actor_data_data={{ type_templated }}
-    then: reactor_type_data.reactor_entity_data reactor_action_data with data1=1, data2={{ event.action }}, data3={{ type_templated }}, data5={{ actor.id }}, data6==
+    then: reactor_type_data.reactor_entity_data reactor_action_data with data1=1, data2={{ event.action }}, data3={{ type_templated }}, data5={{ actor.id }}, data6==, data7={{ 'as,df' }}, data8="qw,er", data9={{ 'true' if 1 == 1 else 'false' }}
 
   workflow_data_delayed:
     when: actor_type_data_delayed.actor_entity_data_delayed actor_action_data_delayed
