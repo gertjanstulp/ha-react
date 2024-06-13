@@ -44,11 +44,6 @@ from custom_components.react.const import (
     ATTR_TRIGGER,
     ATTR_TYPE,
     ATTR_WORKFLOW_ID,
-    CONF_ENTITY_GROUPS,
-    CONF_PLUGINS,
-    CONF_FRONTEND_REPO_URL,
-    CONF_STENCIL,
-    CONF_WORKFLOW,
     DEFAULT_INITIAL_STATE, 
     DOMAIN,
     EVENT_REACT_ACTION,
@@ -158,8 +153,6 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
         
 
     async def async_added_to_hass(self) -> None:
-        _ENTITY_LOGGER.debug(f"Added {self.entity_id} to registry")
-
         self._destroyers = []
         self._async_destroyers = []
 
@@ -220,10 +213,8 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
                 last_triggered = state.attributes.get("last_triggered")
                 if last_triggered is not None:
                     self._last_triggered = parse_datetime(last_triggered)
-                _ENTITY_LOGGER.debug(f"Setting {self.entity_id} state: {format_data(last_state=enable_workflow, enabled=state.state)}")
             else:
                 enable_workflow = DEFAULT_INITIAL_STATE
-                _ENTITY_LOGGER.debug(f"Setting {self.entity_id} state (no last state found): {format_data(enabled=enable_workflow)}")
             
             if enable_workflow:
                 await self.async_enable()
@@ -235,7 +226,6 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
 
 
     async def async_will_remove_from_hass(self):
-        _ENTITY_LOGGER.debug(f"Removing {self.entity_id} from registry")
         await self.async_destroy()
         
 
@@ -287,7 +277,6 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
     
     async def async_enable(self):
         if not self.is_enabled:
-            _ENTITY_LOGGER.debug(f"Enabling {self.entity_id}")
             self.is_enabled = True
             self.async_write_ha_state()
 
@@ -296,7 +285,6 @@ class WorkflowEntity(ToggleEntity, RestoreEntity):
     
     async def async_disable(self):
         if self.is_enabled:
-            _ENTITY_LOGGER.debug(f"Disabling {self.entity_id}")
             self.is_enabled = False
             self.async_write_ha_state()
 
