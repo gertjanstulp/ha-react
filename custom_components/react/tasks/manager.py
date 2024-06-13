@@ -4,7 +4,9 @@ from ast import Tuple
 
 import asyncio
 from datetime import datetime, timedelta
+import importlib
 from pathlib import Path
+from types import ModuleType
 from typing import TYPE_CHECKING, Any, Callable
 
 from homeassistant.const import (
@@ -15,6 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, Event as HaEvent, HassJob, callback
 from homeassistant.helpers.event import async_track_time_change, async_track_sunrise, async_track_sunset
 from homeassistant.helpers.importlib import async_import_module
+from homeassistant.util.async_ import create_eager_task
 
 from custom_components.react.const import (
     ATTR_ENTITY, 
@@ -67,21 +70,28 @@ class ReactTaskManager:
 
     async def async_load(self) -> None:
         task_files_root = Path(__file__).parent
-        task_modules = (
-            {
-                "parent": str(module.relative_to(task_files_root).parent).replace("/", "."),
-                "name": module.stem,
-            }
-            for module in task_files_root.rglob("*.py")
-            if module.name not in ("__init__.py", "base.py", "filters.py", "manager.py", "default_task.py")
-        )
 
-        async def _load_module(module: dict):
-            task_module = await async_import_module(self.react.hass, f"{__package__}.{module['parent']}.{module['name']}")
-            if task := await task_module.async_setup_task(react=self.react):
+        def _import_all_plugin_modules() -> list[ModuleType]:
+            modules: list[ModuleType] = []
+            for module_file in task_files_root.rglob("*.py"):
+                if module_file.name in ("__init__.py", "base.py", "filters.py", "manager.py", "default_task.py"):
+                    continue
+                parent = str(module_file.relative_to(task_files_root).parent).replace("/", ".")
+                name = module_file.stem
+                modules.append(importlib.import_module(f"{__package__}.{parent}.{name}"))
+            return modules
+
+        async def _setup_module(module: ModuleType):
+            if task := await module.async_setup_task(react=self.react):
                 self.register_task(task)
 
-        await asyncio.gather(*[_load_module(task) for task in task_modules])
+        modules = await self.react.hass.async_add_import_executor_job(_import_all_plugin_modules)
+        await asyncio.gather(
+            *(
+                create_eager_task(_setup_module(module))
+                for module in modules
+            )
+        )
 
 
     def unload(self):
