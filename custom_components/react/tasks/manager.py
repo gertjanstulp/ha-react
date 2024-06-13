@@ -71,47 +71,27 @@ class ReactTaskManager:
     async def async_load(self) -> None:
         task_files_root = Path(__file__).parent
 
-        modules: list[ModuleType] = []
-
-        def _load_all_plugin_modules() -> None:
-            """Load all repair modules."""
+        def _import_all_plugin_modules() -> list[ModuleType]:
+            modules: list[ModuleType] = []
             for module_file in task_files_root.rglob("*.py"):
                 if module_file.name in ("__init__.py", "base.py", "filters.py", "manager.py", "default_task.py"):
                     continue
                 parent = str(module_file.relative_to(task_files_root).parent).replace("/", ".")
                 name = module_file.stem
                 modules.append(importlib.import_module(f"{__package__}.{parent}.{name}"))
+            return modules
 
-        await self.react.hass.async_add_import_executor_job(_load_all_plugin_modules)
-
-        async def _load_module(module: ModuleType):
+        async def _setup_module(module: ModuleType):
             if task := await module.async_setup_task(react=self.react):
                 self.register_task(task)
 
+        modules = await self.react.hass.async_add_import_executor_job(_import_all_plugin_modules)
         await asyncio.gather(
             *(
-                create_eager_task(_load_module(module))
+                create_eager_task(_setup_module(module))
                 for module in modules
             )
         )
-
-        # def get_task_modules():
-        #     return (
-        #         {
-        #             "parent": str(module.relative_to(task_files_root).parent).replace("/", "."),
-        #             "name": module.stem,
-        #         }
-        #         for module in task_files_root.rglob("*.py")
-        #         if module.name not in ("__init__.py", "base.py", "filters.py", "manager.py", "default_task.py")
-        #     )
-        # task_modules = await self.react.hass.async_add_executor_job(get_task_modules)
-
-        # async def _load_module(module: dict):
-        #     task_module = await async_import_module(self.react.hass, f"{__package__}.{module['parent']}.{module['name']}")
-        #     if task := await task_module.async_setup_task(react=self.react):
-        #         self.register_task(task)
-
-        # await asyncio.gather(*[_load_module(task) for task in task_modules])
 
 
     def unload(self):
