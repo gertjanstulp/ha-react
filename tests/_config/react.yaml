@@ -427,11 +427,11 @@ workflow:
 
   workflow_input_number_set_test:
     when: actor_type_input_number_set_test.actor_entity_input_number_set_test actor_action_input_number_set_test
-    then: input_number.input_number_value_test set_value data value=12.34
+    then: input_number.input_number_value_test set_value with value=12.34
 
   workflow_input_number_increase_test:
     when: actor_type_input_number_increase_test.actor_entity_input_number_increase_test actor_action_input_number_increase_test
-    then: input_number.input_number_value_test increase data value1.5
+    then: input_number.input_number_value_test increase with value=1.5
 
   workflow_input_number_increase_with_max_test:
     when: actor_type_input_number_increase_with_max_test.actor_entity_input_number_increase_with_max_test actor_action_input_number_increase_with_max_test
