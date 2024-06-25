@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import voluptuous as vol
-from anyio import TASK_STATUS_IGNORED
 
 from homeassistant.components import websocket_api
 from homeassistant.components.trace import async_get_trace, async_list_traces
@@ -16,7 +15,7 @@ from custom_components.react.const import DOMAIN
 from custom_components.react.tasks.base import ReactTask, ReactTaskType
 
 
-async def async_setup_task(react: ReactBase) -> TASK_STATUS_IGNORED:
+async def async_setup_task(react: ReactBase) -> Task:
     return Task(react=react)
 
 
