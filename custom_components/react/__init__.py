@@ -6,7 +6,6 @@ from awesomeversion import AwesomeVersion
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, __version__ as HAVERSION
 from homeassistant.core import Context, HomeAssistant, callback, CALLBACK_TYPE, Event as HaEvent
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import ToggleEntity
@@ -16,13 +15,7 @@ from homeassistant.util.dt import parse_datetime, utcnow
 
 from custom_components.react.base import ReactBase
 from custom_components.react.config.config import Actor, Reactor, Workflow
-from custom_components.react.config.schema import (
-    ENTITY_GROUPS_SCHEMA,
-    PLUGIN_SCHEMA,
-    REACT_SCHEMA,
-    STENCIL_SCHEMA,
-    WORKFLOW_SCHEMA,
-)
+from custom_components.react.config.schema import REACT_SCHEMA
 from custom_components.react.plugin.factory import PluginFactory
 from custom_components.react.runtime.runtime import ReactRuntime
 from custom_components.react.runtime.snapshots import create_snapshot

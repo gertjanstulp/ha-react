@@ -1,6 +1,5 @@
 """React task manager."""
 from __future__ import annotations
-from ast import Tuple
 
 import asyncio
 from datetime import datetime, timedelta
@@ -16,7 +15,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, Event as HaEvent, HassJob, callback
 from homeassistant.helpers.event import async_track_time_change, async_track_sunrise, async_track_sunset
-from homeassistant.helpers.importlib import async_import_module
 from homeassistant.util.async_ import create_eager_task
 
 from custom_components.react.const import (
