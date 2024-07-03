@@ -3,7 +3,7 @@ from __future__ import annotations
 from aiohttp import web
 
 from homeassistant.components import frontend
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import HomeAssistantView, StaticPathConfig
 
 from custom_components.react.base import ReactBase
 from custom_components.react.const import DOMAIN
@@ -33,14 +33,14 @@ class Task(ReactTask):
         self.task_logger.debug("Setting up react frontend")
 
         # Register themes
-        self.react.hass.http.register_static_path(f"{URL_BASE}/themes", self.react.hass.config.path("themes"))
+        await self.react.hass.http.async_register_static_paths([StaticPathConfig(f"{URL_BASE}/themes", self.react.hass.config.path("themes"), cache_headers=True)])
 
         # Register frontend
         if self.react.configuration.frontend_repo_url:
             self.task_logger.warning("Frontend development mode enabled. Do not run in production!")
             self.react.hass.http.register_view(ReactFrontendDev())
         else:
-            self.react.hass.http.register_static_path(f"{URL_BASE}/frontend", locate_dir(), cache_headers=False)
+            await self.react.hass.http.async_register_static_paths([StaticPathConfig(f"{URL_BASE}/frontend", locate_dir(), cache_headers=False)])
 
         self.react.frontend_version = FE_VERSION
 
