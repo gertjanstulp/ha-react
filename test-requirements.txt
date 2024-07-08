@@ -6,7 +6,7 @@ coverage==7.5.3
 pytest==8.2.0
 pytest-asyncio==0.23.6
 pytest-cov==5.0.0
-pytest-homeassistant-custom-component==0.13.143
+pytest-homeassistant-custom-component==0.13.144
 pytest-xdist==3.6.1
 
 # for homeassistant cloud, also used by mobile app
