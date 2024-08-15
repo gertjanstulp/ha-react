@@ -1,3 +1,4 @@
+import asyncio
 import pytest
 from datetime import timedelta
 from freezegun import freeze_time
@@ -24,6 +25,7 @@ async def test_wait_for_state_initial_false(test_context: TstContext, workflow_n
         test_context.verify_reaction_found()
         # test_context.verify_reaction_entity_data()
         await ibc.async_turn_on("wait_for_state_test")
+        # await asyncio.sleep(1)
         test_context.verify_reaction_event_data()
         test_context.verify_trace_record()
         test_context.verify_reaction_not_found()

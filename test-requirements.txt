@@ -2,17 +2,17 @@
 
 debugpy==1.8.1
 
-coverage==7.5.3
-pytest==8.2.0
-pytest-asyncio==0.23.6
+coverage==7.6.0
+pytest==8.3.1
+pytest-asyncio==0.23.8
 pytest-cov==5.0.0
-pytest-homeassistant-custom-component==0.13.144
+pytest-homeassistant-custom-component==0.13.152
 pytest-xdist==3.6.1
 
 # for homeassistant cloud, also used by mobile app
 hass-nabucasa==0.81.1
-hassil==1.7.1
-home-assistant-intents==2024.7.3
+hassil==1.7.4
+home-assistant-intents==2024.8.7
 webrtcvad
 
 mutagen==1.47.0
@@ -20,9 +20,9 @@ deepdiff==6.3.0
 
 # for sonos
 soco==0.30.4
-async-upnp-client==0.39.0
+async-upnp-client==0.40.0
 spotipy==2.23.0
-plexapi==4.15.13
+plexapi==4.15.14
 plexwebsocket==0.0.14
 
 # sonos_websocket
@@ -35,12 +35,15 @@ PyNaCl==1.5.0
 python-telegram-bot[socks]==21.0.1
 
 # for time
-freezegun==1.5.0
+freezegun==1.5.1
 
-Pillow==10.3.0
+Pillow==10.4.0
 
 # for unifi
 aiounifi==79
 
 # for tts
 ha-ffmpeg==3.2.0
+pymicro-vad==1.0.1
+
+PyTurboJPEG==1.7.1
