@@ -32,41 +32,39 @@ class Task(ReactTask):
 
     async def async_execute(self) -> None:
         self.task_logger.debug("Setting up react service")
-        def setup_services():
-            self.react.hass.services.register(DOMAIN, SERVICE_RUN_NOW, self.run_now)
-            self.react.hass.services.register(DOMAIN, SERVICE_REACT_NOW, self.react_now)
-            self.react.hass.services.register(DOMAIN, SERVICE_DELETE_RUN, self.async_delete_run)
-            self.react.hass.services.register(DOMAIN, SERVICE_DELETE_REACTION, self.delete_reaction)
-        await self.react.hass.async_add_executor_job(setup_services)
+        self.react.hass.services.async_register(DOMAIN, SERVICE_RUN_NOW, self.async_run_now)
+        self.react.hass.services.async_register(DOMAIN, SERVICE_REACT_NOW, self.async_react_now)
+        self.react.hass.services.async_register(DOMAIN, SERVICE_DELETE_RUN, self.async_delete_run)
+        self.react.hass.services.async_register(DOMAIN, SERVICE_DELETE_REACTION, self.async_delete_reaction)
 
     
-    def run_now(self, service_call: ServiceCall):
+    async def async_run_now(self, service_call: ServiceCall):
         try:
             run_id = service_call.data.get(ATTR_RUN_ID)
             self.react.runtime.run_now(run_id)
         except Exception as ex:
-            self.task_logger.exception(ex)
+            self.task_logger.exception(ex, 'run_now failed')
 
 
-    def react_now(self, service_call: ServiceCall):
+    async def async_react_now(self, service_call: ServiceCall):
         try:
             reaction_id = service_call.data.get(ATTR_REACTION_ID)
             self.react.runtime.react_now(reaction_id)
         except Exception as ex:
-            self.task_logger.exception(ex)
-
+            self.task_logger.exception(ex, 'react_now failed')
+ 
 
     async def async_delete_run(self, service_call: ServiceCall):
         try:
             run_id = service_call.data.get(ATTR_RUN_ID)
-            await self.react.runtime.async_delete_run(run_id)
+            self.react.runtime.delete_run(run_id)
         except Exception as ex:
-            self.task_logger.exception(ex)
+            self.task_logger.exception(ex, 'delete_run failed')
 
 
-    def delete_reaction(self, service_call: ServiceCall):
+    async def async_delete_reaction(self, service_call: ServiceCall):
         try:
             reaction_id = service_call.data.get(ATTR_REACTION_ID)
             self.react.runtime.delete_reaction(reaction_id)
         except Exception as ex:
-            self.task_logger.exception(ex)
+            self.task_logger.exception(ex, 'delete_reaction failed')
