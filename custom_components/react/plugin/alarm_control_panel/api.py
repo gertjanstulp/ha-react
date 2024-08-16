@@ -44,7 +44,7 @@ class AlarmApi(PluginApiBase[AlarmConfig]):
             if provider and value is not None and value == STATE_ALARM_DISARMED:
                 await provider.async_arm(session, context, full_entity_id, self.plugin.config.code, arm_mode)
         except:
-            session.exception(f"Arming {arm_mode} failed")
+            session.exception(self.plugin.logger, f"Arming {arm_mode} failed")
 
 
     async def async_alarm_arm_home(self, session: Session, context: Context, entity_id: str, alarm_control_panel_provider: str):

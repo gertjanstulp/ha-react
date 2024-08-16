@@ -263,10 +263,10 @@ class ReactRuntime:
             _LOGGER.warn(f"Reaction '{reaction_id}' could not be found")
 
 
-    async def async_delete_run(self, run_id: str):
+    def delete_run(self, run_id: str):
         workflow_run = self.run_registry.get_run(run_id)
         if workflow_run:
-            await workflow_run.async_stop()
+            workflow_run.stop()
         else:
             _LOGGER.warn(f"Workflow run '{run_id}' could not be found")
 
@@ -366,7 +366,7 @@ class WorkflowRuntime:
             source_session.debug(_LOGGER, f"Scheduling run {run.id} now")
             await run.async_run()
         except asyncio.CancelledError:
-            await run.async_stop()
+            run.stop()
             raise
 
     
@@ -385,11 +385,8 @@ class WorkflowRuntime:
     ) -> None:
         self._debug(f"Stopping all react.{self._workflow_config.id} jobs", source_session)
         self._queue.clear()
-        aws = [ asyncio.create_task(run.async_stop(is_hass_shutdown)) for run in self.get_runs() if run != spare ]
-        if not aws:
-            self._debug(f"No react.{self._workflow_config.id} jobs to stop", source_session)
-            return
-        await asyncio.shield(self._async_stop_all_runs(aws))
+        for run in [item for item in self.get_runs() if item != spare]:
+            run.stop(is_hass_shutdown)\
 
     
     def _debug(self, message: str, session: Session = None):
@@ -454,7 +451,7 @@ class WorkflowRun:
         }
 
     
-    async def async_stop(self, is_hass_shutdown: bool = False) -> None:
+    def stop(self, is_hass_shutdown: bool = False) -> None:
         self.session.debug(_LOGGER, f"Stopping run")
 
         self._stopped = True
@@ -482,7 +479,7 @@ class WorkflowRun:
         except _ConditionFail:
             self.finish()
         except Exception as ex:
-            self.session.exception(f"Run failed")
+            self.session.exception(_LOGGER, f"Run failed")
             raise
 
 
@@ -670,8 +667,8 @@ class Reaction:
             if self.result in DONE_RESULTS:
                 self._steps.close()
                 self.finish()
-        except Exception as ex:
-            self.session.exception(ex)
+        except Exception:
+            self.session.exception(_LOGGER, 'Step failed')
             self.result = StepResult.FAIL
             self.finish()
 
@@ -789,5 +786,5 @@ class Reaction:
 
         else:
             self.session.debug(_LOGGER, f"Dispatching reaction event with data {format_data(**vars(reaction))}")
-            self._hass.bus.fire(EVENT_REACT_REACTION, vars(reaction))
+            self._hass.bus.async_fire(EVENT_REACT_REACTION, vars(reaction))
             node.set_result(reaction=reaction.to_trace_result())
