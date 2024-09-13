@@ -87,7 +87,7 @@ class CompositeTracker(BaseTracker, Generic[T], Destroyable):
         elif attr_value is not None:
             if isinstance(attr_value, str) and is_template_string(attr_value):
                 self.set_property(attr, None, PROP_TYPE_TEMPLATE)
-                self.trackers.append(TemplatePropertyTracker(self.hass, self, attr, Template(attr_value), type_converter, self.tctx, self.async_update))
+                self.trackers.append(TemplatePropertyTracker(self.hass, self, attr, Template(attr_value, self.hass), type_converter, self.tctx, self.async_update))
             else:
                 self.set_property(attr, attr_value, PROP_TYPE_VALUE)
         else:
