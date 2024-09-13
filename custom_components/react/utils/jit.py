@@ -46,7 +46,7 @@ class CompositeJitter(BaseJitter, Generic[T]):
     def __init__(self, hass: HomeAssistant, config_source: DynamicData, tctx: TemplateContext, t_type: Type[T] = DynamicData) -> None:
         super().__init__()
 
-        self.react = hass
+        self.hass = hass
         self.config_source = config_source
         self.tctx = tctx
         self.t_type = t_type
@@ -61,18 +61,18 @@ class CompositeJitter(BaseJitter, Generic[T]):
         attr_value = getattr(self.config_source, attr, None)
         
         if isinstance(attr_value, MultiItem):
-            self.set_jitter(attr, MultiItemJitter(self.react, attr_value, self.tctx))
+            self.set_jitter(attr, MultiItemJitter(self.hass, attr_value, self.tctx))
         elif isinstance(attr_value, DynamicData):
             t_type = self.t_type.type_hints.get(attr, DynamicData) if hasattr(self.t_type, ATTR_TYPE_HINTS) else DynamicData
-            self.set_jitter(attr, ObjectJitter(self.react, attr_value, self.tctx, t_type))
+            self.set_jitter(attr, ObjectJitter(self.hass, attr_value, self.tctx, t_type))
         elif isinstance(attr_value, list):
             if len(attr_value) > 0 and isinstance(attr_value[0], DynamicData):
-                self.set_jitter(attr, ListJitter(self.react, attr_value, self.tctx))
+                self.set_jitter(attr, ListJitter(self.hass, attr_value, self.tctx))
             else:
                 pass
         elif attr_value is not None:
             if isinstance(attr_value, str) and is_template_string(attr_value):
-                self.set_jitter(attr, TemplatePropertyJitter(attr, Template(attr_value), type_converter, self.tctx, self.react))
+                self.set_jitter(attr, TemplatePropertyJitter(attr, Template(attr_value, self.hass), type_converter, self.tctx, self.hass))
             else:
                 self.set_jitter(attr, ValuePropertyJitter(attr_value, PROP_TYPE_VALUE, type_converter))
         else:
@@ -131,7 +131,7 @@ class ListJitter(BaseJitter):
     def __init__(self, hass: HomeAssistant, config_source: list[DynamicData], tctx: TemplateContext) -> None:
         super().__init__()
 
-        self.react = hass
+        self.hass = hass
         self.config_source = config_source
         self.tctx = tctx
         self.jitters: list[ObjectJitter] = []
