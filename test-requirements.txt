@@ -6,13 +6,13 @@ coverage==7.6.0
 pytest==8.3.1
 pytest-asyncio==0.23.8
 pytest-cov==5.0.0
-pytest-homeassistant-custom-component==0.13.152
+pytest-homeassistant-custom-component==0.13.162
 pytest-xdist==3.6.1
 
 # for homeassistant cloud, also used by mobile app
 hass-nabucasa==0.81.1
 hassil==1.7.4
-home-assistant-intents==2024.8.7
+home-assistant-intents==2024.9.4
 webrtcvad
 
 mutagen==1.47.0
@@ -32,7 +32,7 @@ sonos-websocket==0.1.3
 PyNaCl==1.5.0
 
 # for telegram
-python-telegram-bot[socks]==21.0.1
+python-telegram-bot[socks]==21.5
 
 # for time
 freezegun==1.5.1
@@ -40,11 +40,12 @@ freezegun==1.5.1
 Pillow==10.4.0
 
 # for unifi
-aiounifi==79
+aiounifi==80
 
 # for tts
 ha-ffmpeg==3.2.0
 
 # other
-PyTurboJPEG==1.7.1
+PyTurboJPEG==1.7.5
 pymicro_vad
+pyspeex_noise

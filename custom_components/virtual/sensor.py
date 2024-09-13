@@ -16,12 +16,13 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     CONF_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
-    POWER_VOLT_AMPERE_REACTIVE,
+    # POWER_VOLT_AMPERE_REACTIVE,
     SIGNAL_STRENGTH_DECIBELS,
     UnitOfApparentPower,
     UnitOfFrequency,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfReactivePower,
     UnitOfVolume,
 )
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
@@ -77,7 +78,7 @@ UNITS_OF_MEASUREMENT = {
     SensorDeviceClass.ENERGY: "kWh",  # energy (Wh/kWh/MWh)
     SensorDeviceClass.FREQUENCY: UnitOfFrequency.GIGAHERTZ,  # energy (Hz/kHz/MHz/GHz)
     SensorDeviceClass.POWER_FACTOR: PERCENTAGE,  # power factor (no unit, min: -1.0, max: 1.0)
-    SensorDeviceClass.REACTIVE_POWER: POWER_VOLT_AMPERE_REACTIVE,  # reactive power (var)
+    SensorDeviceClass.REACTIVE_POWER: UnitOfReactivePower.VOLT_AMPERE_REACTIVE,  # reactive power (var)
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,  # µg/m³ of vocs
     SensorDeviceClass.VOLTAGE: "V",  # voltage (V)
     SensorDeviceClass.GAS: UnitOfVolume.CUBIC_METERS,  # gas (m³)
