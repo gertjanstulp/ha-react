@@ -1,8 +1,12 @@
-from homeassistant.components.group import (
+from homeassistant.components.group.const import (
     DOMAIN, 
     REG_KEY as GROUP_REG_KEY, 
+)
+
+from homeassistant.components.group.registry import (
     GroupIntegrationRegistry,
 )
+
 from homeassistant.const import (
     STATE_OFF, 
     STATE_ON, 
