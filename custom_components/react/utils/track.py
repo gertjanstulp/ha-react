@@ -1,5 +1,5 @@
 from typing import Generic, Type, TypeVar, Union
-from anyio import Any
+from typing import Any
 
 from homeassistant.const import ATTR_ID
 from homeassistant.core import Event as HaEvent, callback, HomeAssistant
