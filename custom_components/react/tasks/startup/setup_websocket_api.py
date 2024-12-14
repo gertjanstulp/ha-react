@@ -4,7 +4,7 @@ import json
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.trace import async_get_trace, async_list_traces
+from homeassistant.components.trace.util import async_get_trace, async_list_traces
 from homeassistant.components.websocket_api import async_register_command
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv

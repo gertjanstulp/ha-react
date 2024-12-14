@@ -1,14 +1,5 @@
-from homeassistant.const import (
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_PENDING,
-    STATE_ALARM_TRIGGERED,
-)
 from homeassistant.core import Context
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 
 from custom_components.react.plugin.alarm_control_panel.config import AlarmConfig
 from custom_components.react.plugin.alarm_control_panel.const import ALARM_GENERIC_PROVIDER, ArmMode
@@ -19,14 +10,15 @@ from custom_components.react.utils.session import Session
 
 
 ARMED_STATES = [
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION, 
-    STATE_ALARM_ARMING,
-    STATE_ALARM_PENDING,
-    STATE_ALARM_TRIGGERED,
+    AlarmControlPanelState.ARMED_HOME,
+    AlarmControlPanelState.ARMED_AWAY,
+    AlarmControlPanelState.ARMED_NIGHT,
+    AlarmControlPanelState.ARMED_VACATION, 
+    AlarmControlPanelState.ARMING,
+    AlarmControlPanelState.PENDING,
+    AlarmControlPanelState.TRIGGERED,
 ]
+
 
 class AlarmApi(PluginApiBase[AlarmConfig]):
 
@@ -41,7 +33,7 @@ class AlarmApi(PluginApiBase[AlarmConfig]):
                 return
             
             provider = self.get_alarm_control_panel_provider(session, alarm_control_panel_provider)
-            if provider and value is not None and value == STATE_ALARM_DISARMED:
+            if provider and value is not None and value == AlarmControlPanelState.DISARMED:
                 await provider.async_arm(session, context, full_entity_id, self.plugin.config.code, arm_mode)
         except:
             session.exception(self.plugin.logger, f"Arming {arm_mode} failed")

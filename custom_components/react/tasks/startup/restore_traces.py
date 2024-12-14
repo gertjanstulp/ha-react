@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from homeassistant.components.trace import async_restore_traces
+from homeassistant.components.trace.util import async_restore_traces
 from homeassistant.components.trace.const import DATA_TRACE_STORE
 
 from custom_components.react.base import ReactBase
