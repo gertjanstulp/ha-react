@@ -5,20 +5,20 @@ This component provides support for a virtual binary sensor.
 
 import logging
 import voluptuous as vol
+from collections.abc import Callable
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.binary_sensor import BinarySensorEntity, DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_DEVICE_CLASS
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
-from homeassistant.const import STATE_ON
-
-from . import get_entity_from_domain
-from .const import (
-    COMPONENT_DOMAIN,
-    COMPONENT_SERVICES,
-    CONF_CLASS,
-    CONF_INITIAL_VALUE,
+from homeassistant.components.binary_sensor import (
+    BinarySensorEntity,
+    DOMAIN as PLATFORM_DOMAIN
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_DEVICE_CLASS, STATE_ON
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
+
+from . import get_entity_from_domain, get_entity_configs
+from .const import *
 from .entity import VirtualEntity, virtual_schema
 
 
@@ -26,23 +26,24 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = [COMPONENT_DOMAIN]
 
-DEFAULT_INITIAL_VALUE = 'off'
+DEFAULT_BINARY_SENSOR_VALUE = "off"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(virtual_schema(DEFAULT_INITIAL_VALUE, {
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(virtual_schema(DEFAULT_BINARY_SENSOR_VALUE, {
+    vol.Optional(CONF_CLASS): cv.string,
+}))
+BINARY_SENSOR_SCHEMA = vol.Schema(virtual_schema(DEFAULT_BINARY_SENSOR_VALUE, {
     vol.Optional(CONF_CLASS): cv.string,
 }))
 
-SERVICE_ON = 'turn_on'
-SERVICE_OFF = 'turn_off'
-SERVICE_TOGGLE = 'toggle'
+SERVICE_ON = "turn_on"
+SERVICE_OFF = "turn_off"
+SERVICE_TOGGLE = "toggle"
 SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
 })
 
 
-async def async_setup_platform(hass, config, async_add_entities, _discovery_info=None):
-    sensors = [VirtualBinarySensor(config)]
-    async_add_entities(sensors, True)
+def setup_services(hass: HomeAssistant) -> None:
 
     async def async_virtual_service(call):
         """Call virtual service handler."""
@@ -55,9 +56,9 @@ async def async_setup_platform(hass, config, async_add_entities, _discovery_info
             await async_virtual_toggle_service(hass, call)
 
     # Build up services...
-    if not hasattr(hass.data[COMPONENT_SERVICES], DOMAIN):
-        _LOGGER.debug("installing handlers")
-        hass.data[COMPONENT_SERVICES][DOMAIN] = 'installed'
+    if not hasattr(hass.data[COMPONENT_SERVICES], PLATFORM_DOMAIN):
+        _LOGGER.debug("installing binary_service handlers")
+        hass.data[COMPONENT_SERVICES][PLATFORM_DOMAIN] = 'installed'
         hass.services.async_register(
             COMPONENT_DOMAIN, SERVICE_ON, async_virtual_service, schema=SERVICE_SCHEMA,
         )
@@ -69,16 +70,40 @@ async def async_setup_platform(hass, config, async_add_entities, _discovery_info
         )
 
 
+async def async_setup_platform(hass, config, async_add_entities, _discovery_info=None):
+    if hass.data[COMPONENT_CONFIG].get(CONF_YAML_CONFIG, False):
+        _LOGGER.debug("setting up old config...")
+
+        sensors = [VirtualBinarySensor(config, True)]
+        async_add_entities(sensors, True)
+        setup_services(hass)
+
+
+async def async_setup_entry(
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        async_add_entities: Callable[[list], None],
+) -> None:
+    _LOGGER.debug("setting up the entries...")
+
+    entities = []
+    for entity in get_entity_configs(hass, entry.data[ATTR_GROUP_NAME], PLATFORM_DOMAIN):
+        entity = BINARY_SENSOR_SCHEMA(entity)
+        entities.append(VirtualBinarySensor(entity, False))
+    async_add_entities(entities)
+    setup_services(hass)
+
+
 class VirtualBinarySensor(VirtualEntity, BinarySensorEntity):
     """An implementation of a Virtual Binary Sensor."""
 
-    def __init__(self, config):
+    def __init__(self, config, old_style: bool):
         """Initialize a Virtual Binary Sensor."""
-        super().__init__(config, DOMAIN)
+        super().__init__(config, PLATFORM_DOMAIN, old_style)
 
         self._attr_device_class = config.get(CONF_CLASS)
 
-        _LOGGER.info('VirtualBinarySensor: %s created', self.name)
+        _LOGGER.info(f"VirtualBinarySensor: {self.name} created")
 
     def _create_state(self, config):
         super()._create_state(config)
@@ -91,7 +116,7 @@ class VirtualBinarySensor(VirtualEntity, BinarySensorEntity):
         self._attr_is_on = state.state.lower() == STATE_ON
 
     def _update_attributes(self):
-        super()._update_attributes();
+        super()._update_attributes()
         self._attr_extra_state_attributes.update({
             name: value for name, value in (
                 (ATTR_DEVICE_CLASS, self._attr_device_class),
@@ -118,16 +143,16 @@ class VirtualBinarySensor(VirtualEntity, BinarySensorEntity):
 async def async_virtual_on_service(hass, call):
     for entity_id in call.data['entity_id']:
         _LOGGER.debug(f"turning on {entity_id}")
-        get_entity_from_domain(hass, DOMAIN, entity_id).turn_on()
+        get_entity_from_domain(hass, PLATFORM_DOMAIN, entity_id).turn_on()
 
 
 async def async_virtual_off_service(hass, call):
     for entity_id in call.data['entity_id']:
         _LOGGER.debug(f"turning off {entity_id}")
-        get_entity_from_domain(hass, DOMAIN, entity_id).turn_off()
+        get_entity_from_domain(hass, PLATFORM_DOMAIN, entity_id).turn_off()
 
 
 async def async_virtual_toggle_service(hass, call):
     for entity_id in call.data['entity_id']:
         _LOGGER.debug(f"toggling {entity_id}")
-        get_entity_from_domain(hass, DOMAIN, entity_id).toggle()
+        get_entity_from_domain(hass, PLATFORM_DOMAIN, entity_id).toggle()
