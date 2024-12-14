@@ -190,7 +190,7 @@ class TstContext():
 
 
     async def async_start_virtual(self):
-        assert await async_setup_component(self.hass, VIRTUAL_DOMAIN, { VIRTUAL_DOMAIN: {}} )
+        assert await async_setup_component(self.hass, VIRTUAL_DOMAIN, { VIRTUAL_DOMAIN: { "yaml_config": True}} )
         await self.hass.async_block_till_done()
 
         async def async_turn_on(domain: str, name: str):
