@@ -14,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_EFFECT_LIST,
     ATTR_HS_COLOR,
@@ -22,7 +22,6 @@ from homeassistant.components.light import (
     DOMAIN as PLATFORM_DOMAIN,
     LightEntity,
     LightEntityFeature,
-    SUPPORT_EFFECT,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
@@ -132,7 +131,7 @@ class VirtualLight(VirtualEntity, LightEntity):
             self._attr_supported_color_modes.add(ColorMode.ONOFF)
 
         if config.get(CONF_SUPPORT_EFFECT):
-            self._attr_supported_features |= SUPPORT_EFFECT
+            self._attr_supported_features |=  LightEntityFeature.EFFECT
             self._attr_effect_list = self._config.get(CONF_INITIAL_EFFECT_LIST)
 
     def _create_state(self, config):
@@ -151,7 +150,7 @@ class VirtualLight(VirtualEntity, LightEntity):
             self._attr_color_mode = ColorMode.COLOR_TEMP
             self._attr_color_temp = config.get(CONF_INITIAL_COLOR_TEMP)
             self._attr_brightness = config.get(CONF_INITIAL_BRIGHTNESS)
-        if self._attr_supported_features & SUPPORT_EFFECT:
+        if self._attr_supported_features &  LightEntityFeature.EFFECT:
             self._attr_effect = config.get(CONF_INITIAL_EFFECT)
 
     def _restore_state(self, state, config):
@@ -166,9 +165,9 @@ class VirtualLight(VirtualEntity, LightEntity):
             self._attr_hs_color = state.attributes.get(ATTR_HS_COLOR, config.get(CONF_INITIAL_COLOR))
             self._attr_brightness = state.attributes.get(ATTR_BRIGHTNESS, config.get(CONF_INITIAL_BRIGHTNESS))
         if self._attr_color_mode == ColorMode.COLOR_TEMP:
-            self._attr_color_temp = state.attributes.get(ATTR_COLOR_TEMP, config.get(CONF_INITIAL_COLOR_TEMP))
+            self._attr_color_temp = state.attributes.get(ATTR_COLOR_TEMP_KELVIN, config.get(CONF_INITIAL_COLOR_TEMP))
             self._attr_brightness = state.attributes.get(ATTR_BRIGHTNESS, config.get(CONF_INITIAL_BRIGHTNESS))
-        if self._attr_supported_features & SUPPORT_EFFECT:
+        if self._attr_supported_features &  LightEntityFeature.EFFECT:
             self._attr_effect = state.attributes.get(ATTR_EFFECT, config.get(CONF_INITIAL_EFFECT))
 
     def _update_attributes(self):
@@ -178,7 +177,7 @@ class VirtualLight(VirtualEntity, LightEntity):
             name: value for name, value in (
                 (ATTR_BRIGHTNESS, self._attr_brightness),
                 (ATTR_COLOR_MODE, self._attr_color_mode),
-                (ATTR_COLOR_TEMP, self._attr_color_temp),
+                (ATTR_COLOR_TEMP_KELVIN, self._attr_color_temp),
                 (ATTR_EFFECT, self._attr_effect),
                 (ATTR_EFFECT_LIST, self._attr_effect_list),
                 (ATTR_HS_COLOR, self._attr_hs_color),
@@ -195,7 +194,7 @@ class VirtualLight(VirtualEntity, LightEntity):
             self._attr_hs_color = hs_color
             self._attr_color_temp = None
 
-        ct = kwargs.get(ATTR_COLOR_TEMP, None)
+        ct = kwargs.get(ATTR_COLOR_TEMP_KELVIN, None)
         if ct is not None and ColorMode.COLOR_TEMP in self._attr_supported_color_modes:
             self._attr_color_mode = ColorMode.COLOR_TEMP
             self._attr_color_temp = ct
@@ -211,7 +210,7 @@ class VirtualLight(VirtualEntity, LightEntity):
             self._attr_color_mode = ColorMode.ONOFF
 
         effect = kwargs.get(ATTR_EFFECT, None)
-        if effect is not None and self._attr_supported_features & SUPPORT_EFFECT:
+        if effect is not None and self._attr_supported_features &  LightEntityFeature.EFFECT:
             self._attr_effect = effect
 
         self._attr_is_on = True
