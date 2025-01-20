@@ -1,18 +1,18 @@
 -r requirements.txt
 
-debugpy==1.8.8
+debugpy==1.8.11
 
 coverage==7.6.8
-pytest==8.3.3
+pytest==8.3.4
 pytest-asyncio==0.24.0
 pytest-cov==6.0.0
-pytest-homeassistant-custom-component==0.13.193
+pytest-homeassistant-custom-component==0.13.203
 pytest-xdist==3.6.1
 
 # for homeassistant cloud, also used by mobile app
-hass-nabucasa==0.86.0
-hassil==2.0.5
-home-assistant-intents==2024.12.9
+hass-nabucasa==0.87.0
+hassil==2.1.0
+home-assistant-intents==2025.1.1
 webrtcvad
 
 mutagen==1.47.0
@@ -20,7 +20,7 @@ deepdiff==8.0.1
 
 # for sonos
 soco==0.30.6
-async-upnp-client==0.41.0
+async-upnp-client==0.42.0
 spotipy==2.23.0
 plexapi==4.15.16
 plexwebsocket==0.0.14
