@@ -43,7 +43,7 @@ from unittest.mock import Mock
 from custom_components.react.base import ReactBase
 from custom_components.react.config.config import Workflow
 from custom_components.react.runtime.runtime import Reaction, WorkflowRun
-from custom_components.react.utils.logger import get_react_logger
+from custom_components.react.utils.logger import format_data, get_react_logger
 from custom_components.react.utils.struct import DynamicData, MultiItem
 from custom_components.react.utils.trace import ReactTrace
 from custom_components.react.const import (
@@ -150,7 +150,7 @@ class TstContext():
         self.react_component = react_component
 
         self.action_event_mock = Mock()
-        self.reaction_event_mock = Mock()
+        self.reaction_event_mock = Mock(side_effect=self.mock_invoked)
 
         if workflow_name != None:
             self.workflow_id = f"workflow_{workflow_name}"
@@ -160,12 +160,16 @@ class TstContext():
         self.notify_confirm_feedback_register: list[dict] = []
         self.plugin_task_unloaded_register: list[str] = []
 
-        react_logger = get_react_logger()
-        react_logger.setLevel("DEBUG")
+        self.react_logger = get_react_logger()
+        self.react_logger.setLevel("DEBUG")
         self.mock_log_handler = MockLogHandler()
-        react_logger.addHandler(self.mock_log_handler)
+        self.react_logger.addHandler(self.mock_log_handler)
 
         hass.data[TEST_CONTEXT] = self
+
+    def mock_invoked(self, *args, **kwargs):
+        ha_event: HaEvent = args[0]
+        self.react_logger.info(f"Caught Mock reaction event with data {ha_event}")
 
 
     async def async_start_react(self, mock_plugins: list[dict] = [], additional_workflows: list[str] = [], process_workflow: callable(dict) = None, skip_setup: bool = False):
