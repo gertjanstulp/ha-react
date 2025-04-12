@@ -1,3 +1,6 @@
+[build-system]
+requires = ["setuptools==77.0.3"]
+
 [tool.pytest.ini_options]
 testpaths = [
     "tests",
@@ -14,7 +17,6 @@ filterwarnings = [
     "ignore::DeprecationWarning"
 ]
 asyncio_mode = "auto"
-#addopts="-n 6"
 
 asyncio_default_fixture_loop_scope = "function"
 
