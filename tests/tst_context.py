@@ -149,8 +149,8 @@ class TstContext():
         self.workflow_name = workflow_name
         self.react_component = react_component
 
-        self.action_event_mock = Mock()
-        self.reaction_event_mock = Mock(side_effect=self.mock_invoked)
+        self.action_event_mock = Mock(side_effect=self.action_mock_invoked)
+        self.reaction_event_mock = Mock(side_effect=self.reaction_mock_invoked)
 
         if workflow_name != None:
             self.workflow_id = f"workflow_{workflow_name}"
@@ -167,9 +167,14 @@ class TstContext():
 
         hass.data[TEST_CONTEXT] = self
 
-    def mock_invoked(self, *args, **kwargs):
+    def reaction_mock_invoked(self, *args, **kwargs):
         ha_event: HaEvent = args[0]
         self.react_logger.info(f"Caught Mock reaction event with data {ha_event}")
+
+
+    def action_mock_invoked(self, *args, **kwargs):
+        ha_event: HaEvent = args[0]
+        self.react_logger.info(f"Caught Mock action event with data {ha_event}")
 
 
     async def async_start_react(self, mock_plugins: list[dict] = [], additional_workflows: list[str] = [], process_workflow: callable(dict) = None, skip_setup: bool = False):
@@ -792,9 +797,17 @@ class TstContext():
         entity_index: int = 0,
         type_index: int = 0,
         action_index: int = 0,
+        event_with_action_name: str = None,
     ):
-        ha_event: HaEvent = self.action_event_mock.mock_calls[event_index].args[0]
-        
+        ha_event: HaEvent
+        if event_with_action_name is not None:
+            for mock_call in self.action_event_mock.mock_calls:
+                test: HaEvent = mock_call.args[0]
+                if test.data[ATTR_ACTION] == event_with_action_name:
+                    ha_event = test
+        else:
+            ha_event: HaEvent = self.action_event_mock.mock_calls[event_index].args[0]
+       
         self.verify_event_data_item(ATTR_ENTITY, ha_event, None, expected_entity, entity_index)
         self.verify_event_data_item(ATTR_TYPE, ha_event, [EVENT_REACT_ACTION], expected_type, type_index)
         self.verify_event_data_item(ATTR_ACTION, ha_event, None, expected_action, action_index)
@@ -837,8 +850,28 @@ class TstContext():
         entity_index: int = 0,
         type_index: int = 0,
         action_index: int = 0,
+        event_with_entity_name: str = None,
+        event_with_action_name: str = None,
+        event_with_reactor_id: str = None,
     ):
-        ha_event: HaEvent = self.reaction_event_mock.mock_calls[event_index].args[0]
+        ha_event: HaEvent = None
+        if event_with_entity_name is not None:
+            for mock_call in self.reaction_event_mock.mock_calls:
+                test: HaEvent = mock_call.args[0]
+                if test.data[ATTR_ENTITY] == event_with_entity_name:
+                    ha_event = test
+        elif event_with_action_name is not None:
+            for mock_call in self.reaction_event_mock.mock_calls:
+                test: HaEvent = mock_call.args[0]
+                if test.data[ATTR_ACTION] == event_with_action_name:
+                    ha_event = test
+        elif event_with_reactor_id is not None:
+            for mock_call in self.reaction_event_mock.mock_calls:
+                test: HaEvent = mock_call.args[0]
+                if test.data[ATTR_REACTOR_ID] == event_with_reactor_id:
+                    ha_event = test
+        else:
+            ha_event: HaEvent = self.reaction_event_mock.mock_calls[event_index].args[0]
         event_type_got = ha_event.event_type
         event_type_expected = EVENT_REACT_REACTION
         assert event_type_got == event_type_expected, f"Expected eventtype '{event_type_expected}', got '{event_type_got}'"

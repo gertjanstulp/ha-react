@@ -371,16 +371,16 @@ async def test_alarm_plugin_input_block_state_change(test_context: TstContext, w
             expected_entity=entity_id,
             expected_type=ALARM_DOMAIN,
             expected_action=ACTION_CHANGE,
-            event_index=0)
+            event_with_action_name=ACTION_CHANGE)
         test_context.verify_action_event_data(
             expected_entity=entity_id,
             expected_type=ALARM_DOMAIN,
             expected_action=f"un_{STATE_ALARM_DISARMED}",
-            event_index=1)
+            event_with_action_name=f"un_{STATE_ALARM_DISARMED}")
         test_context.verify_action_event_data(
             expected_entity=entity_id,
             expected_type=ALARM_DOMAIN,
             expected_action=f"{STATE_ALARM_ARMED_AWAY}",
-            event_index=2)
+            event_with_action_name=f"{STATE_ALARM_ARMED_AWAY}")
         test_context.verify_has_no_log_issues()
     await test_context.hass.async_block_till_done()

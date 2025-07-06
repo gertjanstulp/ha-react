@@ -42,17 +42,17 @@ async def test_device_tracker_plugin_input_block_state_change(test_context: TstC
             expected_entity=entity_id,
             expected_type=DEVICE_TRACKER_DOMAIN,
             expected_action=ACTION_CHANGE,
-            event_index=0)
+            event_with_action_name=ACTION_CHANGE)
         test_context.verify_action_event_data(
             expected_entity=entity_id,
             expected_type=DEVICE_TRACKER_DOMAIN,
-            expected_action=f"{STATE_HOME}",
-            event_index=1)
+            expected_action=STATE_HOME,
+            event_with_action_name=STATE_HOME)
         test_context.verify_action_event_data(
             expected_entity=entity_id,
             expected_type=DEVICE_TRACKER_DOMAIN,
             expected_action=ACTION_TOGGLE,
-            event_index=2)
+            event_with_action_name=ACTION_TOGGLE)
         test_context.verify_has_no_log_issues()
 
     await test_context.hass.async_block_till_done()

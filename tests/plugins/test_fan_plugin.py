@@ -562,6 +562,6 @@ async def test_fan_plugin_input_block_state_change(test_context: TstContext, ent
                 expected_entity=entity_id,
                 expected_type=FAN_DOMAIN,
                 expected_action=expected_action,
-                event_index=i)
+                event_with_action_name=expected_action)
         test_context.verify_has_no_log_issues()
     await test_context.hass.async_block_till_done()
