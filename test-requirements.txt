@@ -1,18 +1,18 @@
 -r requirements.txt
 
-debugpy==1.8.13
+debugpy==1.8.14
 
-coverage==7.6.12
-pytest==8.3.5
-pytest-asyncio==0.26.0
-pytest-cov==6.0.0
-pytest-homeassistant-custom-component==0.13.244
-pytest-xdist==3.6.1
+coverage==7.8.2
+pytest==8.4.0
+pytest-asyncio==1.0.0
+pytest-cov==6.1.1
+pytest-homeassistant-custom-component==0.13.261
+pytest-xdist==3.7.0
 
 # for homeassistant cloud, also used by mobile app
-hass-nabucasa==0.96.0
+hass-nabucasa==0.105.0
 hassil==2.2.3
-home-assistant-intents==2025.5.7
+home-assistant-intents==2025.6.23
 webrtcvad
 
 mutagen==1.47.0
@@ -36,17 +36,17 @@ PyNaCl==1.5.0
 python-telegram-bot[socks]==21.5
 
 # for time
-freezegun==1.5.1
+freezegun==1.5.2
 
 Pillow==11.2.1
 
 # for unifi
-aiounifi==83
+aiounifi==84
 
 # for tts
 ha-ffmpeg==3.2.2
 
 # other
-PyTurboJPEG==1.7.5
+PyTurboJPEG==1.8.0
 pymicro_vad
 pyspeex_noise
