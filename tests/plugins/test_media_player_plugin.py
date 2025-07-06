@@ -526,11 +526,11 @@ async def test_media_player_plugin_input_block_state_change(test_context: TstCon
             expected_entity=entity_id,
             expected_type=MEDIA_PLAYER_DOMAIN,
             expected_action=ACTION_CHANGE,
-            event_index=0)
+            event_with_action_name=ACTION_CHANGE)
         test_context.verify_action_event_data(
             expected_entity=entity_id,
             expected_type=MEDIA_PLAYER_DOMAIN,
             expected_action=str(MediaPlayerState.PLAYING),
-            event_index=1)
+            event_with_action_name=str(MediaPlayerState.PLAYING))
         test_context.verify_has_no_log_issues()
     await test_context.hass.async_block_till_done()

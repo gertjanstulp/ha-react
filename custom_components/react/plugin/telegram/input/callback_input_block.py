@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from homeassistant.core import Event as HaEvent
-from homeassistant.components.telegram_bot import (
+from homeassistant.components.telegram_bot.const import (
     ATTR_MESSAGE, 
     EVENT_TELEGRAM_CALLBACK, 
 )

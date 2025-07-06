@@ -19,6 +19,7 @@ from custom_components.react.const import (
     ACTION_TOGGLE, 
     ACTION_UNAVAILABLE,
     ATTR_ACTION,
+    ATTR_ID,
     ATTR_SESSION_ID,
     ATTR_ENTITY,
     ATTR_TYPE,
@@ -214,7 +215,7 @@ class StateChangeData:
             result.append({
                 ATTR_ENTITY: self.entity,
                 ATTR_TYPE: type,
-                ATTR_ACTION: action
+                ATTR_ACTION: action,
             })
         return result
 

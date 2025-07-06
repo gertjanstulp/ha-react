@@ -1,11 +1,11 @@
 import pytest
 
-from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
+from homeassistant.components.notify.const import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.telegram import DOMAIN as TELEGRAM_DOMAIN
 from homeassistant.components.telegram.notify import (
     ATTR_INLINE_KEYBOARD
 )
-from homeassistant.components.telegram_bot import (
+from homeassistant.components.telegram_bot.const import (
     ATTR_CHAT_ID, 
     ATTR_MESSAGE, 
     ATTR_MESSAGEID, 
