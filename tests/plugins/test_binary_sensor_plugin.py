@@ -76,12 +76,12 @@ async def test_binary_sensor_available(test_context: TstContext, workflow_name: 
             expected_entity=entity_id,
             expected_type=BINARY_SENSOR_DOMAIN,
             expected_action=ACTION_AVAILABLE,
-            event_index=0)
+            event_with_action_name=ACTION_AVAILABLE)
         test_context.verify_action_event_data(
             expected_entity=entity_id,
             expected_type=BINARY_SENSOR_DOMAIN,
-            expected_action=f"{ACTION_CHANGE}",
-            event_index=1)
+            expected_action=ACTION_CHANGE,
+            event_with_action_name=ACTION_CHANGE)
         test_context.verify_has_no_log_issues()
 
 

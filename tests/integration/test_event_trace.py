@@ -98,8 +98,8 @@ async def test_trace_basic_switched_on_actor_2(test_context: TstContext, workflo
         await test_context.async_send_action_event(actor_index=1)
         test_context.verify_reaction_not_found()
         await test_context.async_verify_reaction_event_received(expected_count=2)
-        test_context.verify_reaction_event_data(event_index=0, reactor_index=0)
-        test_context.verify_reaction_event_data(event_index=1, reactor_index=1)
+        test_context.verify_reaction_event_data(event_with_action_name="reactor_action_trace_basic_test_1", reactor_index=0)
+        test_context.verify_reaction_event_data(event_with_action_name="reactor_action_trace_basic_test_2", reactor_index=1)
         test_context.verify_trace_record(
             actor_index=1,
             expected_reactor_condition_results=[True, True]
